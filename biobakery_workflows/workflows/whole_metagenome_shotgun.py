@@ -36,13 +36,15 @@ workflow.add_task_group(
 """ STEP #2: Run Metaphlan2 on all of the filtered fastq files (and merge tables)"""
 
 # get a list of metaphlan2 output files, one for each input file
-metaphlan2_output_files = workflow.name_output_files(name=in_files, subfolder="metaphlan2", tag="taxonomic_profile", extension="tsv")
+metaphlan2_output_files_profile = workflow.name_output_files(name=in_files, subfolder="metaphlan2", tag="taxonomic_profile", extension="tsv")
+metaphlan2_output_files_bowtie2 = workflow.name_output_files(name=in_files, subfolder="metaphlan2", tag="bowtie2", extension="tsv")
+metaphlan2_output_files_sam = workflow.name_output_files(name=in_files, subfolder="metaphlan2", tag="bowtie2", extension="sam")
 
 # run metaphlan2 on each of the kneaddata output files
 workflow.add_task_group(
-    "metaphlan2.py [depends[0]] --input_type fastq --nproc [threads] > [targets[0]]",
+    "metaphlan2.py [depends[0]] --input_type fastq --nproc [threads] --output_file [targets[0]] --bowtie2out [targets[1]] --samout [targets[2]]",
     depends=kneaddata_output_files,
-    targets=metaphlan2_output_files,
+    targets=zip(metaphlan2_output_files_profile, metaphlan2_output_files_bowtie2, metaphlan2_output_files_sam),
     threads=args.threads) 
 
 # merge all of the metaphlan taxonomy tables
@@ -50,10 +52,11 @@ metaphlan2_merged_output = workflow.name_output_files(name="taxonomic_profiles.t
 
 # run the humann2 join script to merge all of the metaphlan2 profiles
 workflow.add_task(
-    "humann2_join_tables --input [metaphlan2_output_folder] --output [targets[0]]",
-    depends=metaphlan2_output_files,
+    "humann2_join_tables --input [metaphlan2_output_folder] --output [targets[0]] --file_name [file_name]",
+    depends=metaphlan2_output_files_profile,
     targets=metaphlan2_merged_output,
-    metaphlan2_output_folder=os.path.dirname(metaphlan2_output_files[0]))
+    metaphlan2_output_folder=os.path.dirname(metaphlan2_output_files_profile[0]),
+    file_name="taxonomic")
 
 """ STEP #3: Run HUMAnN2 on the filtered fastq files (providing the MetaPhlAn2 taxonomic profiles) """
 
@@ -65,7 +68,7 @@ pathcoverage = workflow.name_output_files(name=kneaddata_output_files, subfolder
 # create a task to run humann2 on each of the kneaddata output files
 workflow.add_task_group(
     "humann2 --input [depends[0]] --output [humann2_output_folder] --taxonomic-profile [depends[1]] --threads [threads]",
-    depends=zip(kneaddata_output_files,metaphlan2_output_files),
+    depends=zip(kneaddata_output_files,metaphlan2_output_files_profile),
     targets=zip(genefamiles, pathabundance, pathcoverage),
     humann2_output_folder=os.path.dirname(genefamiles[0]),
     threads=args.threads)
