@@ -33,3 +33,9 @@ For specific options for a workflow, run:
 ``$ biobakery_workflows whole_metagenome_shotgun --help``
 
 
+### Demo ###
+
+``$ biobakery_workflows whole_metagenome_shotgun --input examples/whole_metagenome_shotgun/ --output workflow_output --kneaddata-db examples/whole_metagenome_shotgun/``
+
+This command will run the whole metagenome shotgun workflow on a set of two demo fastq files along with the demo kneaddata database. The output files will be written to the folder named ``workflow_output``. Before running this workflow, the software dependencies of the workflow must be installed. These dependencies include: [KneadData](https://bitbucket.org/biobakery/kneaddata), [MetaPhlAn2](https://bitbucket.org/biobakery/metaphlan2), and [HUMAnN2](https://bitbucket.org/biobakery/humann2).
+
