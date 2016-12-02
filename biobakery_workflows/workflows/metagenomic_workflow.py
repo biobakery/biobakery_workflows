@@ -26,11 +26,14 @@ kneaddata_output_files = workflow.name_output_files(name=input_files, tag="knead
 kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0])
 
 # create a task for each set of input and output files to run kneaddata
-workflow.add_task_group(
+workflow.add_task_group_gridable(
     "kneaddata --input [depends[0]] --output [args[0]] --reference-db [args[1]] --threads [args[2]]",
     depends=input_files,
     targets=kneaddata_output_files,
-    args=[kneaddata_output_folder, args.kneaddata_db, args.threads])
+    args=[kneaddata_output_folder, args.kneaddata_db, args.threads],
+    time=6*60, # 6 hours
+    mem=12*1024, # 12 GB
+    cpus=args.threads) # time/mem based on 8 cores
 
 """ STEP #2: Run Metaphlan2 on all of the filtered fastq files (and merge tables)"""
 
@@ -42,11 +45,14 @@ metaphlan2_output_files_sam = workflow.name_output_files(name=input_files, subfo
 metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
 
 # run metaphlan2 on each of the kneaddata output files
-workflow.add_task_group(
+workflow.add_task_group_gridable(
     "metaphlan2.py [depends[0]] --input_type fastq --output_file [targets[0]] --bowtie2out [targets[1]] --samout [targets[2]] --nproc [args[0]]",
     depends=kneaddata_output_files,
     targets=zip(metaphlan2_output_files_profile, metaphlan2_output_files_bowtie2, metaphlan2_output_files_sam),
-    args=[args.threads]) 
+    args=[args.threads],
+    time=3*60, # 3 hours
+    mem=12*1024, # 12 GB
+    cpus=args.threads) # time/mem based on 8 cores
 
 # merge all of the metaphlan taxonomy tables
 metaphlan2_merged_output = workflow.name_output_files(name="taxonomic_profiles.tsv")
@@ -67,11 +73,14 @@ pathcoverage = workflow.name_output_files(name=kneaddata_output_files, subfolder
 humann2_output_folder = os.path.dirname(genefamiles[0])
 
 # create a task to run humann2 on each of the kneaddata output files
-workflow.add_task_group(
+workflow.add_task_group_gridable(
     "humann2 --input [depends[0]] --output [args[0]] --taxonomic-profile [depends[1]] --threads [args[1]]",
     depends=zip(kneaddata_output_files,metaphlan2_output_files_profile),
     targets=zip(genefamiles, pathabundance, pathcoverage),
-    args=[humann2_output_folder, args.threads])
+    args=[humann2_output_folder, args.threads],
+    time=24*60, # 24 hours
+    mem=36*1024, # 36 GB
+    cpus=args.threads)
 
 """ STEP #4: Regroup UniRef90 gene families to ecs """
 
@@ -79,10 +88,13 @@ workflow.add_task_group(
 ec_files = workflow.name_output_files(name=genefamiles, subfolder="humann2", tag="ecs")
 
 # get ec files for all of the gene families files
-workflow.add_task_group(
+workflow.add_task_group_gridable(
     "humann2_regroup_table --input [depends[0]] --output [targets[0]] --groups uniref90_level4ec",
     depends=genefamiles,
-    targets=ec_files)
+    targets=ec_files,
+    time=10*60, # 10 minutes
+    mem=5*1024, # 5 GB
+    cpus=1)
 
 """ STEP #5: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) """
 
@@ -92,10 +104,13 @@ norm_ec_files = workflow.name_output_files(name=ec_files, subfolder="ecs", tag="
 norm_pathabundance_files = workflow.name_output_files(name=pathabundance, subfolder="pathways", tag="relab")
 
 # normalize the genefamily, ec, and pathabundance files
-workflow.add_task_group(
+workflow.add_task_group_gridable(
     "humann2_renorm_table --input [depends[0]] --output [targets[0]] --units relab",
     depends=genefamiles + ec_files + pathabundance,
-    targets=norm_genefamily_files + norm_ec_files + norm_pathabundance_files)
+    targets=norm_genefamily_files + norm_ec_files + norm_pathabundance_files,
+    time=5*60, # 5 minutes
+    mem=5*1024, # 5 GB
+    cpus=1)
 
 # get a list of merged files for ec, gene families, and pathway abundance
 merged_genefamilies = workflow.name_output_files(name="genefamilies_relab.tsv")
