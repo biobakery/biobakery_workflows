@@ -47,13 +47,13 @@ def quality_control(workflow, input_files, threads, databases=None):
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows import tasks
+        from biobakery_workflows.tasks import whole_genome_shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = tasks.whole_genome_shotgun.quality_control(workflow,
+        filtered_fastq = whole_genome_shotgun.quality_control(workflow,
             ["demo.fastq","demo2.fastq"], 1)
             
         # run the workflow
@@ -112,17 +112,17 @@ def taxonomic_profile(workflow,input_files,threads):
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows import tasks
+        from biobakery_workflows.tasks import whole_genome_shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = tasks.whole_genome_shotgun.quality_control(workflow,
+        filtered_fastq = whole_genome_shotgun.quality_control(workflow,
             ["demo.fastq","demo2.fastq"], 1)
         
         # run taxonomic profile
-        taxonomic_profile, sam_outputs = tasks.whole_genome_shotgun.taxonomic_profile(
+        taxonomic_profile, sam_outputs = whole_genome_shotgun.taxonomic_profile(
             workflow, filtered_fastq, 1) 
             
         # run the workflow
@@ -185,17 +185,17 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows import tasks
+        from biobakery_workflows.tasks import whole_genome_shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = tasks.whole_genome_shotgun.quality_control(workflow,
+        filtered_fastq = whole_genome_shotgun.quality_control(workflow,
             ["demo.fastq","demo2.fastq"], 1)
         
         # run functional profiling
-        genefamilies_file, ecs_file, pathabundance_file = tasks.whole_genome_shotgun.functional_profile(
+        genefamilies_file, ecs_file, pathabundance_file = whole_genome_shotgun.functional_profile(
             workflow, filtered_fastq, 1) 
             
         # run the workflow
@@ -208,6 +208,7 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
     genefamiles = workflow.name_output_files(name=input_files, subfolder="humann2", tag="genefamilies", extension="tsv")
     pathabundance = workflow.name_output_files(name=input_files, subfolder="humann2", tag="pathabundance", extension="tsv")
     pathcoverage = workflow.name_output_files(name=input_files, subfolder="humann2", tag="pathcoverage", extension="tsv")
+    
     humann2_output_folder = os.path.dirname(genefamiles[0])
     
     # if taxonomic profiles are provided, add these to the targets and the command option
