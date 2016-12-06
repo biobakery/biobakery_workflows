@@ -79,7 +79,7 @@ def quality_control(workflow, input_files, threads, databases=None):
     
     # create a task for each set of input and output files to run kneaddata
     workflow.add_task_group_gridable(
-        "kneaddata --input [depends[0]] --output [args[0]] --reference-db [args[1]] --threads [args[2]] "+optional_database_args,
+        "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] "+optional_database_args,
         depends=input_files,
         targets=kneaddata_output_files,
         args=[kneaddata_output_folder, threads],
@@ -136,16 +136,15 @@ def taxonomic_profile(workflow,input_files,threads):
     # get a list of metaphlan2 output files, one for each input file
     metaphlan2_profile_tag="taxonomic_profile"
     metaphlan2_output_files_profile = workflow.name_output_files(name=input_files, subfolder="metaphlan2", tag=metaphlan2_profile_tag, extension="tsv")
-    metaphlan2_output_files_bowtie2 = workflow.name_output_files(name=input_files, subfolder="metaphlan2", tag="bowtie2", extension="tsv")
     metaphlan2_output_files_sam = workflow.name_output_files(name=input_files, subfolder="metaphlan2", tag="bowtie2", extension="sam")
     metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
     
     # run metaphlan2 on each of the kneaddata output files
     workflow.add_task_group_gridable(
-        "metaphlan2.py [depends[0]] --input_type fastq --output_file [targets[0]] --bowtie2out [targets[1]] --samout [targets[2]] --nproc [args[0]]",
+        "metaphlan2.py [depends[0]] --input_type fastq --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
         depends=input_files,
-        targets=zip(metaphlan2_output_files_profile, metaphlan2_output_files_bowtie2, metaphlan2_output_files_sam),
-        args=[threads],
+        targets=zip(metaphlan2_output_files_profile, metaphlan2_output_files_sam),
+        args=[threads,metaphlan2_output_folder],
         time=3*60, # 3 hours
         mem=12*1024, # 12 GB
         cpus=threads) # time/mem based on 8 cores
