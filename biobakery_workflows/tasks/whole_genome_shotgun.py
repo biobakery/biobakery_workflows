@@ -25,7 +25,117 @@ THE SOFTWARE.
 
 import os
 
-def quality_control(workflow, input_files, threads, databases=None):
+from biobakery_workflows import utilities
+
+def kneaddata(workflow, input_files, threads, paired=None, databases=None):
+    """Run kneaddata
+    
+    This set of tasks will run kneaddata on the input files provided. It will run with
+    single-end or paired-end input files.
+    
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list): A list of paths to fastq files for input to kneaddata. This
+        is a list of lists if the input files are paired.
+        threads (int): The number of threads/cores for kneaddata to use.
+        paired (bool): This indicates if the input files are paired.
+        databases (string/list): The databases to use with kneaddata (optional).
+        
+    Requires:
+        kneaddata v0.5.3+: A tool to perform quality control on metagenomic and
+            metatranscriptomic sequencing data
+        
+    Returns:
+        list: A list of the filtered fastq files created by kneaddata.
+        
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import whole_genome_shotgun
+        
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+        
+        # add quality control tasks for the fastq files
+        filtered_fastq = whole_genome_shotgun.kneaddata(workflow,
+            ["demo.fastq","demo2.fastq"], 1)
+            
+        # run the workflow
+        workflow.go()
+    """
+
+    # get the sample basenames from the input files
+    if paired:
+        sample_names=utilities.sample_names(input_files[0])
+    else:
+        sample_names=utilities.sample_names(input_files)
+        
+
+    if paired:
+        # get a list of output files, one for each pair of input files
+        # get the names of the output files that are always written
+        kneaddata_output_files = workflow.name_output_files(name=sample_names, tag="paired_1", subfolder="kneaddata", extension="fastq")
+        kneaddata_output_files = zip(kneaddata_output_files, 
+            workflow.name_output_files(name=sample_names, tag="paired_2", subfolder="kneaddata", extension="fastq"))
+        
+        # get the names for the output files that are sometimes written based on mapping
+        kneaddata_optional_output_files = workflow.name_output_files(name=sample_names, tag="unmatched_1", subfolder="kneaddata", extension="fastq")
+        kneaddata_optional_output_files = zip(kneaddata_optional_output_files,
+            workflow.name_output_files(name=sample_names, tag="unmatched_2", subfolder="kneaddata", extension="fastq"))
+        
+        # add the second input file to the kneaddata arguments
+        second_input_option=" --input [depends[1]] "
+        # get the output folder
+        kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
+    else:
+        # get a list of output files one for each single-end input file
+        kneaddata_output_files = workflow.name_output_files(name=sample_names, subfolder="kneaddata", extension="fastq")
+        # the second input option is not used since these are single-end input files
+        second_input_option=" "
+        # get the output folder
+        kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0])
+        
+    # create the database command option string to provide zero or more databases to kneaddata
+    if databases is None:
+        optional_arguments=""
+    elif isinstance(databases,list):
+        # start the string with the kneaddata option and add an option for each database
+        optional_arguments=" --reference-db "+" --reference-db ".join(databases)
+    else:
+        optional_arguments=" --reference-db " + databases
+    
+    # create a task for each set of input and output files to run kneaddata
+    for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
+        workflow.add_task_gridable(
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments,
+            depends=depends,
+            targets=targets,
+            args=[kneaddata_output_folder, threads, sample],
+            time=6*60, # 6 hours
+            mem=12*1024, # 12 GB
+            cpus=threads) # time/mem based on 8 cores
+    
+    if paired:
+        # if the inputs are paired, merge the final fastq output files into a single file
+        # two output files are always written while the second two are sometimes printed
+        # those that are optionally printed are not included in the depends
+        kneaddata_merged_files = workflow.name_output_files(name=sample_names, subfolder="kneaddata", extension="fastq")
+        for depends, args, target in zip(kneaddata_output_files, kneaddata_optional_output_files, kneaddata_merged_files):
+            workflow.add_task_gridable(
+                "cat [depends[0]] [depends[1]] [args[0]] [args[1]] > [targets[0]]",
+                depends=depends,
+                targets=target,
+                args=args,
+                time=10, # 10 minutes
+                mem=1*1024, # 1 GB
+                cpus=1)
+            
+        # set the final output files to be the list of the merged files
+        kneaddata_output_files = kneaddata_merged_files
+    
+    return kneaddata_output_files
+
+
+def quality_control(workflow, input_files, threads, databases=None, pair_identifier=None):
     """Quality control tasks for whole genome shotgun sequences
     
     This set of tasks performs quality control on whole genome shotgun
@@ -37,9 +147,11 @@ def quality_control(workflow, input_files, threads, databases=None):
         input_files (list): A list of paths to fastq files for input to kneaddata.
         threads (int): The number of threads/cores for kneaddata to use.
         databases (string/list): The databases to use with kneaddata (optional).
+        pair_identifer (string): The string in the file basename to identify
+            the first pair in the set (optional).
         
     Requires:
-        kneaddata v0.5.1+: A tool to perform quality control on metagenomic and
+        kneaddata v0.5.3+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -60,32 +172,20 @@ def quality_control(workflow, input_files, threads, databases=None):
         workflow.go()
         
     Todo:
-        * Add option for paired input fastq files.
         * Add option parameter to allow for setting options like fastqc.
     """
     
-    # get a list of output files, one for each input file, with the kneaddata tag
-    kneaddata_output_files = workflow.name_output_files(name=input_files, tag="kneaddata", subfolder="kneaddata")
-    kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0])
+    # check for paired input files
+    input_pair1, input_pair2 = utilities.paired_files(input_files, pair_identifier)
+
     
-    # create the database command option string to provide zero or more databases to kneaddata
-    if databases is None:
-        optional_database_args=""
-    elif isinstance(databases,list):
-        # start the string with the kneaddata option and add an option for each database
-        optional_database_args=" --reference-db "+" --reference-db ".join(databases)
-    else:
-        optional_database_args=" --reference-db " + databases
+    paired = False
+    if input_pair1:
+        paired = True
+        input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    workflow.add_task_group_gridable(
-        "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] "+optional_database_args,
-        depends=input_files,
-        targets=kneaddata_output_files,
-        args=[kneaddata_output_folder, threads],
-        time=6*60, # 6 hours
-        mem=12*1024, # 12 GB
-        cpus=threads) # time/mem based on 8 cores
+    kneaddata_output_files=kneaddata(workflow, input_files, threads, paired, databases)
     
     return kneaddata_output_files
 

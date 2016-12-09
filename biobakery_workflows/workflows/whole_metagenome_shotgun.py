@@ -37,8 +37,9 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 
 # add the custom arguments to the workflow
 workflow.add_argument("kneaddata-db", desc="the kneaddata database", required=True)
-workflow.add_argument("input-extension", desc="the input file extension", default="fastq")
+workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
+workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1.")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -47,7 +48,7 @@ args = workflow.parse_args()
 input_files = workflow.get_input_files(extension=args.input_extension)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files = whole_genome_shotgun.quality_control(workflow, input_files, args.threads, args.kneaddata_db)
+qc_output_files = whole_genome_shotgun.quality_control(workflow, input_files, args.threads, args.kneaddata_db, args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
 merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = whole_genome_shotgun.taxonomic_profile(workflow,qc_output_files,args.threads)
