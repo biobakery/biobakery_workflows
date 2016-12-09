@@ -71,6 +71,8 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
         
 
     if paired:
+        # reorder the input files so they are a set of paired files
+        input_files=zip(input_files[0],input_files[1])
         # get a list of output files, one for each pair of input files
         # get the names of the output files that are always written
         kneaddata_output_files = workflow.name_output_files(name=sample_names, tag="paired_1", subfolder="kneaddata", extension="fastq")
