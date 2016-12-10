@@ -114,7 +114,7 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
             args=[kneaddata_output_folder, threads, sample],
             time=6*60, # 6 hours
             mem=12*1024, # 12 GB
-            cpus=threads) # time/mem based on 8 cores
+            cores=threads) # time/mem based on 8 cores
     
     if paired:
         # if the inputs are paired, merge the final fastq output files into a single file
@@ -129,7 +129,7 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
                 args=args,
                 time=10, # 10 minutes
                 mem=1*1024, # 1 GB
-                cpus=1)
+                cores=1)
             
         # set the final output files to be the list of the merged files
         kneaddata_output_files = kneaddata_merged_files
@@ -249,7 +249,7 @@ def taxonomic_profile(workflow,input_files,threads):
         args=[threads,metaphlan2_output_folder],
         time=3*60, # 3 hours
         mem=12*1024, # 12 GB
-        cpus=threads) # time/mem based on 8 cores
+        cores=threads) # time/mem based on 8 cores
     
     # merge all of the metaphlan taxonomy tables
     metaphlan2_merged_output = workflow.name_output_files(name="taxonomic_profiles.tsv")
@@ -329,7 +329,7 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         args=[humann2_output_folder, threads],
         time=24*60, # 24 hours
         mem=36*1024, # 36 GB
-        cpus=threads)
+        cores=threads)
     
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
@@ -343,7 +343,7 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         targets=ec_files,
         time=10*60, # 10 minutes
         mem=5*1024, # 5 GB
-        cpus=1)
+        cores=1)
     
     ### STEP #3: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
@@ -359,7 +359,7 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         targets=norm_genefamily_files + norm_ec_files + norm_pathabundance_files,
         time=5*60, # 5 minutes
         mem=5*1024, # 5 GB
-        cpus=1)
+        cores=1)
     
     # get a list of merged files for ec, gene families, and pathway abundance
     merged_genefamilies = workflow.name_output_files(name="genefamilies_relab.tsv")
