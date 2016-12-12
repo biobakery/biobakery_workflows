@@ -1,6 +1,6 @@
 """
-bioBakery Workflows: tasks.whole_genome_shotgun module
-A collection of tasks for wgs workflows
+bioBakery Workflows: tasks.shotgun module
+A collection of tasks for workflows with shotgun sequences
 
 Copyright (c) 2016 Harvard School of Public Health
 
@@ -50,13 +50,13 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows.tasks import whole_genome_shotgun
+        from biobakery_workflows.tasks import shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = whole_genome_shotgun.kneaddata(workflow,
+        filtered_fastq = shotgun.kneaddata(workflow,
             ["demo.fastq","demo2.fastq"], 1)
             
         # run the workflow
@@ -161,13 +161,13 @@ def quality_control(workflow, input_files, threads, databases=None, pair_identif
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows.tasks import whole_genome_shotgun
+        from biobakery_workflows.tasks import shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = whole_genome_shotgun.quality_control(workflow,
+        filtered_fastq = shotgun.quality_control(workflow,
             ["demo.fastq","demo2.fastq"], 1)
             
         # run the workflow
@@ -214,17 +214,17 @@ def taxonomic_profile(workflow,input_files,threads):
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows.tasks import whole_genome_shotgun
+        from biobakery_workflows.tasks import shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = whole_genome_shotgun.quality_control(workflow,
+        filtered_fastq = shotgun.quality_control(workflow,
             ["demo.fastq","demo2.fastq"], 1)
         
         # run taxonomic profile
-        taxonomic_profile, sam_outputs = whole_genome_shotgun.taxonomic_profile(
+        taxonomic_profile, sam_outputs = shotgun.taxonomic_profile(
             workflow, filtered_fastq, 1) 
             
         # run the workflow
@@ -287,17 +287,17 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         
     Example:
         from anadama2 import Workflow
-        from biobakery_workflows.tasks import whole_genome_shotgun
+        from biobakery_workflows.tasks import shotgun
         
         # create an anadama2 workflow instance
         workflow=Workflow()
         
         # add quality control tasks for the fastq files
-        filtered_fastq = whole_genome_shotgun.quality_control(workflow,
+        filtered_fastq = shotgun.quality_control(workflow,
             ["demo.fastq","demo2.fastq"], 1)
         
         # run functional profiling
-        genefamilies_file, ecs_file, pathabundance_file = whole_genome_shotgun.functional_profile(
+        genefamilies_file, ecs_file, pathabundance_file = shotgun.functional_profile(
             workflow, filtered_fastq, 1) 
             
         # run the workflow
