@@ -30,8 +30,8 @@ from anadama2 import Workflow
 # import the library of biobakery_workflow tasks for shotgun sequences
 from biobakery_workflows.tasks import shotgun
 
-# import the utilities functions from biobakery_workflows
-from biobakery_workflows import utilities
+# import the utilities functions and config settings from biobakery_workflows
+from biobakery_workflows import utilities, config
 
 # create a workflow instance, providing the version number and description
 # the version number will appear when running this script with the "--version" option
@@ -39,7 +39,6 @@ from biobakery_workflows import utilities
 workflow = Workflow(version="0.1", description="A workflow for whole metagenome shotgun sequences")
 
 # add the custom arguments to the workflow
-workflow.add_argument("kneaddata-db", desc="the kneaddata database", required=True)
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1.")
@@ -52,7 +51,7 @@ args = workflow.parse_args()
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.kneaddata_db, args.pair_identifier)
+qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, config.kneaddata_db_human_genome, args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
 merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)

@@ -32,8 +32,8 @@ from anadama2 import Workflow
 # import the library of biobakery_workflow tasks for shotgun sequences
 from biobakery_workflows.tasks import shotgun
 
-# import the utilities functions from biobakery_workflows
-from biobakery_workflows import utilities
+# import the utilities functions and config settings from biobakery_workflows
+from biobakery_workflows import utilities, config
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with two input folder options
@@ -44,7 +44,6 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 workflow.add_argument("input-metagenome",desc="the input folder of whole metagenome shotgun sequences", required=True)
 workflow.add_argument("input-metatranscriptome",desc="the input folder of whole metatranscriptome shotgun sequences", required=True)
 workflow.add_argument("input-mapping",desc="the mapping file of metatranscriptome samples to metagenome samples")
-workflow.add_argument("kneaddata-db", desc="the kneaddata database", required=True)
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1.")
@@ -59,8 +58,8 @@ input_files_metatranscriptome = utilities.find_files(args.input_metatranscriptom
 ### STEP #1: Run quality control on all input files ###
 wms_output_folder = os.path.join(args.output,"whole_metagenome_shotgun")
 wts_output_folder = os.path.join(args.output,"whole_metatranscriptome_shotgun")
-wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, input_files_metagenome, wms_output_folder, args.threads, args.kneaddata_db, args.pair_identifier)
-wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, input_files_metatranscriptome, wts_output_folder, args.threads, args.kneaddata_db, args.pair_identifier)
+wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, input_files_metagenome, wms_output_folder, args.threads, config.kneaddata_db_human_genome, args.pair_identifier)
+wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, input_files_metatranscriptome, wts_output_folder, args.threads, [config.kneaddata_db_human_genome, config.kneaddata_db_human_metatranscriptome], args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
 wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads)
