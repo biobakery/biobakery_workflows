@@ -90,3 +90,110 @@ def sample_names(files):
         samples=samples[0]
     
     return samples
+
+def find_files(folder, extension=None, exit_if_not_found=None):
+    """ Return the files in the given folder with the extension if provided
+    
+    Args:
+        folder (string): A path to a folder
+        extension (string): The file extension to search for (optional)
+        exit_if_not_found (bool): Indicator to check if files exist (optional) 
+        
+    Requires:
+        None
+        
+    Returns:
+        list: A list of files in the folder
+
+    Example:
+        files = find_files("examples","fastq")
+    """
+    
+    # get all of the files in the folder
+    files=[os.path.join(folder,file) for file in os.listdir(folder)]
+    files=list(filter(lambda file: os.path.isfile(file),files))
+    
+    # filter to only files with extension
+    if extension:
+        files=list(filter(lambda file: file.endswith(extension), files))
+    
+    if exit_if_not_found:
+        if not files:
+            message="ERROR: No files were found in the folder " + folder
+            if extension:
+                message+=" with extension "+extension
+            sys.exit(message+" .\n")
+            
+    return files
+
+def name_files(names, folder, subfolder=None, tag=None, extension=None, create_folder=None):
+    """ Return a list of file names based on the names and folders provided
+    
+    Args:
+        names (list or string): A list of basenames or files.
+        folder (string): The path to the folder.
+        subfolder (string): The subfolder to use with the files (optional).
+        tag (string): The tag to add to the file basenames (optional).
+        extension (string): The extension to use for the files (optional).
+        create_folder (bool): Create the folder and subfolder if they do not exist (optional).
+
+    Requires:
+        None
+        
+    Returns:
+        list: A list of file names.
+        
+    Example:
+        files = name_files(["file1","file2"], "output")
+    """
+    
+    # if names is a list, convert to string
+    if isinstance(names, basestring):
+        names=[names]
+    
+    # get the basenames from the files
+    names=[os.path.basename(name) for name in names]
+    
+    # get the name of the full folder plus subfolder if provided
+    if subfolder:
+        folder=os.path.join(folder,subfolder)
+
+    # add the extension if provided, and replace existing
+    if extension:
+        names=[os.path.splitext(name)[0]+"."+extension for name in names]
+
+    # add the tag to the names, if provided
+    if tag:
+        names=[os.path.splitext(name)[0]+"_"+tag+os.path.splitext(name)[1] for name in names]
+        
+    files=[os.path.join(folder,name) for name in names]
+    
+    if create_folder:
+        create_folders(os.path.dirname(files[0]))
+        
+    return files
+
+def create_folders(folder):
+    """ Create folder if it does not exist
+    
+    Args:
+        folder (string): The full path to the folder.
+        
+    Requires:
+        None
+        
+    Returns:
+        None
+        
+    Example:
+        create_folders("new_folder")
+    """
+    
+    try:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+    except EnvironmentError:
+        print("Warning: Unable to create folder: "+ folder)
+    
+    
+    
