@@ -194,6 +194,71 @@ def create_folders(folder):
             os.makedirs(folder)
     except EnvironmentError:
         print("Warning: Unable to create folder: "+ folder)
+        
+def match_files(files1,files2,mapping):
+    """ Match files from two sets using the mapping provided
     
+    Args:
+        files1 (list): A list of files for set1
+        files2 (list): A list of files for set2
+        mapping (string): The file with the mapping information. This file
+            should be tab delimited. It can have headers starting with "#". 
+            It should have the basenames for the files for set1 and set2 with
+            each line as "fileA\tfileB" with fileA in set files1 and fileB in
+            set files2.
+            
+    Requires:
+        None
     
+    Returns:
+        (list): An ordered list of the first set of files
+        (list): An ordered list of the second set of files
+        The two lists will be the same length with pairs having the same index
+            in each list.
+        
+    Example:
+        match_files(["wts_1.fastq","wts_2.fastq"],["wms_1.tsv","wms_2.tsv"],"mapping.tsv")
+        
+        mapping.tsv contains:
+        # wts   wms
+        wts_1   wms_1
+        wts_2   wms_2
+
+    """
     
+    # read in the mapping file
+    set_mappings={}
+    try:
+        file_handle=open(mapping,"r")
+        lines=file_handle.readlines()
+        file_handle.close()                
+    except EnvironmentError:
+        sys.exit("ERROR: Unable to read mapping file: " + mapping)
+    
+    for line in lines:
+        if not line.startswith("#"):
+            data=line.rstrip().split("\t")
+            if len(data) > 1:
+                item1=data[0]
+                item2=data[1]
+                # check for duplicate mappings
+                if item1 in set_mappings:
+                    print("Warning: Duplicate mapping in file: " + item1)
+                set_mappings[item1]=item2
+    
+    pair1=[]
+    pair2=[]
+    for item1,item2 in set_mappings.items():
+        file1=list(filter(lambda file: os.path.basename(file).startswith(item1),files1))
+        file2=list(filter(lambda file: os.path.basename(file).startswith(item2), files2))
+        if len(file1) == 1 and len(file2) == 1:
+            # check for the pair
+            pair1.append(file1[0])
+            pair2.append(file2[0])
+        else:
+            print("Warning: Duplicate files found for mapping keys: " + item1 + " " + item2)
+
+    if len(pair1) != len(files1):
+        print("Warning: Unable to find matches for all of the files in the set.")
+    
+    return pair1, pair2
