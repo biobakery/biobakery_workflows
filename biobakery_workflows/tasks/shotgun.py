@@ -43,7 +43,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         databases (string/list): The databases to use with kneaddata (optional).
         
     Requires:
-        kneaddata v0.5.3+: A tool to perform quality control on metagenomic and
+        kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -70,33 +70,24 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
     else:
         sample_names=utilities.sample_names(input_files)
         
+    # get the kneaddata final output files
+    kneaddata_output_fastq = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="fastq", create_folder=True)
+    kneaddata_output_logs = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="log")
+    kneaddata_output_files = zip(kneaddata_output_fastq, kneaddata_output_logs)
 
+    # get the output folder
+    kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
+        
     if paired:
         # reorder the input files so they are a set of paired files
         input_files=zip(input_files[0],input_files[1])
-        # get a list of output files, one for each pair of input files
-        # get the names of the output files that are always written
-        paired1 = utilities.name_files(sample_names, output_folder, tag="paired_1", subfolder="kneaddata", extension="fastq", create_folder=True)
-        paired2 = utilities.name_files(sample_names, output_folder, tag="paired_2", subfolder="kneaddata", extension="fastq")
-        kneaddata_output_files = zip(paired1, paired2)
-        
-        # get the names for the output files that are sometimes written based on mapping
-        unmatched1 = utilities.name_files(sample_names, output_folder, tag="unmatched_1", subfolder="kneaddata", extension="fastq")
-        unmatched2 = utilities.name_files(sample_names, output_folder, tag="unmatched_2", subfolder="kneaddata", extension="fastq")
-        kneaddata_optional_output_files = zip(unmatched1, unmatched2)
-        
         # add the second input file to the kneaddata arguments
-        second_input_option=" --input [depends[1]] "
-        # get the output folder
-        kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
+        # also add the option to cat the final output files into a single file
+        second_input_option=" --input [depends[1]] --cat-final-output"
     else:
-        # get a list of output files one for each single-end input file
-        kneaddata_output_files = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="fastq", create_folder=True)
         # the second input option is not used since these are single-end input files
         second_input_option=" "
-        # get the output folder
-        kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0])
-        
+
     # create the database command option string to provide zero or more databases to kneaddata
     if databases is None:
         optional_arguments=""
@@ -117,25 +108,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
             mem=12*1024, # 12 GB
             cores=threads) # time/mem based on 8 cores
     
-    if paired:
-        # if the inputs are paired, merge the final fastq output files into a single file
-        # two output files are always written while the second two are sometimes printed
-        # those that are optionally printed are not included in the depends
-        kneaddata_merged_files = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="fastq")
-        for depends, args, target in zip(kneaddata_output_files, kneaddata_optional_output_files, kneaddata_merged_files):
-            workflow.add_task_gridable(
-                "cat [depends[0]] [depends[1]] [args[0]] [args[1]] > [targets[0]]",
-                depends=depends,
-                targets=target,
-                args=args,
-                time=10, # 10 minutes
-                mem=1*1024, # 1 GB
-                cores=1)
-            
-        # set the final output files to be the list of the merged files
-        kneaddata_output_files = kneaddata_merged_files
-    
-    return kneaddata_output_files
+    return kneaddata_output_fastq, kneaddata_output_logs
 
 
 def quality_control(workflow, input_files, output_folder, threads, databases=None, pair_identifier=None):
@@ -155,7 +128,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
             the first pair in the set (optional).
         
     Requires:
-        kneaddata v0.5.3+: A tool to perform quality control on metagenomic and
+        kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -189,9 +162,9 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    kneaddata_output_files=kneaddata(workflow, input_files, output_folder, threads, paired, databases)
+    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases)
     
-    return kneaddata_output_files
+    return kneaddata_output_fastq
 
 
 def taxonomic_profile(workflow,input_files,output_folder,threads):
