@@ -52,7 +52,7 @@ args = workflow.parse_args()
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.kneaddata_db, args.pair_identifier)
+qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.kneaddata_db, args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
 merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)

@@ -110,6 +110,54 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
     
     return kneaddata_output_fastq, kneaddata_output_logs
 
+def kneaddata_read_count_table(workflow, input_files, output_folder):
+    """Run kneaddata_read_count_table
+    
+    This task will run kneaddata_read_count_table on the input files provided.
+    
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list): A list of paths to log files for input to kneaddata. 
+            All input files are expected to be in the same folder and all should
+            have the log extension. 
+        output_folder (string): The path of the output folder.
+        
+    Requires:
+        kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
+            metatranscriptomic sequencing data
+        
+    Returns:
+        string: The path to the read count table written.
+        
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import shotgun
+        
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+        
+        # add a task to run kneaddata_read_count_table
+        read_count_file = shotgun.kneaddata_read_count_table(workflow,
+            ["demo.log","demo2.log"])
+            
+        # run the workflow
+        workflow.go()
+    """
+    
+    # get the folder of the log files
+    input_folder=os.path.dirname(input_files[0])
+    
+    # get the name for the output file
+    kneaddata_read_count_file = utilities.name_files("kneaddata_read_count_table.tsv",output_folder)
+    
+    # add the task (which is not gridable as this task should take under 5 minutes)
+    workflow.add_task("kneaddata_read_count_table --input [args[0]] --output [targets[0]]",
+        depends=input_files,
+        targets=kneaddata_read_count_file,
+        args=[input_folder])
+    
+    return kneaddata_read_count_file
+
 
 def quality_control(workflow, input_files, output_folder, threads, databases=None, pair_identifier=None):
     """Quality control tasks for whole genome shotgun sequences
@@ -164,7 +212,10 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
     # create a task for each set of input and output files to run kneaddata
     kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases)
     
-    return kneaddata_output_fastq
+    # create the read count table
+    kneaddata_read_count_file=kneaddata_read_count_table(workflow, kneaddata_output_logs, output_folder)
+    
+    return kneaddata_output_fastq, kneaddata_read_count_file
 
 
 def taxonomic_profile(workflow,input_files,output_folder,threads):
