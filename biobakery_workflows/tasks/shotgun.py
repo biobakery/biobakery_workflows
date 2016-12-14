@@ -258,7 +258,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         cores=threads) # time/mem based on 8 cores
     
     # merge all of the metaphlan taxonomy tables
-    metaphlan2_merged_output = workflow.name_output_files(name="taxonomic_profiles.tsv")
+    metaphlan2_merged_output = utilities.name_files("taxonomic_profiles.tsv", output_folder)
     
     # run the humann2 join script to merge all of the metaphlan2 profiles
     workflow.add_task(
