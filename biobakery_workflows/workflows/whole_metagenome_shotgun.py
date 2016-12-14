@@ -30,6 +30,9 @@ from anadama2 import Workflow
 # import the library of biobakery_workflow tasks for shotgun sequences
 from biobakery_workflows.tasks import shotgun
 
+# import the utilities functions from biobakery_workflows
+from biobakery_workflows import utilities
+
 # create a workflow instance, providing the version number and description
 # the version number will appear when running this script with the "--version" option
 # the description will appear when running this script with the "--help" option
@@ -45,16 +48,17 @@ workflow.add_argument("pair-identifier", desc="the string to identify the first 
 args = workflow.parse_args()
 
 # get all input files with the input extension provided on the command line
-input_files = workflow.get_input_files(extension=args.input_extension)
+# return an error if no files are found
+input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files = shotgun.quality_control(workflow, input_files, args.threads, args.kneaddata_db, args.pair_identifier)
+qc_output_files = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.kneaddata_db, args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
-merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.threads)
+merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
-merged_genefamilies, merged_ecs, merged_pathabundance = shotgun.functional_profile(workflow,qc_output_files,args.threads,taxonomy_tsv_files)
+merged_genefamilies, merged_ecs, merged_pathabundance = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files)
 
 # start the workflow
 workflow.go()

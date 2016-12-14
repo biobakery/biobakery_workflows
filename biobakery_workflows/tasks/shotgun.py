@@ -27,7 +27,7 @@ import os
 
 from biobakery_workflows import utilities
 
-def kneaddata(workflow, input_files, threads, paired=None, databases=None):
+def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None):
     """Run kneaddata
     
     This set of tasks will run kneaddata on the input files provided. It will run with
@@ -37,6 +37,7 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files for input to kneaddata. This
         is a list of lists if the input files are paired.
+        output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for kneaddata to use.
         paired (bool): This indicates if the input files are paired.
         databases (string/list): The databases to use with kneaddata (optional).
@@ -75,14 +76,14 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
         input_files=zip(input_files[0],input_files[1])
         # get a list of output files, one for each pair of input files
         # get the names of the output files that are always written
-        kneaddata_output_files = workflow.name_output_files(name=sample_names, tag="paired_1", subfolder="kneaddata", extension="fastq")
-        kneaddata_output_files = zip(kneaddata_output_files, 
-            workflow.name_output_files(name=sample_names, tag="paired_2", subfolder="kneaddata", extension="fastq"))
+        paired1 = utilities.name_files(sample_names, output_folder, tag="paired_1", subfolder="kneaddata", extension="fastq", create_folder=True)
+        paired2 = utilities.name_files(sample_names, output_folder, tag="paired_2", subfolder="kneaddata", extension="fastq")
+        kneaddata_output_files = zip(paired1, paired2)
         
         # get the names for the output files that are sometimes written based on mapping
-        kneaddata_optional_output_files = workflow.name_output_files(name=sample_names, tag="unmatched_1", subfolder="kneaddata", extension="fastq")
-        kneaddata_optional_output_files = zip(kneaddata_optional_output_files,
-            workflow.name_output_files(name=sample_names, tag="unmatched_2", subfolder="kneaddata", extension="fastq"))
+        unmatched1 = utilities.name_files(sample_names, output_folder, tag="unmatched_1", subfolder="kneaddata", extension="fastq")
+        unmatched2 = utilities.name_files(sample_names, output_folder, tag="unmatched_2", subfolder="kneaddata", extension="fastq")
+        kneaddata_optional_output_files = zip(unmatched1, unmatched2)
         
         # add the second input file to the kneaddata arguments
         second_input_option=" --input [depends[1]] "
@@ -90,7 +91,7 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
         kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
     else:
         # get a list of output files one for each single-end input file
-        kneaddata_output_files = workflow.name_output_files(name=sample_names, subfolder="kneaddata", extension="fastq")
+        kneaddata_output_files = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="fastq", create_folder=True)
         # the second input option is not used since these are single-end input files
         second_input_option=" "
         # get the output folder
@@ -120,7 +121,7 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
         # if the inputs are paired, merge the final fastq output files into a single file
         # two output files are always written while the second two are sometimes printed
         # those that are optionally printed are not included in the depends
-        kneaddata_merged_files = workflow.name_output_files(name=sample_names, subfolder="kneaddata", extension="fastq")
+        kneaddata_merged_files = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="fastq")
         for depends, args, target in zip(kneaddata_output_files, kneaddata_optional_output_files, kneaddata_merged_files):
             workflow.add_task_gridable(
                 "cat [depends[0]] [depends[1]] [args[0]] [args[1]] > [targets[0]]",
@@ -137,7 +138,7 @@ def kneaddata(workflow, input_files, threads, paired=None, databases=None):
     return kneaddata_output_files
 
 
-def quality_control(workflow, input_files, threads, databases=None, pair_identifier=None):
+def quality_control(workflow, input_files, output_folder, threads, databases=None, pair_identifier=None):
     """Quality control tasks for whole genome shotgun sequences
     
     This set of tasks performs quality control on whole genome shotgun
@@ -148,6 +149,7 @@ def quality_control(workflow, input_files, threads, databases=None, pair_identif
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files for input to kneaddata.
         threads (int): The number of threads/cores for kneaddata to use.
+        output_folder (string): The path of the output folder.
         databases (string/list): The databases to use with kneaddata (optional).
         pair_identifer (string): The string in the file basename to identify
             the first pair in the set (optional).
@@ -187,12 +189,12 @@ def quality_control(workflow, input_files, threads, databases=None, pair_identif
         input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    kneaddata_output_files=kneaddata(workflow, input_files, threads, paired, databases)
+    kneaddata_output_files=kneaddata(workflow, input_files, output_folder, threads, paired, databases)
     
     return kneaddata_output_files
 
 
-def taxonomic_profile(workflow,input_files,threads):
+def taxonomic_profile(workflow,input_files,output_folder,threads):
     """Taxonomic profile for whole genome shotgun sequences
     
     This set of tasks performs taxonomic profiling on whole genome shotgun
@@ -202,6 +204,7 @@ def taxonomic_profile(workflow,input_files,threads):
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files already run through quality control.
+        output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for metaphlan2 to use.
         
     Requires:
@@ -235,10 +238,13 @@ def taxonomic_profile(workflow,input_files,threads):
         * Add option to provide paired input files which are merged then run.
     """
     
+    # get the sample names from the input files
+    sample_names=utilities.sample_names(input_files)
+    
     # get a list of metaphlan2 output files, one for each input file
     metaphlan2_profile_tag="taxonomic_profile"
-    metaphlan2_output_files_profile = workflow.name_output_files(name=input_files, subfolder="metaphlan2", tag=metaphlan2_profile_tag, extension="tsv")
-    metaphlan2_output_files_sam = workflow.name_output_files(name=input_files, subfolder="metaphlan2", tag="bowtie2", extension="sam")
+    metaphlan2_output_files_profile = utilities.name_files(sample_names, output_folder, subfolder="metaphlan2", tag=metaphlan2_profile_tag, extension="tsv", create_folder=True)
+    metaphlan2_output_files_sam = utilities.name_files(sample_names, output_folder, subfolder="metaphlan2", tag="bowtie2", extension="sam")
     metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
     
     # run metaphlan2 on each of the kneaddata output files
@@ -263,7 +269,7 @@ def taxonomic_profile(workflow,input_files,threads):
     
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
-def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
+def functional_profile(workflow,input_files,output_folder,threads,taxonomic_profiles=None):
     """Functional profile for whole genome shotgun sequences
     
     This set of tasks performs functional profiling on whole genome shotgun
@@ -274,6 +280,7 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq (or fasta) files already run through quality control.
+        output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for kneaddata to use.
         taxonomic_profiles (list): A set of taxonomic profiles, one per sample (optional).
         
@@ -304,12 +311,15 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         workflow.go()
     """
     
+    # get the sample names from the input files
+    sample_names=utilities.sample_names(input_files)
+    
     ### Step 1: Run humann2 on all input files ###
 
     # get a list of output files, one for each input file, with the humann2 output file names
-    genefamiles = workflow.name_output_files(name=input_files, subfolder="humann2", tag="genefamilies", extension="tsv")
-    pathabundance = workflow.name_output_files(name=input_files, subfolder="humann2", tag="pathabundance", extension="tsv")
-    pathcoverage = workflow.name_output_files(name=input_files, subfolder="humann2", tag="pathcoverage", extension="tsv")
+    genefamiles = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="genefamilies", extension="tsv", create_folder=True)
+    pathabundance = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathabundance", extension="tsv")
+    pathcoverage = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathcoverage", extension="tsv")
     
     humann2_output_folder = os.path.dirname(genefamiles[0])
     
@@ -334,7 +344,7 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
     # get a list of all output ec files
-    ec_files = workflow.name_output_files(name=genefamiles, subfolder="humann2", tag="ecs")
+    ec_files = utilities.name_files(genefamiles, output_folder, subfolder="humann2", tag="ecs")
     
     # get ec files for all of the gene families files
     workflow.add_task_group_gridable(
@@ -348,9 +358,9 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
     ### STEP #3: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
     # get a list of files for normalized ec, gene families, and pathway abundance
-    norm_genefamily_files = workflow.name_output_files(name=genefamiles, subfolder="genes", tag="relab")
-    norm_ec_files = workflow.name_output_files(name=ec_files, subfolder="ecs", tag="relab")
-    norm_pathabundance_files = workflow.name_output_files(name=pathabundance, subfolder="pathways", tag="relab")
+    norm_genefamily_files = utilities.name_files(genefamiles, output_folder, subfolder="genes", tag="relab", create_folder=True)
+    norm_ec_files = utilities.name_files(ec_files, output_folder,  subfolder="ecs", tag="relab", create_folder=True)
+    norm_pathabundance_files = utilities.name_files(pathabundance, output_folder,  subfolder="pathways", tag="relab", create_folder=True)
     
     # normalize the genefamily, ec, and pathabundance files
     workflow.add_task_group_gridable(
@@ -362,9 +372,9 @@ def functional_profile(workflow,input_files,threads,taxonomic_profiles=None):
         cores=1)
     
     # get a list of merged files for ec, gene families, and pathway abundance
-    merged_genefamilies = workflow.name_output_files(name="genefamilies_relab.tsv")
-    merged_ecs = workflow.name_output_files(name="ecs_relab.tsv")
-    merged_pathabundance = workflow.name_output_files(name="pathabundance_relab.tsv")
+    merged_genefamilies = utilities.name_files("genefamilies_relab.tsv", output_folder)
+    merged_ecs = utilities.name_files("ecs_relab.tsv", output_folder)
+    merged_pathabundance = utilities.name_files("pathabundance_relab.tsv", output_folder)
     
     # merge the ec, gene families, and pathway abundance files
     all_depends=[norm_genefamily_files, norm_ec_files, norm_pathabundance_files]
