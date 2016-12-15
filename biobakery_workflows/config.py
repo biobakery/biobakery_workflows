@@ -23,5 +23,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-kneaddata_db_human_genome = "/n/huttenhower_lab/data/kneaddata_databases/"
-kneaddata_db_human_metatranscriptome = "/n/huttenhower_lab/data/kneaddata_databases/transcriptome/"
+import os
+
+def get_environ_variable(environ_variable):
+    """ Try to get the environment variable """
+    
+    try:
+        variable = os.environ[environ_variable]
+    except KeyError:
+        sys.exit("ERROR: Please set the environment variable " + environ_variable)
+    
+    return variable
+
+kneaddata_db_human_genome = get_environ_variable("KNEADDATA_DB_HUMAN_GENOME")
+kneaddata_db_human_metatranscriptome = get_environ_variable("KNEADDATA_DB_HUMAN_TRANSCRIPTOME")
+
+
