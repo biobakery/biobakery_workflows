@@ -24,6 +24,7 @@ THE SOFTWARE.
 """
 
 import os
+import sys
 
 def paired_files(files, pair_identifier=None):
     """ Find sets of paired-end reads
