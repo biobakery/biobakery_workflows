@@ -27,7 +27,7 @@ import os
 
 from biobakery_workflows import utilities
 
-def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None):
+def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None):
     """Run kneaddata
     
     This set of tasks will run kneaddata on the input files provided. It will run with
@@ -41,6 +41,8 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         threads (int): The number of threads/cores for kneaddata to use.
         paired (bool): This indicates if the input files are paired.
         databases (string/list): The databases to use with kneaddata (optional).
+        pair_identifier (string): The string in the file basename to identify
+            the first pair in the set (optional).
         
     Requires:
         kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
@@ -66,7 +68,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
 
     # get the sample basenames from the input files
     if paired:
-        sample_names=utilities.sample_names(input_files[0])
+        sample_names=utilities.sample_names(input_files[0],pair_identifier)
     else:
         sample_names=utilities.sample_names(input_files)
         
@@ -172,7 +174,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         threads (int): The number of threads/cores for kneaddata to use.
         output_folder (string): The path of the output folder.
         databases (string/list): The databases to use with kneaddata (optional).
-        pair_identifer (string): The string in the file basename to identify
+        pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         
     Requires:
@@ -210,7 +212,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases)
+    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases, pair_identifier)
     
     # create the read count table
     kneaddata_read_count_file=kneaddata_read_count_table(workflow, kneaddata_output_logs, output_folder)

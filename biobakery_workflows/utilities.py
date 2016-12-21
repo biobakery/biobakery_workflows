@@ -33,7 +33,7 @@ def paired_files(files, pair_identifier=None):
     
     Args:
         files (list): A list of files (with or without the full paths)
-        pair_identifer (string): The string in the file basename to identify
+        pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
             
     Requires:
@@ -50,23 +50,27 @@ def paired_files(files, pair_identifier=None):
     if pair_identifier is None:
         pair_identifier=".R1."
     
+    pair_identifier2=pair_identifier.replace("1","2",1)
+
     input_pair1 = list(filter(lambda file: pair_identifier in os.path.basename(file), files))
-    input_pair2 = list(filter(lambda file: pair_identifier.replace("1","2") in os.path.basename(file), files))
+    input_pair2 = list(filter(lambda file: pair_identifier2 in os.path.basename(file), files))
     
     # only return matching pairs of files in the same order
     paired_files = [[],[]]
     for file1, file2 in zip(sorted(input_pair1), sorted(input_pair2)):
-        if sample_names(file1) == sample_names(file2):
+        if sample_names(file1,pair_identifier) == sample_names(file2,pair_identifier2):
             paired_files[0].append(file1)
             paired_files[1].append(file2)
     
     return [input_pair1, input_pair2]
 
-def sample_names(files):
+def sample_names(files,pair_identifier=None):
     """ Return the basenames of the files, without any extensions, as the sample names
     
     Args:
         files (list): A list of files (with or without the full paths)
+        pair_identifier (string): The string in the file basename to identify
+            the first pair in the set (optional).
         
     Requires:
         None
@@ -86,7 +90,11 @@ def sample_names(files):
         convert=True
         
     samples=[os.path.basename(file).split(".")[0] for file in files]
-        
+    
+    # remove the pair_idenifier from the sample name, if provided
+    if pair_identifier:
+        samples=[sample.replace(pair_identifier,"") for sample in samples]
+    
     if convert:
         samples=samples[0]
     
