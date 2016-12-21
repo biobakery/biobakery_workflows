@@ -56,13 +56,13 @@ def paired_files(files, pair_identifier=None):
     input_pair2 = list(filter(lambda file: pair_identifier2 in os.path.basename(file), files))
     
     # only return matching pairs of files in the same order
-    paired_files = [[],[]]
+    paired_file_set = [[],[]]
     for file1, file2 in zip(sorted(input_pair1), sorted(input_pair2)):
         if sample_names(file1,pair_identifier) == sample_names(file2,pair_identifier2):
-            paired_files[0].append(file1)
-            paired_files[1].append(file2)
+            paired_file_set[0].append(file1)
+            paired_file_set[1].append(file2)
     
-    return [input_pair1, input_pair2]
+    return paired_file_set
 
 def sample_names(files,pair_identifier=None):
     """ Return the basenames of the files, without any extensions, as the sample names
