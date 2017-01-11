@@ -12,3 +12,7 @@ vars = document.get_vars()
 #' % <% print(vars["title"]) %>
 #' % Project: <% print(vars["project"]) %>
 #' % Date: <%= time.strftime("%m/%d/%Y") %>
+
+#' # Introduction
+
+#' <% print(vars["introduction_text"]) %>
