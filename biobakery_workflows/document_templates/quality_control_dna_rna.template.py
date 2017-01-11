@@ -1,7 +1,7 @@
 
 #' # Quality Control
 
-#' This report contains information about the quality control processing
+#' This report section contains information about the quality control processing
 #' for all samples. These samples were
 #' run through [KneadData](http://huttenhower.sph.harvard.edu/kneaddata).
 #' Samples were first trimmed then filtered using the human genome (hg38). RNA
