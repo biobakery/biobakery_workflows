@@ -271,3 +271,120 @@ def match_files(files1,files2,mapping):
         print("Warning: Unable to find matches for all of the files in the set.")
     
     return pair1, pair2
+
+def row_average(data):
+    """ Compute the average of each row in a data set
+        
+        Args:
+            data (list of lists): Each list in data represents a row of data. 
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of averages, one for each row in the original data.
+            
+        Example:
+            row_average([[1,2,3],[4,5,6]])
+    """    
+    
+    return [sum(row)/(len(row)*1.0) for row in data]
+
+def row_variance(data):
+    """ Compute the variance of each row in a data set
+        
+        Args:
+            data (list of lists): Each list in data represents a row of data. 
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of variances, one for each row in the original data.
+            
+        Example:
+            row_variance([[1,2,3],[4,5,6]])
+    """
+      
+    data_averages=row_average(data)
+    data_variances=[]
+    for average, row in zip(data_averages,data):
+        data_variances.append(sum((i-average)**2 for i in row)/(len(row)*1.0))
+        
+    return data_variances
+
+def top_rows(row_labels, data, max_sets, function):
+    """ Get the top rows in the data based on the metric provided 
+        
+        Args:
+            row_labels (list): A list of labels for each row.
+            data (list of lists): Each list in data represents a row of data. 
+            max_sets (int): Total number of top rows to return.
+            function (string): The function to run to get the top values (average or variance)
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of variances, one for each row in the original data.
+            
+        Example:
+            row_variance([[1,2,3],[4,5,6]])
+    """
+    
+    # get the data after applying the metric function
+    if function == "variance":
+        stats_data=row_variance(data)
+    else:
+        stats_data=row_average(data)
+    
+    # sort the numbers by decreasing order
+    sorted_indexes=sorted(range(len(stats_data)),key=lambda i: stats_data[i],reverse=True)
+    
+    # reduce max sets if the number of rows is less than max sets
+    if len(row_labels) < max_sets:
+        max_sets = len(row_labels)
+    
+    top_labels=[]
+    top_data=[]
+    for i in range(max_sets):
+        top_labels.append(row_labels[sorted_indexes[i]])
+        top_data.append(data[sorted_indexes[i]])
+        
+    return top_labels, top_data
+
+def remove_stratified_pathways(pathways, data, remove_description=None):
+    """ Remove the stratified pathways from the data set.
+        Also remove the unintegrated and unmapped values. Remove the descriptions
+        from the pathway names if set.
+    
+        Args:
+            pathways (list): A list of pathway names for each row.
+            data (list of lists): Each list in data represents a row of data. 
+            remove_description (bool): If set, remove the pathway description
+                from the names returned.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of pathway names.
+            (list): A list of lists of the data.
+            
+        Example:
+            remove_stratified_pathways(["pwy1","pwy1|bug1"],[[1,2,3],[4,5,6]])
+    """
+    
+    new_pathways=[]
+    new_data=[]
+    
+    for path, row in zip(pathways, data):
+        if not "|" in path and not "UNINTEGRATED" in path and not "UNMAPPED" in path:
+            if remove_description:
+                path=path.split(":")[0]
+            new_pathways.append(path)
+            new_data.append(row)
+            
+    return new_pathways, new_data    
+
+    
