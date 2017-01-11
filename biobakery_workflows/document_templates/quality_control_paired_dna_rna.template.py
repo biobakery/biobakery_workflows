@@ -60,7 +60,7 @@ def microbial_read_proportion(paired_data, orphan_data):
     
 dna_microbial_read_proportion = microbial_read_proportion(dna_paired_data, dna_orphan_data)
 document.show_table(dna_microbial_read_proportion, dna_samples, ["hg38 / Trim","hg38 / Raw"],
-                    "DNA microbial read proportion", column_width=0.5)
+                    "DNA microbial read proportion")
 
 #' ### DNA Samples Plots of Filtered Reads
 
@@ -86,12 +86,12 @@ document.show_table(rna_paired_data, rna_samples, rna_paired_columns, "RNA Paire
 
 #+ echo=False
 document.show_table(rna_orphan_data, rna_samples, rna_orphan_columns, "RNA Orphan reads", 
-    format_data_comma=True)
+    format_data_comma=True, column_width=0.10)
 
 #+ echo=False
 rna_microbial_read_proportion = microbial_read_proportion(rna_paired_data, rna_orphan_data)
 document.show_table(rna_microbial_read_proportion, rna_samples, ["hg38 mRNA / Trim","hg38 mRNA / Raw"],
-                    "RNA microbial read proportion", column_width=0.5)
+                    "RNA microbial read proportion")
 
 #' ### RNA Samples Plots of Filtered Reads
 
