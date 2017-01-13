@@ -83,7 +83,22 @@ document.show_hclust2(samples,top_taxonomy,top_data,
 top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_sets_barplot,
     function="average") 
 
-document.plot_stacked_barchart(top_data, row_labels=top_taxonomy, 
-    column_labels=samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
+# sort the top data so it is ordered with the top sample/abundance first
+sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
+sorted_samples=[samples[i] for i in sorted_sample_indexes]
+sorted_data=[]
+for row in top_data:
+    sorted_data.append([row[i] for i in sorted_sample_indexes])
+
+# add other to the taxonomy data
+# other represents the total abundance of all species not included in the top set
+top_taxonomy.append("other")
+other_abundances=[]
+for column in numpy.transpose(sorted_data):
+    other_abundances.append(100-sum(column))
+sorted_data.append(other_abundances)
+
+document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
+    column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
     ylabel="Predicted community composition (% of total)", legend_title="Species")
 
