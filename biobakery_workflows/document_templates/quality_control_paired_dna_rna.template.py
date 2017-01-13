@@ -70,7 +70,7 @@ def microbial_read_proportion(paired_data, orphan_data, rna=None):
     
 dna_microbial_reads, dna_microbial_labels = microbial_read_proportion(dna_paired_data, dna_orphan_data)
 document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
-                    "DNA microbial read proportion")
+                    "DNA microbial read proportion", column_width=0.25)
 
 #' ### DNA Samples Plots of Filtered Reads
 
@@ -96,13 +96,13 @@ document.show_table(rna_paired_data, rna_samples, rna_paired_columns, "RNA Paire
 
 #+ echo=False
 document.show_table(rna_orphan_data, rna_samples, rna_orphan_columns, "RNA Orphan reads", 
-    format_data_comma=True, column_width=0.10)
+    format_data_comma=True)
 
 #+ echo=False
 rna_microbial_reads, rna_microbial_labels = microbial_read_proportion(rna_paired_data,
     rna_orphan_data,rna=True)
 document.show_table(rna_microbial_reads, rna_samples, rna_microbial_labels,
-                    "RNA microbial read proportion")
+                    "RNA microbial read proportion", column_width=0.3)
 
 #' ### RNA Samples Plots of Filtered Reads
 
