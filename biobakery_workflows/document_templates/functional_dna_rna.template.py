@@ -12,6 +12,10 @@ from biobakery_workflows import utilities
 #' The taxonomic profiles for the DNA samples were used for both the DNA and RNA
 #' samples in this set. The UniRef90 full database was used for the translated search.
 
+#' The pathways identified in functional profiling are from the MetaCyc database.
+#' See the [MetaCyc website](https://metacyc.org/) for detailed information
+#' on each pathway.
+
 #+ echo=False
 
 # read in the DNA samples and get the data with out the stratification by bug
