@@ -53,12 +53,11 @@ def count_filtered_columns(data, min):
 
 species_counts=count_filtered_columns(species_data, min=0)
 species_counts_after_filter=count_filtered_columns(filtered_species_data, min=0)
-species_counts_after_filter_min_ab=count_filtered_columns(filtered_species_data, min=min_abundance)
 
-all_species_counts=[[a,b,c] for a,b,c in zip(species_counts, species_counts_after_filter, species_counts_after_filter_min_ab)]
+all_species_counts=[[a,b] for a,b in zip(species_counts, species_counts_after_filter)]
 
-document.show_table(all_species_counts,samples,["Total","After filter","After filter min abun "+str(min_abundance)+"%"],
-    title="Total species per sample", column_width=0.4)
+document.show_table(all_species_counts,samples,["Total","After filter"],
+    title="Total species per sample")
 
 #' ## Ordination
 
