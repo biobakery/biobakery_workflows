@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-bioBakery Workflows: whole metagenome shotgun workflow
+bioBakery Workflows: whole metagenome and metatranscriptome shotgun workflow
 
 Copyright (c) 2016 Harvard School of Public Health
 
