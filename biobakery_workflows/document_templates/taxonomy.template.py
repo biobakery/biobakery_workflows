@@ -9,6 +9,13 @@ max_sets_barplot=15
 
 from biobakery_workflows import utilities
 
+from anadama2 import PweaveDocument
+
+document=PweaveDocument()  
+
+# get the variables for this document generation task
+vars = document.get_vars()
+
 #' # Taxonomy
 
 #' This report section contains information about the taxonomy

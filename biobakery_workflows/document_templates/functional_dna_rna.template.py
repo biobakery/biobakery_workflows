@@ -4,6 +4,13 @@ max_sets=50
 
 from biobakery_workflows import utilities
 
+from anadama2 import PweaveDocument
+
+document=PweaveDocument()  
+
+# get the variables for this document generation task
+vars = document.get_vars()
+
 #' # Functional Profiling
 
 #' This report section contains information about the functional profiling run

@@ -1,4 +1,12 @@
 
+#+ echo=False
+from anadama2 import PweaveDocument
+
+document=PweaveDocument()  
+
+# get the variables for this document generation task
+vars = document.get_vars()
+
 #' # Quality Control
 
 #' This report section contains information about the quality control processing
