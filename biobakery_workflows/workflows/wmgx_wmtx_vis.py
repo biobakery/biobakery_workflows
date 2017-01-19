@@ -42,7 +42,7 @@ workflow.add_argument("wmgx-qc-counts",desc="the kneaddata read counts table for
 workflow.add_argument("wmtx-qc-counts",desc="the kneaddata read counts table for wmtx samples",required=True)
 workflow.add_argument("taxonomic-profile",desc="the merged taxonomic profiles for the wmgx samples",required=True)
 workflow.add_argument("wmgx-pathabundance",desc="the pathway abundances for the wmgx samples",required=True)
-workflow.add_argument("project-name",desc="the name of the project",required=True)
+workflow.add_argument("project-name",desc="the name of the project")
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
 

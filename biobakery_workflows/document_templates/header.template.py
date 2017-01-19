@@ -10,7 +10,7 @@ document=PweaveDocument()
 vars = document.get_vars()
         
 #' % <% print(vars["title"]) %>
-#' % Project: <% print(vars["project"]) %>
+#' % <% if vars["project"]: print("Project: "+vars["project"])  %>
 #' % Date: <%= time.strftime("%m/%d/%Y") %>
 
 #' # Introduction
