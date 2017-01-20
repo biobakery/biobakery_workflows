@@ -436,3 +436,41 @@ def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
         species_data=filtered_data
 
     return species_taxonomy, species_data
+
+
+
+def microbial_read_proportion(paired_data, orphan_data, rna=None):
+    """ Compute microbial read proporations from the KneadData read counts.
+    
+        Args:
+            paired_data (list of lists): The paired data read counts for each sample.
+            orphan_data (list of lists): The orphan data read counts for each sample. 
+            rna (bool): If set, this data set is RNA so compute additional ratio.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list of lists): A list of ratios for each sample.
+            (list): A list of strings with labels for the ratios.
+            
+    """
+    proportion_decontaminated = []
+    for paired_row, orphan_row in zip(paired_data, orphan_data):
+        decontaminated_sum = 2.0 * paired_row[-1] + orphan_row[-1] + orphan_row[-2]
+        decon_trim = decontaminated_sum / (2.0 * paired_row[1] + orphan_row[0] + orphan_row[1])
+        decon_raw = decontaminated_sum / (2.0 * paired_row[0])
+        if rna:
+            decon_ratio = decontaminated_sum / (2.0 * paired_row[-2] + orphan_row[-3] + orphan_row[-4])
+            proportion_decontaminated.append(["{0:.5f}".format(i) for i in [decon_trim, decon_ratio, decon_raw]])
+        else:
+            proportion_decontaminated.append(["{0:.5f}".format(i) for i in [decon_trim, decon_raw]])
+
+    if rna:
+        labels=["hg38 mRNA / Trim","hg38 mRNA / hg38","hg38 mRNA / Raw"]
+    else:
+        labels=["hg38 / Trim","hg38 / Raw"]
+        
+    return proportion_decontaminated, labels
+
+

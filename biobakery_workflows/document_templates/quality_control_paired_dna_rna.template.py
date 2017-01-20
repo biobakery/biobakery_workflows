@@ -1,5 +1,9 @@
 
 #+ echo=False
+import numpy
+
+from biobakery_workflows import utilities
+
 from anadama2 import PweaveDocument
 
 document=PweaveDocument()  
@@ -56,35 +60,14 @@ document.show_table(dna_orphan_data, dna_samples, dna_orphan_columns, "DNA Orpha
     format_data_comma=True)
 
 #+ echo=False
-def microbial_read_proportion(paired_data, orphan_data, rna=None):
-    # compute the proportion of reads relative to the trim/raw reads
-    proportion_decontaminated = []
-    for paired_row, orphan_row in zip(paired_data, orphan_data):
-        decontaminated_sum = 2.0 * paired_row[-1] + orphan_row[-1] + orphan_row[-2]
-        decon_trim = decontaminated_sum / (2.0 * paired_row[1] + orphan_row[0] + orphan_row[1])
-        decon_raw = decontaminated_sum / (2.0 * paired_row[0])
-        if rna:
-            decon_ratio = decontaminated_sum / (2.0 * paired_row[-2] + orphan_row[-3] + orphan_row[-4])
-            proportion_decontaminated.append(["{0:.5f}".format(i) for i in [decon_trim, decon_ratio, decon_raw]])
-        else:
-            proportion_decontaminated.append(["{0:.5f}".format(i) for i in [decon_trim, decon_raw]])
-
-    if rna:
-        labels=["hg38 mRNA / Trim","hg38 mRNA / hg38","hg38 mRNA / Raw"]
-    else:
-        labels=["hg38 / Trim","hg38 / Raw"]
-        
-    return proportion_decontaminated, labels
-    
-dna_microbial_reads, dna_microbial_labels = microbial_read_proportion(dna_paired_data, dna_orphan_data)
+# plot the microbial reads ratios
+dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
 document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
                     "DNA microbial read proportion", column_width=0.25)
 
 #' ### DNA Samples Plots of Filtered Reads
 
 #+ echo=False
-import numpy
-
 document.plot_grouped_barchart(numpy.transpose(dna_paired_data), row_labels=dna_paired_columns, 
     column_labels=dna_samples, title="DNA Paired end reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
@@ -107,7 +90,8 @@ document.show_table(rna_orphan_data, rna_samples, rna_orphan_columns, "RNA Orpha
     format_data_comma=True)
 
 #+ echo=False
-rna_microbial_reads, rna_microbial_labels = microbial_read_proportion(rna_paired_data,
+# plot the microbial reads ratios
+rna_microbial_reads, rna_microbial_labels = utilities.microbial_read_proportion(rna_paired_data,
     rna_orphan_data,rna=True)
 document.show_table(rna_microbial_reads, rna_samples, rna_microbial_labels,
                     "RNA microbial read proportion", column_width=0.3)
