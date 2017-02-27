@@ -251,6 +251,9 @@ def match_files(files1,files2,mapping):
             if len(data) > 1:
                 item1=data[0]
                 item2=data[1]
+                if "." in item1 or "." in item2:
+                    sys.exit("ERROR: Sample names should not contain file extensions ('.fastq'),"+
+                    "pair identifiers ('.R1.'), or periods ('.') as part of the name.")
                 # check for duplicate mappings
                 if item1 in set_mappings:
                     print("Warning: Duplicate mapping in file: " + item1)
