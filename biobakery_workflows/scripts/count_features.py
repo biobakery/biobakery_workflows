@@ -49,7 +49,7 @@ def main():
     with open(args.input) as file_handle:
         # remove RPKs from sample name if included
         if args.reduce_sample_name:
-            samples=[sample.replace("_Abundance-RPKs","").replace("_genefamilies_Abundance","") for sample in file_handle.readline().rstrip().split("\t")[1:]]
+            samples=[sample.replace("_Abundance-RPKs","").replace("_genefamilies_Abundance","").replace("_Abundance","") for sample in file_handle.readline().rstrip().split("\t")[1:]]
         else:
             samples=file_handle.readline().rstrip().split("\t")[1:]
              
