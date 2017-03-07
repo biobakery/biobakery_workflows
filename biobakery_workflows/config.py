@@ -24,6 +24,7 @@ THE SOFTWARE.
 """
 
 import os
+import sys
 
 def get_environ_variable(environ_variable):
     """ Try to get the environment variable """

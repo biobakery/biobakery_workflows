@@ -150,7 +150,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     input_folder=os.path.dirname(input_files[0])
     
     # get the name for the output file
-    kneaddata_read_count_file = utilities.name_files("kneaddata_read_count_table.tsv",output_folder)
+    kneaddata_read_count_file = utilities.name_files("kneaddata_read_count_table.tsv",output_folder,subfolder="counts",create_folder=True)
     
     # add the task (which is not gridable as this task should take under 5 minutes)
     workflow.add_task("kneaddata_read_count_table --input [args[0]] --output [targets[0]]",
@@ -346,7 +346,12 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     genefamiles = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="genefamilies", extension="tsv", create_folder=True)
     pathabundance = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathabundance", extension="tsv")
     pathcoverage = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathcoverage", extension="tsv")
-    
+
+    # get the list of the log files that will be created, one for each input file, each in a temp humann2 folder
+    log_files = [os.path.join(output_folder, "humann2", sample+"_humann2_temp", sample)+".log" for sample in sample_names]
+    # get the name for the file of read and species counts created from the humann2 log outputs
+    log_counts = utilities.name_files("humann2_read_and_species_count_table.tsv",output_folder,subfolder="counts",create_folder=True)
+
     humann2_output_folder = os.path.dirname(genefamiles[0])
     
     # if taxonomic profiles are provided, add these to the targets and the command option
@@ -361,11 +366,18 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     workflow.add_task_group_gridable(
         "humann2 --input [depends[0]] --output [args[0]] --threads [args[1]]"+optional_profile_args,
         depends=depends,
-        targets=zip(genefamiles, pathabundance, pathcoverage),
+        targets=zip(genefamiles, pathabundance, pathcoverage, log_files),
         args=[humann2_output_folder, threads],
         time=24*60, # 24 hours
         mem=36*1024, # 36 GB
         cores=threads)
+
+    # create a task to get the read and species counts for each humann2 run from the log files
+    workflow.add_task(
+        "get_counts_from_humann2_logs.py --input [args[0]] --output [targets[0]]",
+        depends=log_files,
+        targets=log_counts,
+        args=humann2_output_folder)
     
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
@@ -411,5 +423,15 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
             depends=depends,
             targets=targets,
             args=[os.path.dirname(depends[0])])
+
+    # get feature counts for the ec, gene families, and pathways
+    genefamilies_counts = utilities.name_files("humann2_genefamilies_relab_counts.tsv", output_folder, subfolder="counts")
+    ecs_counts = utilities.name_files("humann2_ecs_relab_counts.tsv", output_folder, subfolder="counts")
+    pathabundance_counts = utilities.name_files("humann2_pathabundance_relab_counts.tsv", output_folder, subfolder="counts")
+    workflow.add_task_group(
+        "count_features.py --input [depends[0]] --output [targets[0]] --reduce-sample-name --ignore-un-features --ignore-stratification",
+        depends=[merged_genefamilies, merged_ecs, merged_pathabundance],
+        targets=[genefamilies_counts, ecs_counts, pathabundance_counts])
+
         
     return merged_genefamilies, merged_ecs, merged_pathabundance
