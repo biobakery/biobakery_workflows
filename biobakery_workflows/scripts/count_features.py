@@ -36,6 +36,12 @@ def parse_arguments(args):
         "--ignore-stratification",
         help="only count the main feature not the stratified instances",
         action='store_true')
+    parser.add_argument(
+        "--include",
+        help="only count features with this string included")
+    parser.add_argument(
+        "--filter",
+        help="do not count features with this string included")
 
     return parser.parse_args()
 
@@ -49,7 +55,7 @@ def main():
     with open(args.input) as file_handle:
         # remove RPKs from sample name if included
         if args.reduce_sample_name:
-            samples=[sample.replace("_Abundance-RPKs","").replace("_genefamilies_Abundance","").replace("_Abundance","") for sample in file_handle.readline().rstrip().split("\t")[1:]]
+            samples=[sample.replace("_Abundance-RPKs","").replace("_genefamilies_Abundance","").replace("_Abundance","").replace("_taxonomic_profile","") for sample in file_handle.readline().rstrip().split("\t")[1:]]
         else:
             samples=file_handle.readline().rstrip().split("\t")[1:]
              
@@ -60,6 +66,12 @@ def main():
                 store=True
 
             if "UNMAPPED" in line or "UNGROUPED" in line or "UNINTEGRATED" in line and args.ignore_un_features:
+                store=False
+
+            if args.include and not args.include in line:
+                store=False
+
+            if args.filter and args.filter in line:
                 store=False
 
             if store:
