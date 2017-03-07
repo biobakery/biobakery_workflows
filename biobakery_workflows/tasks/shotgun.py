@@ -298,7 +298,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
 
     # create a file of species counts
     workflow.add_task(
-    "count_features.py --input [depends[0]] --output [targets[0]] --include s__ --filter t__ --reduce-sample-name"
+    "count_features.py --input [depends[0]] --output [targets[0]] --include s__ --filter t__ --reduce-sample-name",
     depends=metaphlan2_merged_output,
     targets=metaphlan2_species_counts_file) 
 
