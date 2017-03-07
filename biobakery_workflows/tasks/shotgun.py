@@ -292,7 +292,16 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         depends=metaphlan2_output_files_profile,
         targets=metaphlan2_merged_output,
         args=[metaphlan2_output_folder, metaphlan2_profile_tag])
-    
+   
+    # get the name for the file to write the species counts
+    metaphlan2_species_counts_file = utilities.name_files("metaphlan2_species_counts_table.tsv",output_folder,subfolder="counts",create_folder=True)
+
+    # create a file of species counts
+    workflow.add_task(
+    "count_features.py --input [depends[0]] --output [targets[0]] --include s__ --filter t__ --reduce-sample-name"
+    depends=metaphlan2_merged_output,
+    targets=metaphlan2_species_counts_file) 
+
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
 def functional_profile(workflow,input_files,output_folder,threads,taxonomic_profiles=None):
