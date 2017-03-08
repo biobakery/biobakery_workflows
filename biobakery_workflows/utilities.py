@@ -444,7 +444,39 @@ def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
 
     return species_taxonomy, species_data
 
-
+def read_otu_table(file):
+    """ Remove the taxons that are not a species level from the data set.
+        Also filter the species if filters are provided.
+    
+        Args:
+            file (string): A file containing the otu table (tsv format).
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of samples.
+            (list): A list of otu ids.
+            (list): A list of taxons.
+            (list): A list of lists of data.
+            
+        Example:
+            samples, ids, taxonomy, data = read_otu_table("otu_table.tsv")
+    """
+        
+    data=[]
+    samples=[]
+    taxonomy=[]
+    ids=[]
+    with open(file) as file_handle:
+        samples = file_handle.readline().rstrip().split("\t")[1:-1]
+        for line in file_handle:
+            data_points=line.rstrip().split("\t")
+            ids.append(data_points.pop(0))
+            taxonomy.append(data_points.pop())
+            data.append([float(i) for i in data_points])
+            
+    return samples, ids, taxonomy, data
 
 def microbial_read_proportion(paired_data, orphan_data, rna=None):
     """ Compute microbial read proporations from the KneadData read counts.
@@ -481,3 +513,66 @@ def microbial_read_proportion(paired_data, orphan_data, rna=None):
     return proportion_decontaminated, labels
 
 
+def taxa_remove_unclassified(taxa):
+    """ Rename the taxa to remove the unclassified levels
+    
+        Args:
+            taxa (list): The list of taxa.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): The list of taxa after removing the unclassified names.
+    """
+    
+    # remove any levels where the name is unknown (ie empty)
+    for taxon in taxa:
+        new_name=[]
+        for level in taxon.replace(" ","").split(";"):
+            try:
+                rank, name = level.split("__")
+            except ValueError:
+                # ignore identities like "unclassified" if present
+                continue
+            if name:
+                new_name.append(level)
+            else:
+                break
+        yield ";".join(new_name)
+
+def taxa_by_level(taxa, data, level):
+    """ Combine the data to represent the taxa by a specific level
+    
+        Args:
+            taxa (list): The list of taxa (in the same order as the data).
+            data (list of lists): The data points for all samples for each taxa.
+            level (int): The level to sum the taxa (zero is kingdom level).
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): The list of taxa (all to the level specified)
+            (list of lists): The data after summing to the taxa level specified.
+    """    
+
+    # first remove any unclassified levels
+    renamed_taxa=taxa_remove_unclassified(taxa)
+    
+    # sum the taxa by the level provided
+    data_sum={}
+    for taxon, taxon_data in zip(renamed_taxa, data):
+        new_taxon_level=";".join(taxon.split(";")[:(level+1)])
+        if new_taxon_level in data_sum:
+            data_sum[new_taxon_level]=[a+b for a,b in zip(data_sum[new_taxon_level],taxon_data)]
+        else:
+            data_sum[new_taxon_level]=taxon_data
+        
+    new_taxa=[]
+    new_data=[]    
+    for taxon, taxon_data in data_sum.items():
+        new_taxa.append(taxon)
+        new_data.append(taxon_data)
+        
+    return new_taxa, new_data
