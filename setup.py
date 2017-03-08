@@ -56,6 +56,6 @@ setuptools.setup(
     entry_points={'console_scripts': ['biobakery_workflows = biobakery_workflows.biobakery_workflows:main']},
     package_data={'biobakery_workflows' : ['workflows/*']},
     scripts=glob('biobakery_workflows/workflows/*py')+glob('biobakery_workflows/scripts/*py'),
-    test_suite='tests',
+    test_suite='tests.get_test_suite',
     zip_safe = False
  )
