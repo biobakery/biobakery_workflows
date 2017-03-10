@@ -321,6 +321,81 @@ def row_variance(data):
         
     return data_variances
 
+def relative_abundance(data):
+    """ Compute the relative abundance values for a set of data 
+        
+        Args:
+            data (list of lists): Each list in data represents a row of data. 
+                
+        Requires:
+            None
+        
+        Returns:
+            (list of lists): Each list in data represents a row of data with relative abundance values.
+            
+        Example:
+            relative_abundance([[1,2,3],[4,5,6]])   
+    """ 
+
+    # compute the sum for each column
+    sums=[0.0]*len(data[0])
+    for i in range(len(data[0])):
+        for row in data:
+            sums[i]+=float(row[i])
+            
+    relab=[]
+    for row in data:
+        relab.append([value/sums[i] for i, value in enumerate(row)])
+        
+    return relab
+
+def filter_zero_rows(taxa, data):
+    """ Remove any taxa and data rows from the lists if the data sum for a row is zero.
+        
+        Args:
+            taxa (list): The list of taxa.
+            data (list of lists): Each list in data represents a row of data.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of labels for the non-zero rows.
+            (list of lists): Each list in data represents a row of data that is non-zero.  
+    """ 
+    new_taxa=[]
+    new_data=[]
+    for taxon, row in zip(taxa, data):
+        if sum(row) != 0:
+            new_taxa.append(taxon)
+            new_data.append(row)
+            
+    return new_taxa, new_data
+
+def taxa_shorten_name(taxa, level, remove_identifier=None):
+    """ Shorten the taxa name by removing the levels indicated (useful for plotting)
+        
+        Args:
+            taxa (list): The list of taxa.
+            level (int): The level to filter.
+            remove_identifier (bool): If set remove the [k|p|c|r|f|g|s|t__]) from the name. 
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): The list of taxa after removing the unclassified names.  
+    """ 
+
+    new_names=[]
+    for taxon in taxa:
+        name=taxon.split(";")[level]
+        if remove_identifier:
+            name=name.split("__")[-1]
+        new_names.append(name)
+        
+    return new_names
+
 def top_rows(row_labels, data, max_sets, function):
     """ Get the top rows in the data based on the metric provided 
         
@@ -334,10 +409,11 @@ def top_rows(row_labels, data, max_sets, function):
             None
         
         Returns:
-            (list): A list of variances, one for each row in the original data.
+            (list): A list of labels for the top rows.
+            (list of lists): Each list in data represents a row of data for the top data.
             
         Example:
-            row_variance([[1,2,3],[4,5,6]])
+            top_rows(["row1","row2"],[[1,2,3],[4,5,6]],1)
     """
     
     # get the data after applying the metric function
@@ -540,7 +616,47 @@ def taxa_remove_unclassified(taxa):
             else:
                 break
         yield ";".join(new_name)
-
+        
+def terminal_taxa(taxa, data):
+    """ Reduce the list of taxa to just those that represent the terminal nodes. If there
+        are duplicate terminal nodes, then sum the duplicates.
+    
+        Args:
+            taxa (list): The list of taxa (in the same order as the data).
+            data (list of lists): The data points for all samples for each taxa.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): The list of taxa (terminal node only)
+            (list of lists): The data after reducing to terminal node taxa.
+    """    
+    
+    terminal_node_taxa=[]
+    # check the taxa by level, starting with the most specific level of strain
+    for level in reversed(range(8)):
+        taxa_for_level, data_level=taxa_by_level(taxa, data, level)
+        for taxon in taxa_for_level:
+            # check if part of this taxon is already included
+            matching_taxa=list(filter(lambda x: x.replace(" ","").startswith(taxon.replace(" ","")), terminal_node_taxa))
+            if len(matching_taxa) == 0:
+                terminal_node_taxa.append(taxon)
+                
+    # create a set of terminal node taxa and data
+    new_taxa={}
+    for taxon, row in zip(taxa, data):
+        if taxon in terminal_node_taxa:
+            if taxon in new_taxa:
+                new_taxa[taxon]=[a+b for a,b in zip(new_taxa[taxon],row)]
+            else:
+                new_taxa[taxon]=row
+               
+    new_taxa_list=sorted(new_taxa.keys())
+    new_data_list=[new_taxa[i] for i in new_taxa_list] 
+               
+    return new_taxa_list, new_data_list
+                    
 def taxa_by_level(taxa, data, level):
     """ Combine the data to represent the taxa by a specific level
     
@@ -563,7 +679,11 @@ def taxa_by_level(taxa, data, level):
     # sum the taxa by the level provided
     data_sum={}
     for taxon, taxon_data in zip(renamed_taxa, data):
-        new_taxon_level=";".join(taxon.split(";")[:(level+1)])
+        split_taxon=taxon.split(";")
+        if len(split_taxon) < (level+1):
+            # do not include those taxa that are not specified to the level requested
+            continue
+        new_taxon_level=";".join(split_taxon[:(level+1)])
         if new_taxon_level in data_sum:
             data_sum[new_taxon_level]=[a+b for a,b in zip(data_sum[new_taxon_level],taxon_data)]
         else:
