@@ -39,6 +39,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 
 # add the custom arguments to the workflow
 workflow.add_argument("otu-table",desc="the closed reference taxonomic profile",required=True)
+workflow.add_argument("read-count-table",desc="the table of read counts",required=True)
 workflow.add_argument("project-name",desc="the name of the project")
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for 16S sequencing.")
@@ -50,12 +51,13 @@ args = workflow.parse_args()
 workflow.add_document(
     templates=[document_templates.get_template("header"),
                document_templates.get_template("16S")],
-    depends=[args.otu_table], 
+    depends=[args.otu_table, args.read_count_table], 
     targets=workflow.name_output_files("16S_report.pdf"),
     vars={"title":"16S Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
-          "otu_table":os.path.abspath(args.otu_table)})
+          "otu_table":os.path.abspath(args.otu_table),
+          "read_count_table":os.path.abspath(args.read_count_table)})
 
 # start the workflow
 workflow.go()

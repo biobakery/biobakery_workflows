@@ -11,6 +11,20 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+#' # Read Count
+
+#+ echo=False
+
+# read in the read count table
+columns, samples, data = document.read_table(vars["read_count_table"])
+
+# sort the samples/data by read count with the largest first
+sorted_samples, sorted_data = utilities.sort_data(data, samples)
+
+# plot the read counts
+document.plot_barchart(sorted_data, sorted_samples, title="Read counts by Sample",
+    ylabel="Total Reads", xlabel="Samples")
+
 #' # Taxonomy
 
 #+ echo=False
@@ -20,10 +34,10 @@ samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
 
 # create a plot of total counts from the otu table
 # get the total number of counts for each sample
-counts={sample:sum(column) for sample,column in zip(samples,numpy.transpose(data))}
+counts=[sum(column) for column in numpy.transpose(data)]
+
 # order the counts to put the samples with the largest counts first in the plot
-sorted_samples=sorted(counts,key=counts.get, reverse=True)
-sorted_counts=[counts[sample] for sample in sorted_samples]
+sorted_samples, sorted_counts = utilities.sort_data(counts,samples)
 
 document.plot_barchart(sorted_counts, sorted_samples, title="OTU Counts by Sample",
     ylabel="Counts", xlabel="Samples")
