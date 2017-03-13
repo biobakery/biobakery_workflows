@@ -554,6 +554,37 @@ def read_otu_table(file):
             
     return samples, ids, taxonomy, data
 
+def sort_data(data, samples):
+    """ Sort the data with those with the largest values first
+
+        Args:
+            data (list): The data points for each sample.
+            samples (list): The sample names that correspond to each data point. 
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): The data points for each sample sorted.
+            (list): The sample names that correspond to each data point sorted.
+            
+    """
+    
+    # if the data is a list of lists, then convert to a list of values
+    if isinstance(data[0], list):
+        max_length=max([len(row) for row in data])
+        if max_length == 1:
+            data_list=[row[0] for row in data]
+            data=data_list
+        else:
+            raise ValueError("Provide data to the sort_data function as a list of floats or ints.")
+        
+    data_by_sample={sample:data_point for sample,data_point in zip(samples,data)}
+    sorted_samples=sorted(data_by_sample,key=data_by_sample.get, reverse=True)
+    sorted_data=[data_by_sample[sample] for sample in sorted_samples]
+    
+    return sorted_samples, sorted_data
+
 def microbial_read_proportion(paired_data, orphan_data, rna=None):
     """ Compute microbial read proporations from the KneadData read counts.
     

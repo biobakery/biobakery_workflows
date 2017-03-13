@@ -161,7 +161,35 @@ class TestUtiltiesFunctions(unittest.TestCase):
         actual_taxa, actual_data = utilities.filter_zero_rows(taxa, data)
         
         self.assertEqual(actual_taxa,expected_taxa)
-        self.assertEqual(actual_data,expected_data)       
+        self.assertEqual(actual_data,expected_data)     
+        
+    def test_sort_data(self):
+        """ Test the sort data function """
+        
+        samples=["s1","s3","s2"] 
+        data=[1,3,2] 
+        
+        expected_samples=["s3","s2","s1"]
+        expected_data=[3,2,1]
+        
+        actual_samples, actual_data = utilities.sort_data(data, samples)
+        
+        self.assertEqual(actual_data, expected_data)
+        self.assertEqual(actual_samples, expected_samples)
+        
+    def test_sort_data_list_of_lists(self):
+        """ Test the sort data function with data as a list of lists """
+        
+        samples=["s1","s3","s2"] 
+        data=[[1],[3],[2]] 
+        
+        expected_samples=["s3","s2","s1"]
+        expected_data=[3,2,1]
+        
+        actual_samples, actual_data = utilities.sort_data(data, samples)
+
+        self.assertEqual(actual_data, expected_data)
+        self.assertEqual(actual_samples, expected_samples)
         
         
         
