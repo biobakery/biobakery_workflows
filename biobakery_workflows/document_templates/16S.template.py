@@ -11,19 +11,33 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+# read in the read count table
+# columns expected are total reads, reads that map to OTUs with taxonomy,
+# and reads that map to OTUs without taxonomy
+columns, samples, data = document.read_table(vars["read_count_table"])
+
+#' There were a total of <% print(len(samples))%> samples processed with this workflow for this project.
+
 #' # Read Count
 
 #+ echo=False
 
-# read in the read count table
-columns, samples, data = document.read_table(vars["read_count_table"])
+# sort the samples/data by read count with the largest original read count first
+total_reads=[row[0] for row in data]
+sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
+sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
 
-# sort the samples/data by read count with the largest first
-sorted_samples, sorted_data = utilities.sort_data(data, samples)
+known_reads = [row[1] for row in sorted_all_read_data]
+unknown_reads = [row[2] for row in sorted_all_read_data]
+unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
 
 # plot the read counts
-document.plot_barchart(sorted_data, sorted_samples, title="Read counts by Sample",
-    ylabel="Total Reads", xlabel="Samples")
+document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
+    title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
+
+#' This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,
+#' 2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these
+#' three read counts for each sample is the total original read count not including filtering prior to OTU clustering.
 
 #' # Taxonomy
 
@@ -31,18 +45,6 @@ document.plot_barchart(sorted_data, sorted_samples, title="Read counts by Sample
 
 # read in the otu table data
 samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
-
-# create a plot of total counts from the otu table
-# get the total number of counts for each sample
-counts=[sum(column) for column in numpy.transpose(data)]
-
-# order the counts to put the samples with the largest counts first in the plot
-sorted_samples, sorted_counts = utilities.sort_data(counts,samples)
-
-document.plot_barchart(sorted_counts, sorted_samples, title="OTU Counts by Sample",
-    ylabel="Counts", xlabel="Samples")
-
-#+ echo=False
 
 # plot the top taxa by genus level, plotting the relative abundance values
 max_taxa=15
@@ -68,11 +70,12 @@ terminal_taxa_relab, terminal_data_relab = utilities.terminal_taxa(taxonomy, rel
 top_terminal_taxa, top_terminal_data = utilities.top_rows(terminal_taxa_relab, terminal_data_relab, max_taxa, function="average")
 
 # reduce the taxa names to just the most specific identifier
-shorted_names=[taxon.split(";")[-1] for taxon in top_terminal_taxa]
+shorted_names=[".".join(taxon.split(";")[-2:]) for taxon in top_terminal_taxa]
 
 document.plot_stacked_barchart(top_terminal_data, row_labels=shorted_names, 
     column_labels=samples, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
+
 
 #+ echo=False
 
@@ -81,7 +84,8 @@ document.plot_stacked_barchart(top_terminal_data, row_labels=shorted_names,
 # filter out any zero rows
 taxa_nonzero, data_nonzero = utilities.filter_zero_rows(terminal_taxa_relab, terminal_data_relab)
 
-document.show_pcoa(samples, taxa_nonzero, data_nonzero, title="Ordination of terminal taxa")
+document.show_pcoa(samples, taxa_nonzero, data_nonzero, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity")
+
 
 
 

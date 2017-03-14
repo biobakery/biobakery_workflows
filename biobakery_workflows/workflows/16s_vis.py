@@ -39,10 +39,15 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 
 # add the custom arguments to the workflow
 workflow.add_argument("otu-table",desc="the closed reference taxonomic profile",required=True)
-workflow.add_argument("read-count-table",desc="the table of read counts",required=True)
+workflow.add_argument("read-count-table",desc="the table of read counts (all, with taxonomy, and unclassified)",required=True)
 workflow.add_argument("project-name",desc="the name of the project")
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
-    default="The data was run through the standard workflow for 16S sequencing.")
+    default=("The samples from this project were run through the standard workflow for 16S sequencing. The workflow "+
+             " follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction."+
+             " The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction."+
+             " Reads were filtered for quality control using a MAXEE score of 1. Filtered reads were"+
+             " used to generate the OTUs. Reads not passing quality control were kept and used in the step"+
+             " assigning reads to OTUs. First these reads were truncated to a max length of 200 bases."))
 
 # get the arguments from the command line
 args = workflow.parse_args()
