@@ -191,6 +191,15 @@ class TestUtiltiesFunctions(unittest.TestCase):
         self.assertEqual(actual_data, expected_data)
         self.assertEqual(actual_samples, expected_samples)
         
+    def test_name_files(self):
+        """ Test the name files function """
         
+        samples=["sample1","sample2"]
         
+        self.assertEqual(sorted(utilities.name_files(samples,"/tmp")), ["/tmp/sample1","/tmp/sample2"])
+        
+    def test_name_files_single_file(self):
+        """ Test the name files function with a single file to make sure a string instead of list is returned """
+        
+        self.assertEqual(utilities.name_files("sample1","/tmp"), "/tmp/sample1")
         

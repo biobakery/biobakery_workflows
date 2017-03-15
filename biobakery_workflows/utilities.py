@@ -151,14 +151,16 @@ def name_files(names, folder, subfolder=None, tag=None, extension=None, create_f
         None
         
     Returns:
-        list: A list of file names.
+        list: A list of file names (or string if input is string).
         
     Example:
         files = name_files(["file1","file2"], "output")
     """
     
     # if names is a list, convert to string
+    was_string=False
     if isinstance(names, basestring):
+        was_string=True
         names=[names]
     
     # get the basenames from the files
@@ -180,6 +182,10 @@ def name_files(names, folder, subfolder=None, tag=None, extension=None, create_f
     
     if create_folder:
         create_folders(os.path.dirname(files[0]))
+        
+    # if the input was originally a string, convert from list
+    if was_string:
+        files=files[0]
         
     return files
 
