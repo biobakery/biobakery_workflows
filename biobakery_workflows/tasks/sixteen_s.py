@@ -224,8 +224,28 @@ def merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier
     
     if pair1 and pair2:
         # paired input files were found
+
+        # if the files are gzipped, first decompress as fastq_mergepairs will take in fastq.gz but the output will not be correctly formatted
+        if pair1[0].endswith(".gz"):
+            # get the names of the decompressed output files
+            decompressed_pair1=utilities.name_files([os.path.basename(file).replace(".gz","") for file in pair1],output_folder,subfolder="merged_renamed")
+            # get the names of the decompressed output files
+            decompressed_pair2=utilities.name_files([os.path.basename(file).replace(".gz","") for file in pair2],output_folder,subfolder="merged_renamed")
+            
+            # add tasks to decompress the files
+            workflow.add_task_group(
+                "gunzip -c [depends[0]] > [targets[0]]",
+                depends=pair1+pair2,
+                targets=decompressed_pair1+decompressed_pair2)
+            
+            # the pair files to be used for the remaining tasks are those that are decompressed
+            pair1=decompressed_pair1
+            pair2=decompressed_pair2
+
+
         # get the sample names from the input file names
         sample_names=[os.path.basename(file).replace(pair_identifier+".fastq","") for file in pair1]
+        
         # get the names of the output files
         stitched_files=utilities.name_files(sample_names,output_folder,subfolder="merged_renamed",tag="stitched",extension="fastq",create_folder=True)
         unjoined_files=utilities.name_files(sample_names,output_folder,subfolder="merged_renamed",tag="unjoined",extension="fastq")
