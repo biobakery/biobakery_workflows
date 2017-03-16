@@ -39,4 +39,9 @@ def get_environ_variable(environ_variable):
 kneaddata_db_human_genome = get_environ_variable("KNEADDATA_DB_HUMAN_GENOME")
 kneaddata_db_human_metatranscriptome = get_environ_variable("KNEADDATA_DB_HUMAN_TRANSCRIPTOME")
 
+greengenes_usearch = get_environ_variable("GREEN_GENES_USEARCH_DB")
+greengenes_fasta = get_environ_variable("GREEN_GENES_FASTA_DB")
+greengenes_taxonomy = get_environ_variable("GREEN_GENES_TAXONOMY_DB")
+
+
 
