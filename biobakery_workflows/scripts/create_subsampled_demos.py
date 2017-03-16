@@ -58,6 +58,11 @@ def parse_arguments(args):
         help="the format to write the output file\n[OPTIONAL]",
         choices=["fastq","fasta"],
         default="fasta")
+    parser.add_argument(
+        "--gene-families",
+        help="the gene families to select with\n[OPTIONAL]",
+        choices=["UniRef50","UniRef90"],
+        default="UniRef90")
 
     return parser.parse_args()
 
@@ -101,12 +106,12 @@ def main():
                 genefamilies[species]=set()
             # get the reactions and then gene families for the pathway
             for reaction in pathways_database.find_reactions(pathway):
-                genefamilies[species].update(reactions_database.find_genes(reaction))
+                genefamilies[species].update(list(filter(lambda x: x.startswith(args.gene_families), reactions_database.find_genes(reaction))))
      
     # get the set of gene families in any pathway           
     all_genefamilies_in_pathways=set()
     for reaction in pathways_database.reaction_list():
-        all_genefamilies_in_pathways.update(reactions_database.find_genes(reaction))
+        all_genefamilies_in_pathways.update(list(filter(lambda x: x.startswith(args.gene_families), reactions_database.find_genes(reaction))))
 
     # open the output file
     try:
@@ -134,11 +139,15 @@ def main():
                 # ignore reads that do not map to the reference
                 continue
             
+            selected_gene_family=uniref90
+            if args.gene_families == "UniRef50":
+                selected_gene_family=uniref50
+
             requested_genes_for_species=genefamilies.get(species,[])
-            if uniref50 in requested_genes_for_species or uniref90 in requested_genes_for_species:
+            if selected_gene_family in requested_genes_for_species:
                 # print this sequence to the output file
                 write_sequence(file_handle, read_name, sequence, quality_scores, args.output_format)                  
-            elif args.add_unintegrated and not(uniref50 in all_genefamilies_in_pathways) and not(uniref90 in all_genefamilies_in_pathways):  
+            elif args.add_unintegrated and not(selected_gene_family in all_genefamilies_in_pathways):  
                 write_sequence(file_handle, read_name, sequence, quality_scores, args.output_format)                  
 
     print("Output file written: " + args.output)
