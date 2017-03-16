@@ -441,6 +441,14 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         "count_features.py --input [depends[0]] --output [targets[0]] --reduce-sample-name --ignore-un-features --ignore-stratification",
         depends=[merged_genefamilies, merged_ecs, merged_pathabundance],
         targets=[genefamilies_counts, ecs_counts, pathabundance_counts])
+    
+    # merge the feature counts into a single file
+    all_feature_counts = utilities.name_files("humann2_feature_counts.tsv", output_folder, subfolder="counts")
+    workflow.add_task(
+        "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name _relab_counts.tsv",
+        depends=[genefamilies_counts, ecs_counts, pathabundance_counts],
+        targets=all_feature_counts,
+        args=[os.path.dirname(genefamilies_counts)])
 
         
     return merged_genefamilies, merged_ecs, merged_pathabundance
