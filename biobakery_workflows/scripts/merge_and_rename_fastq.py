@@ -13,6 +13,7 @@ except ImportError:
     
 import os
 import re
+import gzip
     
 FASTQ_LINE1_START="@"
 FASTQ_LINE2_REGEXP="^[A|a|T|t|G|g|C|c|N|n]+$"
@@ -21,11 +22,16 @@ NEW_SEQUENCE_NAME_DELIMITER="."
     
 def catch_open(file,write=None):
     """ Try to open the file, return file handle, or exit if unable to open """
+
+    open_function=open
+    if file.endswith(".gz"):
+        open_function=gzip.open
+
     try:
         if write:
-            file_handle=open(file,"w")
+            file_handle=open_function(file,"w")
         else:
-            file_handle=open(file)
+            file_handle=open_function(file)
     except EnvironmentError:
         sys.exit("ERROR: Unable to open file: " + file)
         
@@ -117,6 +123,10 @@ def main():
     
     # get the new sequence name as the basename of the first input file
     input_file_basename=os.path.basename(args.input_paired_fastq)
+    # remove gzip extension if present
+    if input_file_basename.endswith(".gz"):
+        input_file_basename=input_file_basename[:-3]    
+
     # remove the extension
     new_sequence_name=input_file_basename.replace(os.path.splitext(input_file_basename)[-1],"")
  
