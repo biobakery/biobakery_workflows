@@ -41,6 +41,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         threads (int): The number of threads/cores for kneaddata to use.
         paired (bool): This indicates if the input files are paired.
         databases (string/list): The databases to use with kneaddata (optional).
+            Allow for a single path or multiple paths in one string comma-delimited.
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         
@@ -96,6 +97,11 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
     elif isinstance(databases,list):
         # start the string with the kneaddata option and add an option for each database
         optional_arguments=" --reference-db "+" --reference-db ".join(databases)
+    elif isinstance(databases,basestring) and "," in databases:
+        # split the paths by comma
+        database_list=list(filter(lambda x: x, databases.split(",")))
+        # start the string with the kneaddata option and add an option for each database
+        optional_arguments=" --reference-db "+" --reference-db ".join(database_list)        
     else:
         optional_arguments=" --reference-db " + databases
     

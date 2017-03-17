@@ -42,6 +42,7 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1.")
+workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate reference databases for QC", default=config.kneaddata_db_human_genome)
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -51,7 +52,7 @@ args = workflow.parse_args()
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, config.kneaddata_db_human_genome, args.pair_identifier)
+qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.contaminate_databases, args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
 merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)
