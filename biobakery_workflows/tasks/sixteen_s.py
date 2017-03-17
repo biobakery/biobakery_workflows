@@ -622,13 +622,16 @@ def global_alignment(workflow, fasta_file, database_file, id, threads, output_fi
         optional_flags=" -top_hit_only"
     
     # remove existing output file if already exists as clustalo will not overwrite
-    workflow.add_task(
+    workflow.add_task_gridable(
         "export OMP_NUM_THREADS=[args[0]]; "+\
         "usearch -usearch_global [depends[0]] -db [depends[1]] -strand 'both' -id [args[1]] -uc [targets[0]] -otutabout [targets[1]] -threads [args[0]]"+optional_flags,
         depends=[fasta_file, database_file],
         targets=[output_file_uc, output_file_tsv],
         args=[threads, id],
-        name="usearch_global")
+        name="usearch_global",
+        time=30, # 30 minutes
+        mem=2*1024, # 2 GB
+        cores=threads) # time/mem based on 8 cores
    
    
 def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_mapping_results_uc, otu_mapping_results_uc, otu_fasta, original_fasta, output_folder):
