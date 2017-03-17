@@ -50,8 +50,42 @@ document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
 document.show_hclust2(dna_samples,dna_top_variance_pathways,dna_top_variance_data,
                       title="Top "+str(max_sets)+" pathways by variance")
 
+#' ## Features
 
+#+ echo=False
+import math
 
+# read in the read count and feature count files
+read_type, read_samples, read_count_data = document.read_table(vars["read_counts"])
+feature_type, feature_samples, feature_count_data = document.read_table(vars["feature_counts"])
 
+# get the total reads for samples along with those for nucleotide alignment and translated
+# convert values to log10
 
+total_reads=[math.log10(row[read_type.index("total reads")]) for row in read_count_data]
+nucleotide_reads=[math.log10(row[read_type.index("total nucleotide aligned")]) for row in read_count_data]
+translated_reads=[math.log10(row[read_type.index("total translated aligned")]) for row in read_count_data]
+
+# sort the feature counts so they are in the same sample order as the read counts
+feature_counts={sample:row for sample, row in zip(feature_samples, feature_count_data)}
+sorted_feature_count_data=[feature_counts[sample] for sample in read_samples]
+
+# get the counts by each feature type
+# convert values to log10
+genefamilies_counts=[math.log10(row[feature_type.index("humann2_ecs_relab_counts")]) for row in sorted_feature_count_data]
+ecs_counts=[math.log10(row[feature_type.index("humann2_ecs_relab_counts")]) for row in sorted_feature_count_data]
+pathabundance_counts=[math.log10(row[feature_type.index("humann2_pathabundance_relab_counts")]) for row in sorted_feature_count_data]
+
+# add scatter plots of the data
+document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
+                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
+
+document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
+                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
+
+document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="Enzymes (ECs)",
+                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
+
+document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="Pathways",
+                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
