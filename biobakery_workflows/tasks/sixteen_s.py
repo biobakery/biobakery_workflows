@@ -108,16 +108,16 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
         if index_files:
             # this run has index files
             workflow.add_task(
-                "fastq-multx -l [args[0]] [depends[0]] [depends[1]] [depends[2]] -o [args[2]]/%_I1_001.fastq [args[2]]/%[args[3]].fastq [args[2]]/%[args[4]].fastq -q [args[1]] > [targets[0]]",
-                depends=[index_files[0], input_pair1[0], input_pair2[0]],
-                args=[expanded_barcode_file, min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
+                "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] [depends[3]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
+                depends=[expanded_barcode_file, index_files[0], input_pair1[0], input_pair2[0]],
+                args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
                 targets=[demultiplex_log]+demultiplex_fastq_files)
             
         else:
             workflow.add_task(
-                "fastq-multx -l [args[0]] [depends[0]] [depends[1]] -o [args[2]]/%[args[3]].fastq [args[2]]/%[args[4]].fastq -q [args[1]] > [targets[0]]",
-                depends=[input_pair1[0], input_pair2[0]],
-                args=[expanded_barcode_file, min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
+                "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
+                depends=[expanded_barcode_file, input_pair1[0], input_pair2[0]],
+                args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
                 targets=[demultiplex_log]+demultiplex_fastq_files)
         
     else:
@@ -128,16 +128,16 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
         if index_files:
             # this run has index files
             workflow.add_task(
-                "fastq-multx -l [args[0]] [depends[0]] [depends[1]] -o [args[2]]/%_I1_001.fastq [args[2]]/%[args[3]].fastq -q [args[1]] > [targets[0]]",
-                depends=[index_files[0], input_files[0]],
-                args=[expanded_barcode_file, min_phred, demultiplex_output_folder, pair_identifier],
+                "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
+                depends=[expanded_barcode_file, index_files[0], input_files[0]],
+                args=[min_phred, demultiplex_output_folder, pair_identifier],
                 targets=[demultiplex_log]+demultiplex_fastq_files)
             
         else:
             workflow.add_task(
-                "fastq-multx -l [args[0]] [depends[0]] -o [args[2]]/%[args[3]].fastq -q [args[1]] > [targets[0]]",
-                depends=[input_files[0]],
-                args=[expanded_barcode_file, min_phred, demultiplex_output_folder, pair_identifier],
+                "fastq-multx -l [depends[0]] [depends[1]] -o [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
+                depends=[expanded_barcode_file, input_files[0]],
+                args=[min_phred, demultiplex_output_folder, pair_identifier],
                 targets=[demultiplex_log]+demultiplex_fastq_files)
 
     return demultiplex_fastq_files
