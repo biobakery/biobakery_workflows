@@ -394,6 +394,14 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         targets=log_counts,
         args=humann2_output_folder)
     
+    # create a task to merge all of the pathway abundance files, to be used as input to the visualization workflow
+    merged_pathabundance_original = utilities.name_files("pathabundance.tsv", output_folder)
+    workflow.add_task(
+        "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name pathabund",
+        depends=pathabundance,
+        targets=merged_pathabundance_original,
+        args=humann2_output_folder)
+    
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
     # get a list of all output ec files
