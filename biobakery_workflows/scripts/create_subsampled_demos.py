@@ -78,6 +78,32 @@ def write_sequence(file_handle, read_name, sequence, quality_scores, output_form
         file_handle.write("+\n")
         file_handle.write(quality_scores+"\n")
 
+def read_sam(file, gene_families_to_use):
+    """ Read the sam file, only reading alignments """
+
+    for line in open(file):
+        data=line.rstrip().split("\t")
+        if len(data) > config.sam_read_quality:
+            read_name=data[config.sam_read_name_index]
+            reference_name=data[config.sam_reference_index]
+            sequence=data[config.sam_read_index]
+            quality_scores=data[config.sam_read_quality]
+
+            reference_data = reference_name.split(config.chocophlan_delimiter)
+            try:
+                uniref50=reference_data[-2]
+                uniref90=reference_data[-3]
+                species=reference_data[-4].split(".")[-1]
+            except IndexError:
+                # ignore reads that do not map to the reference
+                continue
+            
+            gene_family=uniref90
+            if gene_families_to_use == "UniRef50":
+                gene_family=uniref50
+
+            yield species, gene_family, read_name, sequence, quality_scores
+
 def main():
 
     args=parse_arguments(sys)
@@ -120,35 +146,23 @@ def main():
         sys.exit("ERROR: Unable to open output file: " + args.output)
                 
     # find the reads for the species and pathways selected
-    print("Reading sam file and writing output file")
-    for line in open(args.input_sam):
-        data=line.rstrip().split("\t")
-        if len(data) > config.sam_read_quality:
-            read_name=data[config.sam_read_name_index]
-            reference_name=data[config.sam_reference_index]
-            sequence=data[config.sam_read_index]
-            quality_scores=data[config.sam_read_quality]
+    print("Reading sam file")
+    selected_reads=set()
+    for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
+        # record the reads that align to species/gene families requested
+        requested_genes_for_species=genefamilies.get(species,[])
+        if gene_family in requested_genes_for_species:
+            selected_reads.add(read_name)
+        elif args.add_unintegrated and not(gene_family in all_genefamilies_in_pathways):
+            selected_reads.add(read_name)
 
-            # check for a requested species and gene family
-            reference_data = reference_name.split(config.chocophlan_delimiter)
-            try:
-                uniref50=reference_data[-2]
-                uniref90=reference_data[-3]
-                species=reference_data[-4].split(".")[-1]
-            except IndexError:
-                # ignore reads that do not map to the reference
-                continue
-            
-            selected_gene_family=uniref90
-            if args.gene_families == "UniRef50":
-                selected_gene_family=uniref50
-
-            requested_genes_for_species=genefamilies.get(species,[])
-            if selected_gene_family in requested_genes_for_species:
-                # print this sequence to the output file
-                write_sequence(file_handle, read_name, sequence, quality_scores, args.output_format)                  
-            elif args.add_unintegrated and not(selected_gene_family in all_genefamilies_in_pathways):  
-                write_sequence(file_handle, read_name, sequence, quality_scores, args.output_format)                  
+    print("Total reads found: " + str(len(selected_reads)))
+    print("Writing output file")
+    for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
+        # write the read sequences requested once
+        if read_name in selected_reads:
+            write_sequence(file_handle, read_name, sequence, quality_scores, args.output_format)
+            selected_reads.remove(read_name)
 
     print("Output file written: " + args.output)
     
