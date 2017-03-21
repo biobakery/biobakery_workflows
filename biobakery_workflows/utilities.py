@@ -527,8 +527,7 @@ def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
     return species_taxonomy, species_data
 
 def read_otu_table(file):
-    """ Remove the taxons that are not a species level from the data set.
-        Also filter the species if filters are provided.
+    """ Read in an otu table. Remove extra brackets from taxonomy names if present.
     
         Args:
             file (string): A file containing the otu table (tsv format).
@@ -555,7 +554,7 @@ def read_otu_table(file):
         for line in file_handle:
             data_points=line.rstrip().split("\t")
             ids.append(data_points.pop(0))
-            taxonomy.append(data_points.pop())
+            taxonomy.append(data_points.pop().replace("[","").replace("]",""))
             data.append([float(i) for i in data_points])
             
     return samples, ids, taxonomy, data
@@ -672,8 +671,21 @@ def terminal_taxa(taxa, data):
     
     terminal_node_taxa=[]
     # check the taxa by level, starting with the most specific level of strain
-    for level in reversed(range(8)):
-        taxa_for_level, data_level=taxa_by_level(taxa, data, level)
+    # use a full match with strain instead of just startswith to allow for unclassified
+    # strains to not match with classified strains
+    # if strains are not present, then run at a species level instead
+    
+    # check for the most specific taxonomy level (ie strain or species)
+    max_taxonomy_level=max([len(taxon.split(";")) for taxon in taxa])
+    
+    taxa_for_level, data_level=taxa_by_level(taxa, data, level=max_taxonomy_level-1, keep_unclassified=True)
+    for taxon in taxa_for_level:
+        matching_taxa=list(filter(lambda x: x.replace(" ","") == taxon.replace(" ",""), terminal_node_taxa))
+        if len(matching_taxa) == 0:
+            terminal_node_taxa.append(taxon)
+    
+    for level in reversed(range(max_taxonomy_level-1)):
+        taxa_for_level, data_level=taxa_by_level(taxa, data, level, keep_unclassified=True)
         for taxon in taxa_for_level:
             # check if part of this taxon is already included
             matching_taxa=list(filter(lambda x: x.replace(" ","").startswith(taxon.replace(" ","")), terminal_node_taxa))
@@ -694,13 +706,14 @@ def terminal_taxa(taxa, data):
                
     return new_taxa_list, new_data_list
                     
-def taxa_by_level(taxa, data, level):
+def taxa_by_level(taxa, data, level, keep_unclassified=None):
     """ Combine the data to represent the taxa by a specific level
     
         Args:
             taxa (list): The list of taxa (in the same order as the data).
             data (list of lists): The data points for all samples for each taxa.
             level (int): The level to sum the taxa (zero is kingdom level).
+            keep_unclassified (bool): If set, keep unclassified taxa.
                 
         Requires:
             None
@@ -711,11 +724,12 @@ def taxa_by_level(taxa, data, level):
     """    
 
     # first remove any unclassified levels
-    renamed_taxa=taxa_remove_unclassified(taxa)
+    if not keep_unclassified:
+        taxa=taxa_remove_unclassified(taxa)
     
     # sum the taxa by the level provided
     data_sum={}
-    for taxon, taxon_data in zip(renamed_taxa, data):
+    for taxon, taxon_data in zip(taxa, data):
         split_taxon=taxon.split(";")
         if len(split_taxon) < (level+1):
             # do not include those taxa that are not specified to the level requested

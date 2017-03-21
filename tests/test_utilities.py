@@ -147,6 +147,36 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         self.assertEqual(actual_taxa,expected_taxa)
         self.assertEqual(actual_data,expected_data)
+
+    def test_terminal_taxa_unclassified_family(self):
+        """ Test the terminal taxa function with a taxon with unclassified at family level"""
+        
+        taxa=["k__k1;p__p1","k__k1;p__p1;c__c1","k__k2;p__p2","k__k3;p__p3;c__c2;o__o3;f__;g__;s__","k__k3;p__p3;c__c2;o__o3;f__f1"]
+        data=[[1],[2],[3],[4],[5]]
+        
+        # it is expected that order of the taxa will stay the same as the original input
+        expected_taxa=["k__k1;p__p1;c__c1","k__k2;p__p2","k__k3;p__p3;c__c2;o__o3;f__;g__;s__","k__k3;p__p3;c__c2;o__o3;f__f1"]
+        expected_data=[[2],[3],[4],[5]]
+        
+        actual_taxa, actual_data = utilities.terminal_taxa(taxa, data)
+        
+        self.assertEqual(actual_taxa,expected_taxa)
+        self.assertEqual(actual_data,expected_data)
+        
+    def test_terminal_taxa_unclassified_species(self):
+        """ Test the terminal taxa function with a taxon with unclassified at species level"""
+        
+        taxa=["k__k3;p__p3;c__c2;o__o3;f__f1;g__g1;s__","k__k3;p__p3;c__c2;o__o3;f__f1;g__g1;s__s1"]
+        data=[[1],[2]]
+        
+        # it is expected that order of the taxa will stay the same as the original input
+        expected_taxa=["k__k3;p__p3;c__c2;o__o3;f__f1;g__g1;s__","k__k3;p__p3;c__c2;o__o3;f__f1;g__g1;s__s1"]
+        expected_data=[[1],[2]]
+        
+        actual_taxa, actual_data = utilities.terminal_taxa(taxa, data)
+        
+        self.assertEqual(actual_taxa,expected_taxa)
+        self.assertEqual(actual_data,expected_data)
         
     def test_filter_zero_rows(self):
         """ Test the filter zero rows function """
