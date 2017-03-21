@@ -42,6 +42,7 @@ document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["cla
 #' # Taxonomy
 
 #+ echo=False
+import numpy
 
 # read in the otu table data
 samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
@@ -57,8 +58,13 @@ top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_
 # shorten the top taxa names to just the genus level for plotting
 top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
 
-document.plot_stacked_barchart(top_data, row_labels=top_taxa_short_names, 
-    column_labels=samples, title="Top "+str(max_taxa)+" genera by average abundance",
+# sort the data so those with the top genera are shown first
+sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
+transpose_top_data = numpy.transpose(top_data)
+sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
+
+document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names, 
+    column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
     ylabel="Relative abundance", legend_title="Genera")
 
 #+ echo=False
@@ -70,10 +76,21 @@ terminal_taxa_relab, terminal_data_relab = utilities.terminal_taxa(taxonomy, rel
 top_terminal_taxa, top_terminal_data = utilities.top_rows(terminal_taxa_relab, terminal_data_relab, max_taxa, function="average")
 
 # reduce the taxa names to just the most specific identifier
-shorted_names=[".".join(taxon.split(";")[-2:]) for taxon in top_terminal_taxa]
+shorted_names=[]
+for reduced_taxa_name in utilities.taxa_remove_unclassified(top_terminal_taxa):
+    # if species, add genus to shorted name
+    if "s__" in reduced_taxa_name:
+        shorted_names.append(".".join(reduced_taxa_name.split(";")[-2:]))
+    else:
+        shorted_names.append(reduced_taxa_name.split(";")[-1])
 
-document.plot_stacked_barchart(top_terminal_data, row_labels=shorted_names, 
-    column_labels=samples, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
+# sort the data with the samples with the top terminal taxa first
+sorted_samples_terminal, sorted_data_terminal = utilities.sort_data(top_terminal_data[0], samples)
+transpose_top_terminal_data = numpy.transpose(top_terminal_data)
+sorted_top_terminal_data = numpy.transpose([transpose_top_terminal_data[samples.index(sample)] for sample in sorted_samples_terminal])
+
+document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_names, 
+    column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
 
