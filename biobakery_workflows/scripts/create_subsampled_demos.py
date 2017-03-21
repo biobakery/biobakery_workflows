@@ -63,6 +63,11 @@ def parse_arguments(args):
         help="the gene families to select with\n[OPTIONAL]",
         choices=["UniRef50","UniRef90"],
         default="UniRef90")
+    parser.add_argument(
+        "--percent",
+        help="the percent of reads to output (subsampled by reaction set for requested pathways)\n[OPTIONAL]",
+        type=int,
+        default=100)
 
     return parser.parse_args()
 
@@ -119,6 +124,7 @@ def main():
     # read in the species and pathways selected
     print("Finding gene families for each species for the pathways selected")
     genefamilies={}
+    reactions={}
     for line in open(args.input_selection):
         # remove starting and ending spaces
         line=line.strip()
@@ -130,8 +136,10 @@ def main():
                 continue
             if not species in genefamilies:
                 genefamilies[species]=set()
+                reactions[species]=set()
             # get the reactions and then gene families for the pathway
             for reaction in pathways_database.find_reactions(pathway):
+                reactions[species].add(reaction)
                 genefamilies[species].update(list(filter(lambda x: x.startswith(args.gene_families), reactions_database.find_genes(reaction))))
      
     # get the set of gene families in any pathway           
@@ -148,15 +156,49 @@ def main():
     # find the reads for the species and pathways selected
     print("Reading sam file")
     selected_reads=set()
+    reads_to_gene_familes={}
+    reaction_totals={}
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
         # record the reads that align to species/gene families requested
         requested_genes_for_species=genefamilies.get(species,[])
-        if gene_family in requested_genes_for_species:
+        if (gene_family in requested_genes_for_species) or (args.add_unintegrated and not(gene_family in all_genefamilies_in_pathways)):
             selected_reads.add(read_name)
-        elif args.add_unintegrated and not(gene_family in all_genefamilies_in_pathways):
-            selected_reads.add(read_name)
-
+            if not read_name in reads_to_gene_familes:
+                reads_to_gene_familes[read_name]=set()
+            
+            reads_to_gene_familes[read_name].add(gene_family)
+            
+            # add to the reaction totals count
+            for reaction in reactions_database.find_reactions(gene_family):
+                reaction_totals[reaction]=reaction_totals.get(reaction,0)+1.0
+            
     print("Total reads found: " + str(len(selected_reads)))
+    
+    if args.percent < 100:
+        print("Filtering reads by percent requested: " + str(args.percent))
+        filtered_reads=set()
+        current_reaction_totals={reaction:0 for reaction in reaction_totals.keys()}
+        # go through the reads, adding until there is enough in the reaction list
+        # to hit the percent requested
+        for read_name in selected_reads:
+            # check if this read is needed into increase the reaction percents
+            add_read=False
+            for gene in reads_to_gene_familes[read_name]:
+                for reaction in reactions_database.find_reactions(gene):
+                    if (current_reaction_totals[reaction]/reaction_totals[reaction])*100 < args.percent:
+                        add_read=True
+                        
+            if add_read:
+                filtered_reads.add(read_name)
+                # update the current reaction counts
+                for gene in reads_to_gene_familes[read_name]:
+                    for reaction in reactions_database.find_reactions(gene):
+                        current_reaction_totals[reaction]+=1
+                        
+        # update the selected reads to those that are filtered
+        selected_reads=filtered_reads
+        print("Total reads after filtering: "+str(len(selected_reads)))
+    
     print("Writing output file")
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
         # write the read sequences requested once
