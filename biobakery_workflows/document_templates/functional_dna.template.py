@@ -78,14 +78,14 @@ pathabundance_counts=[math.log10(row[feature_type.index("humann2_pathabundance_r
 
 # add scatter plots of the data
 document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
-                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
 
 document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
-                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
 
 document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="Enzymes (ECs)",
-                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
 
 document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="Pathways",
-                       row_labels=["Nucleotide search","Translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
