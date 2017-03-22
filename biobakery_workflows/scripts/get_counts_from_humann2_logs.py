@@ -65,7 +65,7 @@ def main():
             elif TRANSLATED_COUNT_TAG in line:
                 try:
                     data[3]=int(data[1]*((100-float(line.split()[-2]))/100.0))
-                except ValueError:
+                except (ValueError, TypeError):
                     print("Warning: Unable to compute translated reads aligned from log line: " + line)
             elif SPECIES_COUNT_TAG in line:
                 data[4]=line.split()[-1]
