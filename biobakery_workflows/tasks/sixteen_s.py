@@ -111,14 +111,16 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] [depends[3]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, index_files[0], input_pair1[0], input_pair2[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
-                targets=[demultiplex_log]+demultiplex_fastq_files)
+                targets=[demultiplex_log]+demultiplex_fastq_files,
+                name="demultiplex")
             
         else:
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, input_pair1[0], input_pair2[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
-                targets=[demultiplex_log]+demultiplex_fastq_files)
+                targets=[demultiplex_log]+demultiplex_fastq_files,
+                name="demultiplex")
         
     else:
         # this run has single end input files
@@ -131,14 +133,16 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, index_files[0], input_files[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier],
-                targets=[demultiplex_log]+demultiplex_fastq_files)
+                targets=[demultiplex_log]+demultiplex_fastq_files,
+                name="demultiplex")
             
         else:
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] -o [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, input_files[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier],
-                targets=[demultiplex_log]+demultiplex_fastq_files)
+                targets=[demultiplex_log]+demultiplex_fastq_files,
+                name="demultiplex")
 
     return demultiplex_fastq_files
     
