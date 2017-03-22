@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import subprocess
 
 try:
     from humann2 import config
@@ -68,6 +69,15 @@ def parse_arguments(args):
         help="the percent of reads to output (subsampled by reaction set for requested pathways)\n[OPTIONAL]",
         type=int,
         default=100)
+    parser.add_argument(
+        "--add-markers",
+        help="add in the reads that align to markers for the selected species using MetaPhlAn2\n[OPTIONAL]",
+        action="store_true")
+    parser.add_argument(
+        "--min-markers",
+        help="the minimum number of reads that map to markers for each species using MetaPhlAn2\n[OPTIONAL]",
+        type=int,
+        default=300)
 
     return parser.parse_args()
 
@@ -158,6 +168,12 @@ def main():
     selected_reads=set()
     reads_to_gene_familes={}
     reaction_totals={}
+    
+    # open a fasta file to write the species specific sequences for input to metaphlan2
+    if args.add_markers:
+        species_fasta_file=args.output+".species_specific_reads.fasta"
+        species_fasta_file_handle=open(species_fasta_file,"w")
+        
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
         # record the reads that align to species/gene families requested
         requested_genes_for_species=genefamilies.get(species,[])
@@ -171,8 +187,40 @@ def main():
             # add to the reaction totals count
             for reaction in reactions_database.find_reactions(gene_family):
                 reaction_totals[reaction]=reaction_totals.get(reaction,0)+1.0
+                
+        # if this is a species in the list, and we are adding markers, write this to the fasta file for input to metaphlan2
+        if args.add_markers and species in genefamilies.keys():
+            write_sequence(species_fasta_file_handle, read_name, sequence, quality_scores, "fasta")
+            
+    # close the species fasta file handle
+    if args.add_markers:
+        species_fasta_file_handle.close()
             
     print("Total reads found: " + str(len(selected_reads)))
+    
+    # get the markers reads from the species fasta file
+    marker_reads_to_add=set()
+    read_to_species_marker={}
+    if args.add_markers:
+        print("Finding reads mapped to markers with MetaPhlAn2")
+        
+        print("Running MetaPhlAn2")
+        metaphlan2_marker_file=species_fasta_file+".marker_alignments.tsv"
+        output=subprocess.check_output(["metaphlan2.py","--input_type","fasta",species_fasta_file,"--no_map","-t","reads_map","-o",metaphlan2_marker_file])
+        
+        # read through the file to identify the maker reads to add
+        for line in open(metaphlan2_marker_file):
+            if not line.startswith("#"):
+                read_name, taxon = line.rstrip().split("\t")
+                species = taxon.split("|")[-1]
+                if species in genefamilies.keys():
+                    marker_reads_to_add.add(read_name)
+                    if not species in read_to_species_marker:
+                        read_to_species_marker[species]=set()
+                        
+                    read_to_species_marker[species].add(read_name)
+                    
+        print("Found a total of "+str(len(marker_reads_to_add))+" reads to species markers")
     
     if args.percent < 100:
         print("Filtering reads by percent requested: " + str(args.percent))
@@ -198,6 +246,22 @@ def main():
         # update the selected reads to those that are filtered
         selected_reads=filtered_reads
         print("Total reads after filtering: "+str(len(selected_reads)))
+    
+    # check to make sure at least 200 marker reads (or command line setting) for each species are present
+    if args.add_markers:
+        # for each species, check the number of maker reads present
+        print("Counting markers in set to determine if reads need to be added to meet min markers")
+        for species, reads_for_species in read_to_species_marker.items():
+            # count how many of the reads are in the selected reads list
+            overlap=selected_reads.intersection(reads_for_species)
+            total_overlap=len(list(overlap))
+            if total_overlap < args.min_markers:
+                # add in more reads to hit the min markers setting for this species
+                max_reads_to_add=list(reads_for_species.difference(selected_reads))
+                total_to_add=args.min_markers - total_overlap
+                selected_reads.update(max_reads_to_add[:total_to_add])
+                print("Added "+str(total_to_add)+" reads for species "+species+" to meet min markers")
+        print("Total reads after counting markers: " + str(len(selected_reads)))
     
     print("Writing output file")
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
