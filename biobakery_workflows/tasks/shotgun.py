@@ -27,7 +27,7 @@ import os
 
 from biobakery_workflows import utilities
 
-def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None):
+def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None, additional_options=None):
     """Run kneaddata
     
     This set of tasks will run kneaddata on the input files provided. It will run with
@@ -44,6 +44,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
             Allow for a single path or multiple paths in one string comma-delimited.
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
+        additional_options (string): Additional options when running kneaddata (optional).
         
     Requires:
         kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
@@ -90,6 +91,10 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
     else:
         # the second input option is not used since these are single-end input files
         second_input_option=" "
+        
+    # set additional options to empty string if not provided
+    if additional_options is None:
+        additional_options=""
 
     # create the database command option string to provide zero or more databases to kneaddata
     if databases is None:
@@ -108,7 +113,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
     # create a task for each set of input and output files to run kneaddata
     for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments,
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options,
             depends=depends,
             targets=targets,
             args=[kneaddata_output_folder, threads, sample],
@@ -167,7 +172,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     return kneaddata_read_count_file
 
 
-def quality_control(workflow, input_files, output_folder, threads, databases=None, pair_identifier=None):
+def quality_control(workflow, input_files, output_folder, threads, databases=None, pair_identifier=None, additional_options=None):
     """Quality control tasks for whole genome shotgun sequences
     
     This set of tasks performs quality control on whole genome shotgun
@@ -182,6 +187,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         databases (string/list): The databases to use with kneaddata (optional).
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
+        additional_options (string): Additional options when running kneaddata (optional).
         
     Requires:
         kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
@@ -218,7 +224,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases, pair_identifier)
+    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases, pair_identifier, additional_options)
     
     # create the read count table
     kneaddata_read_count_file=kneaddata_read_count_table(workflow, kneaddata_output_logs, output_folder)
