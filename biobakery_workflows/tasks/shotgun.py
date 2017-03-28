@@ -167,7 +167,8 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     workflow.add_task("kneaddata_read_count_table --input [args[0]] --output [targets[0]]",
         depends=input_files,
         targets=kneaddata_read_count_file,
-        args=[input_folder])
+        args=[input_folder],
+        name="kneaddata_read_count_table")
     
     return kneaddata_read_count_file
 
