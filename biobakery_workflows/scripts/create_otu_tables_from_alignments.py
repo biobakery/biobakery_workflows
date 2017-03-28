@@ -80,7 +80,7 @@ def create_fasta_files(targets, green_genes_fasta, nonchimera_fasta, output_open
                     file_handle_write_open_ref.write(line)
                     file_handle_write_closed_ref.write(line)
 
-def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, out_tsv, filtered_out_tsv):
+def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, out_tsv, filtered_out_tsv, reads_to_otus):
     """ Create open and closed reference otu tables """
 
     # read in the green genes taxonomy ids to names file
@@ -90,6 +90,7 @@ def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, o
 
     otu_table = {}
     targets = set()
+    known_otus = set()
     for alignment_type, otu_id, target in read_uc_file(green_genes_uc, all_alignments=True):
         if otu_id in denovo_otu_table:
             hits = denovo_otu_table[otu_id]
@@ -97,6 +98,7 @@ def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, o
             if alignment_type == USEARCH_HIT:
                 if target in green_genes_taxonomy_ids:
                     taxonomy_name = green_genes_taxonomy_ids[target]
+                    known_otus.add(otu_id)
                 else:
                     sys.exit("ERROR: Alignment to green genes id not included in taxonomy file:" + target)
             else:
@@ -115,8 +117,6 @@ def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, o
                 otu_table[full_id] = map(add, otu_table[full_id], hits)
 
     # write the two output files
-    sample_taxonomy_read_counts=[0]*len(samples)
-    sample_unknown_read_counts=[0]*len(samples)
     with catch_open(out_tsv, write=True) as file_handle:
         with catch_open(filtered_out_tsv, write=True) as filtered_file_handle:
             header="\t".join(["# OTU"]+samples+["taxonomy"])+"\n"
@@ -128,12 +128,17 @@ def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, o
                 # do not write unclassified output to filtered file
                 if not taxonomy_name == UNNAMED_TAXONOMY:
                     filtered_file_handle.write(output_line) 
-                    sample_taxonomy_read_counts=[a+b for a,b in zip(hits,sample_taxonomy_read_counts)]
-                else:
-                    sample_unknown_read_counts=[a+b for a,b in zip(hits,sample_unknown_read_counts)]
 
-    sample_known_read_counts={sample:count for sample, count in zip(samples,sample_taxonomy_read_counts)}
-    sample_unclassified_read_counts={sample:count for sample, count in zip(samples,sample_unknown_read_counts)}
+    # compute the counts of reads mapping to known (included in green genes) and unknown otus 
+    sample_known_read_counts={sample:0 for sample in samples}
+    sample_unclassified_read_counts={sample:0 for sample in samples}
+    for read, otus in reads_to_otus.items():
+        sample = get_sample_id(read)
+        # check if any of the otus are known
+        if known_otus.intersection(otus):
+            sample_known_read_counts[sample]+=1
+        else:
+            sample_unclassified_read_counts[sample]+=1
 
     return targets, sample_known_read_counts, sample_unclassified_read_counts
 
@@ -173,12 +178,16 @@ def write_denovo_otu_table(nonchimera_uc_mapping, output_file):
     # read the uc mapping file
     table = {}
     samples = set()
+    queries_to_otus = {}
     for query, otu in read_uc_file(nonchimera_uc_mapping):
         sample = get_sample_id(query)
         samples.add(sample)
         if not otu in table:
             table[otu]={}
         table[otu][sample] = table[otu].get(sample,0) + 1
+        if not query in queries_to_otus:
+            queries_to_otus[query]=set()
+        queries_to_otus[query].add(otu)
     
     # write the denovo output file
     sample_list=list(samples)
@@ -191,7 +200,7 @@ def write_denovo_otu_table(nonchimera_uc_mapping, output_file):
             file_handle.write("\t".join([otu]+map(str,hits_by_sample))+"\n")
             denovo_otu_table[otu]=hits_by_sample
             
-    return sample_list, denovo_otu_table
+    return sample_list, denovo_otu_table, queries_to_otus
                     
 def count_reads_per_sample(file):
     """ Count the reads for each sample from the original fasta file """
@@ -262,9 +271,9 @@ def main():
     # get the original read counts
     original_read_counts = count_reads_per_sample(args.input_original_fasta)
 
-    samples, denovo_otu_table = write_denovo_otu_table(args.input_nonchimera_uc,args.output_denovo_otu)
+    samples, denovo_otu_table, reads_to_otus = write_denovo_otu_table(args.input_nonchimera_uc,args.output_denovo_otu)
     targets, sample_known_read_counts, sample_unknown_read_counts=create_otu_table(args.input_taxonomy,
-        samples,denovo_otu_table,args.input_greengenes_uc,args.output_open_ref_tsv,args.output_closed_ref_tsv)
+        samples,denovo_otu_table,args.input_greengenes_uc,args.output_open_ref_tsv,args.output_closed_ref_tsv, reads_to_otus)
     create_fasta_files(targets,args.input_greengenes_fasta,args.input_nonchimera_fasta,args.output_open_ref_fasta,
         args.output_closed_ref_fasta)
 
