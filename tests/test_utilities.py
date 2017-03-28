@@ -233,3 +233,13 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         self.assertEqual(utilities.name_files("sample1","/tmp"), "/tmp/sample1")
         
+    def test_taxonomy_trim(self):
+        """ Test the taxonomy trim function """
+        
+        taxa = ["k__k3;p__p3;c__c2;o__o3;f__;g__;s__","k__k3;p__p3;c__c2;o__o3;f__f1;g__g1;s__",
+                "k__k3;p__p3;c__c2;o__o3;f__f1;g__g1;s__s1","k__k3;p__p3;c__c2;o__o3;f__f1;g__;s__"]
+        
+        expected_taxa = ["o__o3.f__.g__.s__","g__g1.s__","g__g1.s__s1","f__f1.g__.s__"]
+        
+        self.assertEqual(utilities.taxonomy_trim(taxa), expected_taxa)
+

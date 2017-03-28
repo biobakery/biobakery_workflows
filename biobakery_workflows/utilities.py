@@ -653,6 +653,40 @@ def taxa_remove_unclassified(taxa):
                 break
         yield ";".join(new_name)
         
+def taxonomy_trim(taxa):
+    """ Trim the taxonomy name to include the most specific known name followed by unclassified
+    
+        Args:
+            taxa (list): The list of taxa.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): The list of taxa after trimming.
+    """
+    
+    # remove any spaces from the taxonomy
+    taxa = [taxon.replace(" ","") for taxon in taxa]
+    
+    # get the taxa with unclassified levels removed
+    taxa_unclassified_removed = taxa_remove_unclassified(taxa)
+    
+    trimmed_taxa=[]
+    for taxon_full, taxon_reduced in zip(taxa, taxa_unclassified_removed):
+        # if the taxon is specific to species level, then 
+        # return the genus and species level
+        if taxon_full == taxon_reduced:
+            data = taxon_full.split(";")
+            trimmed_taxa.append(data[-2]+"."+data[-1])
+            
+        else:
+            most_specific_clade = taxon_reduced.split(";")[-1]
+            data = taxon_full.split(most_specific_clade)
+            trimmed_taxa.append(most_specific_clade+data[-1].replace(";","."))
+            
+    return trimmed_taxa
+        
 def terminal_taxa(taxa, data):
     """ Reduce the list of taxa to just those that represent the terminal nodes. If there
         are duplicate terminal nodes, then sum the duplicates.

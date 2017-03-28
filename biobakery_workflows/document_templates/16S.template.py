@@ -76,13 +76,7 @@ terminal_taxa_relab, terminal_data_relab = utilities.terminal_taxa(taxonomy, rel
 top_terminal_taxa, top_terminal_data = utilities.top_rows(terminal_taxa_relab, terminal_data_relab, max_taxa, function="average")
 
 # reduce the taxa names to just the most specific identifier
-shorted_names=[]
-for reduced_taxa_name in utilities.taxa_remove_unclassified(top_terminal_taxa):
-    # if species, add genus to shorted name
-    if "s__" in reduced_taxa_name:
-        shorted_names.append(".".join(reduced_taxa_name.split(";")[-2:]))
-    else:
-        shorted_names.append(reduced_taxa_name.split(";")[-1])
+shorted_names=utilities.taxonomy_trim(top_terminal_taxa)
 
 # sort the data with the samples with the top terminal taxa first
 sorted_samples_terminal, sorted_data_terminal = utilities.sort_data(top_terminal_data[0], samples)
