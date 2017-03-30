@@ -77,7 +77,12 @@ def parse_arguments(args):
         "--min-markers",
         help="the minimum number of reads that map to markers for each species using MetaPhlAn2\n[OPTIONAL]",
         type=int,
-        default=300)
+        default=20)
+    parser.add_argument(
+        "--min-reads-per-marker",
+        help="the minimum number of reads per marker for each species using MetaPhlAn2\n[OPTIONAL]",
+        type=int,
+        default=5)
 
     return parser.parse_args()
 
@@ -201,12 +206,22 @@ def main():
     # get the markers reads from the species fasta file
     marker_reads_to_add=set()
     read_to_species_marker={}
+    read_to_marker_name={}
+    all_reads_mapping_to_markers=set()
     if args.add_markers:
         print("Finding reads mapped to markers with MetaPhlAn2")
         
         print("Running MetaPhlAn2")
         metaphlan2_marker_file=species_fasta_file+".marker_alignments.tsv"
-        output=subprocess.check_output(["metaphlan2.py","--input_type","fasta",species_fasta_file,"--no_map","-t","reads_map","-o",metaphlan2_marker_file])
+        metaphlan2_bowtie2_file=species_fasta_file+".bowtie2.tsv"
+        
+        try:
+            # remove the bowtie2 output file if it exists to prevent metaphlan2 error
+            os.remove(metaphlan2_bowtie2_file)
+        except EnvironmentError:
+            pass
+        
+        output=subprocess.check_output(["metaphlan2.py","--input_type","fasta",species_fasta_file,"-t","reads_map","-o",metaphlan2_marker_file,"--bowtie2out",metaphlan2_bowtie2_file])
         
         # read through the file to identify the maker reads to add
         for line in open(metaphlan2_marker_file):
@@ -219,6 +234,17 @@ def main():
                         read_to_species_marker[species]=set()
                         
                     read_to_species_marker[species].add(read_name)
+                    all_reads_mapping_to_markers.add(read_name)
+                    
+        # read through the file to identify the name of the marker the reads map to
+        for line in open(metaphlan2_bowtie2_file):
+            try:
+                read_name, marker_name = line.rstrip().split("\t")
+            except IndexError:
+                continue
+            
+            if read_name in all_reads_mapping_to_markers:
+                read_to_marker_name[read_name]=marker_name
                     
         print("Found a total of "+str(len(marker_reads_to_add))+" reads to species markers")
     
@@ -248,6 +274,7 @@ def main():
         print("Total reads after filtering: "+str(len(selected_reads)))
     
     # check to make sure at least 200 marker reads (or command line setting) for each species are present
+    # make sure there reads are spread over the markers for the sample
     if args.add_markers:
         # for each species, check the number of maker reads present
         print("Counting markers in set to determine if reads need to be added to meet min markers")
@@ -258,9 +285,89 @@ def main():
             if total_overlap < args.min_markers:
                 # add in more reads to hit the min markers setting for this species
                 max_reads_to_add=list(reads_for_species.difference(selected_reads))
+                # group the reads based on the species markers
+                to_add_by_markers={}
+                for read_name in max_reads_to_add:
+                    marker_for_read = read_to_marker_name[read_name]
+                    if not marker_for_read in to_add_by_markers:
+                        to_add_by_markers[marker_for_read]=set()
+                    to_add_by_markers[marker_for_read].add(read_name)
+                    
+                selected_reads_by_markers={}
+                for read_name in selected_reads:
+                    try:
+                        marker_for_read = read_to_marker_name[read_name]
+                    except KeyError:
+                        # ignore reads that do not map to markers
+                        continue
+                    if not marker_for_read in selected_reads_by_markers:
+                        selected_reads_by_markers[marker_for_read]=set()
+                    selected_reads_by_markers[marker_for_read].add(read_name)
+                
+                # count the total reads to add    
                 total_to_add=args.min_markers - total_overlap
-                selected_reads.update(max_reads_to_add[:total_to_add])
-                print("Added "+str(total_to_add)+" reads for species "+species+" to meet min markers")
+                total_added=0
+                
+                # get a list of all of the markers for the species
+                all_species_markers=set(to_add_by_markers.keys())
+                all_species_markers.update(selected_reads_by_markers.keys())
+                
+                # start with the markers not already included, adding one read to each
+                for marker_name in all_species_markers.difference(selected_reads_by_markers.keys()):
+                    total_markers_in_set=len(list(to_add_by_markers[marker_name]))
+                    end_index = args.min_reads_per_marker if total_markers_in_set >= args.min_reads_per_marker else total_markers_in_set
+                    
+                    # add at most min reads per markers for this marker set to the set of selected reads
+                    to_add=list(to_add_by_markers[marker_name])[:end_index]
+                    selected_reads.update(to_add)
+                    if not marker_name in selected_reads_by_markers:
+                        selected_reads_by_markers[marker_name]=set()
+                    selected_reads_by_markers[marker_name].update(to_add)
+                    
+                    # remove the added reads from the set of reads to add
+                    to_add_by_markers[marker_name]=to_add_by_markers[marker_name].difference(to_add)
+                    
+                    # decrease the total amount to add
+                    total_added+=end_index
+                    
+                    print("Adding " +str(end_index)+ " total reads to fill empty marker for species " + species)
+                    
+                # next add more reads for those sets that already have markers, starting with the smallest
+                # set of markers to the largest
+                marker_counts={marker:len(list(reads)) for marker, reads in selected_reads_by_markers.items()} 
+                for marker_name in sorted(marker_counts, key=marker_counts.get):
+                    try:
+                        total_markers_in_set=len(list(to_add_by_markers[marker_name]))
+                    except KeyError:
+                        # ignore errors for markers that are not included in the to add list (only in the selected reads)
+                        continue
+                    
+                    end_index = args.min_reads_per_marker if total_markers_in_set >= args.min_reads_per_marker else total_markers_in_set
+                    
+                    # add only so many reads to get to min reads per markers for this set
+                    end_index=end_index-len(list(selected_reads_by_markers[marker_name]))
+                    
+                    # add at most min reads per marker reads for this marker set to the set of selected reads
+                    if end_index > 0:
+                        to_add=list(to_add_by_markers[marker_name])[:end_index]
+                        selected_reads.update(to_add)
+                        selected_reads_by_markers[marker_name].update(to_add)
+                            
+                        # remove the added reads from the set of reads to add
+                        to_add_by_markers[marker_name]=to_add_by_markers[marker_name].difference(to_add)
+                            
+                        total_added+=end_index
+                        print("Adding " +str(end_index)+ " total reads to fill slightly full marker for species " + species)
+                    
+                # add more reads to get to the min reads added value
+                total_to_add=total_to_add-total_added if total_added < total_to_add else 0
+                try:
+                    selected_reads.update(max_reads_to_add[:total_to_add])
+                    total_added+=total_to_add
+                    print("Added "+str(total_to_add)+" reads for species "+species+" to meet min markers")
+                except (TypeError, IndexError):
+                    continue
+                
         print("Total reads after counting markers: " + str(len(selected_reads)))
     
     print("Writing output file")
