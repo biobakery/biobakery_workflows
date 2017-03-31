@@ -242,4 +242,62 @@ class TestUtiltiesFunctions(unittest.TestCase):
         expected_taxa = ["o__o3.f__.g__.s__","g__g1.s__","g__g1.s__s1","f__f1.g__.s__"]
         
         self.assertEqual(utilities.taxonomy_trim(taxa), expected_taxa)
+        
+    def test_sample_names(self):
+        """ Test the sample names function """
+        
+        files=["s1.fastq","s1.fastq.gz"]
+        
+        self.assertEqual(utilities.sample_names(files), ["s1","s1"])
+        
+    def test_sample_names_pair_identifier(self):
+        """ Test the sample names function with a pair identifier """
+        
+        files=["s1.R1.fastq","s1.R1.fastq.gz"]
+        
+        self.assertEqual(utilities.sample_names(files,".R1"), ["s1","s1"])
+        
+    def test_paired_files(self):
+        """ Test the paired files function """
+        
+        files=["s1.R1.fastq","s1.R2.fastq","s2.R1.fastq.gz","s2.R2.fastq.gz"]
+        
+        expected_pairs = [["s1.R1.fastq","s2.R1.fastq.gz"],["s1.R2.fastq","s2.R2.fastq.gz"]]
+        
+        actual_pairs = utilities.paired_files(files, pair_identifier=".R1")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
+    def test_sample_names_pair_identifier_duplicate(self):
+        """ Test the sample names function with a pair identifier included in the sample name"""
+        
+        files=["s_1_1.fastq","s1_1.fastq.gz"]
+        
+        self.assertEqual(utilities.sample_names(files,"_1"), ["s_1","s1"])
+        
+    def test_paired_files_duplicate_identifier_1(self):
+        """ Test the paired files function with a first identifier duplicated"""
+        
+        files=["s_1_1.fastq","s_1_2.fastq","s_1_3_1.fastq.gz","s_1_3_2.fastq.gz"]
+        
+        expected_pairs = [["s_1_1.fastq","s_1_3_1.fastq.gz"],["s_1_2.fastq","s_1_3_2.fastq.gz"]]
+        
+        actual_pairs = utilities.paired_files(files, pair_identifier="_1")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
+    def test_paired_files_duplicate_identifier_2(self):
+        """ Test the paired files function with a second identifier duplicated"""
+        
+        files=["s_2_1.fastq","s_2_2.fastq","s_2_3_1.fastq.gz","s_2_3_2.fastq.gz"]
+        
+        expected_pairs = [["s_2_1.fastq","s_2_3_1.fastq.gz"],["s_2_2.fastq","s_2_3_2.fastq.gz"]]
+        
+        actual_pairs = utilities.paired_files(files, pair_identifier="_1")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
 

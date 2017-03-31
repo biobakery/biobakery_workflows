@@ -56,12 +56,25 @@ def paired_files(files, pair_identifier=None):
     input_pair1 = list(filter(lambda file: pair_identifier in os.path.basename(file), files))
     input_pair2 = list(filter(lambda file: pair_identifier2 in os.path.basename(file), files))
     
+    # in the case where an identifier matches multiple places in a sample name
+    # remove the duplicates from the two sets
+    if len(input_pair1) > len(input_pair2):
+        input_pair1=list(set(input_pair1).difference(input_pair2))
+    elif len(input_pair2) > len(input_pair1):
+        input_pair2=list(set(input_pair2).difference(input_pair1))
+    
     # only return matching pairs of files in the same order
     paired_file_set = [[],[]]
-    for file1, file2 in zip(sorted(input_pair1), sorted(input_pair2)):
-        if sample_names(file1,pair_identifier) == sample_names(file2,pair_identifier2):
-            paired_file_set[0].append(file1)
-            paired_file_set[1].append(file2)
+    for file1 in sorted(input_pair1):
+        # find the matching file in the second set
+        name1=sample_names(file1, pair_identifier)
+        for file2 in input_pair2:
+            name2=sample_names(file2, pair_identifier2)
+            if name1 == name2:
+                paired_file_set[0].append(file1)
+                paired_file_set[1].append(file2)
+                input_pair2.remove(file2)
+                break
     
     return paired_file_set
 
@@ -90,11 +103,12 @@ def sample_names(files,pair_identifier=None):
         files=[files]
         convert=True
         
-    samples=[os.path.basename(file).split(".")[0] for file in files]
+    samples=[".".join(os.path.basename(file).replace(".gz","").split(".")[:-1]) for file in files]
     
     # remove the pair_idenifier from the sample name, if provided
     if pair_identifier:
-        samples=[sample.replace(pair_identifier,"") for sample in samples]
+        # only remove the last instance of the pair identifier
+        samples=[pair_identifier.join(sample.split(pair_identifier)[:-1]) for sample in samples]
     
     if convert:
         samples=samples[0]
