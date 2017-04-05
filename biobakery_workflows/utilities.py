@@ -489,7 +489,40 @@ def remove_stratified_pathways(pathways, data, remove_description=None):
             new_pathways.append(path)
             new_data.append(row)
             
-    return new_pathways, new_data    
+    return new_pathways, new_data   
+
+def filter_taxa(taxonomy, data, min_abundance, min_samples):
+    """ Remove the taxons by min abundance and min samples.
+    
+        Args:
+            taxonomy (list): A list of taxonomy strings for each row.
+            data (list of lists): Each list in data represents a row of data. 
+            min_abundance (float): Remove data without min abundance. 
+            min_samples (float): Remove data not in min samples.
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of species names.
+            (list): A list of lists of the data.
+            
+        Example:
+            filter_taxa(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]],10,2)
+    """ 
+
+    filtered_data=[]
+    filtered_taxonomy=[]
+    # compute the min samples required for this data set
+    min_samples_required=math.ceil(len(data[0])*(min_samples/100.0))
+    for taxon, data_row in zip(taxonomy, data):
+        # filter the species to only include those with min abundance in min of samples
+        total_samples_pass_filter=len(list(filter(lambda x: x>min_abundance, data_row)))
+        if total_samples_pass_filter >= min_samples_required: 
+            filtered_taxonomy.append(taxon)
+            filtered_data.append(data_row)
+    
+    return filtered_taxonomy, filtered_data
 
 def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
     """ Remove the taxons that are not a species level from the data set.
@@ -525,18 +558,7 @@ def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
     # if filters are provided, then filter the data by both min abundance
     # and min samples
     if min_abundance is not None and min_samples is not None:
-        filtered_data=[]
-        filtered_taxonomy=[]
-        # compute the min samples required for this data set
-        min_samples_required=math.ceil(len(species_data[0])*(min_samples/100.0))
-        for taxon, data_row in zip(species_taxonomy, species_data):
-            # filter the species to only include those with min abundance in min of samples
-            total_samples_pass_filter=len(list(filter(lambda x: x>min_abundance, data_row)))
-            if total_samples_pass_filter >= min_samples_required: 
-                filtered_taxonomy.append(taxon)
-                filtered_data.append(data_row)
-        species_taxonomy=filtered_taxonomy
-        species_data=filtered_data
+        species_taxonomy, species_data = filter_taxa(species_taxonomy, species_data, min_abundance, min_samples)
 
     return species_taxonomy, species_data
 

@@ -2,6 +2,9 @@
 #+ echo=False
 import numpy
 
+min_abundance=0.01
+min_samples=10
+
 from biobakery_workflows import utilities
 
 from anadama2 import PweaveDocument
@@ -87,16 +90,21 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
+#' # Ordination
 
 #+ echo=False
 
 # plot the top terminal node taxa in a PCOA
 # provide data as values [0-1] organized as samples as columns and features as rows
-# filter out any zero rows
-taxa_nonzero, data_nonzero = utilities.filter_zero_rows(terminal_taxa_relab, terminal_data_relab)
 
-document.show_pcoa(samples, taxa_nonzero, data_nonzero, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity")
+# filter the data by min abundance and min samples
+filtered_taxonomy, filtered_data = utilities.filter_taxa(terminal_taxa_relab, terminal_data_relab, min_abundance, min_samples)
 
+document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity")
+
+#' For the PCoA plot, relative abundances are passed through a basic filter requiring each terminal taxa
+#' to have at least <% print(min_abundance)%> % abundance in at least 
+#' <% print(min_samples) %> % of all samples.
 
 
 
