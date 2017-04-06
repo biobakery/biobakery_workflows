@@ -1,5 +1,6 @@
 
 #+ echo=False
+import os
 import numpy
 
 from biobakery_workflows import utilities
@@ -10,6 +11,17 @@ document=PweaveDocument()
 
 # get the variables for this document generation task
 vars = document.get_vars()
+
+# set the max number of table rows to be shown
+# and set the messages to print for each table size
+max_table_rows=20
+table_message="A data file exists of this table: "
+large_table_message="The table is too large to include the full table in this document."+\
+    " A partial table is shown which includes only "+str(max_table_rows)+" samples."+\
+    " Please see the data file for the full table: "
+
+# set the location of the data folder
+data_folder=os.path.join(os.path.dirname(vars["targets"][0]),"data")
 
 #' # Quality Control
 
@@ -30,10 +42,10 @@ vars = document.get_vars()
 #+ echo=False
 
 # read in the DNA samples
-columns, dna_samples, dna_paired_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,2,6))
+columns, dna_samples, dna_paired_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,2,6), format_data=int)
 dna_paired_columns = ["Raw","Trim","hg38"]
 
-columns, dna_samples, dna_orphan_data = document.read_table(vars["dna_read_counts"], only_data_columns=(4,5,8,9))
+columns, dna_samples, dna_orphan_data = document.read_table(vars["dna_read_counts"], only_data_columns=(4,5,8,9), format_data=int)
 dna_orphan_columns = ["Trim orphan1", "Trim orphan2", "hg38 orphan1", "hg38 orphan2"]
 
 #' ## DNA Samples Quality Control
@@ -41,19 +53,55 @@ dna_orphan_columns = ["Trim orphan1", "Trim orphan2", "hg38 orphan1", "hg38 orph
 #' ### DNA Samples Tables of Filtered Reads
 
 #+ echo=False
-document.show_table(dna_paired_data, dna_samples, dna_paired_columns, "DNA Paired end reads", 
-    format_data_comma=True)
+
+# create a table of the paired counts
+paired_counts_file = os.path.join(data_folder,"paired_counts_table.tsv")
+document.write_table(["# Sample"]+dna_paired_columns, dna_samples, dna_paired_data, paired_counts_file)
+
+if len(dna_samples) <= max_table_rows:
+    document.show_table(dna_paired_data, dna_samples, dna_paired_columns, "DNA Paired end reads", 
+        format_data_comma=True)
+else:
+    document.show_table(dna_paired_data[:max_table_rows], dna_samples[:max_table_rows], 
+        dna_paired_columns, "DNA Paired end reads (partial table)", format_data_comma=True)
+        
+#' <% print(large_table_message) if len(dna_samples) > max_table_rows else print(table_message) %>
+#' [paired_counts_table.tsv](data/paired_counts_table.tsv)    
 
 #+ echo=False
-document.show_table(dna_orphan_data, dna_samples, dna_orphan_columns, "DNA Orphan reads", 
-    format_data_comma=True)
+
+# create a table of the orphan counts
+orphan_counts_file = os.path.join(data_folder,"orphan_counts_table.tsv")
+document.write_table(["# Sample"]+dna_orphan_columns, dna_samples, dna_orphan_data, orphan_counts_file)
+
+if len(dna_samples) <= max_table_rows:
+    document.show_table(dna_orphan_data, dna_samples, dna_orphan_columns, "DNA Orphan reads", 
+        format_data_comma=True)
+else:
+    document.show_table(dna_orphan_data[:max_table_rows], dna_samples[:max_table_rows], 
+        dna_orphan_columns, "DNA Orphan reads (partial table)", format_data_comma=True)    
+
+#' <% print(large_table_message) if len(dna_samples) > max_table_rows else print(table_message) %>
+#' [orphan_counts_table.tsv](data/orphan_counts_table.tsv) 
 
 #+ echo=False
 # plot the microbial reads ratios    
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
-document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
-                    "DNA microbial read proportion", column_width=0.25)
 
+# create a table of the microbial reads
+microbial_counts_file = os.path.join(data_folder,"microbial_counts_table.tsv")
+document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, dna_microbial_reads, microbial_counts_file)
+
+if len(dna_samples) <= max_table_rows:
+    document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
+        "DNA microbial read proportion", column_width=0.25)
+else:
+    document.show_table(dna_microbial_reads[:max_table_rows], dna_samples[:max_table_rows], 
+        dna_microbial_labels, "DNA microbial read proportion (partial table)", column_width=0.25)    
+        
+#' <% print(large_table_message) if len(dna_samples) > max_table_rows else print(table_message) %>
+#' [microbial_counts_table.tsv](data/microbial_counts_table.tsv) 
+        
 #' ### DNA Samples Plots of Filtered Reads
 
 #+ echo=False
