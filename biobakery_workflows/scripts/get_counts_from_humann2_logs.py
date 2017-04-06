@@ -60,7 +60,7 @@ def main():
             elif NUCLEOTIDE_COUNT_TAG in line:
                 try:
                     data[2]=int(data[1]*((100-float(line.split()[-2]))/100.0))
-                except ValueError:
+                except (ValueError, TypeError):
                     print("Warning: Unable to compute nucleotide reads aligned from log line: " + line)
             elif TRANSLATED_COUNT_TAG in line:
                 try:
