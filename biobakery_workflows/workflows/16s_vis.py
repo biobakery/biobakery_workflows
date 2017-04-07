@@ -53,7 +53,7 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
 args = workflow.parse_args()
 
 # add the document to the workflow
-workflow.add_document(
+doc_task=workflow.add_document(
     templates=[document_templates.get_template("header"),
                document_templates.get_template("16S")],
     depends=[args.otu_table, args.read_count_table], 
@@ -63,6 +63,17 @@ workflow.add_document(
           "introduction_text":args.introduction_text,
           "otu_table":os.path.abspath(args.otu_table),
           "read_count_table":os.path.abspath(args.read_count_table)})
+
+# name the archive the same as the output folder
+# join with "" so directory always ends with path join so dirname picks up correct directory
+archive = os.path.dirname(os.path.join(args.output,""))+".zip"
+
+# add an archive of the document and figures, removing the log file
+workflow.add_archive(
+    depends=[args.output,doc_task],
+    targets=archive,
+    archive_software="zip",
+    remove_log=True)
 
 # start the workflow
 workflow.go()
