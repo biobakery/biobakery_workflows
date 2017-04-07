@@ -66,8 +66,7 @@ species_counts_after_filter=count_filtered_columns(filtered_species_data, min=0)
 all_species_counts=[[a,b] for a,b in zip(species_counts, species_counts_after_filter)]
 
 # create a table of the data in the output folder
-data_folder=os.path.join(os.path.dirname(vars["targets"][0]),"data")
-species_table_file = os.path.join(data_folder,"species_counts_table.tsv")
+species_table_file = os.path.join(document.data_folder,"species_counts_table.tsv")
 document.write_table(["# Sample","Total","After filter"],samples, all_species_counts, species_table_file)
 
 # if there are not many samples, then show the full table

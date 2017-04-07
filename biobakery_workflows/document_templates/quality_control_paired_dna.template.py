@@ -20,9 +20,6 @@ large_table_message="The table is too large to include the full table in this do
     " A partial table is shown which includes only "+str(max_table_rows)+" samples."+\
     " Please see the data file for the full table: "
 
-# set the location of the data folder
-data_folder=os.path.join(os.path.dirname(vars["targets"][0]),"data")
-
 #' # Quality Control
 
 #' This report section contains information about the quality control processing
@@ -55,7 +52,7 @@ dna_orphan_columns = ["Trim orphan1", "Trim orphan2", "hg38 orphan1", "hg38 orph
 #+ echo=False
 
 # create a table of the paired counts
-paired_counts_file = os.path.join(data_folder,"paired_counts_table.tsv")
+paired_counts_file = os.path.join(document.data_folder,"paired_counts_table.tsv")
 document.write_table(["# Sample"]+dna_paired_columns, dna_samples, dna_paired_data, paired_counts_file)
 
 if len(dna_samples) <= max_table_rows:
@@ -71,7 +68,7 @@ else:
 #+ echo=False
 
 # create a table of the orphan counts
-orphan_counts_file = os.path.join(data_folder,"orphan_counts_table.tsv")
+orphan_counts_file = os.path.join(document.data_folder,"orphan_counts_table.tsv")
 document.write_table(["# Sample"]+dna_orphan_columns, dna_samples, dna_orphan_data, orphan_counts_file)
 
 if len(dna_samples) <= max_table_rows:
@@ -89,7 +86,7 @@ else:
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
 
 # create a table of the microbial reads
-microbial_counts_file = os.path.join(data_folder,"microbial_counts_table.tsv")
+microbial_counts_file = os.path.join(document.data_folder,"microbial_counts_table.tsv")
 document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, dna_microbial_reads, microbial_counts_file)
 
 if len(dna_samples) <= max_table_rows:
