@@ -29,8 +29,9 @@ import os
 # import the workflow class from anadama2
 from anadama2 import Workflow
 
-# import the document templates from biobakery_workflows
+# import the document templates and utilities from biobakery_workflows
 from biobakery_workflows import document_templates
+from biobakery_workflows import utilities
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with multiple input files
@@ -50,12 +51,20 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
 # get the arguments from the command line
 args = workflow.parse_args()
 
+# select the templates based on the qc data
+templates=[document_templates.get_template("header")]
+
+if utilities.is_paired_table(args.qc_counts):
+    templates+=[document_templates.get_template("quality_control_paired_dna")]
+else:
+    templates+=[document_templates.get_template("quality_control_single_dna")]
+    
+templates+=[document_templates.get_template("taxonomy"),
+            document_templates.get_template("functional_dna")]
+
 # add the document to the workflow
 doc_task=workflow.add_document(
-    templates=[document_templates.get_template("header"),
-               document_templates.get_template("quality_control_paired_dna"),
-               document_templates.get_template("taxonomy"),
-               document_templates.get_template("functional_dna")],
+    templates=templates,
     depends=[args.qc_counts, args.taxonomic_profile, args.pathabundance,
              args.read_counts, args.feature_counts], 
     targets=workflow.name_output_files("wmgx_report.pdf"),
