@@ -70,7 +70,7 @@ def paired_files(files, pair_identifier=None):
         name1=sample_names(file1, pair_identifier)
         for file2 in input_pair2:
             name2=sample_names(file2, pair_identifier2)
-            if name1 == name2:
+            if name1 and name1 == name2:
                 paired_file_set[0].append(file1)
                 paired_file_set[1].append(file2)
                 input_pair2.remove(file2)

@@ -300,4 +300,29 @@ class TestUtiltiesFunctions(unittest.TestCase):
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
         
+    def test_paired_files_identifier_not_found(self):
+        """ Test the paired files function with an identifier that is not found"""
+        
+        files=["sample-1.R1.fastq","sample-1.R2.fastq","sample-2.R1.fastq.gz","sample-2.R2.fastq.gz"]
+        
+        expected_pairs = [[],[]]
+        
+        actual_pairs = utilities.paired_files(files, pair_identifier="_R1.")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
+    def test_paired_files_identifier_includes_extension(self):
+        """ Test the paired files function with an identifier that is not found because
+            it includes the period from the file extension"""
+        
+        files=["sample-1.R1.fastq","sample-1.R2.fastq","sample-2.R1.fastq.gz","sample-2.R2.fastq.gz"]
+        
+        expected_pairs = [[],[]]
+        
+        actual_pairs = utilities.paired_files(files, pair_identifier="R1.")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
 
