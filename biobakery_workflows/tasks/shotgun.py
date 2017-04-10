@@ -401,14 +401,6 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         targets=log_counts,
         args=humann2_output_folder)
     
-    # create a task to merge all of the pathway abundance files, to be used as input to the visualization workflow
-    merged_pathabundance_original = utilities.name_files("pathabundance.tsv", output_folder)
-    workflow.add_task(
-        "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name pathabund",
-        depends=pathabundance,
-        targets=merged_pathabundance_original,
-        args=humann2_output_folder)
-    
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
     # get a list of all output ec files
@@ -431,8 +423,9 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     norm_pathabundance_files = utilities.name_files(pathabundance, output_folder,  subfolder="pathways", tag="relab", create_folder=True)
     
     # normalize the genefamily, ec, and pathabundance files
+    # do not include special features (ie UNMAPPED, UNINTEGRATED, UNGROUPED) in norm computation
     workflow.add_task_group_gridable(
-        "humann2_renorm_table --input [depends[0]] --output [targets[0]] --units relab",
+        "humann2_renorm_table --input [depends[0]] --output [targets[0]] --units relab --special n",
         depends=genefamiles + ec_files + pathabundance,
         targets=norm_genefamily_files + norm_ec_files + norm_pathabundance_files,
         time=5*60, # 5 minutes
