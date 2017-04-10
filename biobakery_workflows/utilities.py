@@ -49,7 +49,7 @@ def paired_files(files, pair_identifier=None):
     """
     
     if pair_identifier is None:
-        pair_identifier=".R1."
+        pair_identifier=".R1"
     
     pair_identifier2=pair_identifier.replace("1","2",1)
 
@@ -626,7 +626,32 @@ def sort_data(data, samples):
     
     return sorted_samples, sorted_data
 
-def microbial_read_proportion(paired_data, orphan_data, rna=None):
+def is_paired_table(file):
+    """ Check if a file contains paired read counts using the header information.
+    
+        Args:
+            file (string): A file of read counts.
+                
+        Requires:
+            None
+        
+        Returns:
+            (bool): True if the file contains paired read counts
+            
+    """
+    
+    # read in the first line in the file
+    try:
+        with open(file) as file_handle:
+            header=file_handle.readline()
+    except EnvironmentError:
+        sys.exit("Unable to read file: " + file)
+        
+    paired = True if "pair" in header.lower() else False
+    
+    return paired
+
+def microbial_read_proportion(paired_data, orphan_data=None, rna=None):
     """ Compute microbial read proporations from the KneadData read counts.
     
         Args:
@@ -642,6 +667,13 @@ def microbial_read_proportion(paired_data, orphan_data, rna=None):
             (list): A list of strings with labels for the ratios.
             
     """
+    
+    # if the orphan reads are not provided, create an empty set of data
+    if orphan_data is None:
+        orphan_data=[]
+        for i in range(len(paired_data)):
+            orphan_data.append([0,0,0,0])
+    
     proportion_decontaminated = []
     for paired_row, orphan_row in zip(paired_data, orphan_data):
         decontaminated_sum = 2.0 * paired_row[-1] + orphan_row[-1] + orphan_row[-2]
