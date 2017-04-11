@@ -216,8 +216,10 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
     """
     
     # check for paired input files
-    input_pair1, input_pair2 = utilities.paired_files(input_files, pair_identifier)
-
+    if pair_identifier:
+        input_pair1, input_pair2 = utilities.paired_files(input_files, pair_identifier)
+    else:
+        input_pair1 = []
     
     paired = False
     if input_pair1:
