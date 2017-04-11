@@ -257,6 +257,13 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         self.assertEqual(utilities.sample_names(files,".R1"), ["s1","s1"])
         
+    def test_sample_names_pair_identifier_not_found(self):
+        """ Test the sample names function with a pair identifier that is not included in the names """
+        
+        files=["s1.R1.fastq","s1.R1.fastq.gz"]
+        
+        self.assertEqual(utilities.sample_names(files,"_R1"), ["s1.R1","s1.R1"])
+        
     def test_paired_files(self):
         """ Test the paired files function """
         

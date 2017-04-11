@@ -108,7 +108,7 @@ def sample_names(files,pair_identifier=None):
     # remove the pair_idenifier from the sample name, if provided
     if pair_identifier:
         # only remove the last instance of the pair identifier
-        samples=[pair_identifier.join(sample.split(pair_identifier)[:-1]) for sample in samples]
+        samples=[pair_identifier.join(sample.split(pair_identifier)[:-1]) if pair_identifier in sample else sample for sample in samples]
     
     if convert:
         samples=samples[0]
