@@ -658,13 +658,14 @@ def is_paired_table(file):
     
     return paired
 
-def microbial_read_proportion(paired_data, orphan_data=None, rna=None):
+def microbial_read_proportion(paired_data, orphan_data=None, rna=None, database_name=None):
     """ Compute microbial read proporations from the KneadData read counts.
     
         Args:
             paired_data (list of lists): The paired data read counts for each sample.
             orphan_data (list of lists): The orphan data read counts for each sample. 
             rna (bool): If set, this data set is RNA so compute additional ratio.
+            database_name (string): The name of the contaminate database.
                 
         Requires:
             None
@@ -674,6 +675,10 @@ def microbial_read_proportion(paired_data, orphan_data=None, rna=None):
             (list): A list of strings with labels for the ratios.
             
     """
+    
+    # if the database name is not set, use the default
+    if database_name is None:
+        database_name="hg38"
     
     # if the orphan reads are not provided, create an empty set of data
     if orphan_data is None:
@@ -693,9 +698,9 @@ def microbial_read_proportion(paired_data, orphan_data=None, rna=None):
             proportion_decontaminated.append(["{0:.5f}".format(i) for i in [decon_trim, decon_raw]])
 
     if rna:
-        labels=["hg38 mRNA / Trim","hg38 mRNA / hg38","hg38 mRNA / Raw"]
+        labels=[database_name+" mRNA / Trim",database_name+" mRNA / "+database_name,database_name+" mRNA / Raw"]
     else:
-        labels=["hg38 / Trim","hg38 / Raw"]
+        labels=[database_name+" / Trim",database_name+" / Raw"]
         
     return proportion_decontaminated, labels
 

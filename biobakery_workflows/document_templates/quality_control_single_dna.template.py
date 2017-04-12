@@ -19,24 +19,27 @@ table_message="A data file exists of this table: "
 large_table_message="The table is too large to include the full table in this document."+\
     " A partial table is shown which includes only "+str(max_table_rows)+" samples."+\
     " Please see the data file for the full table: "
+    
+# get the name of the contaminate database used
+db_name = vars["contaminate_database"]
 
 #' # Quality Control
 
 #' This report section contains information about the quality control processing
 #' for all samples. These samples were
 #' run through [KneadData](http://huttenhower.sph.harvard.edu/kneaddata).
-#' Samples were first trimmed then filtered using the human genome (hg38).
+#' Samples were first trimmed then filtered against a contaminate reference database.
 
-#' * raw: Untouched fastq reads.
-#' * trim: Number of reads remaining after trimming bases with Phred score < 20. If the 
+#' * raw : Untouched fastq reads.
+#' * trim : Number of reads remaining after trimming bases with Phred score < 20. If the 
 #' trimmed reads is <70% of original length then it is removed altogether.
-#' * hg38: Number of reads remaining after depleting reads against the human genome (hg38).
+#' * <% print(db_name) %> : Number of reads remaining after depleting reads against the contaminate reference database.
 
 #+ echo=False
 
 # read in the DNA samples
 columns, dna_samples, dna_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,1,3), format_data=int)
-dna_columns = ["Raw","Trim","hg38"]
+dna_columns = ["Raw","Trim",db_name]
 
 #' ## DNA Samples Quality Control
 
@@ -60,7 +63,7 @@ else:
 
 #+ echo=False
 # plot the microbial reads ratios    
-dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_data)
+dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_data, database_name=db_name)
 
 # create a table of the microbial reads
 microbial_counts_file = os.path.join(document.data_folder,"microbial_counts_table.tsv")

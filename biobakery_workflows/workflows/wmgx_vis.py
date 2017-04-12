@@ -47,6 +47,7 @@ workflow.add_argument("feature-counts", desc="the counts of features (gene famil
 workflow.add_argument("project-name",desc="the name of the project")
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome shotgun sequencing.")
+workflow.add_argument("contaminate-database",desc="the database used for contaminate read filtering for quality control", default="hg38")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -75,7 +76,8 @@ doc_task=workflow.add_document(
           "taxonomic_profile":os.path.abspath(args.taxonomic_profile),
           "dna_pathabundance":os.path.abspath(args.pathabundance),
           "read_counts":os.path.abspath(args.read_counts),
-          "feature_counts":os.path.abspath(args.feature_counts)})
+          "feature_counts":os.path.abspath(args.feature_counts),
+          "contaminate_database":args.contaminate_database})
 
 # name the archive the same as the output folder
 # join with "" so directory always ends with path join so dirname picks up correct directory

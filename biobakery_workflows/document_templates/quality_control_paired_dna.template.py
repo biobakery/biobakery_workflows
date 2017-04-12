@@ -20,30 +20,33 @@ large_table_message="The table is too large to include the full table in this do
     " A partial table is shown which includes only "+str(max_table_rows)+" samples."+\
     " Please see the data file for the full table: "
 
+# get the name of the contaminate database used
+db_name = vars["contaminate_database"]
+
 #' # Quality Control
 
 #' This report section contains information about the quality control processing
 #' for all samples. These samples were
 #' run through [KneadData](http://huttenhower.sph.harvard.edu/kneaddata).
-#' Samples were first trimmed then filtered using the human genome (hg38).
+#' Samples were first trimmed then filtered against a contaminate reference database.
 
 #' Data is organized by paired and orphan reads. When 
 #' one read in a pair passes a filtering step and the other does not the surviving
 #' read is an orphan. The tables and plots are annotated as follows:
 
-#' * raw: Untouched fastq reads.
-#' * trim: Number of reads remaining after trimming bases with Phred score < 20. If the 
+#' * raw : Untouched fastq reads.
+#' * trim : Number of reads remaining after trimming bases with Phred score < 20. If the 
 #' trimmed reads is <70% of original length then it is removed altogether.
-#' * hg38: Number of reads remaining after depleting reads against the human genome (hg38).
+#' * <% print(db_name) %> : Number of reads remaining after depleting reads against a contaminate reference database.
 
 #+ echo=False
 
 # read in the DNA samples
 columns, dna_samples, dna_paired_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,2,6), format_data=int)
-dna_paired_columns = ["Raw","Trim","hg38"]
+dna_paired_columns = ["Raw","Trim",db_name]
 
 columns, dna_samples, dna_orphan_data = document.read_table(vars["dna_read_counts"], only_data_columns=(4,5,8,9), format_data=int)
-dna_orphan_columns = ["Trim orphan1", "Trim orphan2", "hg38 orphan1", "hg38 orphan2"]
+dna_orphan_columns = ["Trim orphan1", "Trim orphan2", db_name+" orphan1", db_name+" orphan2"]
 
 #' ## DNA Samples Quality Control
 
@@ -83,7 +86,7 @@ else:
 
 #+ echo=False
 # plot the microbial reads ratios    
-dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
+dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data, database_name=db_name)
 
 # create a table of the microbial reads
 microbial_counts_file = os.path.join(document.data_folder,"microbial_counts_table.tsv")
