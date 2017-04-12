@@ -369,12 +369,13 @@ def relative_abundance(data):
         
     return relab
 
-def filter_zero_rows(taxa, data):
+def filter_zero_rows(taxa, data, ignore_index=None):
     """ Remove any taxa and data rows from the lists if the data sum for a row is zero.
         
         Args:
             taxa (list): The list of taxa.
             data (list of lists): Each list in data represents a row of data.
+            ignore_index (int): An index to ignore in each row in computing the sum.
                 
         Requires:
             None
@@ -386,7 +387,13 @@ def filter_zero_rows(taxa, data):
     new_taxa=[]
     new_data=[]
     for taxon, row in zip(taxa, data):
-        if sum(row) != 0:
+        if ignore_index is not None:
+            temp_row = row
+            del temp_row[ignore_index]
+            row_sum = sum(temp_row)
+        else:
+            row_sum = sum(row)
+        if row_sum != 0:
             new_taxa.append(taxon)
             new_data.append(row)
             
