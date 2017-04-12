@@ -97,6 +97,9 @@ document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ordination 
 
 #' ## Heatmap
 
+#' The top <% print(max_sets_heatmap) %> species based on average relative abundance are
+#' shown in the heatmap. The heatmap was generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
+
 #+ echo=False
 document.show_hclust2(samples,top_taxonomy,top_data,
                       title="Top "+str(max_sets_heatmap)+" species by average abundance")
@@ -122,6 +125,13 @@ for column in numpy.transpose(sorted_data):
     other_abundances.append(100-sum(column))
 sorted_data.append(other_abundances)
 
+#' The top <% print(max_sets_barplot) %> species based on average relative abundance are
+#' shown in the barplot. The samples are organized based on relative abundance of the
+#' species with the highest relative abundance in any sample. For this data set,
+#' <% print(top_taxonomy[0]) %> had the highest relative abundance in sample <% print(sorted_samples[0]) %>. 
+#' The samples are ordered from highest relative abundance for <% print(top_taxonomy[0]) %> to lowest.
+
+#+ echo=False
 document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
     column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
     ylabel="Predicted community composition (% of total)", legend_title="Species")
