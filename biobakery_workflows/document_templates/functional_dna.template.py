@@ -42,6 +42,9 @@ dna_top_variance_pathways, dna_top_variance_data = utilities.top_rows(dna_pathwa
 
 #' ## Heatmaps
 
+#' The top <% print(max_sets) %> pathways based on average relative abundance are
+#' shown in the heatmaps. The heatmaps were generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
+
 #+ echo=False
 document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
                       title="Top "+str(max_sets)+" pathways by average abundance")
@@ -51,6 +54,12 @@ document.show_hclust2(dna_samples,dna_top_variance_pathways,dna_top_variance_dat
                       title="Top "+str(max_sets)+" pathways by variance")
 
 #' ## Features
+
+#' The total number of reads used for functional profiling along with the total
+#' number of reads aligned at the nucleotide and translated search steps are shown.
+#' They are plotted against the total number of features identified for each sample.
+#' The features include gene families, ECs, and pathways. The feature counts do not
+#' include stratification levels.
 
 #+ echo=False
 import math
@@ -94,6 +103,7 @@ pathabundance_counts=[try_log10(row[feature_type.index("humann2_pathabundance_re
 document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
 
+#+ echo=False
 document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
 
