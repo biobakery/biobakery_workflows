@@ -64,15 +64,11 @@ doc_task=workflow.add_document(
           "otu_table":os.path.abspath(args.otu_table),
           "read_count_table":os.path.abspath(args.read_count_table)})
 
-# name the archive the same as the output folder
-# join with "" so directory always ends with path join so dirname picks up correct directory
-archive = os.path.dirname(os.path.join(args.output,""))+".zip"
-
 # add an archive of the document and figures, removing the log file
+# the archive will have the same name and location as the output folder
 workflow.add_archive(
     depends=[args.output,doc_task],
-    targets=archive,
-    archive_software="zip",
+    targets=args.output+".zip",
     remove_log=True)
 
 # start the workflow
