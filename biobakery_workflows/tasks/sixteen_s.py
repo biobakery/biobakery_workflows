@@ -696,7 +696,7 @@ def functional_profile(workflow, closed_reference_tsv, output_folder):
     
     # convert the tsv file to biom format
     closed_reference_biom_file = utilities.name_files(closed_reference_tsv,output_folder,extension="biom")
-    convert_to_biom_from_tsv(workflow,closed_reference_tsv,closed_reference_biom_file)
+    convert_to_biom_from_tsv(workflow,closed_reference_tsv,closed_reference_biom_file,options="--process-obs-metadata=taxonomy --output-metadata-id=taxonomy")
     
     # run picrust to get functional data
     functional_data_biom = picrust(workflow,closed_reference_biom_file,output_folder)
@@ -747,13 +747,15 @@ def picrust(workflow,otu_table_biom,output_folder):
     return predict_metagenomes_table
     
 
-def convert_to_biom_from_tsv(workflow, tsv_file, biom_file):
+def convert_to_biom_from_tsv(workflow, tsv_file, biom_file, table_type="OTU table", options=""):
     """ Convert a tsv file to a biom file 
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         tsv_file (string): The path to a tsv file (otu table format) with taxonomy.
         biom_file (string): The path to write the new biom file
+        table_type (string): The type of table to convert
+        options (string): Additional options to provide to the convert function
         
     Requires:
         Biom v2: A tool for general use formatting of biological data.
@@ -763,19 +765,20 @@ def convert_to_biom_from_tsv(workflow, tsv_file, biom_file):
     # first remove biom file if exists as biom will not overwrite
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
-        "biom convert -i [depends[0]] -o [targets[0]] --table-type='OTU table' --process-obs-metadata=taxonomy --output-metadata-id=taxonomy --to-json",
+        "biom convert -i [depends[0]] -o [targets[0]] --table-type='"+table_type+"' --to-json "+options,
         depends=tsv_file,
         targets=biom_file,
         name="biom")
     
-def convert_from_biom_to_tsv(workflow, biom_file, tsv_file):
+def convert_from_biom_to_tsv(workflow, biom_file, tsv_file, table_type="OTU table", options=""):
     """ Convert from a biom file to a tsv file 
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         biom_file (string): The path to the biom file.
         tsv_file (string): The path to write the new tsv file.
-        
+        table_type (string): The type of table to convert
+        options (string): Additional options to provide to the convert function
         
     Requires:
         Biom v2: A tool for general use formatting of biological data.
@@ -785,7 +788,7 @@ def convert_from_biom_to_tsv(workflow, biom_file, tsv_file):
     # first remove biom file if exists as biom will not overwrite
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
-        "biom convert -i [depends[0]] -o [targets[0]] --table-type='OTU table' --to-tsv",
+        "biom convert -i [depends[0]] -o [targets[0]] --table-type='"+table_type+"' --to-tsv "+options,
         depends=biom_file,
         targets=tsv_file,
         name="biom")
