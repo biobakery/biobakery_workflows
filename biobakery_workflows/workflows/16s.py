@@ -36,6 +36,7 @@ from biobakery_workflows import utilities, config
 workflow = Workflow(version="0.1", description="A workflow for 16S sequencing data")
 
 # add the custom arguments to the workflow
+workflow_config = config.SixteenS()
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
@@ -79,8 +80,8 @@ filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_co
 # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
 closed_reference_tsv = sixteen_s.taxonomic_profile(
     workflow, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output, 
-    args.threads, args.percent_identity, config.greengenes_usearch, config.greengenes_fasta,
-    config.greengenes_taxonomy, args.min_size)
+    args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
+    workflow_config.greengenes_taxonomy, args.min_size)
 
 # functional profiling
 predict_metagenomes_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)

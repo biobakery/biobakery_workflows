@@ -41,6 +41,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
                     description="A workflow for whole metagenome and metatranscriptome shotgun sequences")
 
 # add the custom arguments to the workflow
+workflow_config = config.ShotGun()
 workflow.add_argument("input-metagenome",desc="the input folder of whole metagenome shotgun sequences", required=True)
 workflow.add_argument("input-metatranscriptome",desc="the input folder of whole metatranscriptome shotgun sequences", required=True)
 workflow.add_argument("input-mapping",desc="the mapping file of metatranscriptome samples to metagenome samples")
@@ -58,8 +59,8 @@ input_files_metatranscriptome = utilities.find_files(args.input_metatranscriptom
 ### STEP #1: Run quality control on all input files ###
 wms_output_folder = os.path.join(args.output,"whole_metagenome_shotgun")
 wts_output_folder = os.path.join(args.output,"whole_metatranscriptome_shotgun")
-wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, input_files_metagenome, wms_output_folder, args.threads, config.kneaddata_db_human_genome, args.pair_identifier)
-wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, input_files_metatranscriptome, wts_output_folder, args.threads, [config.kneaddata_db_human_genome, config.kneaddata_db_human_metatranscriptome], args.pair_identifier)
+wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, input_files_metagenome, wms_output_folder, args.threads, workflow_config.kneaddata_db_human_genome, args.pair_identifier)
+wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, input_files_metatranscriptome, wts_output_folder, args.threads, [workflow_config.kneaddata_db_human_genome, workflow_config.kneaddata_db_human_metatranscriptome], args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
 wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads)
