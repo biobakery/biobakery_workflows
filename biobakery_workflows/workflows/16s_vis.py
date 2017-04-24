@@ -48,6 +48,7 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
              " Reads were filtered for quality control using a MAXEE score of 1. Filtered reads were"+
              " used to generate the OTUs. Reads not passing quality control were kept and used in the step"+
              " assigning reads to OTUs. First these reads were truncated to a max length of 200 bases."))
+workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -57,7 +58,7 @@ doc_task=workflow.add_document(
     templates=[document_templates.get_template("header"),
                document_templates.get_template("16S")],
     depends=[args.otu_table, args.read_count_table], 
-    targets=workflow.name_output_files("16S_report.pdf"),
+    targets=workflow.name_output_files("16S_report."+args.format),
     vars={"title":"16S Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
