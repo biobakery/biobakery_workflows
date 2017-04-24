@@ -45,6 +45,7 @@ workflow.add_argument("wmgx-pathabundance",desc="the pathway abundances for the 
 workflow.add_argument("project-name",desc="the name of the project")
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
+workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -57,7 +58,7 @@ workflow.add_document(
                document_templates.get_template("functional_dna_rna")],
     depends=[args.wmgx_qc_counts, args.wmtx_qc_counts,
              args.taxonomic_profile, args.wmgx_pathabundance], 
-    targets=workflow.name_output_files("wmgx_wmtx_report.pdf"),
+    targets=workflow.name_output_files("wmgx_wmtx_report."+args.format),
     vars={"title":"Metagenome and Metatranscriptome Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
