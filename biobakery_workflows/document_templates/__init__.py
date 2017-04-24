@@ -1,11 +1,11 @@
 
 import os
 
-def get_template(name):
+def get_template(name,format="py"):
     """ Get the location of the template by name """
     
     # get all of the templates in this folder
-    template_extension=".template.py"
+    template_extension=".template."+format
     template_install_folder=os.path.dirname(os.path.realpath(__file__))
     templates=filter(lambda file: file.endswith(template_extension),os.listdir(template_install_folder))
 
