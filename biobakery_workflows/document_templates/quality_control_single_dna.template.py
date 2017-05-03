@@ -71,10 +71,10 @@ document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, dna_microbi
 
 if len(dna_samples) <= max_table_rows:
     document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
-        "DNA microbial read proportion", column_width=0.25)
+        "DNA microbial read proportion")
 else:
     document.show_table(dna_microbial_reads[:max_table_rows], dna_samples[:max_table_rows], 
-        dna_microbial_labels, "DNA microbial read proportion (partial table)", column_width=0.25)    
+        dna_microbial_labels, "DNA microbial read proportion (partial table)")    
         
 #' <% print(large_table_message) if len(dna_samples) > max_table_rows else print(table_message) %>
 #' [microbial_counts_table.tsv](data/microbial_counts_table.tsv) 

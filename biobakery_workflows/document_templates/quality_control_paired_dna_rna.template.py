@@ -63,7 +63,7 @@ document.show_table(dna_orphan_data, dna_samples, dna_orphan_columns, "DNA Orpha
 # plot the microbial reads ratios
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
 document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
-                    "DNA microbial read proportion", column_width=0.25)
+                    "DNA microbial read proportion")
 
 #' ### DNA Samples Plots of Filtered Reads
 
@@ -94,7 +94,7 @@ document.show_table(rna_orphan_data, rna_samples, rna_orphan_columns, "RNA Orpha
 rna_microbial_reads, rna_microbial_labels = utilities.microbial_read_proportion(rna_paired_data,
     rna_orphan_data,rna=True)
 document.show_table(rna_microbial_reads, rna_samples, rna_microbial_labels,
-                    "RNA microbial read proportion", column_width=0.3)
+                    "RNA microbial read proportion")
 
 #' ### RNA Samples Plots of Filtered Reads
 
