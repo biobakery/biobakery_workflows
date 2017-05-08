@@ -11,6 +11,9 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+# determine the document format
+pdf_format = True if vars["format"] == "pdf" else False
+
 #' # Functional Profiling
 
 #' This report section contains information about the functional profiling run
@@ -52,6 +55,8 @@ document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
 #+ echo=False
 document.show_hclust2(dna_samples,dna_top_variance_pathways,dna_top_variance_data,
                       title="Top "+str(max_sets)+" pathways by variance")
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' ## Features
 
