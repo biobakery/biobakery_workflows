@@ -18,6 +18,9 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+# determine the document format
+pdf_format = True if vars["format"] == "pdf" else False
+
 #' # Taxonomy
 
 #' This report section contains information about the taxonomy
@@ -95,6 +98,8 @@ top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_
 # provide data as range of [0-1] organised as samples as rows and features as columns
 document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ordination of species abundances")
 
+#' <% if pdf_format: print("\clearpage") %>
+
 #' ## Heatmap
 
 #' The top <% print(max_sets_heatmap) %> species based on average relative abundance are
@@ -103,6 +108,8 @@ document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ordination 
 #+ echo=False
 document.show_hclust2(samples,top_taxonomy,top_data,
                       title="Top "+str(max_sets_heatmap)+" species by average abundance")
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' ## Barplot
 
@@ -136,3 +143,4 @@ document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
     column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
     ylabel="Predicted community composition (% of total)", legend_title="Species")
 
+#' <% if pdf_format: print("\clearpage") %>
