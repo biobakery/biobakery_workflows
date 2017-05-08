@@ -24,8 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-import os
-
 # import the workflow class from anadama2
 from anadama2 import Workflow
 
@@ -62,8 +60,9 @@ doc_task=workflow.add_document(
     vars={"title":"16S Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
-          "otu_table":os.path.abspath(args.otu_table),
-          "read_count_table":os.path.abspath(args.read_count_table)})
+          "otu_table":args.otu_table,
+          "read_count_table":args.read_count_table,
+          "format":args.format})
 
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder
