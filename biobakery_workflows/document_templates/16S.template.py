@@ -14,12 +14,17 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+# determine the document format
+pdf_format = True if vars["format"] == "pdf" else False
+
 # read in the read count table
 # columns expected are total reads, reads that map to OTUs with taxonomy,
 # and reads that map to OTUs without taxonomy
 columns, samples, data = document.read_table(vars["read_count_table"])
 
 #' There were a total of <% print(len(samples))%> samples processed with this workflow for this project.
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' # Read Count
 
@@ -41,6 +46,8 @@ document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["cla
 #' This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,
 #' 2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these
 #' three read counts for each sample is the total original read count not including filtering prior to OTU clustering.
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' # Taxonomy
 
@@ -89,6 +96,8 @@ sorted_top_terminal_data = numpy.transpose([transpose_top_terminal_data[samples.
 document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_names, 
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' # Ordination
 
