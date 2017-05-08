@@ -24,8 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-import os
-
 # import the workflow class from anadama2
 from anadama2 import Workflow
 
@@ -73,11 +71,12 @@ doc_task=workflow.add_document(
     vars={"title":"Metagenome Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
-          "dna_read_counts":os.path.abspath(args.qc_counts),
-          "taxonomic_profile":os.path.abspath(args.taxonomic_profile),
-          "dna_pathabundance":os.path.abspath(args.pathabundance),
-          "read_counts":os.path.abspath(args.read_counts),
-          "feature_counts":os.path.abspath(args.feature_counts),
+          "dna_read_counts":args.qc_counts,
+          "taxonomic_profile":args.taxonomic_profile,
+          "dna_pathabundance":args.pathabundance,
+          "read_counts":args.read_counts,
+          "feature_counts":args.feature_counts,
+          "format":args.format,
           "contaminate_database":args.contaminate_database})
 
 # add an archive of the document and figures, removing the log file
