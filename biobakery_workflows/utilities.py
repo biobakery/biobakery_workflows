@@ -496,7 +496,38 @@ def remove_stratified_pathways(pathways, data, remove_description=None):
             new_pathways.append(path)
             new_data.append(row)
             
-    return new_pathways, new_data   
+    return new_pathways, new_data 
+
+def pathway_names(pathways):
+    """ Split the pathway names and descriptions
+    
+        Args:
+            pathways (list): A list of pathway names and descriptions 
+                (from a pathway abundance or coverage file)  
+        
+        Requires:
+            None
+            
+        Returns:
+            (dict): A dictionary of pathway names to descriptions
+            
+    """
+    
+    path_names = {}
+    for path in pathways:
+        # ignore stratified pathways
+        if not "|" in path:
+            try:
+                description = path.split(":")
+                name = description.pop(0)
+                description=":".join(description)
+            except ValueError:
+                continue
+            
+            path_names[name]=description
+        
+    return path_names
+        
 
 def filter_taxa(taxonomy, data, min_abundance, min_samples):
     """ Remove the taxons by min abundance and min samples.
