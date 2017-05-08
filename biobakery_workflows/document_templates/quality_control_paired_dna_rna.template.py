@@ -11,6 +11,9 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+# determine the document format
+pdf_format = True if vars["format"] == "pdf" else False
+
 #' # Quality Control
 
 #' This report section contains information about the quality control processing
@@ -109,5 +112,5 @@ document.plot_grouped_barchart(numpy.transpose(rna_orphan_data), row_labels=rna_
     legend_title="Filter", yaxis_in_millions=True)
 
 
-
+#' <% if pdf_format: print("\clearpage") %>
 
