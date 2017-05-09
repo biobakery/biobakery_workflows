@@ -14,6 +14,15 @@ vars = document.get_vars()
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
+# set the max number of table rows to be shown
+# and set the messages to print for each table size
+max_table_rows=20
+format_table_decimal="{:.3}"
+table_message="A data file exists of this table: "
+large_table_message="The table is too large to include the full table in this document."+\
+    " A partial table is shown which includes only "+str(max_table_rows)+" pathways."+\
+    " Please see the data file for the full table: "
+
 #' # Functional Profiling
 
 #' This report section contains information about the functional profiling run
@@ -30,6 +39,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 # read in the DNA samples and get the data with out the stratification by bug
 dna_samples, dna_pathways, dna_data = document.read_table(vars["dna_pathabundance"])
+dna_pathway_names = utilities.pathway_names(dna_pathways)
 dna_pathways, dna_data = utilities.remove_stratified_pathways(dna_pathways, 
     dna_data, remove_description=True)
 
@@ -44,16 +54,69 @@ dna_top_average_pathways, dna_top_average_data = utilities.top_rows(dna_pathways
 dna_top_variance_pathways, dna_top_variance_data = utilities.top_rows(dna_pathways,
     dna_data, max_sets, function="variance")
 
-#' ## Heatmaps
+#' <% if pdf_format: print("\clearpage") %>
+
+#' ## Pathway Abundance
+
+#' The top <% print(max_sets) %> pathways based on average relative abundance and variance are
+#' shown in the heatmaps. The heatmaps were generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
+
+#' ### Average Abundance
 
 #+ echo=False
 document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
                       title="Top "+str(max_sets)+" pathways by average abundance")
 
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+# get the average abundances and descriptions for the pathways
+top_average_pathways_file = os.path.join(document.data_folder,"top_average_pathways_names.tsv")
+top_names_and_descriptions = [name+":"+dna_pathway_names[name] for name in dna_top_average_pathways]
+# get the average abundances, formatting as a single value per row 
+average_abundance = [[format_table_decimal.format(row)] for row in utilities.row_average(dna_top_average_data)]
+
+document.write_table(["# Pathway","Average abundance"], top_names_and_descriptions, average_abundance, top_average_pathways_file)
+
+if len(top_names_and_descriptions) <= max_table_rows:
+    document.show_table(average_abundance, top_names_and_descriptions, ["Average"], 
+        "Top "+str(max_sets)+" pathways by average abundance", location="left", font=7)
+else:
+    document.show_table(average_abundance[:max_table_rows], top_names_and_descriptions[:max_table_rows], 
+        ["Average"], "Top "+str(max_sets)+" pathways by average abundance (partial table)", location="left", font=7)
+        
+#' <% print(large_table_message) if len(dna_top_average_pathways) > max_table_rows else print(table_message) %>
+#' [top_average_pathways_names.tsv](data/top_average_pathways_names.tsv)
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' ### Variance
+
 #+ echo=False
 document.show_hclust2(dna_samples,dna_top_variance_pathways,dna_top_variance_data,
                       title="Top "+str(max_sets)+" pathways by variance")
 
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+# get the variances and descriptions for the pathways
+top_variance_pathways_file = os.path.join(document.data_folder,"top_variance_pathways_names.tsv")
+top_names_and_descriptions = [name+":"+dna_pathway_names[name] for name in dna_top_variance_pathways]
+# get the variances, formatting as a single value per row
+variance_abundance = [[format_table_decimal.format(row)] for row in utilities.row_variance(dna_top_variance_data)]
+
+document.write_table(["# Pathway","Variance abundance"], top_names_and_descriptions, variance_abundance, top_variance_pathways_file)
+
+if len(top_names_and_descriptions) <= max_table_rows:
+    document.show_table(variance_abundance, top_names_and_descriptions, ["Variance"], 
+        "Top "+str(max_sets)+" pathways by variance", location="left", font=7)
+else:
+    document.show_table(variance_abundance[:max_table_rows], top_names_and_descriptions[:max_table_rows], 
+        ["Variance"], "Top "+str(max_sets)+" pathways by variance (partial table)", location="left", font=7)
+    
+#' <% print(large_table_message) if len(dna_top_variance_pathways) > max_table_rows else print(table_message) %>
+#' [top_variance_pathways_names.tsv](data/top_variance_pathways_names.tsv)
 
 #' <% if pdf_format: print("\clearpage") %>
 
