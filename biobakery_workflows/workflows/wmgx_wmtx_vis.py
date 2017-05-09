@@ -53,7 +53,7 @@ workflow.add_argument("format",desc="the format for the report, pdf or html", de
 args = workflow.parse_args()
 
 # add the document to the workflow
-workflow.add_document(
+doc_task=workflow.add_document(
     templates=[document_templates.get_template("header"),
                document_templates.get_template("quality_control_paired_dna_rna"),
                document_templates.get_template("taxonomy"),
@@ -73,6 +73,13 @@ workflow.add_document(
           "taxonomic_profile":args.taxonomic_profile,
           "dna_pathabundance":args.wmgx_pathabundance,
           "format":args.format})
+
+# add an archive of the document and figures, removing the log file
+# the archive will have the same name and location as the output folder
+workflow.add_archive(
+    depends=[args.output,doc_task],
+    targets=args.output+".zip",
+    remove_log=True)
 
 # start the workflow
 workflow.go()
