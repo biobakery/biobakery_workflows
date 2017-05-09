@@ -111,6 +111,13 @@ caption=document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ord
 document.show_hclust2(samples,top_taxonomy,top_data,
                       title="Top "+str(max_sets_heatmap)+" species by average abundance")
 
+#' Hierarchical clustering of samples and species, using top <%= max_sets_heatmap %> species with highest mean 
+#' relative abundance among samples.  Abundances were log10 transformed prior to clustering, and the "average linkage" 
+#' clustering on the Euclidean distance metric was used to cluster samples.  The species dendrogram is based on pairwise 
+#' (Spearman) correlation between species.  Samples are columns and species are rows. The color bar represents relative 
+#' abundances on a log10 scale.
+
+
 #' <% if pdf_format: print("\clearpage") %>
 
 #' ## Barplot
@@ -134,15 +141,12 @@ for column in numpy.transpose(sorted_data):
     other_abundances.append(100-sum(column))
 sorted_data.append(other_abundances)
 
-#' The top <% print(max_sets_barplot) %> species based on average relative abundance are
-#' shown in the barplot. The samples are organized based on relative abundance of the
-#' species with the highest relative abundance in any sample. For this data set,
-#' <% print(top_taxonomy[0]) %> had the highest relative abundance in sample <% print(sorted_samples[0]) %>. 
-#' The samples are ordered from highest relative abundance for <% print(top_taxonomy[0]) %> to lowest.
-
 #+ echo=False
 document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
     column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
-    ylabel="Predicted community composition (% of total)", legend_title="Species")
+    ylabel="Relative abundance", legend_title="Species")
+
+#' Stacked barplot of <% print(max_sets_barplot) %> most abundant species among samples.
+#' Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order. 
 
 #' <% if pdf_format: print("\clearpage") %>
