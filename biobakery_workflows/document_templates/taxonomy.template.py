@@ -96,7 +96,9 @@ top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_
 
 # compute the pcoa and plot
 # provide data as range of [0-1] organised as samples as rows and features as columns
-document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ordination of species abundances")
+caption=document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ordination of species abundances")
+
+#' <% print(caption) %>
 
 #' <% if pdf_format: print("\clearpage") %>
 
