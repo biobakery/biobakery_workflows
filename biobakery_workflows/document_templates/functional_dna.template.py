@@ -25,14 +25,14 @@ large_table_message="The table is too large to include the full table in this do
 
 #' # Functional Profiling
 
-#' This report section contains information about the functional profiling run
-#' on all samples. These samples were
-#' run through [HUMAnN2](http://huttenhower.sph.harvard.edu/humann2).
-#' The UniRef90 full database was used for the translated search.
 
-#' The pathways identified in functional profiling are from the MetaCyc database.
-#' See the [MetaCyc website](https://metacyc.org/) for detailed information
-#' on each pathway.
+#' This report section contains preliminary exploratory figures that summarize 
+#' HUMAnN2 functional profiling of all samples. HUMAnN2 performs species-specific and species-agnostic 
+#' quantification of gene families, EC enzyme modules, and pathways, using the UniRef and MetaCyc databases.
+#' For more information on functional profiling and the databases used, see websites for 
+#' [HUMAnN2](http://huttenhower.sph.harvard.edu/humann2), 
+#' [UniRef](http://www.uniprot.org/help/uniref), 
+#' and [MetaCyc](https://metacyc.org/). 
 
 #+ echo=False
 
@@ -52,8 +52,6 @@ dna_top_average_pathways, dna_top_average_data = utilities.top_rows(dna_pathways
 # get the variance for the pathways
 dna_top_variance_pathways, dna_top_variance_data = utilities.top_rows(dna_pathways,
     dna_data, max_sets, function="variance")
-
-#' <% if pdf_format: print("\clearpage") %>
 
 #' ## Pathway Abundance
 
