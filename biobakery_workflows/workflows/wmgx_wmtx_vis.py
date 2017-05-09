@@ -24,8 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-import os
-
 # import the workflow class from anadama2
 from anadama2 import Workflow
 
@@ -42,6 +40,10 @@ workflow.add_argument("wmgx-qc-counts",desc="the kneaddata read counts table for
 workflow.add_argument("wmtx-qc-counts",desc="the kneaddata read counts table for wmtx samples",required=True)
 workflow.add_argument("taxonomic-profile",desc="the merged taxonomic profiles for the wmgx samples",required=True)
 workflow.add_argument("wmgx-pathabundance",desc="the pathway abundances for the wmgx samples",required=True)
+workflow.add_argument("wmgx-read-counts", desc="the read counts from the humann2 log files for wmgx samples")
+workflow.add_argument("wmtx-read-counts", desc="the read counts from the humann2 log files for wmtx samples")
+workflow.add_argument("wmgx-feature-counts", desc="the counts of features (gene families, ecs, and pathways) for wmgx samples")
+workflow.add_argument("wmtx-feature-counts", desc="the counts of features (gene families, ecs, and pathways) for wmtx samples")
 workflow.add_argument("project-name",desc="the name of the project")
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
@@ -62,10 +64,15 @@ workflow.add_document(
     vars={"title":"Metagenome and Metatranscriptome Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
-          "dna_read_counts":os.path.abspath(args.wmgx_qc_counts),
-          "rna_read_counts":os.path.abspath(args.wmtx_qc_counts),
-          "taxonomic_profile":os.path.abspath(args.taxonomic_profile),
-          "dna_pathabundance":os.path.abspath(args.wmgx_pathabundance)})
+          "dna_read_counts":args.wmgx_qc_counts,
+          "rna_read_counts":args.wmtx_qc_counts,
+          "dna_aligned_read_counts":args.wmgx_read_counts,
+          "rna_aligned_read_counts":args.wmtx_read_counts,
+          "dna_feature_counts":args.wmgx_feature_counts,
+          "rna_feature_counts":args.wmtx_feature_counts,
+          "taxonomic_profile":args.taxonomic_profile,
+          "dna_pathabundance":args.wmgx_pathabundance,
+          "format":args.format})
 
 # start the workflow
 workflow.go()
