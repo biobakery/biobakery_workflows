@@ -20,7 +20,7 @@ max_table_rows=20
 format_table_decimal="{:.3}"
 table_message="A data file exists of this table: "
 large_table_message="The table is too large to include the full table in this document."+\
-    " A partial table is shown which includes only "+str(max_table_rows)+" samples."+\
+    " A partial table is shown which includes only "+str(max_table_rows)+" pathways."+\
     " Please see the data file for the full table: "
 
 #' # Functional Profiling
@@ -112,6 +112,9 @@ if len(top_names_and_descriptions) <= max_table_rows:
 else:
     document.show_table(variance_abundance[:max_table_rows], top_names_and_descriptions[:max_table_rows], 
         ["Variance"], "Top "+str(max_sets)+" pathways by variance (partial table)", location="left", font=7)
+    
+#' <% print(large_table_message) if len(dna_top_variance_pathways) > max_table_rows else print(table_message) %>
+#' [top_variance_pathways_names.tsv](data/top_variance_pathways_names.tsv)
 
 #' <% if pdf_format: print("\clearpage") %>
 
