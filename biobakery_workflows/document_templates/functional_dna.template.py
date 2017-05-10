@@ -118,11 +118,13 @@ else:
 
 #' ## Features
 
-#' The total number of reads used for functional profiling along with the total
-#' number of reads aligned at the nucleotide and translated search steps are shown.
-#' They are plotted against the total number of features identified for each sample.
-#' The features include gene families, ECs, and pathways. The feature counts do not
-#' include stratification levels.
+#' Feature detection as a function of sequencing depth. Effect of sample sequencing depth on the ability to detect 
+#' microbiome functional features in metagenomic sequence data. HUMAnN2 functional profiling of 
+#' DNA quality filtered reads was performed on individual samples in species-specific mode (blue), i.e. nucleotide 
+#' alignment against pangenomes of species identified in the sample with MetaPhlAn2, and in combined species-specific 
+#' and -agnostic (orange) mode, in which reads not matching any pangenome reference sequences were subjected to translated 
+#' searching against the UniRef90 database. Each profiled sample is represented by a orange and blue point in each plot. 
+#' Linear regression fit is represented by straight lines in each plot.
 
 #+ echo=False
 import math
@@ -166,6 +168,8 @@ pathabundance_counts=[try_log10(row[feature_type.index("humann2_pathabundance_re
 document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
 
+#' Number of aligned reads in species-specific (nucleotide search) and species-agnostic (translated search) HUMAnN2 mode as a function of input reads.
+
 #+ echo=False
 document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
@@ -176,3 +180,4 @@ document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_count
 document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="Pathways",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
+#' Detection of UniRef90 gene families, enzyme modules, and pathways as a function of aligned reads. 

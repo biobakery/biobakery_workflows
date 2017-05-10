@@ -125,12 +125,31 @@ if vars["dna_aligned_read_counts"] and vars["dna_feature_counts"]:
 show_rna_features=False
 if vars["rna_aligned_read_counts"] and vars["rna_feature_counts"]:
     show_rna_features=True
-    
-intro_message="\n".join(["The total number of reads used for functional profiling along with the total",
-    "number of reads aligned at the nucleotide and translated search steps are shown.",
-    "They are plotted against the total number of features identified for each sample.",
-    "The features include gene families, ECs, and pathways. The feature counts do not",
-    "include stratification levels."])
+
+# determine the wording for the intro based on the input files provided
+if show_dna_features and show_rna_features:
+    sequence_data_type="metagenomic and metatranscriptomic"
+    short_type="DNA and RNA"
+elif show_dna_features:
+    sequence_data_type="metagenomic"
+    short_type="DNA"
+elif show_rna_features:
+    sequence_data_type="metatranscriptomic"
+    short_type="RNA"
+else:
+    sequence_data_type=""
+    short_type=""
+
+intro_message="\n".join(["Effect of sample sequencing depth on the ability to detect",
+    "microbiome functional features in "+sequence_data_type+" sequence data. HUMAnN2 ",
+    "functional profiling of "+short_type+" quality filtered reads was performed ",
+    "on individual samples in species-specific mode (blue), i.e. nucleotide alignment ",
+    "against pangenomes of species identified in the sample with MetaPhlAn2, ",
+    "and in combined species-specific and -agnostic (orange) mode, in which reads ",
+    "not matching any pangenome reference sequences were subjected to translated ",
+    "searching against the UniRef90 database. Each profiled sample is represented ",
+    " by a orange and blue point in each plot. Linear regression fit is represented "
+    "by straight lines in each plot."])
 
 #' <% if show_dna_features or show_rna_features: print("## Features") %>
 
@@ -188,6 +207,7 @@ if show_dna_features:
     document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="DNA Read alignment rate",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
     
+#' <% if show_dna_features: print("Number of aligned reads in species-specific (nucleotide search) and species-agnostic (translated search) HUMAnN2 mode as a function of input reads.") %>
 #' <% if show_dna_features and pdf_format: print("\clearpage") %>
     
 #+ echo=False
@@ -201,6 +221,8 @@ if show_dna_features:
     document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="DNA Pathways",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
+#' <% if show_dna_features: print("Detection of UniRef90 gene families, enzyme modules, and pathways as a function of aligned reads.") %>
+
 #' <% if show_dna_features and pdf_format: print("\clearpage") %>
 
 #' <% if show_rna_features: print("## RNA Features") %>
@@ -213,6 +235,7 @@ if show_rna_features:
     document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="RNA Read alignment rate",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
     
+#' <% if show_rna_features: print("Number of aligned reads in species-specific (nucleotide search) and species-agnostic (translated search) HUMAnN2 mode as a function of input reads.") %>
 #' <% if show_rna_features and pdf_format: print("\clearpage") %>
     
 #+ echo=False
@@ -226,4 +249,4 @@ if show_rna_features:
     document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="RNA Pathways",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
-
+#' <% if show_rna_features: print("Detection of UniRef90 gene families, enzyme modules, and pathways as a function of aligned reads.") %>
