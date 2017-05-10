@@ -118,9 +118,6 @@ def main():
     # parse arguments
     args = parse_arguments(sys.argv)
     
-    # check the paired input file is not empty (it is okay if the unpaired is empty)
-    check_file_nonempty(args.input_paired_fastq)
-    
     # get the new sequence name as the basename of the first input file
     input_file_basename=os.path.basename(args.input_paired_fastq)
     # remove gzip extension if present

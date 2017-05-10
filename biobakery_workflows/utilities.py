@@ -26,6 +26,48 @@ THE SOFTWARE.
 import os
 import sys
 import math
+import functools
+
+def run_task(command, **keywords):
+    """ Run the task command, formatting command with keywords. The command stdout
+        and stderr are written to the workflow log.
+    
+    Args:
+        command (string): A string to execute on the command line. It can be
+            formatted the same as a task command.
+       
+    Returns:
+        (int): Return code from command.     
+    """
+
+    from anadama2.helpers import format_command
+    from anadama2.helpers import sh
+    
+    # format the command to include the items for this task
+    command=format_command(command, **keywords)
+    
+    # run the command
+    return_code = sh(command)()
+    
+    return return_code
+
+def partial_function(function, **keywords):
+    """ Return a partial function, setting function name attribute
+    
+    Args:
+        function (function): A function
+        keywords: One or more keywords to be applied to the function
+        
+    Returns:
+        (function): A partial function
+        
+    """
+    
+    partial = functools.partial(function, **keywords)
+    partial.__name__ = function.__name__
+    
+    return partial
+        
 
 def paired_files(files, pair_identifier=None):
     """ Find sets of paired-end reads

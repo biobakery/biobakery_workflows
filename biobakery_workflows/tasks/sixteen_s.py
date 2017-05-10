@@ -111,7 +111,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] [depends[3]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, index_files[0], input_pair1[0], input_pair2[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
-                targets=[demultiplex_log]+demultiplex_fastq_files,
+                targets=demultiplex_log,
                 name="demultiplex")
             
         else:
@@ -119,7 +119,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, input_pair1[0], input_pair2[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
-                targets=[demultiplex_log]+demultiplex_fastq_files,
+                targets=demultiplex_log,
                 name="demultiplex")
         
     else:
@@ -133,7 +133,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, index_files[0], input_files[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier],
-                targets=[demultiplex_log]+demultiplex_fastq_files,
+                targets=demultiplex_log,
                 name="demultiplex")
             
         else:
@@ -141,8 +141,18 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
                 "fastq-multx -l [depends[0]] [depends[1]] -o [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, input_files[0]],
                 args=[min_phred, demultiplex_output_folder, pair_identifier],
-                targets=[demultiplex_log]+demultiplex_fastq_files,
+                targets=demultiplex_log,
                 name="demultiplex")
+            
+    # fastq-multx only creates files for those samples with reads mapping to barcodes
+    # if a sample in the barcode file does not have any reads, the expected files for 
+    # that sample will not be created. This task group will create empty files for
+    # any samples that do not have reads so that all expected files exist.
+    workflow.add_task_group(
+        "bash -c \"[ -e [targets[0]] ] || touch [targets[0]]\"",
+        depends=[demultiplex_log]*len(demultiplex_fastq_files),
+        targets=demultiplex_fastq_files,
+        name="check_demultiplex")
 
     return demultiplex_fastq_files
     
@@ -205,6 +215,30 @@ def merge_samples_and_rename(workflow, input_files, output_folder, pair_identifi
     return all_samples_fastq
 
 
+def merge_pairs(task, threads=1):
+    """ Merge the pair files, allowing for empty input files 
+    
+        Args:
+            task: (anadama2.task): An instance of the task class.
+            threads: (int): Total threads to use for usearch task.
+        
+        Requires:
+            usearch: tools for sequence analysis.
+        """
+    
+    if os.path.getsize(task.depends[0].name) > 0:
+        # since the input files are not empty, run usearch merge pairs
+        command="export OMP_NUM_THREADS=[args[0]]; " +\
+            "usearch -fastq_mergepairs [depends[0]] -reverse [depends[1]]  -fastqout [targets[0]] -fastqout_notmerged_fwd [targets[1]] -threads [args[0]]"
+        
+    else:
+        # the input files are empty, create empty output files
+        command="touch [targets[0]] [targets[1]]"
+        
+    # run the task
+    return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, args=threads)
+    
+
 def merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier, threads):
     """ Merge the files if pairs and rename sequence ids to match sample id
     
@@ -254,14 +288,11 @@ def merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier
         stitched_files=utilities.name_files(sample_names,output_folder,subfolder="merged_renamed",tag="stitched",extension="fastq",create_folder=True)
         unjoined_files=utilities.name_files(sample_names,output_folder,subfolder="merged_renamed",tag="unjoined",extension="fastq")
         
-        # run usearch to merge pairs
-        # set env variable so threads are used
+        # run usearch to merge pairs, if input files are non-empty
         workflow.add_task_group(
-            "export OMP_NUM_THREADS=[args[0]]; " +\
-            "usearch -fastq_mergepairs [depends[0]] -reverse [depends[1]]  -fastqout [targets[0]] -fastqout_notmerged_fwd [targets[1]] -threads [args[0]]",
+            utilities.partial_function(merge_pairs,threads=threads),
             depends=zip(pair1,pair2),
             targets=zip(stitched_files,unjoined_files),
-            args=[threads],
             name="usearch_fastq_mergepairs")
         
         # merge the stitched and unjoined from the prior step
