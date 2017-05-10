@@ -62,11 +62,15 @@ document.show_table(dna_paired_data, dna_samples, dna_paired_columns, "DNA Paire
 document.show_table(dna_orphan_data, dna_samples, dna_orphan_columns, "DNA Orphan reads", 
     format_data_comma=True)
 
+#' <% if pdf_format: print("\clearpage") %>
+
 #+ echo=False
 # plot the microbial reads ratios
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
 document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
                     "DNA microbial read proportion")
+
+#' Proportion of reads remaining after removing host reads relative to the number of: i) quality-trimmed reads, and ii) raw unfiltered reads.
 
 #' ### DNA Samples Plots of Filtered Reads
 
@@ -92,12 +96,16 @@ document.show_table(rna_paired_data, rna_samples, rna_paired_columns, "RNA Paire
 document.show_table(rna_orphan_data, rna_samples, rna_orphan_columns, "RNA Orphan reads", 
     format_data_comma=True)
 
+#' <% if pdf_format: print("\clearpage") %>
+
 #+ echo=False
 # plot the microbial reads ratios
 rna_microbial_reads, rna_microbial_labels = utilities.microbial_read_proportion(rna_paired_data,
     rna_orphan_data,rna=True)
 document.show_table(rna_microbial_reads, rna_samples, rna_microbial_labels,
                     "RNA microbial read proportion")
+
+#' Proportion of reads remaining after removing host reads relative to the number of: i) quality-trimmed reads, and ii) raw unfiltered reads.
 
 #' ### RNA Samples Plots of Filtered Reads
 

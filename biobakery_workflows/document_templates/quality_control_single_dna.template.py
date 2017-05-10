@@ -12,6 +12,9 @@ document=PweaveDocument()
 # get the variables for this document generation task
 vars = document.get_vars()
 
+# determine the document format
+pdf_format = True if vars["format"] == "pdf" else False
+
 # set the max number of table rows to be shown
 # and set the messages to print for each table size
 max_table_rows=20
@@ -61,6 +64,8 @@ else:
 #' <% print(large_table_message) if len(dna_samples) > max_table_rows else print(table_message) %>
 #' [qc_counts_table.tsv](data/qc_counts_table.tsv)
 
+#' <% if pdf_format: print("\clearpage") %>
+
 #+ echo=False
 # plot the microbial reads ratios    
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_data, database_name=db_name)
@@ -75,6 +80,8 @@ if len(dna_samples) <= max_table_rows:
 else:
     document.show_table(dna_microbial_reads[:max_table_rows], dna_samples[:max_table_rows], 
         dna_microbial_labels, "DNA microbial read proportion (partial table)")    
+    
+#' Proportion of reads remaining after removing host reads relative to the number of: i) quality-trimmed reads, and ii) raw unfiltered reads.  
         
 #' <% print(large_table_message) if len(dna_samples) > max_table_rows else print(table_message) %>
 #' [microbial_counts_table.tsv](data/microbial_counts_table.tsv) 
