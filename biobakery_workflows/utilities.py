@@ -28,6 +28,19 @@ import sys
 import math
 import functools
 
+def metacyc_url(pathway):
+    """ Return the url for the pathway on the MetaCyc website 
+    
+    Args:
+        pathway (string): The MetaCyc pathway
+        
+    Returns
+       (string): The url to the website for the pathway
+       
+    """
+    
+    return "http://metacyc.org/META/NEW-IMAGE?type=NIL&object="+pathway
+
 def run_task(command, **keywords):
     """ Run the task command, formatting command with keywords. The command stdout
         and stderr are written to the workflow log.

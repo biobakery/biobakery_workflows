@@ -54,14 +54,26 @@ dna_top_variance_pathways, dna_top_variance_data = utilities.top_rows(dna_pathwa
 
 #' ## Pathway Abundance
 
-#' The top <% print(max_sets) %> pathways based on average relative abundance and variance are
-#' shown in the heatmaps. The heatmaps were generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
-
-#' ### Average Abundance
+#' Hierarchical clustering of samples and pathways, using top <%= max_sets %> pathways 
+#' with highest mean relative abundance among samples. The "average linkage" 
+#' clustering on the Euclidean distance metric was used to cluster samples.
+#' The pathway dendrogram is based on pairwise (Spearman) correlation between pathways.
+#' Samples are columns and pathway are rows. The heatmaps were generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
 
 #+ echo=False
 document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
-                      title="Top "+str(max_sets)+" pathways by average abundance")
+                      title="Top "+str(max_sets)+" pathways by average abundance")  
+
+#' Abundances were log10 transformed prior to clustering. The color bar 
+#' represents relative abundances on a log10 scale.  
+
+#+ echo=False
+document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+                      title="Top "+str(max_sets)+" pathways by average abundance",
+                      log_scale=False,zscore=True)
+
+#' Abundances were z-score transformed prior to clustering. The color bar 
+#' represents relative abundances on a z-score scale.  
 
 #' <% if pdf_format: print("\clearpage") %>
 
@@ -70,49 +82,27 @@ document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
 top_average_pathways_file = os.path.join(document.data_folder,"top_average_pathways_names.tsv")
 top_names_and_descriptions = [name+":"+dna_pathway_names[name] for name in dna_top_average_pathways]
 # get the average abundances, formatting as a single value per row 
-average_abundance = [[format_table_decimal.format(row)] for row in utilities.row_average(dna_top_average_data)]
+average_abundance_variance=[]
+for average, variance in zip(utilities.row_average(dna_top_average_data), utilities.row_variance(dna_top_average_data)):
+    average_abundance_variance.append([format_table_decimal.format(average),format_table_decimal.format(variance)])
 
-document.write_table(["# Pathway","Average abundance"], top_names_and_descriptions, average_abundance, top_average_pathways_file)
-
-if len(top_names_and_descriptions) <= max_table_rows:
-    document.show_table(average_abundance, top_names_and_descriptions, ["Average"], 
-        "Top "+str(max_sets)+" pathways by average abundance", location="left", font=7)
-else:
-    document.show_table(average_abundance[:max_table_rows], top_names_and_descriptions[:max_table_rows], 
-        ["Average"], "Top "+str(max_sets)+" pathways by average abundance (partial table)", location="left", font=7)
-        
-#' <% print(large_table_message) if len(dna_top_average_pathways) > max_table_rows else print(table_message) %>
-#' [top_average_pathways_names.tsv](data/top_average_pathways_names.tsv)
-
-#' <% if pdf_format: print("\clearpage") %>
-
-#' ### Variance
-
-#+ echo=False
-document.show_hclust2(dna_samples,dna_top_variance_pathways,dna_top_variance_data,
-                      title="Top "+str(max_sets)+" pathways by variance")
-
-
-#' <% if pdf_format: print("\clearpage") %>
-
-#+ echo=False
-# get the variances and descriptions for the pathways
-top_variance_pathways_file = os.path.join(document.data_folder,"top_variance_pathways_names.tsv")
-top_names_and_descriptions = [name+":"+dna_pathway_names[name] for name in dna_top_variance_pathways]
-# get the variances, formatting as a single value per row
-variance_abundance = [[format_table_decimal.format(row)] for row in utilities.row_variance(dna_top_variance_data)]
-
-document.write_table(["# Pathway","Variance abundance"], top_names_and_descriptions, variance_abundance, top_variance_pathways_file)
+document.write_table(["# Pathway","Average abundance", "Variance"], top_names_and_descriptions, average_abundance_variance, top_average_pathways_file)
 
 if len(top_names_and_descriptions) <= max_table_rows:
-    document.show_table(variance_abundance, top_names_and_descriptions, ["Variance"], 
-        "Top "+str(max_sets)+" pathways by variance", location="left", font=7)
+    document.show_table(average_abundance_variance, top_names_and_descriptions, [" Average "," Variance "], 
+        "Top "+str(max_sets)+" pathways by average abundance", font=7)
 else:
-    document.show_table(variance_abundance[:max_table_rows], top_names_and_descriptions[:max_table_rows], 
-        ["Variance"], "Top "+str(max_sets)+" pathways by variance (partial table)", location="left", font=7)
+    document.show_table(average_abundance_variance[:max_table_rows], top_names_and_descriptions[:max_table_rows], 
+        [" Average "," Variance "], "Top "+str(max_sets)+" pathways by average abundance (partial table)", font=7)
     
-#' <% print(large_table_message) if len(dna_top_variance_pathways) > max_table_rows else print(table_message) %>
-#' [top_variance_pathways_names.tsv](data/top_variance_pathways_names.tsv)
+#' <% print(large_table_message) if len(dna_top_average_pathways) > max_table_rows else print(table_message) %>
+#' [top_average_pathways_names.tsv](data/top_average_pathways_names.tsv)  
+        
+#' Detailed functions of the top three pathways can be found on the following MetaCyc pages:  
+
+#' <%= "  \r".join([" * ["+full_name+"]("+utilities.metacyc_url(path)+")" for path, full_name in zip(dna_top_average_pathways[:3],top_names_and_descriptions[:3])]) %>  
+
+#' To learn more about other pathways, search for the pathway by name on the [MetaCyc](https://metacyc.org/) website.
 
 #' <% if pdf_format: print("\clearpage") %>
 
