@@ -144,7 +144,7 @@ sorted_data.append(other_abundances)
 #+ echo=False
 document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
     column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
-    ylabel="Relative abundance", legend_title="Species")
+    ylabel="Relative abundance", legend_title="Species", legend_style="italic")
 
 #' Stacked barplot of <% print(max_sets_barplot) %> most abundant species among samples.
 #' Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order. 
