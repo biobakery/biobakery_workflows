@@ -88,9 +88,15 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         # add the second input file to the kneaddata arguments
         # also add the option to cat the final output files into a single file
         second_input_option=" --input [depends[1]] --cat-final-output"
+        # determine time/memory equations based on the two input files
+        time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*6*60"
+        mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 2*12*1024"
     else:
         # the second input option is not used since these are single-end input files
         second_input_option=" "
+        # determine time/memory equations based on the single input file
+        time_equation="6*60 if file_size('[depends[0]]') < 25 else 4*6*60"
+        mem_equation="12*1024 if file_size('[depends[0]]') < 25 else 2*12*1024"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -117,8 +123,8 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
             depends=depends,
             targets=targets,
             args=[kneaddata_output_folder, threads, sample],
-            time=6*60, # 6 hours
-            mem=12*1024, # 12 GB
+            time=time_equation, # 6 hours or more depending on file size
+            mem=mem_equation, # 12 GB or more depending on file size
             cores=threads) # time/mem based on 8 cores
     
     return kneaddata_output_fastq, kneaddata_output_logs
@@ -392,8 +398,8 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         depends=depends,
         targets=zip(genefamiles, pathabundance, pathcoverage, log_files),
         args=[humann2_output_folder, threads],
-        time=24*60, # 24 hours
-        mem=36*1024, # 36 GB
+        time="24*60 if file_size('[depends[0]]') < 25 else 4*24*60", # 24 hours or more depending on file size
+        mem="32*1024 if file_size('[depends[0]]') < 25 else 2*32*1024", # 32 GB or more depending on file size
         cores=threads)
 
     # create a task to get the read and species counts for each humann2 run from the log files
