@@ -45,9 +45,9 @@ workflow.add_argument("wmtx-read-counts", desc="the read counts from the humann2
 workflow.add_argument("wmgx-feature-counts", desc="the counts of features (gene families, ecs, and pathways) for wmgx samples")
 workflow.add_argument("wmtx-feature-counts", desc="the counts of features (gene families, ecs, and pathways) for wmtx samples")
 workflow.add_argument("project-name",desc="the name of the project")
-workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
+workflow.add_argument("introduction-text",desc="the text to include in the intro of the report [default: %default]",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
-workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
+workflow.add_argument("format",desc="the format for the report, pdf or html [default: %default]", default="pdf")
 
 # get the arguments from the command line
 args = workflow.parse_args()

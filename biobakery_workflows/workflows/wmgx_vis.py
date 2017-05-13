@@ -43,10 +43,10 @@ workflow.add_argument("pathabundance",desc="the pathway abundances",required=Tru
 workflow.add_argument("read-counts", desc="the read counts from the humann2 log files",required=True)
 workflow.add_argument("feature-counts", desc="the counts of features (gene families, ecs, and pathways)", required=True)
 workflow.add_argument("project-name",desc="the name of the project")
-workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
+workflow.add_argument("introduction-text",desc="the text to include in the intro of the report [default: %default]",
     default="The data was run through the standard workflow for whole metagenome shotgun sequencing.")
-workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
-workflow.add_argument("contaminate-database",desc="the database used for contaminate read filtering for quality control", default="hg38")
+workflow.add_argument("format",desc="the format for the report, pdf or html [default: %default]", default="pdf")
+workflow.add_argument("contaminate-database",desc="the database used for contaminate read filtering for quality control [default: %default]", default="hg38")
 
 # get the arguments from the command line
 args = workflow.parse_args()

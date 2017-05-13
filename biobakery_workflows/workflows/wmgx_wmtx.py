@@ -45,9 +45,9 @@ workflow_config = config.ShotGun()
 workflow.add_argument("input-metagenome",desc="the input folder of whole metagenome shotgun sequences", required=True)
 workflow.add_argument("input-metatranscriptome",desc="the input folder of whole metatranscriptome shotgun sequences", required=True)
 workflow.add_argument("input-mapping",desc="the mapping file of metatranscriptome samples to metagenome samples")
-workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
-workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
-workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
+workflow.add_argument("input-extension", desc="the input file extension [default: %default]", default="fastq.gz")
+workflow.add_argument("threads", desc="number of threads/cores for each task to use [default: %default]", default=1)
+workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair [default: %default]", default=".R1")
 
 # get the arguments from the command line
 args = workflow.parse_args()

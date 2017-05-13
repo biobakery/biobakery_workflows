@@ -37,16 +37,16 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()
-workflow.add_argument("barcode-file", desc="the barcode file", default="")
-workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
-workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
-workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default="_R1_001")
-workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
-workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
-workflow.add_argument("maxee", desc="the maxee value to use for quality control filtering", default=1)
-workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
-workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
-workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
+workflow.add_argument("barcode-file", desc="the barcode file [default: %default]", default="")
+workflow.add_argument("input-extension", desc="the input file extension [default: %default]", default="fastq.gz")
+workflow.add_argument("threads", desc="number of threads/cores for each task to use [default: %default]", default=1)
+workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair [default: %default]", default="_R1_001")
+workflow.add_argument("index-identifier", desc="the string to identify the index files [default: %default]", default="_I1_001")
+workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing [default: %default]", default=2)
+workflow.add_argument("maxee", desc="the maxee value to use for quality control filtering [default: %default]", default=1)
+workflow.add_argument("trunc-len-max", desc="the max length for truncating reads [default: %default]", default=200)
+workflow.add_argument("min-size", desc="the min size to use for clustering [default: %default]", default=2)
+workflow.add_argument("percent-identity", desc="the percent identity to use for alignments [default: %default]", default=0.97)
 
 # get the arguments from the command line
 args = workflow.parse_args()
