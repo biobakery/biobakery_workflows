@@ -184,7 +184,7 @@ def feature_counts(read_counts_file, feature_counts_file):
     
     # get the counts by each feature type
     # convert values to log10
-    genefamilies_counts=[try_log10(row[feature_type.index("humann2_ecs_relab_counts")]) for row in sorted_feature_count_data]
+    genefamilies_counts=[try_log10(row[feature_type.index("humann2_genefamilies_relab_counts")]) for row in sorted_feature_count_data]
     ecs_counts=[try_log10(row[feature_type.index("humann2_ecs_relab_counts")]) for row in sorted_feature_count_data]
     pathabundance_counts=[try_log10(row[feature_type.index("humann2_pathabundance_relab_counts")]) for row in sorted_feature_count_data]
     
