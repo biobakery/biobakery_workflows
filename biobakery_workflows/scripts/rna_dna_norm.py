@@ -38,10 +38,14 @@ def parse_arguments(args):
         "--min-abundance", 
         help="the minimum abundance value, data below this value are considered zero (default: 1)", 
         default=1)
+    parser.add_argument(
+        "--reduce-sample-name",
+        help="remove the extra strings from the sample names",
+        action='store_true')
     
     return parser.parse_args()
     
-def read_table(file, min_abundance, delimiter="\t"):
+def read_table(file, min_abundance, reduce_sample_name, delimiter="\t"):
     """ Read the table from a text file with the first line the column
     names and the first column the row names. Filter humann2 un-identifiers and split
     data into stratified categories. """
@@ -54,6 +58,11 @@ def read_table(file, min_abundance, delimiter="\t"):
             x = 0.0
             
         return x if x >= min_abundance else 0.0
+    
+    if reduce_sample_name:
+        format_sample_name = lambda x: x.split("_Abundance")[0]
+    else:
+        format_sample_name = lambda x: x
     
     stratified_features={}
     unstratified_features={}
@@ -68,7 +77,7 @@ def read_table(file, min_abundance, delimiter="\t"):
     strat_no_unclass_index=0    
     
     with open(file) as file_handle:
-        sample_names = {name:i for i, name in enumerate(file_handle.readline().rstrip().split(delimiter)[1:])}
+        sample_names = {format_sample_name(name):i for i, name in enumerate(file_handle.readline().rstrip().split(delimiter)[1:])}
         for line in file_handle:
             line=line.rstrip().split(delimiter)
             if not "UNINTEGRATED" in line[0] and not "UNMAPPED" in line[0] and not "UNGROUPED" in line[0]:
@@ -87,7 +96,7 @@ def read_table(file, min_abundance, delimiter="\t"):
                     unstratified_features[feature_name]=unstratified_index
                     unstratified_index+=1
                     unstratified_data.append(formatted_data)
-                
+                                    
     return ( unstratified_features, unstratified_data, stratified_features, 
              stratified_data, strat_no_unclass_features, strat_no_unclass_data,
              sample_names )
@@ -176,12 +185,12 @@ def main():
     # read in the rna table, organizing by stratification
     print("Reading RNA table")
     ( rna_unstrat_features, rna_unstrat_data, rna_strat_features, rna_strat_data, 
-      rna_strat_no_unclass_features, rna_strat_no_unclass_data, rna_samples ) = read_table(args.input_rna, args.min_abundance)
+      rna_strat_no_unclass_features, rna_strat_no_unclass_data, rna_samples ) = read_table(args.input_rna, args.min_abundance, args.reduce_sample_name)
     
     # read in the dna table, organizing by stratification
     print("Reading DNA table")
     ( dna_unstrat_features, dna_unstrat_data, dna_strat_features, dna_strat_data, 
-      dna_strat_no_unclass_features, dna_strat_no_unclass_data, dna_samples ) = read_table(args.input_dna, args.min_abundance)
+      dna_strat_no_unclass_features, dna_strat_no_unclass_data, dna_samples ) = read_table(args.input_dna, args.min_abundance, args.reduce_sample_name)
 
     # apply sample map if provided
     if args.mapping:

@@ -48,6 +48,7 @@ workflow.add_argument("input-mapping",desc="the mapping file of metatranscriptom
 workflow.add_argument("input-extension", desc="the input file extension [default: %default]", default="fastq.gz")
 workflow.add_argument("threads", desc="number of threads/cores for each task to use [default: %default]", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair [default: %default]", default=".R1")
+workflow.add_argument("bypass-norm-ratio", desc="bypass the rna/dna normalization computation", type="bool")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -81,6 +82,10 @@ if args.input_mapping:
 else:
     # if no mapping file is provided then run to get a taxonomic profile from the wts samples
     wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads,wts_taxonomy_tsv_files)
+
+### STEP #4: Compute the normalized functional abundances based on the rna/dna ratio
+if not args.bypass_norm_ratio:
+    norm_ratio_genes, norm_ratio_ecs, norm_ratio_pathway = shotgun.norm_ratio(workflow, wms_genes, wms_ecs, wms_path, wts_genes, wts_ecs, wts_path, args.output, args.input_mapping)
 
 # start the workflow
 workflow.go()

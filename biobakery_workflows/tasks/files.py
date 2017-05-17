@@ -23,6 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+import os
 import copy
 
 from biobakery_workflows import utilities
@@ -66,6 +67,11 @@ class ShotGun(Workflow):
     # set the all feature counts file names
     file_settings["feature_counts"]=settings("humann2_feature_counts.tsv", subfolder="counts")
     file_settings["humann2_read_counts"]=settings("humann2_read_and_species_count_table.tsv",subfolder="counts")
+    
+    # set the names for the rna/dna normed files
+    file_settings["genefamilies_norm_ratio"]=settings("rna_dna_relative_expression_unstratified.tsv",subfolder=os.path.join("norm","genes"))
+    file_settings["ecs_norm_ratio"]=settings("rna_dna_relative_expression_unstratified.tsv",subfolder=os.path.join("norm","ecs"))
+    file_settings["paths_norm_ratio"]=settings("rna_dna_relative_expression_unstratified.tsv",subfolder=os.path.join("norm","paths"))
 
     
     
