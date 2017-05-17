@@ -60,7 +60,7 @@ qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_
 merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
-merged_genefamilies, merged_ecs, merged_pathabundance = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files)
+genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files)
 
 # start the workflow
 workflow.go()

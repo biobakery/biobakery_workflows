@@ -71,16 +71,16 @@ if not args.input_mapping:
 ### STEP #3: Run functional profiling on all of the filtered files ###
 
 # run the wms samples with their taxonomy files
-wms_genefamilies, wms_ecs, wms_pathabundance = shotgun.functional_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads,wms_taxonomy_tsv_files)
+wms_genes_relab, wms_ecs_relab, wms_path_relab, wms_genes, wms_ecs, wms_path = shotgun.functional_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads,wms_taxonomy_tsv_files)
 
 # provide the taxonomy files for the wms samples to the wts samples, if mapping file provided
 if args.input_mapping:
     # get the mapped taxonomy files for the quality controlled input files
     filtered_fastq, matched_taxonomic_profile = utilities.match_files(wts_qc_output_files,wms_taxonomy_tsv_files,args.input_mapping)
-    wts_genefamilies, wts_ecs, wts_pathabundance = shotgun.functional_profile(workflow,filtered_fastq,wts_output_folder,args.threads,matched_taxonomic_profile)
+    wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,filtered_fastq,wts_output_folder,args.threads,matched_taxonomic_profile)
 else:
     # if no mapping file is provided then run to get a taxonomic profile from the wts samples
-    wts_genefamilies, wts_ecs, wts_pathabundance = shotgun.functional_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads,wts_taxonomy_tsv_files)
+    wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads,wts_taxonomy_tsv_files)
 
 # start the workflow
 workflow.go()

@@ -26,6 +26,7 @@ THE SOFTWARE.
 import os
 
 from biobakery_workflows import utilities
+from biobakery_workflows.tasks.files import ShotGun
 
 def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None, additional_options=None):
     """Run kneaddata
@@ -167,7 +168,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     input_folder=os.path.dirname(input_files[0])
     
     # get the name for the output file
-    kneaddata_read_count_file = utilities.name_files("kneaddata_read_count_table.tsv",output_folder,subfolder="counts",create_folder=True)
+    kneaddata_read_count_file = ShotGun.file("kneaddata_read_counts",output_folder,create_folder=True)
     
     # add the task (which is not gridable as this task should take under 5 minutes)
     workflow.add_task("kneaddata_read_count_table --input [args[0]] --output [targets[0]]",
@@ -305,7 +306,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         cores=threads) # time/mem based on 8 cores
     
     # merge all of the metaphlan taxonomy tables
-    metaphlan2_merged_output = utilities.name_files("taxonomic_profiles.tsv", output_folder)
+    metaphlan2_merged_output = ShotGun.file("taxonomic_profile", output_folder)
     
     # run the humann2 join script to merge all of the metaphlan2 profiles
     workflow.add_task(
@@ -315,7 +316,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         args=[metaphlan2_output_folder, metaphlan2_profile_tag])
    
     # get the name for the file to write the species counts
-    metaphlan2_species_counts_file = utilities.name_files("metaphlan2_species_counts_table.tsv",output_folder,subfolder="counts",create_folder=True)
+    metaphlan2_species_counts_file = ShotGun.file("species_counts",output_folder,create_folder=True)
 
     # create a file of species counts
     workflow.add_task(
@@ -380,7 +381,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     # get the list of the log files that will be created, one for each input file, each in a temp humann2 folder
     log_files = [os.path.join(output_folder, "humann2", sample+"_humann2_temp", sample)+".log" for sample in sample_names]
     # get the name for the file of read and species counts created from the humann2 log outputs
-    log_counts = utilities.name_files("humann2_read_and_species_count_table.tsv",output_folder,subfolder="counts",create_folder=True)
+    log_counts = ShotGun.file("humann2_read_counts",output_folder,create_folder=True)
 
     humann2_output_folder = os.path.dirname(genefamiles[0])
     
@@ -412,7 +413,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
     # get a list of all output ec files
-    ec_files = utilities.name_files(genefamiles, output_folder, subfolder="humann2", tag="ecs")
+    ec_files = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="ecs", extension="tsv")
     
     # get ec files for all of the gene families files
     workflow.add_task_group_gridable(
@@ -423,7 +424,25 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         mem=5*1024, # 5 GB
         cores=1)
     
-    ### STEP #3: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
+    ### STEP #3: Merge gene families, ecs, and pathway abundance files
+
+    # get a list of merged files for ec, gene families, and pathway abundance
+    merged_genefamilies = ShotGun.file("genefamilies", output_folder)
+    merged_ecs = ShotGun.file("ecs", output_folder)
+    merged_pathabundance = ShotGun.file("pathabundance", output_folder)
+    
+    # merge the ec, gene families, and pathway abundance files
+    all_depends=[genefamiles, ec_files, pathabundance]
+    all_targets=[merged_genefamilies, merged_ecs, merged_pathabundance]
+    file_basenames=["genefamilies","ecs","pathabundance"]
+    for depends, targets, basename in zip(all_depends, all_targets, file_basenames):
+        workflow.add_task(
+            "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name [args[1]]",
+            depends=depends,
+            targets=targets,
+            args=[os.path.dirname(depends[0]),basename])
+    
+    ### STEP #4: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
     # get a list of files for normalized ec, gene families, and pathway abundance
     norm_genefamily_files = utilities.name_files(genefamiles, output_folder, subfolder="genes", tag="relab", create_folder=True)
@@ -441,13 +460,13 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         cores=1)
     
     # get a list of merged files for ec, gene families, and pathway abundance
-    merged_genefamilies = utilities.name_files("genefamilies_relab.tsv", output_folder)
-    merged_ecs = utilities.name_files("ecs_relab.tsv", output_folder)
-    merged_pathabundance = utilities.name_files("pathabundance_relab.tsv", output_folder)
+    merged_genefamilies_relab = ShotGun.file("genefamilies_relab", output_folder)
+    merged_ecs_relab = ShotGun.file("ecs_relab", output_folder)
+    merged_pathabundance_relab = ShotGun.file("pathabundance_relab", output_folder)
     
     # merge the ec, gene families, and pathway abundance files
     all_depends=[norm_genefamily_files, norm_ec_files, norm_pathabundance_files]
-    all_targets=[merged_genefamilies, merged_ecs, merged_pathabundance]
+    all_targets=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab]
     for depends, targets in zip(all_depends, all_targets):
         workflow.add_task(
             "humann2_join_tables --input [args[0]] --output [targets[0]]",
@@ -456,16 +475,16 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
             args=[os.path.dirname(depends[0])])
 
     # get feature counts for the ec, gene families, and pathways
-    genefamilies_counts = utilities.name_files("humann2_genefamilies_relab_counts.tsv", output_folder, subfolder="counts")
-    ecs_counts = utilities.name_files("humann2_ecs_relab_counts.tsv", output_folder, subfolder="counts")
-    pathabundance_counts = utilities.name_files("humann2_pathabundance_relab_counts.tsv", output_folder, subfolder="counts")
+    genefamilies_counts = ShotGun.file("genefamilies_relab_counts", output_folder)
+    ecs_counts = ShotGun.file("ecs_relab_counts", output_folder)
+    pathabundance_counts = ShotGun.file("pathabundance_relab_counts", output_folder)
     workflow.add_task_group(
         "count_features.py --input [depends[0]] --output [targets[0]] --reduce-sample-name --ignore-un-features --ignore-stratification",
-        depends=[merged_genefamilies, merged_ecs, merged_pathabundance],
+        depends=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab],
         targets=[genefamilies_counts, ecs_counts, pathabundance_counts])
     
     # merge the feature counts into a single file
-    all_feature_counts = utilities.name_files("humann2_feature_counts.tsv", output_folder, subfolder="counts")
+    all_feature_counts = ShotGun.file("feature_counts", output_folder)
     workflow.add_task(
         "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name _relab_counts.tsv",
         depends=[genefamilies_counts, ecs_counts, pathabundance_counts],
@@ -473,4 +492,4 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         args=[os.path.dirname(genefamilies_counts)])
 
         
-    return merged_genefamilies, merged_ecs, merged_pathabundance
+    return merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab, merged_genefamilies, merged_ecs, merged_pathabundance
