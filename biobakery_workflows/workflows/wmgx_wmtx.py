@@ -32,8 +32,8 @@ from anadama2 import Workflow
 # import the library of biobakery_workflow tasks for shotgun sequences
 from biobakery_workflows.tasks import shotgun
 
-# import the utilities functions and config settings from biobakery_workflows
-from biobakery_workflows import utilities, config
+# import the utilities functions, config settings, and file names from biobakery_workflows
+from biobakery_workflows import utilities, config, files
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with two input folder options
@@ -58,8 +58,8 @@ input_files_metagenome = utilities.find_files(args.input_metagenome, extension=a
 input_files_metatranscriptome = utilities.find_files(args.input_metatranscriptome, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-wms_output_folder = os.path.join(args.output,"whole_metagenome_shotgun")
-wts_output_folder = os.path.join(args.output,"whole_metatranscriptome_shotgun")
+wms_output_folder = os.path.join(args.output,files.ShotGun.wmgx_folder_name)
+wts_output_folder = os.path.join(args.output,files.ShotGun.wmtx_folder_name)
 wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, input_files_metagenome, wms_output_folder, args.threads, workflow_config.kneaddata_db_human_genome, args.pair_identifier)
 wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, input_files_metatranscriptome, wts_output_folder, args.threads, [workflow_config.kneaddata_db_human_genome, workflow_config.kneaddata_db_human_metatranscriptome], args.pair_identifier)
 

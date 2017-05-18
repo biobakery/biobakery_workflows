@@ -64,6 +64,10 @@ class Workflow(object):
         return name_files(folder=main_folder, **merged_keywords)
 
 class ShotGun(Workflow):
+    # set the folder names for wmgx_wmtx data workflows
+    wmgx_folder_name="whole_metagenome_shotgun"
+    wmtx_folder_name="whole_metatranscriptome_shotgun"
+    
     file_info={}
     
     # set the kneaddata file name
@@ -125,5 +129,4 @@ class ShotGun(Workflow):
         description=("A tab-delimited file with samples as columns and pathways as rows. This file includes the normalized RNA abundances ",
             " as a ratio to DNA abundance. This file does not include stratified features."))
 
-    
     
