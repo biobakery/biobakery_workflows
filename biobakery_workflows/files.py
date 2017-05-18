@@ -26,7 +26,7 @@ THE SOFTWARE.
 import os
 import copy
 
-from biobakery_workflows import utilities
+from .utilities import name_files
 
 class FileInfo(object):
     def __init__(self, name=None, subfolder=None, tag=None, extension=None, description=None):
@@ -61,7 +61,7 @@ class Workflow(object):
     def file(cls, name, main_folder, **keywords):
         merged_keywords = copy.copy(keywords)
         merged_keywords.update(cls.file_info[name].get_path_keywords())
-        return utilities.name_files(folder=main_folder, **merged_keywords)
+        return name_files(folder=main_folder, **merged_keywords)
 
 class ShotGun(Workflow):
     file_info={}

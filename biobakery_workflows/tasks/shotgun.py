@@ -26,7 +26,7 @@ THE SOFTWARE.
 import os
 
 from biobakery_workflows import utilities
-from biobakery_workflows.tasks.files import ShotGun
+from biobakery_workflows.files import ShotGun
 
 def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None, additional_options=None):
     """Run kneaddata
