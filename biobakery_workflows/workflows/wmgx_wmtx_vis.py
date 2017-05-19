@@ -54,7 +54,7 @@ input_desc+=files.ShotGun.list_file_path_description(files.ShotGun.wmtx_folder_n
 
 # add the custom arguments to the workflow                          
 workflow.add_argument("input",desc=input_desc,required=True)
-workflow.add_argument("project-name",desc="the name of the project")
+workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
 workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
