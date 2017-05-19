@@ -27,6 +27,7 @@ import os
 import sys
 
 from biobakery_workflows import utilities
+from biobakery_workflows import files
 
 def demultiplex(workflow, input_files, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)
@@ -693,10 +694,10 @@ def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_ma
     # name the output files
     open_ref_tsv = utilities.name_files("all_samples_taxonomy_open_reference.tsv", output_folder) 
     open_ref_fasta = utilities.name_files("all_samples_open_reference.fasta", output_folder)
-    closed_ref_tsv = utilities.name_files("all_samples_taxonomy_closed_reference.tsv", output_folder)
+    closed_ref_tsv = files.SixteenS.path("otu_table_closed_reference", output_folder)
     closed_ref_fasta = utilities.name_files("all_samples_closed_reference.fasta", output_folder)
     denovo_tsv = utilities.name_files("all_samples_denovo_otu_table.tsv", output_folder)
-    read_counts = utilities.name_files("all_samples_read_counts.tsv", output_folder)
+    read_counts = files.SixteenS.path("read_count_table", output_folder)
   
 
     workflow.add_task(

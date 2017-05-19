@@ -70,7 +70,7 @@ class Workflow(object):
 
         # if set, error if the file does not exist
         if error_if_not_found and not os.path.isfile(file_path):
-            message="ERROR: Unable to find file: "+file_path
+            message="\nERROR: Unable to find file: "+file_path
             desc=cls.description(name)
             if desc:
                 message+="\n\nFile description:\n"+desc
@@ -172,4 +172,20 @@ class ShotGun(Workflow):
         description=("A tab-delimited file with samples as columns and pathways as rows. This file includes the normalized RNA abundances ",
             " as a ratio to DNA abundance. This file does not include stratified features."))
 
+class SixteenS(Workflow):
     
+    file_info={}
+
+    # set the names for the otu table and read count files
+    file_info["otu_table_closed_reference"]=FileInfo("all_samples_taxonomy_closed_reference.tsv",
+        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
+            "First column is the OTU id and the last column is the taxonomy. The remaining",
+            "columns are sample names. Values are counts."))
+    file_info["read_count_table"]=FileInfo("all_samples_read_counts.tsv",
+        description=("A tab-delimited file with samples as rows and counts as columns. ",
+            "The counts included are the original read count, total number of reads ",
+            "mapping to an OTU with known taxonomy, and total reads mapping to an ",
+            "unclassified OTU."))
+    
+    
+        
