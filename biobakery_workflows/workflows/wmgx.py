@@ -40,11 +40,11 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 
 # add the custom arguments to the workflow
 workflow_config = config.ShotGun()
-workflow.add_argument("input-extension", desc="the input file extension [default: %default]", default="fastq.gz")
-workflow.add_argument("threads", desc="number of threads/cores for each task to use [default: %default]", default=1)
-workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair [default: %default]", default=".R1")
-workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate reference databases for QC [default: %default]", default=workflow_config.kneaddata_db_human_genome)
-workflow.add_argument("qc-options", desc="additional options when running the QC step [default: %default]", default="")
+workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
+workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
+workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
+workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", default=workflow_config.kneaddata_db_human_genome)
+workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
 
 # get the arguments from the command line
 args = workflow.parse_args()
