@@ -26,7 +26,7 @@ THE SOFTWARE.
 import os
 
 from biobakery_workflows import utilities
-from biobakery_workflows.files import ShotGun
+from biobakery_workflows import files
 
 def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None, additional_options=None):
     """Run kneaddata
@@ -168,7 +168,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     input_folder=os.path.dirname(input_files[0])
     
     # get the name for the output file
-    kneaddata_read_count_file = ShotGun.file("kneaddata_read_counts",output_folder,create_folder=True)
+    kneaddata_read_count_file = files.ShotGun.path("kneaddata_read_counts",output_folder,create_folder=True)
     
     # add the task (which is not gridable as this task should take under 5 minutes)
     workflow.add_task("kneaddata_read_count_table --input [args[0]] --output [targets[0]]",
@@ -306,7 +306,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         cores=threads) # time/mem based on 8 cores
     
     # merge all of the metaphlan taxonomy tables
-    metaphlan2_merged_output = ShotGun.file("taxonomic_profile", output_folder)
+    metaphlan2_merged_output = files.ShotGun.path("taxonomic_profile", output_folder)
     
     # run the humann2 join script to merge all of the metaphlan2 profiles
     workflow.add_task(
@@ -316,7 +316,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         args=[metaphlan2_output_folder, metaphlan2_profile_tag])
    
     # get the name for the file to write the species counts
-    metaphlan2_species_counts_file = ShotGun.file("species_counts",output_folder,create_folder=True)
+    metaphlan2_species_counts_file = files.ShotGun.path("species_counts",output_folder,create_folder=True)
 
     # create a file of species counts
     workflow.add_task(
@@ -381,7 +381,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     # get the list of the log files that will be created, one for each input file, each in a temp humann2 folder
     log_files = [os.path.join(output_folder, "humann2", sample+"_humann2_temp", sample)+".log" for sample in sample_names]
     # get the name for the file of read and species counts created from the humann2 log outputs
-    log_counts = ShotGun.file("humann2_read_counts",output_folder,create_folder=True)
+    log_counts = files.ShotGun.path("humann2_read_counts",output_folder,create_folder=True)
 
     humann2_output_folder = os.path.dirname(genefamiles[0])
     
@@ -427,9 +427,9 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     ### STEP #3: Merge gene families, ecs, and pathway abundance files
 
     # get a list of merged files for ec, gene families, and pathway abundance
-    merged_genefamilies = ShotGun.file("genefamilies", output_folder)
-    merged_ecs = ShotGun.file("ecs", output_folder)
-    merged_pathabundance = ShotGun.file("pathabundance", output_folder)
+    merged_genefamilies = files.ShotGun.path("genefamilies", output_folder)
+    merged_ecs = files.ShotGun.path("ecs", output_folder)
+    merged_pathabundance = files.ShotGun.path("pathabundance", output_folder)
     
     # merge the ec, gene families, and pathway abundance files
     all_depends=[genefamiles, ec_files, pathabundance]
@@ -460,9 +460,9 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         cores=1)
     
     # get a list of merged files for ec, gene families, and pathway abundance
-    merged_genefamilies_relab = ShotGun.file("genefamilies_relab", output_folder)
-    merged_ecs_relab = ShotGun.file("ecs_relab", output_folder)
-    merged_pathabundance_relab = ShotGun.file("pathabundance_relab", output_folder)
+    merged_genefamilies_relab = files.ShotGun.path("genefamilies_relab", output_folder)
+    merged_ecs_relab = files.ShotGun.path("ecs_relab", output_folder)
+    merged_pathabundance_relab = files.ShotGun.path("pathabundance_relab", output_folder)
     
     # merge the ec, gene families, and pathway abundance files
     all_depends=[norm_genefamily_files, norm_ec_files, norm_pathabundance_files]
@@ -475,16 +475,16 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
             args=[os.path.dirname(depends[0])])
 
     # get feature counts for the ec, gene families, and pathways
-    genefamilies_counts = ShotGun.file("genefamilies_relab_counts", output_folder)
-    ecs_counts = ShotGun.file("ecs_relab_counts", output_folder)
-    pathabundance_counts = ShotGun.file("pathabundance_relab_counts", output_folder)
+    genefamilies_counts = files.ShotGun.path("genefamilies_relab_counts", output_folder)
+    ecs_counts = files.ShotGun.path("ecs_relab_counts", output_folder)
+    pathabundance_counts = files.ShotGun.path("pathabundance_relab_counts", output_folder)
     workflow.add_task_group(
         "count_features.py --input [depends[0]] --output [targets[0]] --reduce-sample-name --ignore-un-features --ignore-stratification",
         depends=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab],
         targets=[genefamilies_counts, ecs_counts, pathabundance_counts])
     
     # merge the feature counts into a single file
-    all_feature_counts = ShotGun.file("feature_counts", output_folder)
+    all_feature_counts = files.ShotGun.path("feature_counts", output_folder)
     workflow.add_task(
         "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name _relab_counts.tsv",
         depends=[genefamilies_counts, ecs_counts, pathabundance_counts],
@@ -523,9 +523,9 @@ def norm_ratio(workflow, wms_genes, wms_ecs, wms_paths, wts_genes, wts_ecs, wts_
     """
     
     # get the names of the output files
-    norm_ratio_genes = ShotGun.file("genefamilies_norm_ratio",output_folder,create_folder=True)
-    norm_ratio_ecs = ShotGun.file("ecs_norm_ratio",output_folder)
-    norm_ratio_pathway = ShotGun.file("paths_norm_ratio",output_folder)
+    norm_ratio_genes = files.ShotGun.path("genefamilies_norm_ratio",output_folder,create_folder=True)
+    norm_ratio_ecs = files.ShotGun.path("ecs_norm_ratio",output_folder)
+    norm_ratio_pathway = files.ShotGun.path("paths_norm_ratio",output_folder)
     
     # if a mapping file is provided, set the mapping option
     mapping_option=""

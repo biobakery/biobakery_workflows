@@ -58,7 +58,7 @@ class FileInfo(object):
 
 class Workflow(object):
     @classmethod
-    def file(cls, name, main_folder, **keywords):
+    def path(cls, name, main_folder, **keywords):
         merged_keywords = copy.copy(keywords)
         merged_keywords.update(cls.file_info[name].get_path_keywords())
         return name_files(folder=main_folder, **merged_keywords)
