@@ -28,6 +28,16 @@ import sys
 import math
 import functools
 
+def try_log10(value):
+    """ Try to convert value to log10 """
+    
+    try:
+        new_value = math.log10(value)
+    except ValueError:
+        new_value = 0
+        
+    return new_value
+
 def metacyc_url(pathway):
     """ Return the url for the pathway on the MetaCyc website 
     
