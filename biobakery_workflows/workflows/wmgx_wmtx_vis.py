@@ -44,6 +44,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 # these are expected to be included in the input folder
 wmgx_input_files={"required":["kneaddata_read_counts","taxonomic_profile","pathabundance"],"optional":["humann2_read_counts","feature_counts"]}
 wmtx_input_files={"required":["kneaddata_read_counts"],"optional":["humann2_read_counts","feature_counts"]}
+norm_input_files={"optional":["genefamilies_norm_ratio","ecs_norm_ratio","paths_norm_ratio"]}
 
 # create a custom description for the input argument listing all expected input files
 input_desc="A folder containing the final products from the wmgx_mwtx data workflow.\n\nThe input folder should include the following:\n\n"
@@ -51,6 +52,8 @@ input_desc+="Whole Metagenome Shotgun\n---------------------------------\n"
 input_desc+=files.ShotGun.list_file_path_description(files.ShotGun.wmgx_folder_name,wmgx_input_files)
 input_desc+="\n\nWhole Metatranscriptome Shotgun\n---------------------------------\n"
 input_desc+=files.ShotGun.list_file_path_description(files.ShotGun.wmtx_folder_name,wmtx_input_files)
+input_desc+="\n\nRNA/DNA Norm\n---------------------------------\n"
+input_desc+=files.ShotGun.list_file_path_description("",norm_input_files)
 
 # add the custom arguments to the workflow                          
 workflow.add_argument("input",desc=input_desc,required=True)
@@ -92,6 +95,9 @@ doc_task=workflow.add_document(
           "rna_feature_counts":files.ShotGun.path("feature_counts",wmtx_input_folder, none_if_not_found=True),
           "taxonomic_profile":taxonomic_profile,
           "dna_pathabundance":pathabundance,
+          "genefamilies_norm_ratio":files.ShotGun.path("genefamilies_norm_ratio",args.input,none_if_not_found=True),
+          "ecs_norm_ratio":files.ShotGun.path("ecs_norm_ratio",args.input,none_if_not_found=True),
+          "paths_norm_ratio":files.ShotGun.path("paths_norm_ratio",args.input,none_if_not_found=True),
           "format":args.format})
 
 # add an archive of the document and figures, removing the log file

@@ -163,14 +163,17 @@ class ShotGun(Workflow):
     
     # set the names for the rna/dna normed files
     file_info["genefamilies_norm_ratio"]=FileInfo("rna_dna_relative_expression_unstratified.tsv",subfolder=os.path.join("norm","genes"),
-        description=("A tab-delimited file with samples as columns and genes as rows. This file includes the normalized RNA abundances ",
-            " as a ratio to DNA abundance. This file does not include stratified features."))
+        description=("A tab-delimited file with samples as columns and genes as rows. ",
+            "This file includes the normalized RNA abundances as a ratio to DNA abundance. ",
+            "This file does not include stratified features."))
     file_info["ecs_norm_ratio"]=FileInfo("rna_dna_relative_expression_unstratified.tsv",subfolder=os.path.join("norm","ecs"),
-        description=("A tab-delimited file with samples as columns and ecs as rows. This file includes the normalized RNA abundances ",
-            " as a ratio to DNA abundance. This file does not include stratified features."))
+        description=("A tab-delimited file with samples as columns and ecs as rows. ",
+            "This file includes the normalized RNA abundances as a ratio to DNA abundance. ",
+            "This file does not include stratified features."))
     file_info["paths_norm_ratio"]=FileInfo("rna_dna_relative_expression_unstratified.tsv",subfolder=os.path.join("norm","paths"),
-        description=("A tab-delimited file with samples as columns and pathways as rows. This file includes the normalized RNA abundances ",
-            " as a ratio to DNA abundance. This file does not include stratified features."))
+        description=("A tab-delimited file with samples as columns and pathways as rows. ",
+            "This file includes the normalized RNA abundances as a ratio to DNA abundance. ",
+            "This file does not include stratified features."))
 
 class SixteenS(Workflow):
     
