@@ -3,6 +3,7 @@
 import numpy
 
 from biobakery_workflows import utilities
+from biobakery_workflows import visualizations
 
 from anadama2 import PweaveDocument
 
@@ -13,27 +14,6 @@ vars = document.get_vars()
 
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
-
-#' # Quality Control
-
-#' This report section contains information about the quality control processing
-#' for all samples. These samples were
-#' run through [KneadData](http://huttenhower.sph.harvard.edu/kneaddata).
-#' Samples were first trimmed then filtered using the human genome (hg38). RNA
-#' samples where than filtered using the human transcriptome (hg38 mRNA).
-
-#' Data is organized by paired and orphan reads. When 
-#' one read in a pair passes a filtering step and the other does not the surviving
-#' read is an orphan. The tables and plots are annotated as follows:
-
-#' * raw: Untouched fastq reads.
-#' * trim: Number of reads remaining after trimming bases with Phred score < 20. If the 
-#' trimmed reads is <70% of original length then it is removed altogether.
-#' * hg38: Number of reads remaining after depleting reads against the human genome (hg38).
-#' * mRNA: Number of reads remaining after depleting reads against the human genome (hg38)
-#' and the human transcriptome (hg38 mRNA). (RNA samples only)
-
-#+ echo=False
 
 # read in the DNA samples
 columns, dna_samples, dna_paired_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,2,6))
@@ -49,6 +29,28 @@ rna_paired_columns = ["Raw","Trim","hg38","hg38 mRNA"]
 columns, rna_samples, rna_orphan_data = document.read_table(vars["rna_read_counts"], only_data_columns=(4,5,10,11,16,17))
 rna_orphan_columns = ["Trim orphan1", "Trim orphan2", "hg38 orphan1", "hg38 orphan2", 
     "mRNA orphan1", "mRNA orphan2"]
+
+
+#' # Quality Control
+
+#' <%= visualizations.ShotGun.format_caption("qc_intro",total_samples=len(dna_samples)+len(rna_samples),seq_type="paired-end") %>
+#' Reads were first trimmed then filtered using the human genome (hg38) 
+#' to remove reads originating from the host DNA. RNA reads were additionally 
+#' filtered using the human transcriptome (hg38 mRNA) to remove reads originating 
+#' from host gene isoforms.
+
+#' Data is organized by paired and orphan reads. When 
+#' one read in a pair passes a filtering step and the other does not the surviving
+#' read is an orphan. The tables and plots are annotated as follows:
+
+#' * raw: Untouched fastq reads.
+#' * trim: Number of reads remaining after trimming bases with Phred score < 20. If the 
+#' trimmed reads is <70% of original length then it is removed altogether.
+#' * hg38: Number of reads remaining after depleting reads against the human genome (hg38).
+#' * mRNA: Number of reads remaining after depleting reads against the human genome (hg38)
+#' and the human transcriptome (hg38 mRNA). (RNA samples only)
+
+#+ echo=False
 
 #' ## DNA Samples Quality Control
 

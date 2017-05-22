@@ -21,7 +21,7 @@ vars = document.get_vars()
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
-#' # Taxonomy
+#' # Taxonomic Profiling of Metagenomic Reads
 
 #' This report section contains information about the taxonomy
 #' for all DNA samples. These samples were

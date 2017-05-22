@@ -4,6 +4,7 @@ import os
 import numpy
 
 from biobakery_workflows import utilities
+from biobakery_workflows import visualizations
 
 from anadama2 import PweaveDocument
 
@@ -26,23 +27,21 @@ large_table_message="The table is too large to include the full table in this do
 # get the name of the contaminate database used
 db_name = vars["contaminate_database"]
 
+# read in the DNA samples
+columns, dna_samples, dna_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,1,3), format_data=int)
+dna_columns = ["Raw","Trim",db_name]
+
+
 #' # Quality Control
 
-#' This report section contains information about the quality control processing
-#' for all samples. These samples were
-#' run through [KneadData](http://huttenhower.sph.harvard.edu/kneaddata).
-#' Samples were first trimmed then filtered against a contaminate reference database.
+#' 
+#' <%= visualizations.ShotGun.format_caption("qc_intro",total_samples=len(dna_samples),seq_type="single-end") %>
+#' Reads were first trimmed then filtered against a contaminate reference database.
 
 #' * raw : Untouched fastq reads.
 #' * trim : Number of reads remaining after trimming bases with Phred score < 20. If the 
 #' trimmed reads is <70% of original length then it is removed altogether.
 #' * <% print(db_name) %> : Number of reads remaining after depleting reads against the contaminate reference database.
-
-#+ echo=False
-
-# read in the DNA samples
-columns, dna_samples, dna_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,1,3), format_data=int)
-dna_columns = ["Raw","Trim",db_name]
 
 #' ## DNA Samples Quality Control
 

@@ -143,6 +143,12 @@ class Workflow(object):
 class ShotGun(Workflow):
     captions={}
     
+    # add captions for the qc templates
+    captions["qc_intro"]="This report section contains information about the "+\
+        "quality control processing for all {total_samples} {seq_type} fastq input "+\
+        "files. These files were run through the "+\
+        "[KneadData](http://huttenhower.sph.harvard.edu/kneaddata) QC pipeline."
+    
     # add captions for functional data section
     captions["functional_intro"]="This report section contains preliminary "+\
         "exploratory figures that summarize HUMAnN2 functional profiling of "+\

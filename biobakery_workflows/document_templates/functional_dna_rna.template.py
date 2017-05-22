@@ -20,7 +20,7 @@ top_norm_pathways=50
 top_norm_ecs=100
 top_norm_genes=100
 
-#' # Functional Profiling
+#' # Functional Profiling of Metagenomic and Metatranscriptomic Reads
 
 #' <%= visualizations.ShotGun.captions["functional_intro"] %>
 
@@ -93,7 +93,7 @@ else:
 
 #' <% if show_dna_features or show_rna_features: print(visualizations.ShotGun.format_caption("feature_detection",seq_type=seq_data_type,seq_short_type=short_type)) %>
 
-#' <% if show_dna_features: print("## DNA Features") %>
+#' <% if show_dna_features: print("### DNA Features") %>
 
 #+ echo=False
 if show_dna_features:
@@ -122,7 +122,7 @@ if show_dna_features:
 
 #' <% if show_dna_features and pdf_format: print("\clearpage") %>
 
-#' <% if show_rna_features: print("## RNA Features") %>
+#' <% if show_rna_features: print("### RNA Features") %>
 
 #+ echo=False
 if show_rna_features:
@@ -160,7 +160,7 @@ norm_intro+=" Note the most abundant DNA features are not necessarily those with
 
 #' <% if show_rna_features and show_norm_ratio and pdf_format: print("\clearpage") %>
 
-#' <% if show_norm_ratio: print("## RNA/DNA Normalized Features") %>
+#' <% if show_norm_ratio: print("### RNA/DNA Normalized Features") %>
 
 #' <% if show_norm_ratio: print(norm_intro) %>
 

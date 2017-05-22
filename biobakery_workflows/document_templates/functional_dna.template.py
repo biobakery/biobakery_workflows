@@ -15,7 +15,7 @@ vars = document.get_vars()
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
-#' # Functional Profiling
+#' # Functional Profiling of Metagenomic Reads
 
 #' <%= visualizations.ShotGun.captions["functional_intro"] %>
 
