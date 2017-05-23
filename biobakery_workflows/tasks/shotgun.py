@@ -48,7 +48,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         additional_options (string): Additional options when running kneaddata (optional).
         
     Requires:
-        kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
+        kneaddata v0.6+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -88,7 +88,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         input_files=zip(input_files[0],input_files[1])
         # add the second input file to the kneaddata arguments
         # also add the option to cat the final output files into a single file
-        second_input_option=" --input [depends[1]] --cat-final-output"
+        second_input_option=" --input [depends[1]] --cat-final-output --serial --no-discordant"
         # determine time/memory equations based on the two input files
         time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*6*60"
         mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 2*12*1024"
@@ -143,7 +143,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
         output_folder (string): The path of the output folder.
         
     Requires:
-        kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
+        kneaddata v0.6+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -198,7 +198,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         additional_options (string): Additional options when running kneaddata (optional).
         
     Requires:
-        kneaddata v0.5.4+: A tool to perform quality control on metagenomic and
+        kneaddata v0.6+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
