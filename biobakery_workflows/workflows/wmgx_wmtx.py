@@ -60,8 +60,14 @@ input_files_metatranscriptome = utilities.find_files(args.input_metatranscriptom
 ### STEP #1: Run quality control on all input files ###
 wms_output_folder = os.path.join(args.output,files.ShotGun.wmgx_folder_name)
 wts_output_folder = os.path.join(args.output,files.ShotGun.wmtx_folder_name)
-wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, input_files_metagenome, wms_output_folder, args.threads, workflow_config.kneaddata_db_human_genome, args.pair_identifier)
-wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, input_files_metatranscriptome, wts_output_folder, args.threads, [workflow_config.kneaddata_db_human_genome, workflow_config.kneaddata_db_human_metatranscriptome], args.pair_identifier)
+wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, 
+    input_files_metagenome, wms_output_folder, args.threads, 
+    [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna], 
+    args.pair_identifier)
+wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, 
+    input_files_metatranscriptome, wts_output_folder, args.threads, 
+    [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_human_metatranscriptome,workflow_config.kneaddata_db_rrna], 
+    args.pair_identifier)
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
 wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads)

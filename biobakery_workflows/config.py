@@ -26,26 +26,44 @@ THE SOFTWARE.
 import os
 import sys
 
-def get_environ_variable(environ_variable):
-    """ Try to get the environment variable """
-    
-    try:
-        variable = os.environ[environ_variable]
-    except KeyError:
-        sys.exit("ERROR: Please set the environment variable " + environ_variable)
-    
-    return variable
+class DBInfo(object):
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
 
-class ShotGun():
-    def __init__(self):
-        self.kneaddata_db_human_genome = get_environ_variable("KNEADDATA_DB_HUMAN_GENOME")
-        self.kneaddata_db_human_metatranscriptome = get_environ_variable("KNEADDATA_DB_HUMAN_TRANSCRIPTOME")
+class Workflow(object):
+    def __getattr__(self, name):
+        """ Try to get the environment variable """
+        try:
+            variable = os.environ[self.vars[name].name]
+        except KeyError:
+            message="ERROR: Please set the environment variable $" + self.vars[name].name
+            message+="\n"+self.vars[name].description
+            sys.exit(message)
+            
+        return variable
 
-class SixteenS():
-    def __init__(self):
-        self.greengenes_usearch = get_environ_variable("GREEN_GENES_USEARCH_DB")
-        self.greengenes_fasta = get_environ_variable("GREEN_GENES_FASTA_DB")
-        self.greengenes_taxonomy = get_environ_variable("GREEN_GENES_TAXONOMY_DB")
+class ShotGun(Workflow):
+    vars={}
+    vars["kneaddata_db_human_genome"]=DBInfo("KNEADDATA_DB_HUMAN_GENOME",
+        description="This is the KneadData bowtie2 database of the human genome. "+\
+            "This database can be downloaded with KneadData.")
+    vars["kneaddata_db_human_metatranscriptome"] = DBInfo("KNEADDATA_DB_HUMAN_TRANSCRIPTOME",
+        description="This is the folder containing the KneadData bowtie2 database for the human transcriptome."+\
+            "This database can be downloaded with KneadData.")
+    vars["kneaddata_db_rrna"] = DBInfo("KNEADDATA_DB_RIBOSOMAL_RNA",
+        description="This is the folder containing the KneadData bowtie2 database of SILVA rRNA."+\
+            "This database can be downloaded with KneadData.")
+
+class SixteenS(Workflow):
+    vars={}
+    vars["greengenes_usearch"] = DBInfo("GREEN_GENES_USEARCH_DB",
+        description="This is the GreenGenes fasta file formatted for Usearch. "+\
+            "A fasta formatted file can also be used.")
+    vars["greengenes_fasta"] = DBInfo("GREEN_GENES_FASTA_DB",
+        description="This is the GreenGenes fasta file.")
+    vars["greengenes_taxonomy"] = DBInfo("GREEN_GENES_TAXONOMY_DB",
+        description="This is the GreenGenes taxonomy file matching the fasta file.")
 
 
 
