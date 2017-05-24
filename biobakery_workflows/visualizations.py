@@ -102,7 +102,7 @@ def show_table_max_rows(document, data, row_labels, column_labels, title, table_
     
     table_message="A data file exists of this table: "
     large_table_message="The table is too large to include the full table in this document."+\
-        " A partial table is shown which includes only "+str(max_rows)+" pathways."+\
+        " A partial table is shown which includes only "+str(max_rows)+" rows."+\
         " Please see the data file for the full table: "
         
     if len(row_labels) <= max_rows:
@@ -191,5 +191,10 @@ class ShotGun(Workflow):
         
     captions["scatter_features"]="Detection of UniRef90 gene families, enzyme modules,"+\
         " and pathways as a function of aligned reads."
+        
+    captions["microbial_ratios"]="Proportion of reads remaining after removing host"+\
+        " reads relative to the number of: i) quality-trimmed reads, and ii) raw "+\
+        "unfiltered reads."
+        
         
 

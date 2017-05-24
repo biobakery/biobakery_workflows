@@ -2,8 +2,7 @@
 #+ echo=False
 import numpy
 
-from biobakery_workflows import utilities
-from biobakery_workflows import visualizations
+from biobakery_workflows import utilities, visualizations, files
 
 from anadama2 import PweaveDocument
 
@@ -57,22 +56,40 @@ rna_orphan_columns = ["Trim orphan1", "Trim orphan2", "hg38 orphan1", "hg38 orph
 #' ### DNA Samples Tables of Filtered Reads
 
 #+ echo=False
-document.show_table(dna_paired_data, dna_samples, dna_paired_columns, "DNA Paired end reads", 
+document.write_table(["# Sample"]+dna_paired_columns, dna_samples, dna_paired_data,
+    files.ShotGunVis.path("qc_counts_paired",document.data_folder))
+
+table_message=visualizations.show_table_max_rows(document, dna_paired_data, dna_samples,
+    dna_paired_columns, "DNA Paired end reads", files.ShotGunVis.path("qc_counts_paired"),
     format_data_comma=True)
 
+#' <%= table_message %>
+
 #+ echo=False
-document.show_table(dna_orphan_data, dna_samples, dna_orphan_columns, "DNA Orphan reads", 
+document.write_table(["# Sample"]+dna_orphan_columns, dna_samples, dna_orphan_data,
+    files.ShotGunVis.path("qc_counts_orphan",document.data_folder))
+
+table_message=visualizations.show_table_max_rows(document, dna_orphan_data, dna_samples,
+    dna_orphan_columns, "DNA Orphan reads", files.ShotGunVis.path("qc_counts_orphan"),
     format_data_comma=True)
+        
+#' <%= table_message %> 
 
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
 # plot the microbial reads ratios
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data)
-document.show_table(dna_microbial_reads, dna_samples, dna_microbial_labels,
-                    "DNA microbial read proportion")
+document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, 
+    dna_microbial_reads, files.ShotGunVis.path("microbial_counts",document.data_folder))
 
-#' Proportion of reads remaining after removing host reads relative to the number of: i) quality-trimmed reads, and ii) raw unfiltered reads.
+table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, dna_samples,
+    dna_microbial_labels, "DNA microbial read proportion",
+    files.ShotGunVis.path("microbial_counts"))
+
+#' <%= visualizations.ShotGun.captions["microbial_ratios"] %>  
+
+#' <%= table_message %>
 
 #' ### DNA Samples Plots of Filtered Reads
 
@@ -91,23 +108,41 @@ document.plot_grouped_barchart(numpy.transpose(dna_orphan_data), row_labels=dna_
 #' ### RNA Samples Tables of Filtered Reads
 
 #+ echo=False
-document.show_table(rna_paired_data, rna_samples, rna_paired_columns, "RNA Paired end reads", 
+document.write_table(["# Sample"]+rna_paired_columns, rna_samples, rna_paired_data,
+    files.ShotGunVis.path("rna_qc_counts_paired",document.data_folder))
+
+table_message=visualizations.show_table_max_rows(document, rna_paired_data, rna_samples,
+    rna_paired_columns, "RNA Paired end reads", files.ShotGunVis.path("rna_qc_counts_paired"),
     format_data_comma=True)
 
+#' <%= table_message %>
+
 #+ echo=False
-document.show_table(rna_orphan_data, rna_samples, rna_orphan_columns, "RNA Orphan reads", 
+document.write_table(["# Sample"]+rna_orphan_columns, rna_samples, rna_orphan_data,
+    files.ShotGunVis.path("rna_qc_counts_orphan",document.data_folder))
+
+table_message=visualizations.show_table_max_rows(document, rna_orphan_data, rna_samples,
+    rna_orphan_columns, "RNA Orphan reads", files.ShotGunVis.path("rna_qc_counts_orphan"),
     format_data_comma=True)
+
+#' <%= table_message %>
 
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
-# plot the microbial reads ratios
+# write and plot the microbial reads ratios
 rna_microbial_reads, rna_microbial_labels = utilities.microbial_read_proportion(rna_paired_data,
     rna_orphan_data,rna=True)
-document.show_table(rna_microbial_reads, rna_samples, rna_microbial_labels,
-                    "RNA microbial read proportion")
+document.write_table(["# Sample"]+rna_microbial_labels, rna_samples, 
+    rna_microbial_reads, files.ShotGunVis.path("rna_microbial_counts",document.data_folder))
 
-#' Proportion of reads remaining after removing host reads relative to the number of: i) quality-trimmed reads, and ii) raw unfiltered reads.
+table_message=visualizations.show_table_max_rows(document, rna_microbial_reads, rna_samples,
+    rna_microbial_labels, "RNA microbial read proportion",
+    files.ShotGunVis.path("rna_microbial_counts"))
+
+#' <%= visualizations.ShotGun.captions["microbial_ratios"] %>  
+
+#' <%= table_message %> 
 
 #' ### RNA Samples Plots of Filtered Reads
 

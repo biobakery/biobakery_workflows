@@ -63,7 +63,7 @@ class FileInfo(object):
 
 class Workflow(object):
     @classmethod
-    def path(cls, name, main_folder, none_if_not_found=None, error_if_not_found=None, **keywords):
+    def path(cls, name, main_folder="", none_if_not_found=None, error_if_not_found=None, **keywords):
         merged_keywords = copy.copy(keywords)
         merged_keywords.update(cls.file_info[name].get_path_keywords())
         file_path=name_files(folder=main_folder, **merged_keywords)
@@ -177,6 +177,42 @@ class ShotGun(Workflow):
         description=("A tab-delimited file with samples as columns and pathways as rows. ",
             "This file includes the normalized RNA abundances as a ratio to DNA abundance. ",
             "This file does not include stratified features."))
+    
+class ShotGunVis(Workflow):
+    file_info={}
+    
+    file_info["microbial_counts"]=FileInfo("microbial_counts_table.tsv",
+        description="A tab-delimited file with samples as rows and ratios as "+\
+            "columns. Includes the proportion of reads remaining after "+\
+            "trimming and filtering in the quality control workflow.")
+    file_info["rna_microbial_counts"]=FileInfo("rna_microbial_counts_table.tsv",
+        description="A tab-delimited file with RNA samples as rows and ratios as "+\
+            "columns. Includes the proportion of reads remaining after "+\
+            "trimming and filtering in the quality control workflow.")
+    file_info["qc_counts"]=FileInfo("qc_counts_table.tsv",
+        description="A tab-delimited file with samples as rows and read counts "+\
+            "as columns. Includes the read counts for trimming and filtering steps "+\
+            "in the quality control workflow. The reads are single end.")
+    file_info["qc_counts_paired"]=FileInfo("qc_counts_pairs_table.tsv",
+        description="A tab-delimited file with samples as rows and read counts "+\
+            "as columns. Includes the read counts for trimming and filtering steps "+\
+            "in the quality control workflow. The reads are paired end and these "+\
+            "counts are only for pairs.")
+    file_info["qc_counts_orphan"]=FileInfo("qc_counts_orphans_table.tsv",
+        description="A tab-delimited file with samples as rows and read counts "+\
+            "as columns. Includes the read counts for trimming and filtering steps "+\
+            "in the quality control workflow. The reads are paired end and these "+\
+            "counts are only for orphans.")
+    file_info["rna_qc_counts_paired"]=FileInfo("rna_qc_counts_pairs_table.tsv",
+        description="A tab-delimited file with RNA samples as rows and read counts "+\
+            "as columns. Includes the read counts for trimming and filtering steps "+\
+            "in the quality control workflow. The reads are paired end and these "+\
+            "counts are only for pairs.")
+    file_info["rna_qc_counts_orphan"]=FileInfo("rna_qc_counts_orphans_table.tsv",
+        description="A tab-delimited file with RNA samples as rows and read counts "+\
+            "as columns. Includes the read counts for trimming and filtering steps "+\
+            "in the quality control workflow. The reads are paired end and these "+\
+            "counts are only for orphans.")
 
 class SixteenS(Workflow):
     
