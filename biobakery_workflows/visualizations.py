@@ -29,6 +29,54 @@ import sys
 
 from . import utilities
 
+def qc_read_counts(document, file):
+    """ Read in the file of read counts compiled from kneaddata logs with the utility script """
+    
+    columns, samples, data = document.read_table(file, format_data=int)
+    
+    # shorten known database names
+    columns=[name.replace("SILVA_128_LSUParc_SSUParc_ribosomal_RNA","rRNA") for name in columns]
+    columns=[name.replace("Homo_sapiens","hg38") for name in columns]
+    columns=[name.replace("human_hg38_refMrna","mRNA") for name in columns]
+    
+    # change the names of the raw and trimmed columns (to include case)
+    columns=[name.replace("raw","Raw").replace("trimmed","Trim").replace("decontaminated","") for name in columns]
+    
+    # check if this is single or paired end data
+    if list(filter(lambda x: "single" in x, columns)):
+        # remove single from the column name
+        columns=[name.replace("single","").strip() for name in columns[:-1]]
+        
+        # return all but the final filtered column as this is not needed
+        data=[row[:-1] for row in data]
+        
+    else:
+        # remove the final columns from the list as these are not needed
+        columns=list(filter(lambda x: not "final" in x, columns))
+        
+        # organize the data into pairs and orphans
+        pairs_index = [index for index, name in enumerate(columns) if "pair1" in name]
+        pairs_columns = [name.replace("pair1","").strip() for index, name in enumerate(columns) if index in pairs_index]
+        orphans_index = [index for index, name in enumerate(columns) if "orphan" in name]
+        orphans_columns = [name for index, name in enumerate(columns) if index in orphans_index]
+        
+        pairs_data=[]
+        orphans_data=[]
+        for row in data:
+            pairs_data.append([])
+            orphans_data.append([])
+            for index in range(len(row)):
+                if index in pairs_index:
+                    pairs_data[-1].append(row[index])
+                if index in orphans_index:
+                    orphans_data[-1].append(row[index])
+                
+        columns = pairs_columns, orphans_columns
+        data = pairs_data, orphans_data
+    
+    return columns, samples, data
+    
+
 def feature_counts(document, read_counts_file, feature_counts_file):
     """ Compute feature counts from the humann2 log read counts file and the feature counts file """
     
@@ -97,27 +145,42 @@ def top_average_pathways(document, file, max_sets):
     return samples, top_pathways, top_data, top_names_and_descriptions
 
 def show_table_max_rows(document, data, row_labels, column_labels, title, table_file,
-    max_rows=20, format_data_comma=None, location="center", font=None):
+    max_rows=20, format_data_comma=None, location="center", font=None, max_columns=7):
     """ For large numbers of samples, only show a reduced table """
     
     table_message="A data file exists of this table: "
     large_table_message="The table is too large to include the full table in this document."+\
-        " A partial table is shown which includes only "+str(max_rows)+" rows."+\
+        " A partial table is shown which includes only {max} {item}."+\
         " Please see the data file for the full table: "
         
-    if len(row_labels) <= max_rows:
-        document.show_table(data, row_labels, column_labels, 
-            title, format_data_comma=format_data_comma, location=location, font=font)
-    else:
-        document.show_table(data[:max_rows], row_labels[:max_rows], 
-            column_labels, title+" (partial table)", format_data_comma=format_data_comma, 
-            location=location, font=font)
-    
-    if len(row_labels) <= max_rows:
-        message=table_message
-    else:
-        message=large_table_message
+    # check if there are too many rows
+    partial_table_rows=False
+    if len(row_labels) > max_rows:
+        data=data[:max_rows]
+        row_labels=row_labels[:max_rows]
+        partial_table_rows=True
         
+    # check if there are too many columns
+    partial_table_columns=False
+    if len(column_labels) > max_columns-1:
+        data=[row[:max_columns-1] for row in data]
+        column_labels=column_labels[:max_columns-1]
+        partial_table_columns=True
+        
+    # determine the message and title if this is a full or partial table
+    if partial_table_rows or partial_table_columns:
+        if partial_table_rows:
+            message=large_table_message.format(max=max_rows,item="rows")
+        else:
+            message=large_table_message.format(max=max_columns,item="columns")
+        title+=" (partial table)"
+    else:
+        message=table_message
+        
+    # render the table
+    document.show_table(data, row_labels, column_labels, 
+        title, format_data_comma=format_data_comma, location=location, font=font)
+    
     message+="[{file}](data/{file})".format(file=table_file)
         
     return message
@@ -142,12 +205,6 @@ class Workflow(object):
 
 class ShotGun(Workflow):
     captions={}
-    
-    # add captions for the qc templates
-    captions["qc_intro"]="This report section contains information about the "+\
-        "quality control processing for all {total_samples} {seq_type} fastq input "+\
-        "files. These files were run through the "+\
-        "[KneadData](http://huttenhower.sph.harvard.edu/kneaddata) QC pipeline."
     
     # add captions for functional data section
     captions["functional_intro"]="This report section contains preliminary "+\
@@ -196,5 +253,63 @@ class ShotGun(Workflow):
         " reads relative to the number of: i) quality-trimmed reads, and ii) raw "+\
         "unfiltered reads."
         
+    captions["qc_intro"]="This report section contains information about the "+\
+        "quality control processing for all {total_samples} {seq_type} fastq input "+\
+        "files. These files were run through the "+\
+        "[KneadData](http://huttenhower.sph.harvard.edu/kneaddata) QC pipeline. "+\
+        "Reads were first trimmed then filtered against contaminate reference database(s): "+\
+        " {dbs}. For multiple databases, reads were filtered sequentially "+\
+        "with those reads passing the first filtering step used as input to the next "+\
+        "filtering step."
+        
+    captions["qc_intro_paired"]="\n \nData is organized by paired "+\
+        "and orphan reads. When one read in a pair passes a filtering step and "+\
+        "the other does not the surviving read is an orphan."
+        
+    captions["qc_intro_table"]="\nThe tables and plots are annotated as follows:\n \n"+\
+        " * raw : Untouched fastq reads.\n"+\
+        " * trim : Number of reads remaining after trimming bases with Phred score < 20. If the "+\
+        "trimmed reads is < 70% of original length then it is removed altogether.\n"
+        
+    # set descriptions for command qc databases
+    captions["qc_databases"]={}
+    captions["qc_databases"]["hg38"]="The human genome database is used to remove "+\
+        "reads originating from the host DNA."
+    captions["qc_databases"]["mRNA"]="The human transcriptome (hg38 mRNA) database "+\
+        "is used to remove reads originating from host gene isoforms."
+    captions["qc_databases"]["rRNA"]="The SILVA (rRNA) database is used to remove "+\
+        " small and large subunit ribosomal RNA."
+    
+    @classmethod
+    def print_qc_intro_caption(cls, total_samples, databases, paired=None):
+        """ Generate the qc intro caption based on the samples and databases """
+        
+        caption=cls.captions["qc_intro"]
+        if paired:
+            caption+=cls.captions["qc_intro_paired"]
+        caption+=cls.captions["qc_intro_table"]
+        
+        # add each database to the list
+        dbs_list=[]
+        for db in databases:
+            dbs_list.append(db)
+            desc=cls.captions["qc_databases"].get(db,"")
+            caption+=" * {db} : Number of reads after depleting against reference database {list}. {desc}\n".format(
+                db=db,list=" and ".join(dbs_list), desc=desc)
+        caption+=" \n"
+        
+        # get the sequence type string
+        seq_type="single-end"
+        if paired:
+            seq_type="paired-end"
+        
+        # format the caption to include the specific details for this data set
+        caption=caption.format(total_samples=total_samples, seq_type=seq_type,
+            dbs=", ".join(databases))
+        
+        for line in caption.split("\n"):
+            print(line)
         
 
+        
+        

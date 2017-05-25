@@ -15,29 +15,13 @@ vars = document.get_vars()
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
-# get the name of the contaminate database used
-db_name = vars["contaminate_database"]
-
 # read in the DNA samples
-columns, dna_samples, dna_paired_data = document.read_table(vars["dna_read_counts"], only_data_columns=(0,2,6), format_data=int)
-dna_paired_columns = ["Raw","Trim",db_name]
+(dna_paired_columns, dna_orphan_columns), dna_samples, (dna_paired_data, dna_orphan_data) = visualizations.qc_read_counts(document, vars["dna_read_counts"])
 
-columns, dna_samples, dna_orphan_data = document.read_table(vars["dna_read_counts"], only_data_columns=(4,5,8,9), format_data=int)
-dna_orphan_columns = ["Trim orphan1", "Trim orphan2", db_name+" orphan1", db_name+" orphan2"]
 
 #' # Quality Control
 
-#' <%= visualizations.ShotGun.format_caption("qc_intro",total_samples=len(dna_samples),seq_type="paired-end") %>
-#' Reads were first trimmed then filtered against a contaminate reference database.
-
-#' Data is organized by paired and orphan reads. When 
-#' one read in a pair passes a filtering step and the other does not the surviving
-#' read is an orphan. The tables and plots are annotated as follows:
-
-#' * raw : Untouched fastq reads.
-#' * trim : Number of reads remaining after trimming bases with Phred score < 20. If the 
-#' trimmed reads is <70% of original length then it is removed altogether.
-#' * <% print(db_name) %> : Number of reads remaining after depleting reads against a contaminate reference database.
+#' <% visualizations.ShotGun.print_qc_intro_caption(len(dna_samples), dna_paired_columns[2:], paired=True) %>
 
 #' ## DNA Samples Quality Control
 
@@ -69,7 +53,8 @@ table_message=visualizations.show_table_max_rows(document, dna_orphan_data, dna_
 
 #+ echo=False
 # plot the microbial reads ratios    
-dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion(dna_paired_data, dna_orphan_data, database_name=db_name)
+dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion_multiple_databases(
+    dna_paired_data, dna_paired_columns, dna_orphan_data)
 
 # create a table of the microbial reads
 document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, 

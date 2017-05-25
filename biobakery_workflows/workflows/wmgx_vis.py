@@ -55,7 +55,6 @@ workflow.add_argument("project-name",desc="the name of the project", required=Tr
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome shotgun sequencing.")
 workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
-workflow.add_argument("contaminate-database",desc="the database used for contaminate read filtering for quality control", default="hg38")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -92,8 +91,7 @@ doc_task=workflow.add_document(
           "dna_pathabundance":pathabundance,
           "read_counts":read_counts,
           "feature_counts":feature_counts,
-          "format":args.format,
-          "contaminate_database":args.contaminate_database})
+          "format":args.format})
 
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder

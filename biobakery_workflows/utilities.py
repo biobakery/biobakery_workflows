@@ -754,6 +754,47 @@ def is_paired_table(file):
     
     return paired
 
+def microbial_read_proportion_multiple_databases(data, columns, orphan_data=None, rna=None):
+    """ Compute microbial read proportions from the KneadData read counts for 
+        multiple databases 
+        
+        Args:
+            data (list of lists): The single or paired data read counts for each sample.
+            columns (list): The names of the columns corresponding to the paired data. These
+                columns include the reference database names.
+            orphan_data (list of lists): The orphan data (if paired end reads)
+            rna (bool): If set, this data set is RNA so compute additional ratio.
+        
+        Requires:
+            None
+        
+        Returns:
+            (list of lists): A list of ratios for each sample.
+            (list): A list of strings with labels for the ratios.
+    """
+    
+    # compute ratios for each database used for qc
+    dna_microbial_reads=[]
+    dna_microbial_labels=[]
+    for index, qc_database in enumerate(columns[2:]):
+        # get a subset of the data for this ratio
+        data_subset=[row[:2]+[row[index+2]] for row in data]
+        
+        # create subset of orphan data if provided
+        orphan_subset=None
+        if orphan_data:
+            orphan_subset=[row[:2]+[row[index+2]] for row in orphan_data]
+        
+        reads_ratio, ratio_labels = microbial_read_proportion(data_subset, 
+            orphan_data=orphan_subset, database_name=qc_database, rna=rna)
+        dna_microbial_labels+=ratio_labels
+        if not dna_microbial_reads:
+            dna_microbial_reads=reads_ratio
+        else:
+            dna_microbial_reads=[row1+row2 for row1, row2 in zip(dna_microbial_reads,reads_ratio)]
+            
+    return dna_microbial_reads, dna_microbial_labels
+
 def microbial_read_proportion(paired_data, orphan_data=None, rna=None, database_name=None):
     """ Compute microbial read proporations from the KneadData read counts.
     
