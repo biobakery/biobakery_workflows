@@ -257,10 +257,11 @@ class ShotGun(Workflow):
         "quality control processing for all {total_samples} {seq_type} fastq input "+\
         "files. These files were run through the "+\
         "[KneadData](http://huttenhower.sph.harvard.edu/kneaddata) QC pipeline. "+\
-        "Reads were first trimmed then filtered against contaminate reference database(s): "+\
-        " {dbs}. For multiple databases, reads were filtered sequentially "+\
+        "Reads were first trimmed then filtered against contaminate reference database{dbs}. "
+    
+    captions["qc_intro_multiple_db"]="Reads were filtered sequentially "+\
         "with those reads passing the first filtering step used as input to the next "+\
-        "filtering step."
+        "filtering step. This chain of filtering removes reads from all references in serial."
         
     captions["qc_intro_paired"]="\n \nData is organized by paired "+\
         "and orphan reads. When one read in a pair passes a filtering step and "+\
@@ -285,6 +286,11 @@ class ShotGun(Workflow):
         """ Generate the qc intro caption based on the samples and databases """
         
         caption=cls.captions["qc_intro"]
+        
+        # if there are multiple databases, add the description about sequential filtering
+        if len(databases) > 1:
+            caption+=cls.captions["qc_intro_multiple_db"]
+        
         if paired:
             caption+=cls.captions["qc_intro_paired"]
         caption+=cls.captions["qc_intro_table"]
@@ -305,7 +311,7 @@ class ShotGun(Workflow):
         
         # format the caption to include the specific details for this data set
         caption=caption.format(total_samples=total_samples, seq_type=seq_type,
-            dbs=", ".join(databases))
+            dbs="s: "+", ".join(databases[:-1])+" and "+databases[-1] if len(databases) > 1 else " "+databases[0])
         
         for line in caption.split("\n"):
             print(line)
