@@ -26,6 +26,8 @@ THE SOFTWARE.
 import os
 import sys
 
+from anadama2.tracked import TrackedExecutable
+
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
@@ -547,7 +549,7 @@ def cluster_otus(workflow, fasta_file, output_folder):
     
     workflow.add_task(
         "usearch -cluster_otus [depends[0]] -otus [targets[0]] -relabel 'OTU' -uparseout [targets[1]]",
-        depends=fasta_file,
+        depends=[fasta_file,TrackedExecutable("usearch")],
         targets=[output_fasta, output_txt],
         name="usearch_cluster_otus")
 
@@ -762,7 +764,7 @@ def picrust(workflow,otu_table_biom,output_folder):
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
         "normalize_by_copy_number.py -i [depends[0]] -o [targets[0]]",
-        depends=otu_table_biom,
+        depends=[otu_table_biom,TrackedExecutable("normalize_by_copy_number.py")],
         targets=normalized_otu_table,
         name="normalize_by_copy_number.py")
     
@@ -772,7 +774,7 @@ def picrust(workflow,otu_table_biom,output_folder):
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
         "predict_metagenomes.py -i [depends[0]] -o [targets[0]]",
-        depends=normalized_otu_table,
+        depends=[normalized_otu_table,TrackedExecutable("predict_metagenomes.py")],
         targets=predict_metagenomes_table,
         name="predict_metagenomes.py")
     
@@ -798,7 +800,7 @@ def convert_to_biom_from_tsv(workflow, tsv_file, biom_file, table_type="OTU tabl
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
         "biom convert -i [depends[0]] -o [targets[0]] --table-type='"+table_type+"' --to-json "+options,
-        depends=tsv_file,
+        depends=[tsv_file,TrackedExecutable("biom")],
         targets=biom_file,
         name="biom")
     
@@ -821,7 +823,7 @@ def convert_from_biom_to_tsv(workflow, biom_file, tsv_file, table_type="OTU tabl
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
         "biom convert -i [depends[0]] -o [targets[0]] --table-type='"+table_type+"' --to-tsv "+options,
-        depends=biom_file,
+        depends=[biom_file,TrackedExecutable("biom")],
         targets=tsv_file,
         name="biom")
 
