@@ -38,6 +38,26 @@ def try_log10(value):
         
     return new_value
 
+def add_to_list(items,new_item):
+    """ Add the value to the list/tuple. If the item is not a list, create a new
+        list from the item and the value 
+        
+    Args:
+        items (list, string or tuple): Single or multiple items
+        new_item (string): The new value
+        
+    Returns:
+        (list): A list of all values
+    """
+    
+    if isinstance(items,tuple):
+        items=[i for i in items]
+    
+    if not isinstance(items,list):
+        items=[items]
+        
+    return items+[new_item]
+
 def metacyc_url(pathway):
     """ Return the url for the pathway on the MetaCyc website 
     

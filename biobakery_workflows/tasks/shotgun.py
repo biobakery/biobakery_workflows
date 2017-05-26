@@ -25,6 +25,8 @@ THE SOFTWARE.
 
 import os
 
+from anadama2.tracked import TrackedExecutable
+
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
@@ -121,7 +123,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
     for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
         workflow.add_task_gridable(
             "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options,
-            depends=depends,
+            depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets,
             args=[kneaddata_output_folder, threads, sample],
             time=time_equation, # 6 hours or more depending on file size
@@ -296,14 +298,15 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
     metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
     
     # run metaphlan2 on each of the kneaddata output files
-    workflow.add_task_group_gridable(
-        "metaphlan2.py [depends[0]] --input_type fastq --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
-        depends=input_files,
-        targets=zip(metaphlan2_output_files_profile, metaphlan2_output_files_sam),
-        args=[threads,metaphlan2_output_folder],
-        time=3*60, # 3 hours
-        mem=12*1024, # 12 GB
-        cores=threads) # time/mem based on 8 cores
+    for depend_fastq, target_profile, target_sam in zip(input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
+        workflow.add_task_gridable(
+            "metaphlan2.py [depends[0]] --input_type fastq --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
+            depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
+            targets=[target_profile,target_sam],
+            args=[threads,metaphlan2_output_folder],
+            time=3*60, # 3 hours
+            mem=12*1024, # 12 GB
+            cores=threads) # time/mem based on 8 cores
     
     # merge all of the metaphlan taxonomy tables
     metaphlan2_merged_output = files.ShotGun.path("taxonomic_profile", output_folder)
@@ -394,14 +397,15 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         depends=input_files
     
     # create a task to run humann2 on each of the kneaddata output files
-    workflow.add_task_group_gridable(
-        "humann2 --input [depends[0]] --output [args[0]] --threads [args[1]]"+optional_profile_args,
-        depends=depends,
-        targets=zip(genefamiles, pathabundance, pathcoverage, log_files),
-        args=[humann2_output_folder, threads],
-        time="24*60 if file_size('[depends[0]]') < 25 else 4*24*60", # 24 hours or more depending on file size
-        mem="32*1024 if file_size('[depends[0]]') < 25 else 2*32*1024", # 32 GB or more depending on file size
-        cores=threads)
+    for depend_fastq, target_gene, target_path, target_coverage, target_log in zip(depends, genefamiles, pathabundance, pathcoverage, log_files):
+        workflow.add_task_gridable(
+            "humann2 --input [depends[0]] --output [args[0]] --threads [args[1]]"+optional_profile_args,
+            depends=utilities.add_to_list(depend_fastq,TrackedExecutable("humann2")),
+            targets=[target_gene, target_path, target_coverage, target_log],
+            args=[humann2_output_folder, threads],
+            time="24*60 if file_size('[depends[0]]') < 25 else 4*24*60", # 24 hours or more depending on file size
+            mem="32*1024 if file_size('[depends[0]]') < 25 else 2*32*1024", # 32 GB or more depending on file size
+            cores=threads)
 
     # create a task to get the read and species counts for each humann2 run from the log files
     workflow.add_task(
