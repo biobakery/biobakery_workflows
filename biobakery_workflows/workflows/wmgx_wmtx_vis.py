@@ -60,6 +60,7 @@ workflow.add_argument("input",desc=input_desc,required=True)
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
+workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
 workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
 
 # get the arguments from the command line
@@ -75,12 +76,21 @@ wmtx_qc_counts=files.ShotGun.path("kneaddata_read_counts",wmtx_input_folder, err
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",wmgx_input_folder, error_if_not_found=True)
 pathabundance=files.ShotGun.path("pathabundance",wmgx_input_folder, error_if_not_found=True)
 
+# get the templates for the report
+templates=[document_templates.get_template("header"),
+    document_templates.get_template("quality_control_paired_dna_rna"),
+    document_templates.get_template("taxonomy"),
+    document_templates.get_template("functional_dna_rna")]
+
+# add the template for the data processing information
+log_file=None
+if not args.exclude_workflow_info:
+    templates+=[document_templates.get_template("workflow_info")]
+    log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
+
 # add the document to the workflow
 doc_task=workflow.add_document(
-    templates=[document_templates.get_template("header"),
-               document_templates.get_template("quality_control_paired_dna_rna"),
-               document_templates.get_template("taxonomy"),
-               document_templates.get_template("functional_dna_rna")],
+    templates=templates,
     depends=[wmgx_qc_counts, wmtx_qc_counts,
              taxonomic_profile, pathabundance], 
     targets=workflow.name_output_files("wmgx_wmtx_report."+args.format),
@@ -98,7 +108,8 @@ doc_task=workflow.add_document(
           "genefamilies_norm_ratio":files.ShotGun.path("genefamilies_norm_ratio",args.input,none_if_not_found=True),
           "ecs_norm_ratio":files.ShotGun.path("ecs_norm_ratio",args.input,none_if_not_found=True),
           "paths_norm_ratio":files.ShotGun.path("paths_norm_ratio",args.input,none_if_not_found=True),
-          "format":args.format})
+          "format":args.format,
+          "log":log_file})
 
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder

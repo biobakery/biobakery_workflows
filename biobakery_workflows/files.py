@@ -27,6 +27,8 @@ import os
 import copy
 import sys
 
+from anadama2 import reporters
+
 from .utilities import name_files
 
 class FileInfo(object):
@@ -35,7 +37,7 @@ class FileInfo(object):
         self.non_path_keywords=["description"]
         
         # concat multiple strings if present in description
-        if description and isinstance(description,basestring) or isinstance(description,tuple):
+        if description and isinstance(description,tuple):
             description="\n".join(description)
         
         keywords={"names":name, "subfolder":subfolder, "tag":tag, "extension":extension, "description":description}
@@ -62,6 +64,11 @@ class FileInfo(object):
         return value
 
 class Workflow(object):
+    file_info = {}
+    
+    file_info["log"]=FileInfo(reporters.LOG_FILE_NAME,
+        description="The AnADAMA2 workflow log.")
+    
     @classmethod
     def path(cls, name, main_folder="", none_if_not_found=None, error_if_not_found=None, **keywords):
         merged_keywords = copy.copy(keywords)
@@ -102,11 +109,13 @@ class Workflow(object):
         return desc
 
 class ShotGun(Workflow):
+    """ A collection of information of folders/files created by the shotgun tasks """
+    
+    file_info=Workflow.file_info
+    
     # set the folder names for wmgx_wmtx data workflows
     wmgx_folder_name="whole_metagenome_shotgun"
     wmtx_folder_name="whole_metatranscriptome_shotgun"
-    
-    file_info={}
     
     # set the kneaddata file name
     file_info["kneaddata_read_counts"]=FileInfo("kneaddata_read_count_table.tsv",subfolder="counts",
@@ -179,7 +188,9 @@ class ShotGun(Workflow):
             "This file does not include stratified features."))
     
 class ShotGunVis(Workflow):
-    file_info={}
+    """ A collection of information of folders/files created by the shotgun vis templates """
+    
+    file_info=Workflow.file_info
     
     file_info["microbial_counts"]=FileInfo("microbial_counts_table.tsv",
         description="A tab-delimited file with samples as rows and ratios as "+\
@@ -219,9 +230,10 @@ class ShotGunVis(Workflow):
             "sample before and after filtering.")
 
 class SixteenS(Workflow):
+    """ A collection of information of folders/files created by the 16s tasks """
     
-    file_info={}
-
+    file_info=Workflow.file_info
+    
     # set the names for the otu table and read count files
     file_info["otu_table_closed_reference"]=FileInfo("all_samples_taxonomy_closed_reference.tsv",
         description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",

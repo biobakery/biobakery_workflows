@@ -58,6 +58,7 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
              " Reads were filtered for quality control using a MAXEE score of 1. Filtered reads were"+
              " used to generate the OTUs. Reads not passing quality control were kept and used in the step"+
              " assigning reads to OTUs. First these reads were truncated to a max length of 200 bases."))
+workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
 workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
 
 # get the arguments from the command line
@@ -67,10 +68,17 @@ args = workflow.parse_args()
 otu_table=files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_found=True)
 read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
 
+templates=[document_templates.get_template("header"), document_templates.get_template("16S")]
+
+# add the template for the data processing information
+log_file=None
+if not args.exclude_workflow_info:
+    templates+=[document_templates.get_template("workflow_info")]
+    log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
+
 # add the document to the workflow
 doc_task=workflow.add_document(
-    templates=[document_templates.get_template("header"),
-               document_templates.get_template("16S")],
+    templates=templates,
     depends=[otu_table, read_count_table], 
     targets=workflow.name_output_files("16S_report."+args.format),
     vars={"title":"16S Report",
@@ -78,7 +86,8 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "otu_table":otu_table,
           "read_count_table":read_count_table,
-          "format":args.format})
+          "format":args.format,
+          "log":log_file})
 
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder
