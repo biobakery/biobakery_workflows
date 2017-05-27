@@ -99,6 +99,9 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
     # get the basenames of the output files, one for each sample
     demultiplex_output_basenames = utilities.name_files(samples,output_folder,subfolder="demultiplex")
     
+    # create a tracked executable
+    fastq_multx_tracked = TrackedExecutable("fastq-multx",version_command="echo 'fastq-multx' `fastq-multx 2>&1 | grep Version`")
+    
     if input_pair1 and input_pair2:
         # this run has paired input files
         # get the second pair identifier
@@ -112,7 +115,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
             # this run has index files
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] [depends[3]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, index_files[0], input_pair1[0], input_pair2[0]],
+                depends=[expanded_barcode_file, index_files[0], input_pair1[0], input_pair2[0], fastq_multx_tracked],
                 args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
                 targets=demultiplex_log,
                 name="demultiplex")
@@ -120,7 +123,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
         else:
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, input_pair1[0], input_pair2[0]],
+                depends=[expanded_barcode_file, input_pair1[0], input_pair2[0], fastq_multx_tracked],
                 args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
                 targets=demultiplex_log,
                 name="demultiplex")
@@ -134,7 +137,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
             # this run has index files
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, index_files[0], input_files[0]],
+                depends=[expanded_barcode_file, index_files[0], input_files[0], fastq_multx_tracked],
                 args=[min_phred, demultiplex_output_folder, pair_identifier],
                 targets=demultiplex_log,
                 name="demultiplex")
@@ -143,7 +146,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] -o [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
                 depends=[expanded_barcode_file, input_files[0]],
-                args=[min_phred, demultiplex_output_folder, pair_identifier],
+                args=[min_phred, demultiplex_output_folder, pair_identifier, fastq_multx_tracked],
                 targets=demultiplex_log,
                 name="demultiplex")
             
@@ -292,11 +295,12 @@ def merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier
         unjoined_files=utilities.name_files(sample_names,output_folder,subfolder="merged_renamed",tag="unjoined",extension="fastq")
         
         # run usearch to merge pairs, if input files are non-empty
-        workflow.add_task_group(
-            utilities.partial_function(merge_pairs,threads=threads),
-            depends=zip(pair1,pair2),
-            targets=zip(stitched_files,unjoined_files),
-            name="usearch_fastq_mergepairs")
+        for read1, read2, stitched_output, unjoined_output in zip(pair1,pair2,stitched_files,unjoined_files):
+            workflow.add_task(
+                utilities.partial_function(merge_pairs,threads=threads),
+                depends=[read1, read2, TrackedExecutable("usearch")],
+                targets=[stitched_output, unjoined_output],
+                name="usearch_fastq_mergepairs")
         
         # merge the stitched and unjoined from the prior step
         renamed_files=utilities.name_files(sample_names,output_folder,subfolder="merged_renamed",tag="renamed",extension="fastq")
@@ -367,7 +371,7 @@ def quality_report(workflow, fastq_file, output_folder, threads):
     workflow.add_task(
         "export OMP_NUM_THREADS=[args[0]]; "+\
         "usearch -fastq_eestats2 [depends[0]] -output [targets[0]] -threads [args[0]]",
-        depends=fastq_file,
+        depends=[fastq_file,TrackedExecutable("usearch")],
         targets=qc_file,
         args=threads,
         name="usearch_fastq_eestats2")
@@ -401,7 +405,7 @@ def filter_fastq(workflow, fastq_file, output_folder, threads, maxee):
     workflow.add_task(
         "export OMP_NUM_THREADS=[args[0]]; "+\
         "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]]",
-        depends=fastq_file,
+        depends=[fastq_file,TrackedExecutable("usearch")],
         targets=[fasta_filtered_file, fasta_discarded_file],
         args=[threads, maxee],
         name="usearch_fastq_filter")
@@ -493,7 +497,7 @@ def dereplicate(workflow, fasta_file, output_folder, threads):
     workflow.add_task(
         "export OMP_NUM_THREADS=[args[0]]; "+\
         "usearch -derep_fulllength [depends[0]] -fastaout [targets[0]] -sizeout -threads [args[0]]",
-        depends=fasta_file,
+        depends=[fasta_file,TrackedExecutable("usearch")],
         targets=output_file,
         args=threads,
         name="usearch_derep_fulllength")
@@ -520,7 +524,7 @@ def sort_by_size(workflow, fasta_file, output_folder, min_size):
     
     workflow.add_task(
         "usearch -sortbysize [depends[0]] -fastaout [targets[0]] -minsize [args[0]]",
-        depends=fasta_file,
+        depends=[fasta_file,TrackedExecutable("usearch")],
         targets=output_file,
         args=min_size,
         name="usearch_sortbysize")
@@ -627,7 +631,7 @@ def centroid_alignment(workflow, fasta_file, output_folder, threads):
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "
         "clustalo -i [depends[0]] -o [targets[0]] --threads [args[0]]",
-        depends=fasta_file,
+        depends=[fasta_file,TrackedExecutable("clustalo",version_command="echo 'clustalo' `clustalo --version`")],
         targets=output_fasta,
         args=threads,
         name="clustalo")
@@ -663,7 +667,7 @@ def global_alignment(workflow, fasta_file, database_file, id, threads, output_fi
     workflow.add_task_gridable(
         "export OMP_NUM_THREADS=[args[0]]; "+\
         "usearch -usearch_global [depends[0]] -db [depends[1]] -strand 'both' -id [args[1]] -uc [targets[0]] -otutabout [targets[1]] -threads [args[0]]"+optional_flags,
-        depends=[fasta_file, database_file],
+        depends=[fasta_file, database_file, TrackedExecutable("usearch")],
         targets=[output_file_uc, output_file_tsv],
         args=[threads, id],
         name="usearch_global",
