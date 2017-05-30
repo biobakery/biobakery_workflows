@@ -109,7 +109,8 @@ doc_task=workflow.add_document(
           "ecs_norm_ratio":files.ShotGun.path("ecs_norm_ratio",args.input,none_if_not_found=True),
           "paths_norm_ratio":files.ShotGun.path("paths_norm_ratio",args.input,none_if_not_found=True),
           "format":args.format,
-          "log":log_file})
+          "log":log_file},
+    table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder
