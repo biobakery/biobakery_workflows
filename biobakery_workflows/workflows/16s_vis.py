@@ -87,7 +87,8 @@ doc_task=workflow.add_document(
           "otu_table":otu_table,
           "read_count_table":read_count_table,
           "format":args.format,
-          "log":log_file})
+          "log":log_file},
+    table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder
