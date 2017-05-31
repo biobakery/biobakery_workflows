@@ -55,7 +55,7 @@ workflow.add_argument("project-name",desc="the name of the project", required=Tr
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome shotgun sequencing.")
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
-workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
+workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 
 # get the arguments from the command line
 args = workflow.parse_args()

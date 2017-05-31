@@ -59,7 +59,7 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
              " used to generate the OTUs. Reads not passing quality control were kept and used in the step"+
              " assigning reads to OTUs. First these reads were truncated to a max length of 200 bases."))
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
-workflow.add_argument("format",desc="the format for the report, pdf or html", default="pdf")
+workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 
 # get the arguments from the command line
 args = workflow.parse_args()
