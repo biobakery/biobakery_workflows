@@ -172,7 +172,9 @@ if show_norm_ratio:
     
     document.show_hclust2(samples,top_pathways,top_pathway_data,
                           title="Top "+str(top_norm_pathways)+" RNA pathways by average abundance")  
-  
+ 
+#' <% if show_norm_ratio and pdf_format: print("\clearpage") %>
+ 
 #+ echo=False
 table_message=None
 if show_norm_ratio:  

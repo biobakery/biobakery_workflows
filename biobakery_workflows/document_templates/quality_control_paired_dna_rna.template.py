@@ -133,6 +133,3 @@ document.plot_grouped_barchart(numpy.transpose(rna_orphan_data), row_labels=rna_
     column_labels=rna_samples, title="RNA Orphan reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
 
-
-#' <% if pdf_format: print("\clearpage") %>
-
