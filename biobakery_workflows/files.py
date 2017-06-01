@@ -155,7 +155,11 @@ class ShotGun(Workflow):
     # set the normed feature file names
     file_info["genefamilies_relab"]=FileInfo("genefamilies_relab.tsv")
     file_info["ecs_relab"]=FileInfo("ecs_relab.tsv")
-    file_info["pathabundance_relab"]=FileInfo("pathabundance_relab.tsv")
+    file_info["pathabundance_relab"]=FileInfo("pathabundance_relab.tsv",
+        description=("A tab-delimited file with samples as columns and pathways ",
+                "as rows. This file is a merged set of pathway abundances for all ",
+                "samples computed by HUMAnN2. This file contains stratified counts ",
+                "of relative abundances."))
     
     # set the feature count file names
     file_info["genefamilies_relab_counts"]=FileInfo("humann2_genefamilies_relab_counts.tsv", subfolder="counts")

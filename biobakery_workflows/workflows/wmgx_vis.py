@@ -41,7 +41,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 
 # list the required and optional files for the workflow
 # these are expected to be included in the input folder
-input_files={"required":["kneaddata_read_counts","taxonomic_profile","pathabundance","humann2_read_counts","feature_counts"]}
+input_files={"required":["kneaddata_read_counts","taxonomic_profile","pathabundance_relab","humann2_read_counts","feature_counts"]}
 
 # create a custom description for the input argument listing all expected input files
 input_desc="A folder containing the final products from the wmgx data workflow.\n\nThe input folder should include the following:\n\n"
@@ -63,7 +63,7 @@ args = workflow.parse_args()
 # get the paths for the required files and check they are found
 qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, error_if_not_found=True)
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_not_found=True)
-pathabundance=files.ShotGun.path("pathabundance",args.input, error_if_not_found=True)
+pathabundance=files.ShotGun.path("pathabundance_relab",args.input, error_if_not_found=True)
 read_counts=files.ShotGun.path("humann2_read_counts",args.input, error_if_not_found=True)
 feature_counts=files.ShotGun.path("feature_counts",args.input, error_if_not_found=True)
 
