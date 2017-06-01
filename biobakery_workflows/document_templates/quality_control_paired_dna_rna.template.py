@@ -23,7 +23,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #' # Quality Control
 
-#' <% visualizations.ShotGun.print_qc_intro_caption(len(dna_samples), dna_paired_columns[2:], paired=True) %>
+#' <% visualizations.ShotGun.print_qc_intro_caption("{} DNA and {} RNA ".format(len(dna_samples),len(rna_samples)), rna_paired_columns[2:], paired=True) %>
 
 #+ echo=False
 
