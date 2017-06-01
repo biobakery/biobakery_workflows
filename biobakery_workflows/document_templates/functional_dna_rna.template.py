@@ -63,8 +63,65 @@ table_message=visualizations.show_table_max_rows(document, average_abundance_var
         
 #' <% visualizations.print_pathways_urls(dna_top_average_pathways,top_names_and_descriptions,3) %>
 
-#' <% if pdf_format: print("\clearpage") %>
+#+ echo=False
+# check for then rna/dna norm files
+show_norm_ratio=False
+if vars["genefamilies_norm_ratio"] and vars["ecs_norm_ratio"] and vars["paths_norm_ratio"]:
+    show_norm_ratio=True 
 
+norm_intro="The heatmaps show RNA normalized to DNA for the three features computed by HUMAnN2: gene families, ecs and pathways."
+norm_intro+=" Note the most abundant DNA features are not necessarily those with the highest transcription (RNA) levels."
+
+#' <% if show_norm_ratio and pdf_format: print("\clearpage") %>
+
+#' <% if show_norm_ratio: print("### RNA/DNA Normalized Features") %>
+
+#' <% if show_norm_ratio: print(norm_intro) %>
+
+#+ echo=False
+if show_norm_ratio:
+    # read in the top average rna normed pathways
+    samples, top_pathways, top_pathway_data, top_names_and_descriptions = visualizations.top_average_pathways(
+        document, vars["paths_norm_ratio"], top_norm_pathways)
+    
+    document.show_hclust2(samples,top_pathways,top_pathway_data,
+                          title="Top "+str(top_norm_pathways)+" RNA pathways by average abundance")  
+ 
+#' <% if show_norm_ratio and pdf_format: print("\clearpage") %>
+ 
+#+ echo=False
+table_message=None
+if show_norm_ratio:  
+    # write a table of the pathways average and variance
+    pathway_file_name="top_average_rna_dna_pathways_names.tsv"
+    average_abundance_variance=visualizations.write_pathway_average_variance_table(document, pathway_file_name, top_pathway_data, top_names_and_descriptions)
+    
+    table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
+        top_names_and_descriptions, [" Average "," Variance "], 
+        "Top "+str(top_norm_pathways)+" RNA pathways by average abundance", pathway_file_name, font=7)
+    
+#' <% if table_message: print(table_message) %>
+
+#' <% if table_message: visualizations.print_pathways_urls(top_pathways,top_names_and_descriptions,3) %>
+    
+#' <% if show_norm_ratio and pdf_format: print("\clearpage") %>
+    
+#+ echo=False
+if show_norm_ratio:
+    # read in the top average rna normed ecs
+    samples, top_ecs, top_ec_data, top_names_and_descriptions = visualizations.top_average_pathways(
+        document, vars["ecs_norm_ratio"], top_norm_ecs)
+    
+    document.show_hclust2(samples,top_ecs,top_ec_data,
+                          title="Top "+str(top_norm_ecs)+" RNA ECs by average abundance")
+    
+    # read in the top average rna normed genes
+    samples, top_genes, top_gene_data, top_names_and_descriptions = visualizations.top_average_pathways(
+        document, vars["genefamilies_norm_ratio"], top_norm_genes)
+    
+    document.show_hclust2(samples,top_genes,top_gene_data,
+                          title="Top "+str(top_norm_genes)+" RNA gene families by average abundance")   
+    
 #+ echo=False
 # check if the optional feature files were included
 show_dna_features=False
@@ -88,6 +145,8 @@ elif show_rna_features:
 else:
     seq_data_type=""
     short_type=""
+    
+#' <% if show_rna_features and show_norm_ratio and pdf_format: print("\clearpage") %>  
 
 #' <% if show_dna_features or show_rna_features: print("## Features") %>
 
@@ -149,63 +208,4 @@ if show_rna_features:
 
 #' <% if show_rna_features: print(visualizations.ShotGun.captions["scatter_features"]) %>
 
-#+ echo=False
-# check for then rna/dna norm files
-show_norm_ratio=False
-if vars["genefamilies_norm_ratio"] and vars["ecs_norm_ratio"] and vars["paths_norm_ratio"]:
-    show_norm_ratio=True 
-
-norm_intro="The heatmaps show RNA normalized to DNA for the three features computed by HUMAnN2: gene families, ecs and pathways."
-norm_intro+=" Note the most abundant DNA features are not necessarily those with the highest transcription (RNA) levels."
-
-#' <% if show_rna_features and show_norm_ratio and pdf_format: print("\clearpage") %>
-
-#' <% if show_norm_ratio: print("### RNA/DNA Normalized Features") %>
-
-#' <% if show_norm_ratio: print(norm_intro) %>
-
-#+ echo=False
-if show_norm_ratio:
-    # read in the top average rna normed pathways
-    samples, top_pathways, top_pathway_data, top_names_and_descriptions = visualizations.top_average_pathways(
-        document, vars["paths_norm_ratio"], top_norm_pathways)
-    
-    document.show_hclust2(samples,top_pathways,top_pathway_data,
-                          title="Top "+str(top_norm_pathways)+" RNA pathways by average abundance")  
- 
-#' <% if show_norm_ratio and pdf_format: print("\clearpage") %>
- 
-#+ echo=False
-table_message=None
-if show_norm_ratio:  
-    # write a table of the pathways average and variance
-    pathway_file_name="top_average_rna_dna_pathways_names.tsv"
-    average_abundance_variance=visualizations.write_pathway_average_variance_table(document, pathway_file_name, top_pathway_data, top_names_and_descriptions)
-    
-    table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
-        top_names_and_descriptions, [" Average "," Variance "], 
-        "Top "+str(top_norm_pathways)+" RNA pathways by average abundance", pathway_file_name, font=7)
-    
-#' <% if table_message: print(table_message) %>
-
-#' <% if table_message: visualizations.print_pathways_urls(top_pathways,top_names_and_descriptions,3) %>
-    
-#' <% if show_norm_ratio and pdf_format: print("\clearpage") %>
-    
-#+ echo=False
-if show_norm_ratio:
-    # read in the top average rna normed ecs
-    samples, top_ecs, top_ec_data, top_names_and_descriptions = visualizations.top_average_pathways(
-        document, vars["ecs_norm_ratio"], top_norm_ecs)
-    
-    document.show_hclust2(samples,top_ecs,top_ec_data,
-                          title="Top "+str(top_norm_ecs)+" RNA ECs by average abundance")
-    
-    # read in the top average rna normed genes
-    samples, top_genes, top_gene_data, top_names_and_descriptions = visualizations.top_average_pathways(
-        document, vars["genefamilies_norm_ratio"], top_norm_genes)
-    
-    document.show_hclust2(samples,top_genes,top_gene_data,
-                          title="Top "+str(top_norm_genes)+" RNA gene families by average abundance")  
-    
-    
+#' <% if show_dna_features or show_rna_features: print("\clearpage") %>
