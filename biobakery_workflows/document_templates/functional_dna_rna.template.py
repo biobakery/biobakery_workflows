@@ -114,7 +114,8 @@ if show_norm_ratio:
     
     document.show_hclust2(samples,top_ecs,top_ec_data,
                           title="Top "+str(top_norm_ecs)+" RNA ECs by average abundance")
-    
+#+ echo=False
+if show_norm_ratio:
     # read in the top average rna normed genes
     samples, top_genes, top_gene_data, top_names_and_descriptions = visualizations.top_average_pathways(
         document, vars["genefamilies_norm_ratio"], top_norm_genes)
@@ -170,10 +171,14 @@ if show_dna_features:
 if show_dna_features:
     document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="DNA UniRef90 gene families",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
-        
+
+#+ echo=False
+if show_dna_features:
     document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="DNA Enzymes (ECs)",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
-        
+
+#+ echo=False
+if show_dna_features:
     document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="DNA Pathways",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
@@ -199,10 +204,12 @@ if show_rna_features:
 if show_rna_features:
     document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="RNA UniRef90 gene families",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
-        
+#+ echo=False
+if show_rna_features:
     document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="RNA Enzymes (ECs)",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
-        
+#+ echo=False
+if show_rna_features:
     document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="RNA Pathways",
                             row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 
