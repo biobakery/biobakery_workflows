@@ -50,7 +50,6 @@ setuptools.setup(
         "Programming Language :: Python :: 2.7",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
         ],
-    dependency_links=['hg+https://bitbucket.org/biobakery/anadama2#egg=anadama2'],
     install_requires=['anadama2'],
     packages=setuptools.find_packages(),
     entry_points={'console_scripts': ['biobakery_workflows = biobakery_workflows.biobakery_workflows:main']},
