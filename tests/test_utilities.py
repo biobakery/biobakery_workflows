@@ -101,6 +101,14 @@ class TestUtiltiesFunctions(unittest.TestCase):
         expected_relab=[[1/3.0,2/5.0,3/7.0],[1/3.0,2/5.0,3/7.0],[1/3.0,1/5.0,1/7.0]]
         
         self.assertEqual(utilities.relative_abundance(data),expected_relab)
+
+    def test_relative_abundance_zeros(self):
+	    """ Test the relative abundance function with a sample with all zeros"""
+	    
+	    data=[[1,2,3,0],[1,2,3,0],[1,1,1,0]]
+	    expected_relab=[[1/3.0,2/5.0,3/7.0,0],[1/3.0,2/5.0,3/7.0,0],[1/3.0,1/5.0,1/7.0,0]]
+	    
+	    self.assertEqual(utilities.relative_abundance(data),expected_relab)
         
     def test_taxa_shorten_name(self):
         """ Test the taxa shorten name function """

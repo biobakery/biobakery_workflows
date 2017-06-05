@@ -450,7 +450,14 @@ def relative_abundance(data):
             
     relab=[]
     for row in data:
-        relab.append([value/sums[i] for i, value in enumerate(row)])
+        new_row=[]
+        for i, value in enumerate(row):
+            try:
+                new_value=value/sums[i]
+            except ZeroDivisionError:
+                new_value=0
+            new_row.append(new_value)
+        relab.append(new_row)
         
     return relab
 
