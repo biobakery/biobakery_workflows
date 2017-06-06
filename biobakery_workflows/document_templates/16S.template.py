@@ -97,8 +97,6 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
-#' <% if pdf_format: print("\clearpage") %>
-
 #' # Ordination
 
 #+ echo=False
