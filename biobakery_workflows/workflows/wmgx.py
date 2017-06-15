@@ -46,6 +46,7 @@ workflow.add_argument("pair-identifier", desc="the string to identify the first 
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
     default=",".join([workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna]))
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
+workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -55,13 +56,13 @@ args = workflow.parse_args()
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.contaminate_databases, args.pair_identifier, args.qc_options)
+qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.contaminate_databases, args.pair_identifier, args.qc_options, args.remove_intermediate_output)
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
 merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
-genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files)
+genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
 
 # start the workflow
 workflow.go()
