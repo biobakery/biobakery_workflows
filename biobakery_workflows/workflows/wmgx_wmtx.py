@@ -49,6 +49,8 @@ workflow.add_argument("input-extension", desc="the input file extension", defaul
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
 workflow.add_argument("bypass-norm-ratio", desc="bypass the rna/dna normalization computation", action="store_true")
+workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
+workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -63,11 +65,11 @@ wts_output_folder = os.path.join(args.output,files.ShotGun.wmtx_folder_name)
 wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, 
     input_files_metagenome, wms_output_folder, args.threads, 
     [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna], 
-    args.pair_identifier)
+    args.pair_identifier, args.qc_options, args.remove_intermediate_output)
 wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, 
     input_files_metatranscriptome, wts_output_folder, args.threads, 
     [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_human_metatranscriptome,workflow_config.kneaddata_db_rrna], 
-    args.pair_identifier)
+    args.pair_identifier, args.qc_options, args.remove_intermediate_output)
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
 wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads)
@@ -84,10 +86,10 @@ wms_genes_relab, wms_ecs_relab, wms_path_relab, wms_genes, wms_ecs, wms_path = s
 if args.input_mapping:
     # get the mapped taxonomy files for the quality controlled input files
     filtered_fastq, matched_taxonomic_profile = utilities.match_files(wts_qc_output_files,wms_taxonomy_tsv_files,args.input_mapping)
-    wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,filtered_fastq,wts_output_folder,args.threads,matched_taxonomic_profile)
+    wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,filtered_fastq,wts_output_folder,args.threads,matched_taxonomic_profile,args.remove_intermediate_output)
 else:
     # if no mapping file is provided then run to get a taxonomic profile from the wts samples
-    wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads,wts_taxonomy_tsv_files)
+    wts_genes_relab, wts_ecs_relab, wts_path_relab, wts_genes, wts_ecs, wts_path = shotgun.functional_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads,wts_taxonomy_tsv_files,args.remove_intermediate_output)
 
 ### STEP #4: Compute the normalized functional abundances based on the rna/dna ratio
 if not args.bypass_norm_ratio:
