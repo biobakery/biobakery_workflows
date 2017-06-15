@@ -30,7 +30,8 @@ from anadama2.tracked import TrackedExecutable
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
-def kneaddata(workflow, input_files, output_folder, threads, paired=None, databases=None, pair_identifier=None, additional_options=None):
+def kneaddata(workflow, input_files, output_folder, threads, paired=None, 
+    databases=None, pair_identifier=None, additional_options=None, remove_intermediate_output=None):
     """Run kneaddata
     
     This set of tasks will run kneaddata on the input files provided. It will run with
@@ -48,9 +49,10 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         additional_options (string): Additional options when running kneaddata (optional).
+        remove_intermediate_output (bool): Remove intermediate output files.
         
     Requires:
-        kneaddata v0.6+: A tool to perform quality control on metagenomic and
+        kneaddata v0.6.1+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -118,6 +120,10 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None, databa
         optional_arguments=" --reference-db "+" --reference-db ".join(database_list)        
     else:
         optional_arguments=" --reference-db " + databases
+        
+    # add option to remove intermediate output, if set
+    if remove_intermediate_output:
+        additional_options+=" --remove-intermediate-output "
     
     # create a task for each set of input and output files to run kneaddata
     for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
@@ -145,7 +151,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
         output_folder (string): The path of the output folder.
         
     Requires:
-        kneaddata v0.6+: A tool to perform quality control on metagenomic and
+        kneaddata v0.6.1+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -182,7 +188,8 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     return kneaddata_read_count_file
 
 
-def quality_control(workflow, input_files, output_folder, threads, databases=None, pair_identifier=None, additional_options=None):
+def quality_control(workflow, input_files, output_folder, threads, databases=None, 
+    pair_identifier=None, additional_options=None, remove_intermediate_output=None):
     """Quality control tasks for whole genome shotgun sequences
     
     This set of tasks performs quality control on whole genome shotgun
@@ -198,9 +205,10 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         additional_options (string): Additional options when running kneaddata (optional).
+        remove_intermediate_output (bool): Remove intermediate output files.
         
     Requires:
-        kneaddata v0.6+: A tool to perform quality control on metagenomic and
+        kneaddata v0.6.1+: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -236,7 +244,9 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, output_folder, threads, paired, databases, pair_identifier, additional_options)
+    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, 
+        output_folder, threads, paired, databases, pair_identifier, additional_options,
+        remove_intermediate_output)
     
     # create the read count table
     kneaddata_read_count_file=kneaddata_read_count_table(workflow, kneaddata_output_logs, output_folder)
@@ -329,7 +339,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
 
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
-def functional_profile(workflow,input_files,output_folder,threads,taxonomic_profiles=None):
+def functional_profile(workflow,input_files,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
     """Functional profile for whole genome shotgun sequences
     
     This set of tasks performs functional profiling on whole genome shotgun
@@ -343,6 +353,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for kneaddata to use.
         taxonomic_profiles (list): A set of taxonomic profiles, one per sample (optional).
+        remove_intermediate_output (bool): Remove intermediate output files.
         
     Requires:
         humann2 v0.9.6+: A tool for functional profiling.
@@ -381,8 +392,8 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     pathabundance = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathabundance", extension="tsv")
     pathcoverage = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathcoverage", extension="tsv")
 
-    # get the list of the log files that will be created, one for each input file, each in a temp humann2 folder
-    log_files = [os.path.join(output_folder, "humann2", sample+"_humann2_temp", sample)+".log" for sample in sample_names]
+    # get the list of the log files that will be created, one for each input file, set to the same folder as the main output files
+    log_files = utilities.name_files(sample_names, output_folder, subfolder="humann2", extension="log")
     # get the name for the file of read and species counts created from the humann2 log outputs
     log_counts = files.ShotGun.path("humann2_read_counts",output_folder,create_folder=True)
 
@@ -395,11 +406,15 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     else:
         optional_profile_args=""
         depends=input_files
+        
+    # remove intermediate temp files, if set
+    if remove_intermediate_output:
+        optional_profile_args+=" --remove-temp-output "
     
     # create a task to run humann2 on each of the kneaddata output files
     for depend_fastq, target_gene, target_path, target_coverage, target_log in zip(depends, genefamiles, pathabundance, pathcoverage, log_files):
         workflow.add_task_gridable(
-            "humann2 --input [depends[0]] --output [args[0]] --threads [args[1]]"+optional_profile_args,
+            "humann2 --input [depends[0]] --output [args[0]] --o-log [targets[3]] --threads [args[1]]"+optional_profile_args,
             depends=utilities.add_to_list(depend_fastq,TrackedExecutable("humann2")),
             targets=[target_gene, target_path, target_coverage, target_log],
             args=[humann2_output_folder, threads],
