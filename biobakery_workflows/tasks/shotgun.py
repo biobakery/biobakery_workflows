@@ -92,7 +92,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
         input_files=zip(input_files[0],input_files[1])
         # add the second input file to the kneaddata arguments
         # also add the option to cat the final output files into a single file
-        second_input_option=" --input [depends[1]] --cat-final-output --serial --no-discordant"
+        second_input_option=" --input [depends[1]] --cat-final-output --serial "
         # determine time/memory equations based on the two input files
         time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*6*60"
         mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 2*12*1024"
