@@ -181,7 +181,7 @@ def show_table_max_rows(document, data, row_labels, column_labels, title, table_
     document.show_table(data, row_labels, column_labels, 
         title, format_data_comma=format_data_comma, location=location, font=font)
     
-    message+="[{file}](data/{file})".format(file=table_file)
+    message+="[{file}](data/{file})".format(file=os.path.basename(table_file))
         
     return message
 
