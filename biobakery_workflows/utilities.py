@@ -265,6 +265,9 @@ def name_files(names, folder, subfolder=None, tag=None, extension=None, create_f
     # get the basenames from the files
     names=[os.path.basename(name) for name in names]
     
+    # use the full path to the folder
+    folder=os.path.abspath(folder)
+    
     # get the name of the full folder plus subfolder if provided
     if subfolder:
         folder=os.path.join(folder,subfolder)
@@ -1025,3 +1028,68 @@ def taxa_by_level(taxa, data, level, keep_unclassified=None):
         new_data.append(taxon_data)
         
     return new_taxa, new_data
+
+def format_data_comma(data):
+    """ Format the numbers in the string to include commas.
+    
+    Args:
+        data (string or list): A text string.
+        
+    Requires:
+        None
+        
+    Returns:
+        (string): A text string.
+        
+    """
+    
+    if not isinstance(data,list):
+        data=data.split()
+
+    new_string=[]
+    for token in data:
+        try:
+            new_token="{:,}".format(int(token))
+        except ValueError:
+            new_token=token
+        new_string.append(new_token)
+        
+    return " ".join(new_string)
+
+def read_eestats2(file):
+    """ Read the eestats2 file which is an ascii table.
+    
+    Args:
+        file (string): The path to the eestats file.
+        
+    Requires:
+        None
+        
+    Returns:
+        (list): The table rows.
+        (list): The table columns.
+        (list): The table data.
+        (string): The summary.
+        
+    """
+    
+    with open(file) as file_handle:
+        eestats_lines = file_handle.readlines()
+        
+    # read in the overall stats line
+    overall_stats = format_data_comma(eestats_lines[1].rstrip())
+    # read in the maxee values from the columns
+    columns = list(filter(lambda x: x.strip() and not x in ["Length","MaxEE"],eestats_lines[3].rstrip().split()))
+    columns = [column+" maxee" for column in columns]
+    rows = []
+    data = []
+    # read through the data table
+    for line in eestats_lines[5:]:
+        stats = list(filter(lambda x: x.strip(),line.strip().split("   ")))
+        # move spaces in data values and percents
+        stats = [stat.replace("(  ","(").replace("( ","(").replace("("," (") for stat in stats]
+        rows.append(stats.pop(0)+" nt")
+        data.append([format_data_comma(stat) for stat in stats])
+        
+    return rows, columns, data, overall_stats
+ 

@@ -366,7 +366,7 @@ def quality_report(workflow, fastq_file, output_folder, threads):
     """       
         
     # get the name of the final merged fastq file
-    qc_file = utilities.name_files("all_samples_eestats2.txt",output_folder)
+    qc_file = files.SixteenS.path("eestats2", output_folder)
 
     workflow.add_task(
         "export OMP_NUM_THREADS=[args[0]]; "+\

@@ -248,6 +248,8 @@ class SixteenS(Workflow):
             "The counts included are the original read count, total number of reads ",
             "mapping to an OTU with known taxonomy, and total reads mapping to an ",
             "unclassified OTU."))
+    file_info["eestats2"]=FileInfo("all_samples_eestats2.txt",
+        description=("A file with maxee as columns and read lengths as rows."))
     
     
         

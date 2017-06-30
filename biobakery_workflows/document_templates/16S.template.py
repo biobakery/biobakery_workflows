@@ -26,6 +26,18 @@ columns, samples, data = document.read_table(vars["read_count_table"])
 
 #' <% if pdf_format: print("\clearpage") %>
 
+#' # Quality Control
+
+#+ echo=False
+# read the eestats2 table and add table to document
+eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
+
+document.show_table(eestats_data, eestats_rows, eestats_columns, 
+    "Expected error filter by read length",font="10")
+
+#' The general stats for this data set are: <%= overall_stats %> .
+#' This table shows the number of reads based on length for different error filters.
+
 #' # Read Count
 
 #+ echo=False
