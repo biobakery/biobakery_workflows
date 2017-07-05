@@ -61,7 +61,7 @@ workflow.add_argument("format",desc="the format for the report", default="pdf", 
 args = workflow.parse_args()
 
 # get the paths for the required files and check they are found
-qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, error_if_not_found=True)
+qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, none_if_not_found=True)
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_not_found=True)
 pathabundance=files.ShotGun.path("pathabundance_relab",args.input, error_if_not_found=True)
 read_counts=files.ShotGun.path("humann2_read_counts",args.input, error_if_not_found=True)
@@ -70,10 +70,12 @@ feature_counts=files.ShotGun.path("feature_counts",args.input, error_if_not_foun
 # select the templates based on the qc data
 templates=[document_templates.get_template("header")]
 
-if utilities.is_paired_table(qc_counts):
-    templates+=[document_templates.get_template("quality_control_paired_dna")]
-else:
-    templates+=[document_templates.get_template("quality_control_single_dna")]
+# if there is a table of qc counts, then add the template
+if qc_counts:
+    if utilities.is_paired_table(qc_counts):
+        templates+=[document_templates.get_template("quality_control_paired_dna")]
+    else:
+        templates+=[document_templates.get_template("quality_control_single_dna")]
     
 templates+=[document_templates.get_template("taxonomy"),
     document_templates.get_template("functional_dna")]
