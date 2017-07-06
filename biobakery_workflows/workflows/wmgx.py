@@ -40,13 +40,14 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 
 # add the custom arguments to the workflow
 workflow_config = config.ShotGun()
-workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq"])
+workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
     default=",".join([workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna]))
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
+workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -56,13 +57,21 @@ args = workflow.parse_args()
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
-qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.contaminate_databases, args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+if not "fasta" in args.input_extension:
+    qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.contaminate_databases, args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+else:
+    # if the input files are fasta, bypass quality control
+    qc_output_files = input_files
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
-merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads)
+merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads,args.input_extension)
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
 genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
+
+### STEP #4: Run strain profiling
+if not args.bypass_strain_profiling:
+    shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers)
 
 # start the workflow
 workflow.go()

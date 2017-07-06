@@ -24,11 +24,13 @@ THE SOFTWARE.
 """
 
 import os
+import subprocess
 
 from anadama2.tracked import TrackedExecutable
 
 from biobakery_workflows import utilities
 from biobakery_workflows import files
+from biobakery_workflows import data
 
 def kneaddata(workflow, input_files, output_folder, threads, paired=None, 
     databases=None, pair_identifier=None, additional_options=None, remove_intermediate_output=None):
@@ -254,7 +256,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
     return kneaddata_output_fastq, kneaddata_read_count_file
 
 
-def taxonomic_profile(workflow,input_files,output_folder,threads):
+def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension):
     """Taxonomic profile for whole genome shotgun sequences
     
     This set of tasks performs taxonomic profiling on whole genome shotgun
@@ -266,6 +268,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
         input_files (list): A list of paths to fastq files already run through quality control.
         output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for metaphlan2 to use.
+        input_extension (string): The extension for the input files.
         
     Requires:
         metaphlan2 v2.5.0+: A tool to profile the composition of microbial communities.
@@ -307,13 +310,19 @@ def taxonomic_profile(workflow,input_files,output_folder,threads):
     metaphlan2_output_files_sam = utilities.name_files(sample_names, output_folder, subfolder="metaphlan2", tag="bowtie2", extension="sam")
     metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
     
+    # determine the input file type based on the extension
+    if input_extension in ["fasta","fasta.gz","fa","fa.gz"]:
+        input_type="fasta"
+    else:
+        input_type="fastq"
+    
     # run metaphlan2 on each of the kneaddata output files
     for depend_fastq, target_profile, target_sam in zip(input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
         workflow.add_task_gridable(
-            "metaphlan2.py [depends[0]] --input_type fastq --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
+            "metaphlan2.py [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
             depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
             targets=[target_profile,target_sam],
-            args=[threads,metaphlan2_output_folder],
+            args=[threads,metaphlan2_output_folder,input_type],
             time=3*60, # 3 hours
             mem=12*1024, # 12 GB
             cores=threads) # time/mem based on 8 cores
@@ -563,4 +572,146 @@ def norm_ratio(workflow, wms_genes, wms_ecs, wms_paths, wts_genes, wts_ecs, wts_
         
     return norm_ratio_genes, norm_ratio_ecs, norm_ratio_pathway
 
+def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_folder):
+    """ Run strainphlan for the specific clade
     
+    Args:
+        task: (anadama2.task): An instance of the task class.
+        threads: (int): Total threads to use for task.
+        clade_number: (int): The number of clade to run.
+        clade_list: (string): The path to the clade list.
+        reference_folder (string): The folder containing the reference files.
+        marker_folder (string): The folder containing the marker files.
+
+    Requires:
+        StrainPhlAn: A tool for strain profiling.    
+        
+    """        
+    
+    # find the name of the clade in the list
+    with open(clade_list) as file_handle:
+        clades=[line.strip() for line in filter(lambda line: line.startswith("s__"), file_handle.readlines())]
+        try:
+            profile_clade=clades[clade_number]
+        except IndexError:
+            profile_clade=None
+            
+    if profile_clade:
+        command = "strainphlan.py --ifn_samples [args[0]]/*.markers --output_dir [args[1]] "+\
+            "--clades [args[2]] --nprocs_main [args[3]] --keep_alignment_files"
+            
+        # add the marker files to the command
+        all_marker_file=os.path.join(marker_folder,"all_markers.fasta")
+        marker_file=os.path.join(marker_folder,profile_clade+".markers.fasta")
+        command += " --ifn_markers "+marker_file
+        
+        # generate the marker file if it does not already exist
+        if not os.path.isfile(marker_file):
+            # get the pkl file relative to the strainphlan install
+            try:
+                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"db_v20","mpa_v20_m200.pkl")
+            except subprocess.CalledProcessError:
+                raise EnvironmentError("Unable to find strainphlan install.")
+            
+            marker_command="extract_markers.py --mpa_pkl [depends[0]] "+\
+                "--ifn_markers [depends[1]] --clade [args[0]] "+\
+                "--ofn_markers [targets[0]]"
+                
+            # create the marker file in the output folder
+            marker_file=os.path.join(os.path.dirname(task.targets[0].name),profile_clade+".markers.fasta")
+                
+            return_code = utilities.run_task(marker_command,depends=[strainphlan_pkl,all_marker_file], 
+                targets=[marker_file],args=[profile_clade])
+        
+        # check that the marker file exists
+        if not os.path.isfile(marker_file):
+            raise EnvironmentError("Unable to find StrainPhlAn markers for clade "+ profile_clade)
+        
+        # get the list of reference genomes
+        genomes=set()
+        with open(data.get_file("strainphlan_species_gcf.tsv")) as file_handle:
+            for line in file_handle:
+                if line.startswith(profile_clade):
+                    genomes.add(os.path.join(reference_folder,line.rstrip().split("\t")[-1]+".fna.bz2"))
+        
+        # only use those references found in the folder
+        genomes = filter(os.path.isfile,genomes)
+        
+        
+        # add the reference genome files to the command, if any are found
+        if len(list(genomes)):
+            command += " --ifn_ref_genomes " + " --ifn_ref_genomes ".join(genomes)
+        
+        # write the output to the log
+        command += " > [targets[0]]"
+        
+    else:
+        # there is not a clade of this number, create an empty output file
+        command = "touch [targets[0]]"
+        
+    # run the task
+    return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, 
+        args=[os.path.dirname(task.depends[0].name),os.path.dirname(task.targets[0].name),profile_clade,threads])
+
+def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,max_species=10):
+    """Strain profile for whole genome shotgun sequences
+    
+    This set of tasks performs strain profiling on whole genome shotgun
+    input files. For paired-end files, first merge and provide a single file per sample.
+    Input files should first be run through quality control. 
+    
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        sam_files (list): A list of paths to sam files generated by MetaPhlAn2.
+        output_folder (string): The path of the output folder.
+        threads (int): The number of threads/cores to use.
+        reference_folder (string): The folder containing the reference files.
+        marker_folder (string): The folder containing the marker files.
+        max_species (int): The maximum number of species to profile.
+        
+    Requires:
+        StrainPhlAn: A tool for strain profiling.
+        
+    Returns:
+        None
+        
+    """    
+
+    ### STEP #1: Identify markers for each of the samples
+    # name the marker files based on the sam files
+    strainphlan_markers = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="markers", create_folder=True)
+     
+    # create a marker file from each sam file
+    for sam, markers in zip(sam_files, strainphlan_markers):
+        workflow.add_task_gridable(
+            "sample2markers.py --ifn_samples [depends[0]] --input_type sam --output_dir [args[0]] --nprocs [args[1]]",
+            depends=sam,
+            targets=markers,
+            args=[os.path.dirname(markers),threads],
+            time=15*60, # 15 minutes
+            mem=5*1024, # 5 GB
+            cores=threads)
+
+    ### STEP #2: Find the top species by average abundance
+    clade_list = utilities.name_files("clades_list.txt", output_folder, subfolder="strainphlan")
+    
+    workflow.add_task(
+        "strainphlan.py --ifn_samples [args[0]]/*.markers --output_dir [args[0]] --print_clades_only > [targets[0]]",
+        depends=strainphlan_markers,
+        targets=clade_list,
+        args=os.path.dirname(strainphlan_markers[0]),
+        name="strainphlan_print_clades")
+    
+    ### STEP #3: Run strainphlan on the top set of clades identified
+    clade_logs = utilities.name_files(map(str,range(10)), output_folder, tag="clade", subfolder="strainphlan", extension="log")
+    for clade_number in range(max_species):
+        workflow.add_task_gridable(
+            utilities.partial_function(strainphlan,threads=threads,clade_number=clade_number,
+                clade_list=clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder)),
+            depends=strainphlan_markers,
+            targets=clade_logs[clade_number-1],                           
+            time=6*60, # 6 hours
+            mem=10*1024, # 10 GB
+            cores=threads)
+
+     

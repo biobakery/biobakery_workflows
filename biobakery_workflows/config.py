@@ -54,6 +54,11 @@ class ShotGun(Workflow):
     vars["kneaddata_db_rrna"] = DBInfo("KNEADDATA_DB_RIBOSOMAL_RNA",
         description="This is the folder containing the KneadData bowtie2 database of SILVA rRNA."+\
             "This database can be downloaded with KneadData.")
+    vars["strainphlan_db_reference"] = DBInfo("STRAINPHLAN_DB_REFERENCE",
+        description="This is the folder containing the reference genomes used "+\
+            "when running StrainPhlAn.")
+    vars["strainphlan_db_markers"] = DBInfo("STRAINPHLAN_DB_MARKERS",
+        description="This is the folder containing the StrainPhlAN marker files.")
 
 class SixteenS(Workflow):
     vars={}

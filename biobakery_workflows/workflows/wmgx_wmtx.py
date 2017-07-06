@@ -72,10 +72,10 @@ wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow,
     args.pair_identifier, args.qc_options, args.remove_intermediate_output)
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
-wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads)
+wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wms_qc_output_files,wms_output_folder,args.threads,args.input_extension)
 
 if not args.input_mapping:
-    wts_taxonomic_profile, wts_taxonomy_tsv_files, wts_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads)   
+    wts_taxonomic_profile, wts_taxonomy_tsv_files, wts_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,wts_qc_output_files,wts_output_folder,args.threads,args.input_extension)   
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
 
