@@ -51,6 +51,7 @@ workflow.add_argument("pair-identifier", desc="the string to identify the first 
 workflow.add_argument("bypass-norm-ratio", desc="bypass the rna/dna normalization computation", action="store_true")
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
+workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -94,6 +95,10 @@ else:
 ### STEP #4: Compute the normalized functional abundances based on the rna/dna ratio
 if not args.bypass_norm_ratio:
     norm_ratio_genes, norm_ratio_ecs, norm_ratio_pathway = shotgun.norm_ratio(workflow, wms_genes, wms_ecs, wms_path, wts_genes, wts_ecs, wts_path, args.output, args.input_mapping)
+
+### STEP #4: Run strain profiling
+if not args.bypass_strain_profiling:
+    shotgun.strain_profile(workflow,wms_taxonomy_sam_files,args.output,args.threads,workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers)
 
 # start the workflow
 workflow.go()
