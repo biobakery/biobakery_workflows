@@ -4,6 +4,7 @@ import sys
 import os
 import argparse
 import subprocess
+import random
 
 try:
     from humann2 import config
@@ -83,6 +84,10 @@ def parse_arguments(args):
         help="the minimum number of reads per marker for each species using MetaPhlAn2\n[OPTIONAL]",
         type=int,
         default=5)
+    parser.add_argument(
+        "--add-trimmable",
+        help="add reads that would be trimmed based on length\n[OPTIONAL]",
+        action="store_true")
 
     return parser.parse_args()
 
@@ -179,11 +184,13 @@ def main():
         species_fasta_file=args.output+".species_specific_reads.fasta"
         species_fasta_file_handle=open(species_fasta_file,"w")
         
+    selected_reads_to_species={}
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
         # record the reads that align to species/gene families requested
         requested_genes_for_species=genefamilies.get(species,[])
         if (gene_family in requested_genes_for_species) or (args.add_unintegrated and not(gene_family in all_genefamilies_in_pathways)):
             selected_reads.add(read_name)
+            selected_reads_to_species[species]=selected_reads_to_species.get(species,0)+1
             if not read_name in reads_to_gene_familes:
                 reads_to_gene_familes[read_name]=set()
             
@@ -196,7 +203,11 @@ def main():
         # if this is a species in the list, and we are adding markers, write this to the fasta file for input to metaphlan2
         if args.add_markers and species in genefamilies.keys():
             write_sequence(species_fasta_file_handle, read_name, sequence, quality_scores, "fasta")
-            
+           
+    print("Total reads per species based on gene families")
+    for species, count in selected_reads_to_species.items():
+        print(species+"\t"+str(count))         
+
     # close the species fasta file handle
     if args.add_markers:
         species_fasta_file_handle.close()
@@ -368,14 +379,29 @@ def main():
                 except (TypeError, IndexError):
                     continue
                 
+            print("Total reads added for species "+species+" :"+str(total_added)) 
         print("Total reads after counting markers: " + str(len(selected_reads)))
-    
+   
+    # determine how many trimmable reads to write
+    total_trimmable = 0
+    trimmable = []
+    if args.add_trimmable:
+        total_trimmable = int(random.uniform(50,100)) 
+        print("Adding "+str(total_trimmable)+" total trimmable reads")
+ 
     print("Writing output file")
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
         # write the read sequences requested once
         if read_name in selected_reads:
             write_sequence(file_handle, read_name, sequence, quality_scores, args.output_format)
             selected_reads.remove(read_name)
+            if len(trimmable) < total_trimmable:
+                trimmable.append([read_name, sequence, quality_scores])
+
+    # write the trimmable reads
+    for read_name, sequence, quality_scores in trimmable:
+        new_length=int(len(sequence)/2.0)
+        write_sequence(file_handle, "trimmable_"+read_name, sequence[0:new_length], quality_scores[0:new_length], args.output_format)
 
     print("Output file written: " + args.output)
     
