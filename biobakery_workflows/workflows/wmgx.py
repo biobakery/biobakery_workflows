@@ -48,6 +48,7 @@ workflow.add_argument("contaminate-databases", desc="the path (or comma-delimite
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
+workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -71,7 +72,7 @@ genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profil
 
 ### STEP #4: Run strain profiling
 if not args.bypass_strain_profiling:
-    shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers)
+    shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,args.strain_profiling_options)
 
 # start the workflow
 workflow.go()
