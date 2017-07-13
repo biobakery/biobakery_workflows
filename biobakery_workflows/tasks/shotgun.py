@@ -94,7 +94,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
         input_files=zip(input_files[0],input_files[1])
         # add the second input file to the kneaddata arguments
         # also add the option to cat the final output files into a single file
-        second_input_option=" --input [depends[1]] --cat-final-output --serial "
+        second_input_option=" --input [depends[1]] --cat-final-output "
         # determine time/memory equations based on the two input files
         time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*6*60"
         mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 2*12*1024"
@@ -108,6 +108,10 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
     # set additional options to empty string if not provided
     if additional_options is None:
         additional_options=""
+
+    # always run with the serial option, which presents read counts in log in the manner expected
+    # by the visualization workflows (in serial filtering in the order of the databases provided)
+    additional_options=" --serial "
 
     # create the database command option string to provide zero or more databases to kneaddata
     if databases is None:
@@ -572,7 +576,7 @@ def norm_ratio(workflow, wms_genes, wms_ecs, wms_paths, wts_genes, wts_ecs, wts_
         
     return norm_ratio_genes, norm_ratio_ecs, norm_ratio_pathway
 
-def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_folder):
+def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_folder,options):
     """ Run strainphlan for the specific clade
     
     Args:
@@ -582,6 +586,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         clade_list: (string): The path to the clade list.
         reference_folder (string): The folder containing the reference files.
         marker_folder (string): The folder containing the marker files.
+        options (string): Options to apply when running strainphlan.
 
     Requires:
         StrainPhlAn: A tool for strain profiling.    
@@ -590,7 +595,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
     
     # find the name of the clade in the list
     with open(clade_list) as file_handle:
-        clades=[line.strip() for line in filter(lambda line: line.startswith("s__"), file_handle.readlines())]
+        clades=[line.strip().split(" ")[0] for line in filter(lambda line: line.startswith("s__") or line.startswith("g__"), file_handle.readlines())]
         try:
             profile_clade=clades[clade_number]
         except IndexError:
@@ -598,7 +603,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             
     if profile_clade:
         command = "strainphlan.py --ifn_samples [args[0]]/*.markers --output_dir [args[1]] "+\
-            "--clades [args[2]] --nprocs_main [args[3]] --keep_alignment_files"
+            "--clades [args[2]] --nprocs_main [args[3]] --keep_alignment_files "+options
             
         # add the marker files to the command
         all_marker_file=os.path.join(marker_folder,"all_markers.fasta")
@@ -653,7 +658,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
     return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, 
         args=[os.path.dirname(task.depends[0].name),os.path.dirname(task.targets[0].name),profile_clade,threads])
 
-def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,max_species=10):
+def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,options="",max_species=10):
     """Strain profile for whole genome shotgun sequences
     
     This set of tasks performs strain profiling on whole genome shotgun
@@ -667,6 +672,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
         threads (int): The number of threads/cores to use.
         reference_folder (string): The folder containing the reference files.
         marker_folder (string): The folder containing the marker files.
+        options (string): Options to apply when running strainphlan.
         max_species (int): The maximum number of species to profile.
         
     Requires:
@@ -707,7 +713,8 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
     for clade_number in range(max_species):
         workflow.add_task_gridable(
             utilities.partial_function(strainphlan,threads=threads,clade_number=clade_number,
-                clade_list=clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder)),
+                clade_list=clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder),
+                options=options),
             depends=strainphlan_markers,
             targets=clade_logs[clade_number-1],                           
             time=6*60, # 6 hours
