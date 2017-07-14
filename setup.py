@@ -53,7 +53,18 @@ setuptools.setup(
     install_requires=['anadama2'],
     packages=setuptools.find_packages(),
     entry_points={'console_scripts': ['biobakery_workflows = biobakery_workflows.biobakery_workflows:main']},
-    package_data={'biobakery_workflows' : ['workflows/*.py','document_templates/*.py','document_templates/*.mdw','data/*']},
+    package_data={
+        'biobakery_workflows' : [
+            'workflows/*.py',
+            'document_templates/*.py',
+            'document_templates/*.mdw',
+            'data/*',
+        ]},
+    data_files=[
+        ("tutorial/input/", glob("examples/tutorial/input/*")),
+        ("tutorial/kneaddata_demo_db/Homo_sapiens_demo/", glob("examples/tutorial/kneaddata_demo_db/Homo_sapiens_demo/*")),
+        ("tutorial/kneaddata_demo_db/SILVA_demo/", glob("examples/tutorial/kneaddata_demo_db/SILVA_demo/*"))
+    ],
     scripts=glob('biobakery_workflows/workflows/*py')+glob('biobakery_workflows/scripts/*py'),
     test_suite='tests.get_test_suite',
     zip_safe = False
