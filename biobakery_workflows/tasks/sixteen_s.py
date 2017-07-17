@@ -671,7 +671,7 @@ def global_alignment(workflow, fasta_file, database_file, id, threads, output_fi
         targets=[output_file_uc, output_file_tsv],
         args=[threads, id],
         name="usearch_global",
-        time=30, # 30 minutes
+        time=60, # 60 minutes
         mem=2*1024, # 2 GB
         cores=threads) # time/mem based on 8 cores
    
