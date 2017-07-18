@@ -715,7 +715,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             utilities.partial_function(strainphlan,threads=threads,clade_number=clade_number,
                 clade_list=clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder),
                 options=options),
-            depends=strainphlan_markers,
+            depends=strainphlan_markers+[clade_list],
             targets=clade_logs[clade_number-1],                           
             time=6*60, # 6 hours
             mem=10*1024, # 10 GB
