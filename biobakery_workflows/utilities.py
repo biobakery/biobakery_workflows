@@ -38,6 +38,11 @@ def try_log10(value):
         
     return new_value
 
+def name_task(sample,software):
+    """ Name the task based on the sample name and software """
+    
+    return software+"____"+os.path.basename(sample)
+
 def add_to_list(items,new_item):
     """ Add the value to the list/tuple. If the item is not a list, create a new
         list from the item and the value 

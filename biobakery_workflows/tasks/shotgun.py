@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 import os
 import subprocess
+import itertools
 
 from anadama2.tracked import TrackedExecutable
 
@@ -140,7 +141,8 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
             args=[kneaddata_output_folder, threads, sample],
             time=time_equation, # 6 hours or more depending on file size
             mem=mem_equation, # 12 GB or more depending on file size
-            cores=threads) # time/mem based on 8 cores
+            cores=threads, # time/mem based on 8 cores
+            name=utilities.name_task(sample,"kneaddata")) # name task based on sample name
     
     return kneaddata_output_fastq, kneaddata_output_logs
 
@@ -321,7 +323,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
         input_type="fastq"
     
     # run metaphlan2 on each of the kneaddata output files
-    for depend_fastq, target_profile, target_sam in zip(input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
+    for sample, depend_fastq, target_profile, target_sam in zip(sample_names, input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
         workflow.add_task_gridable(
             "metaphlan2.py [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
             depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
@@ -329,7 +331,8 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
             args=[threads,metaphlan2_output_folder,input_type],
             time=3*60, # 3 hours
             mem=12*1024, # 12 GB
-            cores=threads) # time/mem based on 8 cores
+            cores=threads, # time/mem based on 8 cores
+            name=utilities.name_task(sample,"metaphlan2"))
     
     # merge all of the metaphlan taxonomy tables
     metaphlan2_merged_output = files.ShotGun.path("taxonomic_profile", output_folder)
@@ -339,7 +342,8 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
         "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name [args[1]]",
         depends=metaphlan2_output_files_profile,
         targets=metaphlan2_merged_output,
-        args=[metaphlan2_output_folder, metaphlan2_profile_tag])
+        args=[metaphlan2_output_folder, metaphlan2_profile_tag],
+        name="metaphlan2_join_taxonomic_profiles")
    
     # get the name for the file to write the species counts
     metaphlan2_species_counts_file = files.ShotGun.path("species_counts",output_folder,create_folder=True)
@@ -348,7 +352,8 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     workflow.add_task(
     "count_features.py --input [depends[0]] --output [targets[0]] --include s__ --filter t__ --reduce-sample-name",
     depends=metaphlan2_merged_output,
-    targets=metaphlan2_species_counts_file) 
+    targets=metaphlan2_species_counts_file,
+    name="metaphlan2_count_species") 
 
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
@@ -425,7 +430,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         optional_profile_args+=" --remove-temp-output "
     
     # create a task to run humann2 on each of the kneaddata output files
-    for depend_fastq, target_gene, target_path, target_coverage, target_log in zip(depends, genefamiles, pathabundance, pathcoverage, log_files):
+    for sample, depend_fastq, target_gene, target_path, target_coverage, target_log in zip(sample_names, depends, genefamiles, pathabundance, pathcoverage, log_files):
         workflow.add_task_gridable(
             "humann2 --input [depends[0]] --output [args[0]] --o-log [targets[3]] --threads [args[1]]"+optional_profile_args,
             depends=utilities.add_to_list(depend_fastq,TrackedExecutable("humann2")),
@@ -433,14 +438,16 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
             args=[humann2_output_folder, threads],
             time="24*60 if file_size('[depends[0]]') < 25 else 4*24*60", # 24 hours or more depending on file size
             mem="32*1024 if file_size('[depends[0]]') < 25 else 2*32*1024", # 32 GB or more depending on file size
-            cores=threads)
+            cores=threads,
+            name=utilities.name_task(sample,"humann2"))
 
     # create a task to get the read and species counts for each humann2 run from the log files
     workflow.add_task(
         "get_counts_from_humann2_logs.py --input [args[0]] --output [targets[0]]",
         depends=log_files,
         targets=log_counts,
-        args=humann2_output_folder)
+        args=humann2_output_folder,
+        name="humann2_count_alignments_species")
     
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
@@ -454,7 +461,9 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         targets=ec_files,
         time=10*60, # 10 minutes
         mem=5*1024, # 5 GB
-        cores=1)
+        cores=1,
+        name=map(lambda sample: utilities.name_task(sample,"humann2_regroup_UniRef2EC"), sample_names))
+
     
     ### STEP #3: Merge gene families, ecs, and pathway abundance files
 
@@ -472,7 +481,8 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
             "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name [args[1]]",
             depends=depends,
             targets=targets,
-            args=[os.path.dirname(depends[0]),basename])
+            args=[os.path.dirname(depends[0]),basename],
+            name="humann2_join_tables_"+basename)
     
     ### STEP #4: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
@@ -483,13 +493,17 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     
     # normalize the genefamily, ec, and pathabundance files
     # do not include special features (ie UNMAPPED, UNINTEGRATED, UNGROUPED) in norm computation
+    renorm_task_names=len(norm_genefamily_files)*["genes"] + len(norm_ec_files)*["ecs"] + len(norm_pathabundance_files)*["pathways"]
+    renorm_task_names=[utilities.name_task(sample,"humann2_renorm_"+type+"_relab") for sample, type in zip(itertools.cycle(sample_names),renorm_task_names)]
     workflow.add_task_group_gridable(
         "humann2_renorm_table --input [depends[0]] --output [targets[0]] --units relab --special n",
         depends=genefamiles + ec_files + pathabundance,
         targets=norm_genefamily_files + norm_ec_files + norm_pathabundance_files,
         time=5*60, # 5 minutes
         mem=5*1024, # 5 GB
-        cores=1)
+        cores=1,
+        name=renorm_task_names)
+
     
     # get a list of merged files for ec, gene families, and pathway abundance
     merged_genefamilies_relab = files.ShotGun.path("genefamilies_relab", output_folder)
@@ -499,12 +513,14 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     # merge the ec, gene families, and pathway abundance files
     all_depends=[norm_genefamily_files, norm_ec_files, norm_pathabundance_files]
     all_targets=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab]
-    for depends, targets in zip(all_depends, all_targets):
+    all_types=["genes_relab","ecs_relab","pathways_relab"]
+    for depends, targets, input_type in zip(all_depends, all_targets, all_types):
         workflow.add_task(
             "humann2_join_tables --input [args[0]] --output [targets[0]]",
             depends=depends,
             targets=targets,
-            args=[os.path.dirname(depends[0])])
+            args=[os.path.dirname(depends[0])],
+            name="humann2_join_tables_"+input_type)
 
     # get feature counts for the ec, gene families, and pathways
     genefamilies_counts = files.ShotGun.path("genefamilies_relab_counts", output_folder)
@@ -513,7 +529,8 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     workflow.add_task_group(
         "count_features.py --input [depends[0]] --output [targets[0]] --reduce-sample-name --ignore-un-features --ignore-stratification",
         depends=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab],
-        targets=[genefamilies_counts, ecs_counts, pathabundance_counts])
+        targets=[genefamilies_counts, ecs_counts, pathabundance_counts],
+        name=["humann2_count_features_genes","humann2_count_features_ecs","humann2_count_features_pathways"])
     
     # merge the feature counts into a single file
     all_feature_counts = files.ShotGun.path("feature_counts", output_folder)
@@ -521,7 +538,8 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name _relab_counts.tsv",
         depends=[genefamilies_counts, ecs_counts, pathabundance_counts],
         targets=all_feature_counts,
-        args=[os.path.dirname(genefamilies_counts)])
+        args=[os.path.dirname(genefamilies_counts)],
+        name="humann2_merge_feature_counts")
 
         
     return merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab, merged_genefamilies, merged_ecs, merged_pathabundance
@@ -689,6 +707,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
      
     # create a marker file from each sam file
     for sam, markers in zip(sam_files, strainphlan_markers):
+        sample_name=os.path.basename(sam).replace("_bowtie2.sam","")
         workflow.add_task_gridable(
             "sample2markers.py --ifn_samples [depends[0]] --input_type sam --output_dir [args[0]] --nprocs [args[1]]",
             depends=sam,
@@ -696,7 +715,8 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             args=[os.path.dirname(markers),threads],
             time=15*60, # 15 minutes
             mem=5*1024, # 5 GB
-            cores=threads)
+            cores=threads,
+            name=utilities.name_task(sample_name,"strainphlan_sample2markers"))
 
     ### STEP #2: Find the top species by average abundance
     clade_list = utilities.name_files("clades_list.txt", output_folder, subfolder="strainphlan")
@@ -719,6 +739,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             targets=clade_logs[clade_number-1],                           
             time=6*60, # 6 hours
             mem=10*1024, # 10 GB
-            cores=threads)
+            cores=threads,
+            name="strainphlan_clade_"+str(clade_number))
 
      
