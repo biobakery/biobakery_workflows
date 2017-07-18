@@ -32,7 +32,7 @@ except ImportError:
     
 from glob import glob    
 
-VERSION = "0.0.1"
+VERSION = "0.2.0"
 
 setuptools.setup(
     name="biobakery_workflows",
