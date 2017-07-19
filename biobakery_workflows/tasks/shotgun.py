@@ -83,8 +83,9 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
         sample_names=utilities.sample_names(input_files)
         
     # get the kneaddata final output files
-    kneaddata_output_fastq = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="fastq", create_folder=True)
-    kneaddata_output_logs = utilities.name_files(sample_names, output_folder, subfolder="kneaddata", extension="log")
+    main_folder=os.path.join("kneaddata","main")
+    kneaddata_output_fastq = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="fastq", create_folder=True)
+    kneaddata_output_logs = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="log")
     kneaddata_output_files = zip(kneaddata_output_fastq, kneaddata_output_logs)
 
     # get the output folder
@@ -312,8 +313,9 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     
     # get a list of metaphlan2 output files, one for each input file
     metaphlan2_profile_tag="taxonomic_profile"
-    metaphlan2_output_files_profile = utilities.name_files(sample_names, output_folder, subfolder="metaphlan2", tag=metaphlan2_profile_tag, extension="tsv", create_folder=True)
-    metaphlan2_output_files_sam = utilities.name_files(sample_names, output_folder, subfolder="metaphlan2", tag="bowtie2", extension="sam")
+    main_folder=os.path.join("metaphlan2","main")
+    metaphlan2_output_files_profile = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag=metaphlan2_profile_tag, extension="tsv", create_folder=True)
+    metaphlan2_output_files_sam = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="bowtie2", extension="sam")
     metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
     
     # determine the input file type based on the extension
@@ -406,12 +408,13 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     ### Step 1: Run humann2 on all input files ###
 
     # get a list of output files, one for each input file, with the humann2 output file names
-    genefamiles = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="genefamilies", extension="tsv", create_folder=True)
-    pathabundance = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathabundance", extension="tsv")
-    pathcoverage = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="pathcoverage", extension="tsv")
+    main_folder=os.path.join("humann2","main")
+    genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="genefamilies", extension="tsv", create_folder=True)
+    pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="pathabundance", extension="tsv")
+    pathcoverage = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="pathcoverage", extension="tsv")
 
     # get the list of the log files that will be created, one for each input file, set to the same folder as the main output files
-    log_files = utilities.name_files(sample_names, output_folder, subfolder="humann2", extension="log")
+    log_files = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="log")
     # get the name for the file of read and species counts created from the humann2 log outputs
     log_counts = files.ShotGun.path("humann2_read_counts",output_folder,create_folder=True)
 
@@ -452,7 +455,9 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
     # get a list of all output ec files
-    ec_files = utilities.name_files(sample_names, output_folder, subfolder="humann2", tag="ecs", extension="tsv")
+    ec_files = utilities.name_files(sample_names, output_folder, 
+        subfolder=os.path.join("humann2","regrouped"), tag="ecs", 
+        extension="tsv", create_folder=True)
     
     # get ec files for all of the gene families files
     workflow.add_task_group_gridable(
@@ -468,7 +473,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     ### STEP #3: Merge gene families, ecs, and pathway abundance files
 
     # get a list of merged files for ec, gene families, and pathway abundance
-    merged_genefamilies = files.ShotGun.path("genefamilies", output_folder)
+    merged_genefamilies = files.ShotGun.path("genefamilies", output_folder, create_folder=True)
     merged_ecs = files.ShotGun.path("ecs", output_folder)
     merged_pathabundance = files.ShotGun.path("pathabundance", output_folder)
     
@@ -487,9 +492,10 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     ### STEP #4: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
     # get a list of files for normalized ec, gene families, and pathway abundance
-    norm_genefamily_files = utilities.name_files(genefamiles, output_folder, subfolder="genes", tag="relab", create_folder=True)
-    norm_ec_files = utilities.name_files(ec_files, output_folder,  subfolder="ecs", tag="relab", create_folder=True)
-    norm_pathabundance_files = utilities.name_files(pathabundance, output_folder,  subfolder="pathways", tag="relab", create_folder=True)
+    relab_folder=os.path.join("humann2","relab")
+    norm_genefamily_files = utilities.name_files(genefamiles, output_folder, subfolder=os.path.join(relab_folder,"genes"), tag="relab", create_folder=True)
+    norm_ec_files = utilities.name_files(ec_files, output_folder,  subfolder=os.path.join(relab_folder,"ecs"), tag="relab", create_folder=True)
+    norm_pathabundance_files = utilities.name_files(pathabundance, output_folder,  subfolder=os.path.join(relab_folder,"pathways"), tag="relab", create_folder=True)
     
     # normalize the genefamily, ec, and pathabundance files
     # do not include special features (ie UNMAPPED, UNINTEGRATED, UNGROUPED) in norm computation
