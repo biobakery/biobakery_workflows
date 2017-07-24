@@ -27,6 +27,73 @@ import os
 import sys
 import math
 import functools
+import time
+
+
+# try to import urllib.request.urlretrieve for python3
+try:
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib import urlretrieve
+    
+
+def byte_to_megabyte(byte):
+    """
+    Convert byte value to megabyte
+    """
+    
+    return byte / (1024.0**2)
+
+class ReportHook():
+    def __init__(self):
+        self.start_time=time.time()
+        
+    def report(self, blocknum, block_size, total_size):
+        """
+        Print download progress message
+        """
+        
+        if blocknum == 0:
+            self.start_time=time.time()
+            if total_size > 0:
+                print("Downloading file of size: " + "{:.2f}".format(byte_to_megabyte(total_size)) + " MB\n")
+        else:
+            total_downloaded=blocknum*block_size
+            status = "{:3.2f} MB ".format(byte_to_megabyte(total_downloaded))
+                    
+            if total_size > 0:
+                percent_downloaded=total_downloaded * 100.0 / total_size
+                # use carriage return plus sys.stdout to overwrite stdout
+                try:
+                    download_rate=total_downloaded/(time.time()-self.start_time)
+                    estimated_time=(total_size-total_downloaded)/download_rate
+                except ZeroDivisionError:
+                    download_rate=0
+                    estimated_time=0
+                estimated_minutes=int(estimated_time/60.0)
+                estimated_seconds=estimated_time-estimated_minutes*60.0
+                status +="{:3.2f}".format(percent_downloaded) + " %  " + \
+                    "{:5.2f}".format(byte_to_megabyte(download_rate)) + " MB/sec " + \
+                    "{:2.0f}".format(estimated_minutes) + " min " + \
+                    "{:2.0f}".format(estimated_seconds) + " sec "
+            status+="        \r"
+            sys.stdout.write(status)
+
+def download_file(url, download_file):
+    """
+    Download a file from a url
+    Create folder for downloaded file if it does not exist
+    """
+
+    create_folders(os.path.dirname(download_file))
+
+    try:
+        print("Downloading "+url)
+        file, headers = urlretrieve(url,download_file,reporthook=ReportHook().report)
+        # print final return to start new line of stdout
+        print("\n")
+    except EnvironmentError:
+        print("WARNING: Unable to download "+url)
 
 def try_log10(value):
     """ Try to convert value to log10 """

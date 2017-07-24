@@ -52,7 +52,11 @@ setuptools.setup(
         ],
     install_requires=['anadama2'],
     packages=setuptools.find_packages(),
-    entry_points={'console_scripts': ['biobakery_workflows = biobakery_workflows.biobakery_workflows:main']},
+    entry_points={
+        'console_scripts': [
+            'biobakery_workflows = biobakery_workflows.biobakery_workflows:main',
+            'biobakery_workflows_databases = biobakery_workflows.biobakery_workflows_databases:main',
+        ]},
     package_data={
         'biobakery_workflows' : [
             'workflows/*.py',
