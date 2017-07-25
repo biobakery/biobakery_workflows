@@ -8,6 +8,7 @@
 
 ## v0.2.0 07-18-2017 ##
 
+* Shotgun task names updated to include sample names.
 * Strain profiling was added to the shotgun data processing workflows.
 * Executables are tracked for tasks in the data processing workflows.
 * Tutorial data files were added to the examples folder.
