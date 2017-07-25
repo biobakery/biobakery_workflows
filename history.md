@@ -1,6 +1,11 @@
 
 # bioBakery workflows History #
 
+## v0.3.0 07-25-2017 ##
+
+* Added utility to automatically install databases for each data processing workflow.
+* Reorganized shotgun output file locations so the products are stored with respect to the software used to generate them.
+
 ## v0.2.0 07-18-2017 ##
 
 * Strain profiling was added to the shotgun data processing workflows.
