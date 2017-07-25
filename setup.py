@@ -34,19 +34,35 @@ from glob import glob
 
 VERSION = "0.2.0"
 
+AUTHOR = "bioBakery workflows development team"
+AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
+MAINTAINER = "Lauren McIver"
+MAINTAINER_EMAIL = "lauren.j.mciver@gmail.com"
+
 setuptools.setup(
     name="biobakery_workflows",
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
     version=VERSION,
     license="MIT",
-    description="bioBakery Workflows: A collection of bioBakery AnADAMA2 workflows",
+    description="bioBakery Workflows: A collection of meta'omic analysis workflows",
+    long_description="bioBakery workflows is a collection of workflows and tasks for "+\
+        "executing common microbial community analyses using standardized, validated "+\
+        "tools and parameters. Quality control and statistical summary reports are "+\
+        "automatically generated for most data types, which include 16S amplicons, "+\
+        "metagenomes, and metatranscriptomes. Workflows are run directly from the "+\
+        "command line and tasks can be imported to create your own custom workflows. "+\
+        "The workflows and tasks are built with AnADAMA2 which allows for parallel "+\
+        "task execution locally and in a grid compute environment.",
+    url="http://huttenhower.sph.harvard.edu/biobakery_workflows",
+    keywords=['microbial','microbiome','bioinformatics','microbiology','metagenomic','metatranscriptomic'],
     platforms=['Linux','MacOS'],
     classifiers=[
         "Programming Language :: Python",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Operating System :: MacOS",
         "Operating System :: Unix",
-        "Programming Language :: Python",
         "Programming Language :: Python :: 2.7",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
         ],
