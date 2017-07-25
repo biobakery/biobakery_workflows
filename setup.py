@@ -45,7 +45,7 @@ setuptools.setup(
     author_email=AUTHOR_EMAIL,
     version=VERSION,
     license="MIT",
-    description="bioBakery Workflows: A collection of meta'omic analysis workflows",
+    description="bioBakery workflows: A collection of meta'omic analysis workflows",
     long_description="bioBakery workflows is a collection of workflows and tasks for "+\
         "executing common microbial community analyses using standardized, validated "+\
         "tools and parameters. Quality control and statistical summary reports are "+\
@@ -55,7 +55,7 @@ setuptools.setup(
         "The workflows and tasks are built with AnADAMA2 which allows for parallel "+\
         "task execution locally and in a grid compute environment.",
     url="http://huttenhower.sph.harvard.edu/biobakery_workflows",
-    keywords=['microbial','microbiome','bioinformatics','microbiology','metagenomic','metatranscriptomic'],
+    keywords=['microbial','microbiome','bioinformatics','microbiology','metagenomic','metatranscriptomic','anadama2','humann2','metaphlan2','strainphlan'],
     platforms=['Linux','MacOS'],
     classifiers=[
         "Programming Language :: Python",
