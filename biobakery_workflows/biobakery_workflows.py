@@ -35,7 +35,7 @@ except ImportError:
 import os
 import subprocess
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 WORKFLOW_FOLDER="workflows"
 WORKFLOW_EXTENSION=".py"
 
