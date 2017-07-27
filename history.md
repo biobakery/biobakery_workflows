@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v0.3.1 07-27-2017 ##
+
+* Change the default size of heatmaps in reports based on format. Increase the size in pdf and decrease in html.
+
 ## v0.3.0 07-25-2017 ##
 
 * Added utility to automatically install databases for each data processing workflow.
