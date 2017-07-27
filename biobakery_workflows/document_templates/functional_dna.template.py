@@ -30,6 +30,10 @@ dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descr
 #' <%= visualizations.ShotGun.format_caption("pathway_abundance_intro",max_sets=max_sets) %>
 
 #+ echo=False
+# update the figure size based on output format for the heatmaps
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+
+#+ echo=False
 document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
                       title="Top "+str(max_sets)+" pathways by average abundance")  
 
@@ -43,6 +47,10 @@ document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
 #' <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
 
 #' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+# reset the figure size to the defaults
+utilities.reset_pweave_figure_size()
 
 #+ echo=False
 

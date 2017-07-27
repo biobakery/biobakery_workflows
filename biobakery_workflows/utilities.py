@@ -36,6 +36,19 @@ try:
 except ImportError:
     from urllib import urlretrieve
     
+def change_pweave_figure_size_heatmap(pdf_format):
+    """ Change the figure size for heatmaps based on the output format"""
+    fig_size = (4,4) if pdf_format else (2.5,2.5)
+    change_pweave_figure_size(fig_size)
+    
+def reset_pweave_figure_size():
+    """ Set the pweave figure size back to the default """
+    change_pweave_figure_size((8,6))
+    
+def change_pweave_figure_size(fig_size):
+    """ Change the pweave default figure size """
+    import pweave
+    pweave.rcParams["chunk"]["defaultoptions"].update({'f_size': fig_size})
 
 def byte_to_megabyte(byte):
     """

@@ -98,6 +98,10 @@ caption=document.show_pcoa(samples,top_taxonomy,numpy.array(top_data)/100.0,"Ord
 #' shown in the heatmap. The heatmap was generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
 
 #+ echo=False
+# update the figure size based on output format for the heatmaps
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+
+#+ echo=False
 document.show_hclust2(samples,top_taxonomy,top_data,
                       title="Top "+str(max_sets_heatmap)+" species by average abundance")
 
@@ -109,6 +113,10 @@ document.show_hclust2(samples,top_taxonomy,top_data,
 
 
 #' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+# reset the figure size to the defaults
+utilities.reset_pweave_figure_size()
 
 #' ## Barplot
 
