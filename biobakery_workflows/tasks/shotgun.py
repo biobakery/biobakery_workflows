@@ -464,7 +464,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         "humann2_regroup_table --input [depends[0]] --output [targets[0]] --groups uniref90_level4ec",
         depends=genefamiles,
         targets=ec_files,
-        time=10*60, # 10 minutes
+        time=10, # 10 minutes
         mem=5*1024, # 5 GB
         cores=1,
         name=map(lambda sample: utilities.name_task(sample,"humann2_regroup_UniRef2EC"), sample_names))
@@ -505,7 +505,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
         "humann2_renorm_table --input [depends[0]] --output [targets[0]] --units relab --special n",
         depends=genefamiles + ec_files + pathabundance,
         targets=norm_genefamily_files + norm_ec_files + norm_pathabundance_files,
-        time=5*60, # 5 minutes
+        time=15, # 15 minutes
         mem=5*1024, # 5 GB
         cores=1,
         name=renorm_task_names)
