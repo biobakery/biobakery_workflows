@@ -14,7 +14,8 @@ except ImportError:
 
 # This script will take as input the bowtie2 alignment file from
 # running humann2 along with a list of species and pathways. The selection list
-# will be formatted as two tab delimited columns of species \t pathway. It can
+# will be formatted as two tab delimited columns of species \t pathway. 
+# To include all pathways for a species use the key "ALL". It can
 # have headers or comments starting with "#". The script will output a 
 # reduced fasta (or fastq if selected) file that only includes reads that 
 # will map to those species and pathways when running the fastq file as input to humann2.
@@ -158,9 +159,13 @@ def main():
                 genefamilies[species]=set()
                 reactions[species]=set()
             # get the reactions and then gene families for the pathway
-            for reaction in pathways_database.find_reactions(pathway):
-                reactions[species].add(reaction)
-                genefamilies[species].update(list(filter(lambda x: x.startswith(args.gene_families), reactions_database.find_genes(reaction))))
+            if pathway.upper() == "ALL":
+                genefamilies[species]="ALL"
+                reactions[species]="ALL"
+            else:
+                for reaction in pathways_database.find_reactions(pathway):
+                    reactions[species].add(reaction)
+                    genefamilies[species].update(list(filter(lambda x: x.startswith(args.gene_families), reactions_database.find_genes(reaction))))
      
     # get the set of gene families in any pathway           
     all_genefamilies_in_pathways=set()
@@ -188,7 +193,7 @@ def main():
     for species, gene_family, read_name, sequence, quality_scores in read_sam(args.input_sam, args.gene_families):
         # record the reads that align to species/gene families requested
         requested_genes_for_species=genefamilies.get(species,[])
-        if (gene_family in requested_genes_for_species) or (args.add_unintegrated and not(gene_family in all_genefamilies_in_pathways)):
+        if (gene_family in requested_genes_for_species) or ("ALL" in requested_genes_for_species) or (args.add_unintegrated and not(gene_family in all_genefamilies_in_pathways)):
             selected_reads.add(read_name)
             selected_reads_to_species[species]=selected_reads_to_species.get(species,0)+1
             if not read_name in reads_to_gene_familes:
