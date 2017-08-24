@@ -957,11 +957,12 @@ def microbial_read_proportion(paired_data, orphan_data=None, rna=None, database_
     return proportion_decontaminated, labels
 
 
-def taxa_remove_unclassified(taxa):
+def taxa_remove_unclassified(taxa, delimiter=";"):
     """ Rename the taxa to remove the unclassified levels
     
         Args:
             taxa (list): The list of taxa.
+            delimiter (str): The string delimiter (usually pipe or semi-colon).
                 
         Requires:
             None
@@ -973,7 +974,7 @@ def taxa_remove_unclassified(taxa):
     # remove any levels where the name is unknown (ie empty)
     for taxon in taxa:
         new_name=[]
-        for level in taxon.replace(" ","").split(";"):
+        for level in taxon.replace(" ","").split(delimiter):
             try:
                 rank, name = level.split("__")
             except ValueError:
@@ -983,7 +984,7 @@ def taxa_remove_unclassified(taxa):
                 new_name.append(level)
             else:
                 break
-        yield ";".join(new_name)
+        yield delimiter.join(new_name)
         
 def taxonomy_trim(taxa):
     """ Trim the taxonomy name to include the most specific known name followed by unclassified
@@ -1000,22 +1001,25 @@ def taxonomy_trim(taxa):
     
     # remove any spaces from the taxonomy
     taxa = [taxon.replace(" ","") for taxon in taxa]
+
+    # determine the delimiter (pipe or semi-colon)
+    delimiter="|" if "|" in taxa[0] else ";"
     
     # get the taxa with unclassified levels removed
-    taxa_unclassified_removed = taxa_remove_unclassified(taxa)
+    taxa_unclassified_removed = taxa_remove_unclassified(taxa,delimiter)
     
     trimmed_taxa=[]
     for taxon_full, taxon_reduced in zip(taxa, taxa_unclassified_removed):
         # if the taxon is specific to species level, then 
         # return the genus and species level
         if taxon_full == taxon_reduced:
-            data = taxon_full.split(";")
+            data = taxon_full.split(delimiter)
             trimmed_taxa.append(data[-2]+"."+data[-1])
             
         else:
-            most_specific_clade = taxon_reduced.split(";")[-1]
+            most_specific_clade = taxon_reduced.split(delimiter)[-1]
             data = taxon_full.split(most_specific_clade)
-            trimmed_taxa.append(most_specific_clade+data[-1].replace(";","."))
+            trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
             
     return trimmed_taxa
         
