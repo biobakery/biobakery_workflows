@@ -1,7 +1,20 @@
 
 import unittest
+import tempfile
+import os
+import sys
 
 from biobakery_workflows import utilities
+
+# write to a temp file
+def write_temp(data):
+    """ Write the data to a temp file """
+    
+    handle, file = tempfile.mkstemp(prefix="biobakery_workflows_test")
+    os.write(handle,data)
+    os.close(handle)
+    
+    return file
 
 class TestUtiltiesFunctions(unittest.TestCase):
     """ Test the functions found in the biobakery workflows utilities module """
@@ -339,5 +352,162 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
+    def test_read_metadata_columns(self):
+        """ Test the read metadata function. Metadata file has samples as columns. """
+        
+        # create a temp taxonomy file (for sample names)
+        taxon_file = write_temp("# taxon\tsample1\tsample2\nbug1\t1\t2\n")
+        # create a temp metadata file
+        metadata_file = write_temp("# feature\tsample1\tsample2\nfeature1\tA\tB\n")
+        
+        # get the metadata values
+        values = utilities.read_metadata(metadata_file,taxon_file)
+        
+        # remove the temp files
+        os.remove(taxon_file)
+        os.remove(metadata_file)
+        
+        expected_values=[["# feature","sample1","sample2"],["feature1","A","B"]]
+        self.assertEqual(values,expected_values)
+        
+    def test_read_metadata_rows(self):
+        """ Test the read metadata function. Metadata file has samples as rows. """
+        
+        # create a temp taxonomy file (for sample names)
+        taxon_file = write_temp("# taxon\tsample1\tsample2\nbug1\t1\t2\n")
+        # create a temp metadata file
+        metadata_file = write_temp("# sample\tfeature1\nsample1\tA\nsample2\tB\n")
+        
+        # get the metadata values
+        values = utilities.read_metadata(metadata_file,taxon_file)
+        
+        # remove the temp files
+        os.remove(taxon_file)
+        os.remove(metadata_file)
+        
+        expected_values=[("# sample","sample1","sample2"),("feature1","A","B")]
+        self.assertEqual(values,expected_values)   
+        
+    def test_read_metadata_remove_feature(self):
+        """ Test the read metadata function. Metadata file has samples as columns.
+            Remove a single feature."""
+        
+        # create a temp taxonomy file (for sample names)
+        taxon_file = write_temp("# taxon\tsample1\tsample2\nbug1\t1\t2\n")
+        # create a temp metadata file
+        metadata_file = write_temp("# feature\tsample1\tsample2\nfeature1\tA\tB\nfeature2\tC\tD\n")
+        
+        # get the metadata values
+        values = utilities.read_metadata(metadata_file,taxon_file,ignore_features=["feature1"])
+        
+        # remove the temp files
+        os.remove(taxon_file)
+        os.remove(metadata_file)
+        
+        expected_values=[["# feature","sample1","sample2"],["feature2","C","D"]]
+        self.assertEqual(values,expected_values)  
+        
+    def test_label_metadata(self):
+        """ Test the label_metadata function. Test default labels. """
+        
+        data=[["# samples","sample1","sample2"],["feature1","1","2.2"],["feature2","A","B"]]
+        labels, new_data=utilities.label_metadata(data)   
+        
+        expected_data=[["# samples","sample1","sample2"],["feature1",1.0,2.2],["feature2","A","B"]]
+        expected_labels={"feature1":"con","feature2":"cat"}
+        
+        self.assertEqual(new_data,expected_data)
+        self.assertEqual(labels, expected_labels)
+        
+    def test_label_metadata_categorical(self):
+        """ Test the label_metadata function. Set categorical label. """
+        
+        data=[["# samples","sample1","sample2"],["feature1","1","2.2"],["feature2","A","B"]]
+        labels, new_data=utilities.label_metadata(data, categorical=["feature1"])   
+        
+        expected_data=[["# samples","sample1","sample2"],["feature1","1","2.2"],["feature2","A","B"]]
+        expected_labels={"feature1":"cat","feature2":"cat"}
+        
+        self.assertEqual(new_data,expected_data)
+        self.assertEqual(labels, expected_labels)
+        
+    def test_label_metadata_continuous(self):
+        """ Test the label_metadata function. Set continuous label. """
+        
+        data=[["# samples","sample1","sample2"],["feature1","1","2.2"],["feature2","A","B"]]
+        labels, new_data=utilities.label_metadata(data, continuous=["feature2"])   
+        
+        expected_data=[["# samples","sample1","sample2"],["feature1",1.0,2.2],["feature2","A","B"]]
+        expected_labels={"feature1":"con","feature2":"con"}
+        
+        self.assertEqual(new_data,expected_data)
+        self.assertEqual(labels, expected_labels)
+        
+    def test_merge_metadata(self):
+        """ Test the merge metadata function."""
+        
+        metadata=[["# samples","s1","s2"],["feature1","A","B"],["feature2",1,2]]
+        samples=["s1","s2"]
+        values=[["bug1",1,2],["bug2",2,4]]
+        
+        merged=utilities.merge_metadata(metadata, samples, values)
+        
+        expected=[["feature1","A","B"],["feature2",1,2],["bug1",1,2],["bug2",2,4]]
+        
+        self.assertEqual(merged, expected)     
+        
+    def test_merge_metadata_reorder(self):
+        """ Test the merge metadata function. Test with reordering."""
+        
+        metadata=[["# samples","s1","s2"],["feature1","A","B"],["feature2",1,2]]
+        samples=["s2","s1"]
+        values=[["bug1",1,2],["bug2",2,4]]
+        
+        merged=utilities.merge_metadata(metadata, samples, values)
+        
+        expected=[["feature1","A","B"],["feature2",1,2],["bug1",2,1],["bug2",4,2]]
+        
+        self.assertEqual(merged, expected) 
+        
+    def test_merge_metadata_less_metadata(self):
+        """ Test the merge metadata function. Test with only a single sample metadata."""
+        
+        metadata=[["# samples","s1"],["feature1","A"],["feature2",1]]
+        samples=["s1","s2"]
+        values=[["bug1",1,2],["bug2",2,4]]
+        
+        # suppress warning message
+        # Redirect stdout
+        sys.stdout=open(os.devnull,"w")
+        
+        merged=utilities.merge_metadata(metadata, samples, values)
+        
+        # Redirect stdout
+        sys.stdout=open(os.devnull,"w")
+        
+        expected=[["feature1","A"],["feature2",1],["bug1",1],["bug2",2]]
+        
+        self.assertEqual(merged, expected)     
+        
+    def test_merge_metadata_nomatch(self):
+        """ Test the merge metadata function. Test with metadata not matching."""
+        
+        metadata=[["# samples","s3"],["feature1","A"],["feature2",1]]
+        samples=["s1","s2"]
+        values=[["bug1",1,2],["bug2",2,4]]
+        
+        # suppress warning message
+        # Redirect stdout
+        sys.stdout=open(os.devnull,"w")
+        
+        merged=utilities.merge_metadata(metadata, samples, values)
+        
+        # Redirect stdout
+        sys.stdout=open(os.devnull,"w")
+        
+        expected=[["bug1",1,2],["bug2",2,4]]
+        
+        self.assertEqual(merged, expected)   
         
 

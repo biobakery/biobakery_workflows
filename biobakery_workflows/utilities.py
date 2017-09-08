@@ -91,6 +91,154 @@ class ReportHook():
                     "{:2.0f}".format(estimated_seconds) + " sec "
             status+="        \r"
             sys.stdout.write(status)
+            
+def read_file_catch(file, delimiter="\t"):
+    """ Try to read the file, catch on error. Split data by delimiter. """
+    
+    try:
+        handle=open(file)
+        lines=handle.readlines()
+        handle.close()
+    except EnvironmentError:
+        sys.exit("Error: Unable to read file: "+file)
+    
+    # split rows by delimiter
+    new_lines=[line.rstrip().split(delimiter) for line in lines]    
+    
+    return new_lines
+            
+def read_metadata(metadata_file, taxonomy_file, ignore_features=[]):
+    """ Read in the metadata file. Samples can be rows or columns.
+    Ignore features if set. 
+        
+    Args:
+        metadata_file (string): The path to the metadata file.
+        taxonomy_file (string): The path to a taxonomy file (or any file with
+            the sample names as the column names).
+        ignore_features (list): A list of strings of features to ignore
+            when reading the metadata file.
+        
+    Returns:
+        (list): A list of lists of the metadata (samples as columns)
+    """
+    
+    # read in a taxonomy file to get the sample names from the columns
+    samples=set(read_file_catch(taxonomy_file)[0][1:])
+        
+    # read in the metadata file
+    data=read_file_catch(metadata_file)
+    # check if the columns or rows are samples
+    possible_samples=data[0][1:]
+    overlap=samples.intersection(possible_samples)
+    if len(list(overlap)) == 0:
+        # the samples must be the rows so invert the data
+        data=zip(*data)
+        possible_samples=data[0][1:]
+        overlap=samples.intersection(possible_samples)
+    
+    # check for samples not included in metadata
+    if len(list(overlap)) < len(list(samples)):
+        sys.exit("ERROR: Not all of the samples in the data set have"+
+            " metadata. Please review the metadata file. The following samples"+
+            " were not found: "+",".join(list(samples.difference(possible_samples))))
+        
+    # remove any features that should be ignored
+    new_data=[]
+    for row in data:
+        if not row[0] in ignore_features:
+            new_data.append(row)
+        else:
+            ignore_features.remove(row[0])
+            
+    # check for any features that were not found
+    if ignore_features:
+        sys.exit("ERROR: Unable to find figures that should be ignored: "+
+            ",".join(ignore_features))
+        
+    return new_data
+
+def label_metadata(data, categorical=[], continuous=[]):
+    """ Label the metadata type. All numerical is continous.
+    
+    Args:
+        data (lists of lists): A list of metadata 
+        categorical (list): A list of categorical features.
+        continuous (list): A list of continuous features.
+        
+    Returns:
+        (dict): A dictionary of metadata labels
+        (list): A list of lists of the metadata (converted to floats if continuous)
+    """
+    
+    # add labels to the metadata, ignore sample names
+    labeled_data=[data[0]]
+    labels={}
+    for row in data[1:]:
+        # apply specific labels if set
+        label=None
+        if row[0] in continuous:
+            label="con"
+            continuous.remove(row[0])
+        if row[0] in categorical:
+            label="cat"
+            categorical.remove(row[0])
+        if not label:
+            try:
+                row[1:] = map(float, row[1:])
+                label="con"
+            except ValueError:
+                label="cat"
+        labeled_data.append(row)
+        labels[row[0]]=label
+        
+    # check for remaining labels
+    if categorical:
+        sys.exit("ERROR: Unable to find and label categorical feature in metadata: "+
+            ",".join(categorical))
+    if continuous:
+        sys.exit("ERROR: Unable to find and label continuous feature in metadata: "+
+            ",".join(continuous))
+        
+    return labels, labeled_data
+    
+def merge_metadata(metadata, samples, values):
+    """ Merge the metadata and values into a single set. Samples are columns. 
+
+    Args:
+        metadata (lists of lists): A list of metadata. 
+        samples (list): A list of samples that correspond with value columns.
+        values (lists of lists): A list of values to merge with the metadata.
+    Returns:
+        (list): A list of lists of the merged data.
+    """
+    
+    # get the indexes for the samples in the data that match with the metadata
+    sample_index=[]
+    metadata_index=[]
+    for index, name in enumerate(metadata[0][1:]):
+        if name in samples:
+            sample_index.append(samples.index(name))
+            metadata_index.append(index)
+            
+    # warn if no metadata samples match the values samples
+    if len(sample_index) == 0:
+        print("Warning: Metadata does not match samples.")
+        return values
+    
+    if len(samples) > len(metadata[0][1:]):
+        print("Warning: Metadata only provided for a subset of samples.")
+    
+    # add metadata to the new data
+    new_data=[]
+    for row in metadata[1:]:
+        # add only matching samples
+        new_data.append([row[0]]+[row[i+1] for i in metadata_index])
+        
+    # add abundance values to the new data
+    for row in values:
+        new_data.append([row[0]]+[row[i+1] for i in sample_index])
+        
+    return new_data
 
 def download_file(url, download_file):
     """
