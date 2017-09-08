@@ -72,7 +72,8 @@ read_counts=files.ShotGun.path("humann2_read_counts",args.input, error_if_not_fo
 feature_counts=files.ShotGun.path("feature_counts",args.input, error_if_not_found=True)
 
 # read and label the metadata
-metadata_labeled=None
+metadata=None
+metadata_labels=None
 if args.input_metadata:
     metadata=utilities.read_metadata(args.input_metadata, taxonomic_profile, 
         name_addition="_taxonomic_profile", ignore_features=args.metadata_exclude)
