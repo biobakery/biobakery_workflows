@@ -451,11 +451,13 @@ class TestUtiltiesFunctions(unittest.TestCase):
         samples=["s1","s2"]
         values=[["bug1",1,2],["bug2",2,4]]
         
-        merged=utilities.merge_metadata(metadata, samples, values)
+        merged, new_samples=utilities.merge_metadata(metadata, samples, values)
         
         expected=[["feature1","A","B"],["feature2",1,2],["bug1",1,2],["bug2",2,4]]
+        expected_samples=["s1","s2"]
         
-        self.assertEqual(merged, expected)     
+        self.assertEqual(merged, expected) 
+        self.assertEqual(new_samples, expected_samples)    
         
     def test_merge_metadata_reorder(self):
         """ Test the merge metadata function. Test with reordering."""
@@ -464,11 +466,13 @@ class TestUtiltiesFunctions(unittest.TestCase):
         samples=["s2","s1"]
         values=[["bug1",1,2],["bug2",2,4]]
         
-        merged=utilities.merge_metadata(metadata, samples, values)
+        merged, new_samples=utilities.merge_metadata(metadata, samples, values)
         
         expected=[["feature1","A","B"],["feature2",1,2],["bug1",2,1],["bug2",4,2]]
+        expected_samples=["s1","s2"]
         
         self.assertEqual(merged, expected) 
+        self.assertEqual(new_samples, expected_samples) 
         
     def test_merge_metadata_less_metadata(self):
         """ Test the merge metadata function. Test with only a single sample metadata."""
@@ -481,14 +485,16 @@ class TestUtiltiesFunctions(unittest.TestCase):
         # Redirect stdout
         sys.stdout=open(os.devnull,"w")
         
-        merged=utilities.merge_metadata(metadata, samples, values)
+        merged, new_samples=utilities.merge_metadata(metadata, samples, values)
         
         # Redirect stdout
         sys.stdout=open(os.devnull,"w")
         
         expected=[["feature1","A"],["feature2",1],["bug1",1],["bug2",2]]
+        expected_samples=["s1"]
         
-        self.assertEqual(merged, expected)     
+        self.assertEqual(merged, expected)  
+        self.assertEqual(new_samples, expected_samples)   
         
     def test_merge_metadata_nomatch(self):
         """ Test the merge metadata function. Test with metadata not matching."""
@@ -501,13 +507,14 @@ class TestUtiltiesFunctions(unittest.TestCase):
         # Redirect stdout
         sys.stdout=open(os.devnull,"w")
         
-        merged=utilities.merge_metadata(metadata, samples, values)
+        merged, new_samples=utilities.merge_metadata(metadata, samples, values)
         
         # Redirect stdout
         sys.stdout=open(os.devnull,"w")
         
         expected=[["bug1",1,2],["bug2",2,4]]
         
-        self.assertEqual(merged, expected)   
+        self.assertEqual(merged, expected) 
+        self.assertEqual(new_samples, samples)  
         
 

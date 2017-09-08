@@ -107,7 +107,7 @@ def read_file_catch(file, delimiter="\t"):
     
     return new_lines
             
-def read_metadata(metadata_file, taxonomy_file, ignore_features=[]):
+def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_features=[]):
     """ Read in the metadata file. Samples can be rows or columns.
     Ignore features if set. 
         
@@ -115,6 +115,8 @@ def read_metadata(metadata_file, taxonomy_file, ignore_features=[]):
         metadata_file (string): The path to the metadata file.
         taxonomy_file (string): The path to a taxonomy file (or any file with
             the sample names as the column names).
+        name_addition (string): Any strings that should be removed from the
+            names in the taxonomy files to get the sample names.
         ignore_features (list): A list of strings of features to ignore
             when reading the metadata file.
         
@@ -123,7 +125,7 @@ def read_metadata(metadata_file, taxonomy_file, ignore_features=[]):
     """
     
     # read in a taxonomy file to get the sample names from the columns
-    samples=set(read_file_catch(taxonomy_file)[0][1:])
+    samples=set([name.replace(name_addition,"") for name in read_file_catch(taxonomy_file)[0][1:]])
         
     # read in the metadata file
     data=read_file_catch(metadata_file)
@@ -152,7 +154,7 @@ def read_metadata(metadata_file, taxonomy_file, ignore_features=[]):
             
     # check for any features that were not found
     if ignore_features:
-        sys.exit("ERROR: Unable to find figures that should be ignored: "+
+        sys.exit("ERROR: Unable to find features that should be ignored: "+
             ",".join(ignore_features))
         
     return new_data
@@ -210,20 +212,23 @@ def merge_metadata(metadata, samples, values):
         values (lists of lists): A list of values to merge with the metadata.
     Returns:
         (list): A list of lists of the merged data.
+        (list): A list of the samples (might be a subset based on metadata available).
     """
     
     # get the indexes for the samples in the data that match with the metadata
     sample_index=[]
     metadata_index=[]
+    samples_found=[]
     for index, name in enumerate(metadata[0][1:]):
         if name in samples:
+            samples_found.append(name)
             sample_index.append(samples.index(name))
             metadata_index.append(index)
             
     # warn if no metadata samples match the values samples
     if len(sample_index) == 0:
         print("Warning: Metadata does not match samples.")
-        return values
+        return values, samples
     
     if len(samples) > len(metadata[0][1:]):
         print("Warning: Metadata only provided for a subset of samples.")
@@ -238,7 +243,7 @@ def merge_metadata(metadata, samples, values):
     for row in values:
         new_data.append([row[0]]+[row[i+1] for i in sample_index])
         
-    return new_data
+    return new_data, samples_found
 
 def download_file(url, download_file):
     """
