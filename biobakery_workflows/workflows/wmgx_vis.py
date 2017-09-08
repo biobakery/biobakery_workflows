@@ -52,6 +52,10 @@ workflow.add_argument("input",desc=input_desc,required=True)
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
+workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)")
+workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
+workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
+workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome shotgun sequencing.")
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
@@ -66,6 +70,13 @@ taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_no
 pathabundance=files.ShotGun.path("pathabundance_relab",args.input, error_if_not_found=True)
 read_counts=files.ShotGun.path("humann2_read_counts",args.input, error_if_not_found=True)
 feature_counts=files.ShotGun.path("feature_counts",args.input, error_if_not_found=True)
+
+# read and label the metadata
+metadata_labeled=None
+if args.input_metadata:
+    metadata=utilities.read_metadata(args.input_metadata, taxonomic_profile, 
+        name_addition="_taxonomic_profile", ignore_features=args.metadata_exclude)
+    metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
 # select the templates based on the qc data
 templates=[document_templates.get_template("header")]
@@ -101,7 +112,9 @@ doc_task=workflow.add_document(
           "read_counts":read_counts,
           "feature_counts":feature_counts,
           "format":args.format,
-          "log":log_file},
+          "log":log_file,
+          "metadata":metadata,
+          "metadata_labels":metadata_labels},
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
