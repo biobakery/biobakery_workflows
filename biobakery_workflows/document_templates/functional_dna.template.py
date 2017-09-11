@@ -34,15 +34,52 @@ dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descr
 utilities.change_pweave_figure_size_heatmap(pdf_format)
 
 #+ echo=False
-document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
-                      title="Top "+str(max_sets)+" pathways by average abundance")  
+# if there is metadata, add it to the heatmap
+if 'metadata' in vars and vars['metadata']:
+    merged_data, metadata_samples=utilities.merge_metadata(vars['metadata'], dna_samples, 
+        [[dna_top_average_pathways[i]]+dna_top_average_data[i] for i in range(len(dna_top_average_pathways))])
+    metadata_pathways=[row.pop(0) for row in merged_data]
+    # get the metadata row numbers
+    metadata_rows=range(1,len(vars['metadata']))
+    document.show_hclust2(metadata_samples, metadata_pathways, merged_data,
+        title="Top "+str(max_sets)+" pathways by average abundance",
+        metadata_rows=metadata_rows)
+else:
+    document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+        title="Top "+str(max_sets)+" pathways by average abundance")  
 
 #' <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="log10") %> 
 
 #+ echo=False
-document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
-                      title="Top "+str(max_sets)+" pathways by average abundance",
-                      log_scale=False,zscore=True)
+# if there is metadata, add it to the heatmap
+if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
+    # get the total number of features
+    total_features=len(vars['metadata'])-1
+    # for the zscore to be applied first all of the categorical data must be removed
+    filtered_metadata_pathways=[]
+    filtered_merged_data=[]
+    filtered_row_count=0
+    for i in range(total_features):
+        label = vars['metadata_labels'].get(metadata_pathways[i],"cat")
+        if label != "cat":
+            filtered_metadata_pathways.append(metadata_pathways[i])
+            filtered_merged_data.append(merged_data[i])
+        else:
+            filtered_row_count+=1
+    filtered_metadata_rows=range(1,total_features-filtered_row_count+1)
+    
+    # add abundance data to filtered metadata
+    filtered_metadata_pathways+=metadata_pathways[total_features:]
+    filtered_merged_data+=merged_data[total_features:]
+      
+    document.show_hclust2(metadata_samples, filtered_metadata_pathways, filtered_merged_data,
+        title="Top "+str(max_sets)+" pathways by average abundance",
+        log_scale=False,zscore=True,
+        metadata_rows=filtered_metadata_rows)
+else:
+    document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+        title="Top "+str(max_sets)+" pathways by average abundance",
+        log_scale=False,zscore=True)
 
 #' <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
 
