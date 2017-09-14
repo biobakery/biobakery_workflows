@@ -167,6 +167,7 @@ def plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata):
         ylabel="Relative abundance", legend_title="Species", legend_style="italic")
     
 categorical_metadata=None
+taxonomy_plotted=False
 if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
     # get the metadata organized into the same sample columns as the data
     new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
@@ -178,8 +179,10 @@ if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and var
     # plot a barchart for a set of categorical data
     if categorical_metadata:
         plot_grouped_taxonomy(sorted_data, sorted_samples, categorical_metadata.pop(0))
+        taxonomy_plotted=True
     
-else:
+# if metadata is not provided or categorical metadata is not provided, then plot taxonomy without metadata
+if not taxonomy_plotted:
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
         column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
         ylabel="Relative abundance", legend_title="Species", legend_style="italic")
