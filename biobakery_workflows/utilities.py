@@ -202,14 +202,65 @@ def label_metadata(data, categorical=[], continuous=[]):
             ",".join(continuous))
         
     return labels, labeled_data
+
+def filter_metadata_categorical(metadata, metadata_labels):
+    """ Return only the metadata that is categorical 
     
-def merge_metadata(metadata, samples, values):
+    Args:
+        metadata (lists of lists): A list of metadata.
+        metadata_labels (dict): The labels for the metadata.
+        
+    Returns:
+        metadata (lists of lists): Only the categorical metadata.
+    """
+    
+    new_metadata=[]
+    for row in metadata:
+        if metadata_labels.get(row[0],"con") == "cat":
+            new_metadata.append(row)
+            
+    return new_metadata
+
+def group_samples_by_metadata(metadata, data, samples):
+    """ Return the samples grouped by the metadata. The data and metadata
+    should have the same ordering of sample columns.
+    
+    Args:
+        metadata (list): A single metadata list.
+        data (list): A single data set.
+        samples (list): The samples (corresponding to the columns in the 
+            data/metadata).
+    
+    Return:
+        data (list of lists): The data organized by the metadata groups.
+    """
+    
+    # get the samples for each metadata type
+    sorted_samples_grouped={}
+    for name, type in zip(samples,metadata[1:]):
+        sorted_samples_grouped[type]=sorted_samples_grouped.get(type,[])+[name]
+        
+    sorted_data_grouped={}
+    for row in data:
+        sorted_temp={}
+        for data_point, type in zip(row, metadata[1:]):
+            sorted_temp[type]=sorted_temp.get(type,[])+[data_point]
+            
+        for key, value in sorted_temp.items():
+            if not key in sorted_data_grouped:
+                sorted_data_grouped[key]=[]
+            sorted_data_grouped[key].append(value)
+    
+    return sorted_data_grouped, sorted_samples_grouped
+    
+def merge_metadata(metadata, samples, values, values_without_names=None):
     """ Merge the metadata and values into a single set. Samples are columns. 
 
     Args:
         metadata (lists of lists): A list of metadata. 
         samples (list): A list of samples that correspond with value columns.
         values (lists of lists): A list of values to merge with the metadata.
+        values_without_names (bool): Set if the values do not have row names.
     Returns:
         (list): A list of lists of the merged data.
         (list): A list of the samples (might be a subset based on metadata available).
@@ -241,7 +292,10 @@ def merge_metadata(metadata, samples, values):
         
     # add abundance values to the new data
     for row in values:
-        new_data.append([row[0]]+[row[i+1] for i in sample_index])
+        if values_without_names:
+            new_data.append([row[i] for i in sample_index])
+        else:
+            new_data.append([row[0]]+[row[i+1] for i in sample_index])
         
     return new_data, samples_found
 

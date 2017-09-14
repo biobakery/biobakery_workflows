@@ -459,6 +459,21 @@ class TestUtiltiesFunctions(unittest.TestCase):
         self.assertEqual(merged, expected) 
         self.assertEqual(new_samples, expected_samples)    
         
+    def test_merge_metadata_values_without_names(self):
+        """ Test the merge metadata function. Test values without names option."""
+        
+        metadata=[["# samples","s1","s2"],["feature1","A","B"],["feature2",1,2]]
+        samples=["s1","s2"]
+        values=[[1,2],[2,4]]
+        
+        merged, new_samples=utilities.merge_metadata(metadata, samples, values, values_without_names=True)
+        
+        expected=[["feature1","A","B"],["feature2",1,2],[1,2],[2,4]]
+        expected_samples=["s1","s2"]
+        
+        self.assertEqual(merged, expected) 
+        self.assertEqual(new_samples, expected_samples)  
+        
     def test_merge_metadata_reorder(self):
         """ Test the merge metadata function. Test with reordering."""
         
@@ -516,5 +531,20 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         self.assertEqual(merged, expected) 
         self.assertEqual(new_samples, samples)  
+        
+    def test_group_samples_by_metadata(self):
+        """ Test the group samples by metadata function """
+        
+        metadata=["feature1","A","B","A","A","B"]
+        data=[[1,2,3,4,5],[11,22,33,44,55],[111,222,333,444,555]]
+        samples=["s1","s2","s3","s4","s5"]
+        
+        sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(metadata, data, samples)
+        
+        expected_samples={"A":["s1","s3","s4"], "B":["s2","s5"]}
+        expected_data={"A":[[1,3,4],[11,33,44],[111,333,444]], "B":[[2,5],[22,55],[222,555]]}
+        
+        self.assertEqual(sorted_data_grouped, expected_data)
+        self.assertEqual(sorted_samples_grouped, expected_samples)
         
 
