@@ -107,7 +107,7 @@ def read_file_catch(file, delimiter="\t"):
     
     return new_lines
             
-def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_features=[]):
+def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_features=[], otu_table=False):
     """ Read in the metadata file. Samples can be rows or columns.
     Ignore features if set. 
         
@@ -119,13 +119,18 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
             names in the taxonomy files to get the sample names.
         ignore_features (list): A list of strings of features to ignore
             when reading the metadata file.
+        otu_table (bool): Set if otu table is used for taxonomy to allow for different
+            header format.
         
     Returns:
         (list): A list of lists of the metadata (samples as columns)
     """
     
     # read in a taxonomy file to get the sample names from the columns
-    samples=set([name.replace(name_addition,"") for name in read_file_catch(taxonomy_file)[0][1:]])
+    if otu_table:
+        samples=set([name.replace(name_addition,"") for name in read_file_catch(taxonomy_file)[0][1:-1]])
+    else:
+        samples=set([name.replace(name_addition,"") for name in read_file_catch(taxonomy_file)[0][1:]])
         
     # read in the metadata file
     data=read_file_catch(metadata_file)
@@ -134,7 +139,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
     overlap=samples.intersection(possible_samples)
     if len(list(overlap)) == 0:
         # the samples must be the rows so invert the data
-        data=zip(*data)
+        data=map(list,zip(*data))
         possible_samples=data[0][1:]
         overlap=samples.intersection(possible_samples)
     
