@@ -28,7 +28,7 @@ THE SOFTWARE.
 from anadama2 import Workflow
 
 # import the document templates from biobakery_workflows
-from biobakery_workflows import document_templates
+from biobakery_workflows import document_templates, utilities
 
 # import the files for descriptions and paths
 from biobakery_workflows import files
@@ -51,6 +51,10 @@ workflow.add_argument("input",desc=input_desc,required=True)
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project",required=True)
+workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)")
+workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
+workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
+workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default=("The samples from this project were run through the standard workflow for 16S sequencing. The workflow "+
              " follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction."+
@@ -68,6 +72,13 @@ args = workflow.parse_args()
 otu_table=files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_found=True)
 read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
 eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=True)
+
+# read and label the metadata
+metadata=None
+metadata_labels=None
+if args.input_metadata:
+    metadata=utilities.read_metadata(args.input_metadata, otu_table, ignore_features=args.metadata_exclude, otu_table=True)
+    metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
 templates=[document_templates.get_template("header"), document_templates.get_template("16S")]
 
@@ -89,7 +100,9 @@ doc_task=workflow.add_document(
           "read_count_table":read_count_table,
           "eestats_table":eestats_table,
           "format":args.format,
-          "log":log_file},
+          "log":log_file,
+          "metadata":metadata,
+          "metadata_labels":metadata_labels},
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
