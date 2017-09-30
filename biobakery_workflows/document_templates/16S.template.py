@@ -38,57 +38,6 @@ document.show_table(eestats_data, eestats_rows, eestats_columns,
 #' The general stats for this data set are: <%= overall_stats %> .
 #' This table shows the number of reads based on length for different error filters.
 
-#' # Read Count
-
-#+ echo=False
-
-# sort the samples/data by read count with the largest original read count first
-total_reads=[row[0] for row in data]
-sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
-sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
-
-known_reads = [row[1] for row in sorted_all_read_data]
-unknown_reads = [row[2] for row in sorted_all_read_data]
-unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
-
-# plot the read counts
-document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
-    title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
-
-#' This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,
-#' 2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these
-#' three read counts for each sample is the total original read count not including filtering prior to OTU clustering.
-
-#' <% if pdf_format: print("\clearpage") %>
-
-#' # Taxonomy
-
-#+ echo=False
-import numpy
-
-# read in the otu table data
-samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
-
-# plot the top taxa by genus level, plotting the relative abundance values
-max_taxa=15
-# get the relative abundance values for the samples
-relab_data = utilities.relative_abundance(data)
-# get the taxa summarized by genus level
-genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
-# get the top rows of the relative abundance data
-top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
-# shorten the top taxa names to just the genus level for plotting
-top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
-
-# sort the data so those with the top genera are shown first
-sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
-transpose_top_data = numpy.transpose(top_data)
-sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
-
-document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names, 
-    column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
-    ylabel="Relative abundance", legend_title="Genera", legend_style="italic")
-
 #+ echo=False
 def sort_data(top_data, samples):
     # sort the top data so it is ordered with the top sample/abundance first
@@ -99,7 +48,7 @@ def sort_data(top_data, samples):
         sorted_data.append([row[i] for i in sorted_sample_indexes])
     return sorted_data, sorted_samples
 
-def plot_grouped_taxonomy_subsets(sorted_data, sorted_samples, cat_metadata):
+def plot_grouped_taxonomy_subsets(sorted_data, sorted_samples, cat_metadata, taxa, title, legend_title):
     """ Plot the grouped taxonomy sorted by species abundance for a single feature """
     # group the samples by metadata
     sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, ordered_sorted_data, samples_found)
@@ -129,10 +78,64 @@ def plot_grouped_taxonomy_subsets(sorted_data, sorted_samples, cat_metadata):
         if len(sorted_metadata_subsets) > max_subsets:
             title_add=" "+metadata_subset[0]+" to "+metadata_subset[-1]
             
-        document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxa_short_names, 
-            column_labels_grouped=subset_sorted_samples_grouped, title="Top "+str(max_taxa)+" genera by average abundance - "+str(cat_metadata[0])+title_add,
-            ylabel="Relative abundance", legend_title="Genera", legend_style="italic")
-    
+        document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=taxa, 
+            column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
+            ylabel="Relative abundance", legend_title=legend_title, legend_style="italic", legend=False)
+
+#' # Read Count
+
+#+ echo=False
+
+# sort the samples/data by read count with the largest original read count first
+total_reads=[row[0] for row in data]
+sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
+sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
+
+known_reads = [row[1] for row in sorted_all_read_data]
+unknown_reads = [row[2] for row in sorted_all_read_data]
+unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
+
+# plot the read counts
+document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
+    title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
+
+#' This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,
+#' 2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these
+#' three read counts for each sample is the total original read count not including filtering prior to OTU clustering.
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' # Taxonomy
+
+#' ## Average Abundance
+
+#+ echo=False
+import numpy
+
+# read in the otu table data
+samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
+
+# plot the top taxa by genus level, plotting the relative abundance values
+max_taxa=15
+# get the relative abundance values for the samples
+relab_data = utilities.relative_abundance(data)
+# get the taxa summarized by genus level
+genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
+# get the top rows of the relative abundance data
+top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
+# shorten the top taxa names to just the genus level for plotting
+top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+
+# sort the data so those with the top genera are shown first
+sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
+transpose_top_data = numpy.transpose(top_data)
+sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
+
+document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names, 
+    column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
+    ylabel="Relative abundance", legend_title="Genera", legend_style="italic")
+
+#+ echo=False
 if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
     # get the metadata organized into the same sample columns as the data
     new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_top_data, values_without_names=True)
@@ -143,7 +146,10 @@ if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and var
     categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
     # plot a barchart for a set of categorical data
     for cat_metadata in categorical_metadata:
-        plot_grouped_taxonomy_subsets(sorted_top_data, sorted_samples, cat_metadata)
+        plot_grouped_taxonomy_subsets(sorted_top_data, sorted_samples, cat_metadata, top_taxa_short_names,
+        title="Top "+str(max_taxa)+" genera by average abundance", legend_title="Genera")
+
+#' ## Terminal Taxa
 
 #+ echo=False
 
@@ -164,6 +170,20 @@ sorted_top_terminal_data = numpy.transpose([transpose_top_terminal_data[samples.
 document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_names, 
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
+
+if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
+    # get the metadata organized into the same sample columns as the data
+    new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples_terminal, sorted_top_terminal_data, values_without_names=True)
+    # split the data and metadata 
+    ordered_metadata=new_data[0:len(vars['metadata'])-1]
+    ordered_sorted_data=new_data[len(vars['metadata'])-1:]
+    # get the categorical metadata
+    categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
+    # plot a barchart for a set of categorical data
+    for cat_metadata in categorical_metadata:
+        plot_grouped_taxonomy_subsets(sorted_top_data, sorted_samples, cat_metadata, shorted_names,
+        title="Top "+str(max_taxa)+" terminal taxa by average abundance",
+        legend_title="Terminal taxa")
 
 #' # Ordination
 
