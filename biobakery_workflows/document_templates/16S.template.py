@@ -199,6 +199,14 @@ document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordina
 #' <% print(min_samples) %> % of all samples.
 
 
+#+ echo=False
+if 'metadata' in vars and vars['metadata']:
+    # organize metadata for plot if available
+    sample_metadata=vars["metadata"][0]
+    for category in vars["metadata"][1:]:
+        name=category[0]
+        metadata_mapping=dict((x,y) for x,y in zip(sample_metadata[1:],category[1:]))
 
-
+        document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity "+name,
+            metadata=metadata_mapping)
 
