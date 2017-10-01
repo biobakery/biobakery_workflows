@@ -48,7 +48,7 @@ def sort_data(top_data, samples):
         sorted_data.append([row[i] for i in sorted_sample_indexes])
     return sorted_data, sorted_samples
 
-def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, samples_found, ylabel, legend_title=""):
+def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, samples_found, ylabel, legend_title):
     """ Plot the grouped taxonomy sorted by species abundance for a single feature """
     # group the samples by metadata
     sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
@@ -80,7 +80,7 @@ def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, sample
             
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=taxa, 
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend=False)
+            ylabel=ylabel, legend_title=legend_title, legend_style="italic")
 
 #' # Read Count
 
@@ -106,7 +106,7 @@ document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["cla
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
-def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, ylabel):
+def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, ylabel, legend_title=""):
     """ Generate a plot of each set of categorical metadata """
     if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
         # get the metadata organized into the same sample columns as the data
@@ -118,7 +118,7 @@ def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, yl
         categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
         # plot a barchart for a set of categorical data
         for cat_metadata in categorical_metadata:
-            plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel)
+            plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel, legend_title)
 
 plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
     ["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
@@ -155,7 +155,7 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
 
 #+ echo=False
 plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
-    title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance")
+    title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera")
 
 #' ## Terminal Taxa
 
@@ -180,7 +180,7 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
 plot_all_categorical_metadata(sorted_samples_terminal, sorted_top_terminal_data, shorted_names,
-    title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance")
+    title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance", legend_title="Terminal taxa")
 
 #' # Ordination
 
