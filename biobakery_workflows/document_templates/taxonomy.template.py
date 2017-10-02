@@ -184,7 +184,7 @@ def plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata):
         column_labels_grouped=sorted_samples_grouped, title="Top "+str(max_sets_barplot)+" species by average abundance - "+str(cat_metadata[0]),
         ylabel="Relative abundance", legend_title="Species", legend_style="italic")
     
-categorical_metadata=None
+categorical_metadata=[]
 if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
     # get the metadata organized into the same sample columns as the data
     new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
