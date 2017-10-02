@@ -172,6 +172,9 @@ document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
     column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
     ylabel="Relative abundance", legend_title="Species", legend_style="italic")
 
+#' Stacked barplot of <% print(max_sets_barplot) %> most abundant species among samples.
+#' Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order. 
+
 #+ echo=False
 def plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata):
     """ Plot the grouped taxonomy sorted by species abundance for a single feature """
@@ -180,9 +183,32 @@ def plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata):
     # sort the data by abundance
     for metadata_type in sorted_data_grouped:
         sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
-    document.plot_stacked_barchart_grouped(sorted_data_grouped, row_labels=top_taxonomy, 
-        column_labels_grouped=sorted_samples_grouped, title="Top "+str(max_sets_barplot)+" species by average abundance - "+str(cat_metadata[0]),
-        ylabel="Relative abundance", legend_title="Species", legend_style="italic")
+
+    # print out a plot for each group of metadata if there are lots of categories
+    sorted_metadata_subsets=sorted(sorted_data_grouped.keys())
+    
+    try:
+        sorted_metadata_subsets=sorted(sorted_data_grouped.keys(), key=float)
+    except ValueError:
+        pass
+    
+    max_subsets=8
+    
+    # split into subsets
+    split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
+    
+    for metadata_subset in split_sorted_metadata_subsets:
+        subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
+        subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
+        
+        # get title addition for subset
+        title_add=""
+        if len(sorted_metadata_subsets) > max_subsets:
+            title_add=" "+metadata_subset[0]+" to "+metadata_subset[-1]
+            
+        document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy, 
+            column_labels_grouped=subset_sorted_samples_grouped, title="Top "+str(max_sets_barplot)+" species by average abundance - "+str(cat_metadata[0])+title_add,
+            ylabel="Relative abundance", legend_title="Species", legend_style="italic")
     
 categorical_metadata=[]
 if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
@@ -196,9 +222,6 @@ if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and var
     # plot a barchart for a set of categorical data
     for cat_metadata in categorical_metadata:
         plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata)
-
-#' Stacked barplot of <% print(max_sets_barplot) %> most abundant species among samples.
-#' Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order. 
 
 #+ echo=False
 def plot_average_taxonomy(sorted_data, sorted_samples, cat_metadata):
