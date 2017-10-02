@@ -64,7 +64,7 @@ def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, sample
     except ValueError:
         pass
     
-    max_subsets=4
+    max_subsets=8
     
     # split into subsets
     split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
