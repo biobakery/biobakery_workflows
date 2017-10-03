@@ -101,7 +101,7 @@ if 'metadata' in vars and vars['metadata']:
         name=category[0]
         metadata_mapping=dict((x,y) for x,y in zip(sample_metadata[1:],category[1:]))
 
-        document.show_pcoa(samples, top_taxonomy, pcoa_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity "+name,
+        document.show_pcoa(samples, top_taxonomy, pcoa_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity - "+name,
             metadata=metadata_mapping)
 
 #' ## Heatmap
@@ -185,12 +185,7 @@ def plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata):
         sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
 
     # print out a plot for each group of metadata if there are lots of categories
-    sorted_metadata_subsets=sorted(sorted_data_grouped.keys())
-    
-    try:
-        sorted_metadata_subsets=sorted(sorted_data_grouped.keys(), key=float)
-    except ValueError:
-        pass
+    sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
     
     max_subsets=8
     
