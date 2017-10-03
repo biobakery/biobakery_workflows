@@ -71,13 +71,28 @@ table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, 
 #' ### DNA Samples Plots of Filtered Reads
 
 #+ echo=False
-document.plot_grouped_barchart(numpy.transpose(dna_paired_data), row_labels=dna_paired_columns, 
-    column_labels=dna_samples, title="DNA Paired end reads", ylabel="Read count (in millions)",
+# sort the samples/data by read count with the largest original read count first
+def sort_samples_reads_decreasing(read_data, read_samples):
+    """ Sort the reads from largest to smallest total read count """
+        
+    sorted_samples, sorted_total_reads = utilities.sort_data(read_data[0], read_samples)
+    sorted_all_read_data = []
+    for data_set in read_data:
+        sorted_all_read_data.append([data_set[read_samples.index(sample)] for sample in sorted_samples])
+    
+    return sorted_samples, sorted_all_read_data
+
+sorted_samples, sorted_all_read_data = sort_samples_reads_decreasing(numpy.transpose(dna_paired_data), dna_samples)
+
+document.plot_grouped_barchart(sorted_all_read_data, row_labels=dna_paired_columns, 
+    column_labels=sorted_samples, title="DNA Paired end reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
 
 #+ echo=False
-document.plot_grouped_barchart(numpy.transpose(dna_orphan_data), row_labels=dna_orphan_columns, 
-    column_labels=dna_samples, title="DNA Orphan reads", ylabel="Read count (in millions)",
+sorted_samples, sorted_all_read_data = sort_samples_reads_decreasing(numpy.transpose(dna_orphan_data), dna_samples)
+
+document.plot_grouped_barchart(sorted_all_read_data, row_labels=dna_orphan_columns, 
+    column_labels=sorted_samples, title="DNA Orphan reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
 
 
