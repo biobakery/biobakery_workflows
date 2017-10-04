@@ -147,9 +147,13 @@ utilities.reset_pweave_figure_size()
 top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_sets_barplot,
     function="average") 
 
-def sort_data(top_data, samples):
+def sort_data(top_data, samples, sort_by_name=False):
     # sort the top data so it is ordered with the top sample/abundance first
-    sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
+    if sort_by_name:
+        sorted_sample_indexes=[samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(samples)]
+    else:
+        sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
+        
     sorted_samples=[samples[i] for i in sorted_sample_indexes]
     sorted_data=[]
     for row in top_data:
@@ -232,8 +236,13 @@ def plot_average_taxonomy(sorted_data, sorted_samples, cat_metadata):
     # reorder average data so it is grouped by taxonomy
     average_data = zip(*average_data)
         
-    # sort the data by abundance
-    sorted_data, sorted_names = sort_data(average_data, metadata_names)
+    # sort the data by abundance or name (depending on metadata type, use name if numeric)
+    sort_by_name=False
+    if document.sorted_data_numerical_or_alphabetical(metadata_names) != sorted(metadata_names):
+        sort_by_name = True
+        
+    sorted_data, sorted_names = sort_data(average_data, metadata_names, sort_by_name=sort_by_name)
+    
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
         column_labels=sorted_names, title="Top "+str(max_sets_barplot)+" species by average abundance, group average - "+str(cat_metadata[0]),
         ylabel="Relative abundance", legend_title="Species", legend_style="italic")
