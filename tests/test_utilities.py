@@ -386,7 +386,7 @@ class TestUtiltiesFunctions(unittest.TestCase):
         os.remove(taxon_file)
         os.remove(metadata_file)
         
-        expected_values=[("# sample","sample1","sample2"),("feature1","A","B")]
+        expected_values=[["# sample","sample1","sample2"],["feature1","A","B"]]
         self.assertEqual(values,expected_values)   
         
     def test_read_metadata_remove_feature(self):
@@ -498,12 +498,13 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         # suppress warning message
         # Redirect stdout
+        original_stdout=sys.stdout
         sys.stdout=open(os.devnull,"w")
         
         merged, new_samples=utilities.merge_metadata(metadata, samples, values)
         
         # Redirect stdout
-        sys.stdout=open(os.devnull,"w")
+        sys.stdout=original_stdout
         
         expected=[["feature1","A"],["feature2",1],["bug1",1],["bug2",2]]
         expected_samples=["s1"]
@@ -520,12 +521,13 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         # suppress warning message
         # Redirect stdout
+        original_stdout=sys.stdout
         sys.stdout=open(os.devnull,"w")
         
         merged, new_samples=utilities.merge_metadata(metadata, samples, values)
         
         # Redirect stdout
-        sys.stdout=open(os.devnull,"w")
+        sys.stdout=original_stdout
         
         expected=[["bug1",1,2],["bug2",2,4]]
         
@@ -546,5 +548,57 @@ class TestUtiltiesFunctions(unittest.TestCase):
         
         self.assertEqual(sorted_data_grouped, expected_data)
         self.assertEqual(sorted_samples_grouped, expected_samples)
+        
+    def test_read_picard(self):
+        """ Test the read picard function. Test with all values passing threshold """
+        
+        file_text="\n".join(["## htsjdk.samtools.metrics.StringHeader",
+            "# picard.analysis.CollectMultipleMetrics INPUT=AYBNT.1.unmapped.bam ASSUME_SORTED=true",
+            "# Started on: Thu Jan 01 01:12:33 EST 2017",
+            "",
+            "",
+            "## HISTOGRAM    java.lang.Integer",
+            "CYCLE\tMEAN_QUALITY",
+            "1\t39.111874",
+            "2\t35.614163",
+            "3\t35.887343",
+            "4\t42.882504",
+            "5\t52.643778"])
+        
+        expected_data=[(1,39.111874),(2,35.614163),(3,35.887343),(4,42.882504),(5,52.643778)]
+        
+        tmp_file=write_temp(file_text)
+        
+        data, below_threshold = utilities.read_picard(tmp_file)
+        os.remove(tmp_file)
+        
+        self.assertFalse(below_threshold)
+        self.assertEqual(data, expected_data)
+        
+    def test_read_picard_threshold(self):
+        """ Test the read picard function. Test with some values passing threshold """
+        
+        file_text="\n".join(["## htsjdk.samtools.metrics.StringHeader",
+            "# picard.analysis.CollectMultipleMetrics INPUT=AYBNT.1.unmapped.bam ASSUME_SORTED=true",
+            "# Started on: Thu Jan 01 01:12:33 EST 2017",
+            "",
+            "",
+            "## HISTOGRAM    java.lang.Integer",
+            "CYCLE\tMEAN_QUALITY",
+            "1\t39.111874",
+            "2\t35.614163",
+            "3\t35.887343",
+            "4\t42.882504",
+            "5\t52.643778"])
+        
+        expected_data=[(1,39.111874),(2,35.614163),(3,35.887343),(4,42.882504),(5,52.643778)]
+        
+        tmp_file=write_temp(file_text)
+        
+        data, below_threshold = utilities.read_picard(tmp_file, threshold=37)
+        os.remove(tmp_file)
+        
+        self.assertTrue(below_threshold)
+        self.assertEqual(data, expected_data)
         
 
