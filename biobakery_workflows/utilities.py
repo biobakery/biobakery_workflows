@@ -1393,4 +1393,45 @@ def read_eestats2(file):
         data.append([format_data_comma(stat) for stat in stats])
         
     return rows, columns, data, overall_stats
- 
+
+def get_files(folder, extension):
+    """ Return paths to all files in a folder with a given extension """
+    
+    for file in os.listdir(folder):
+        file=os.path.join(folder, file)
+        if os.path.isfile(file) and file.endswith(extension):
+            yield file
+
+def read_picard(file, threshold=20):
+    """ Read the picard file which is an ascii table of quality scores per base.
+    
+    Args:
+        file (string): The path to the picard file.
+        
+    Requires:
+        None
+        
+    Returns:
+        (list): A list of tuples of base / quality score. 
+        (bool): True if any quality score in the set does not meet the threshold.
+    """
+    
+    with open(file) as file_handle:
+        picard_lines = file_handle.readlines()
+        
+    # read through file to get quality scores ignoring all lines with comments/headers
+    data=[]
+    below_threshold=False
+    for line in picard_lines:
+        if not (line.startswith("#") or line.startswith("CYCLE")):
+            new_data=line.rstrip().split("\t")
+            # check if the quality score passes the threshold
+            try:
+                new_data=(int(new_data[0]),float(new_data[1]))
+                if new_data[1] < threshold:
+                    below_threshold=True
+                data.append(new_data)
+            except ValueError:
+                pass
+        
+    return data, below_threshold
