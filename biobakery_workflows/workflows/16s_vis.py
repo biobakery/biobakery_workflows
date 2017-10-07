@@ -52,6 +52,8 @@ workflow.add_argument("input",desc=input_desc,required=True)
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project",required=True)
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)")
+workflow.add_argument("input-picard",desc="the folder of picard quality score files")
+workflow.add_argument("input-picard-extension",desc="the extensions for the picard quality score files", default="quality_by_cycle_metrics")
 workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
 workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
@@ -102,7 +104,9 @@ doc_task=workflow.add_document(
           "format":args.format,
           "log":log_file,
           "metadata":metadata,
-          "metadata_labels":metadata_labels},
+          "metadata_labels":metadata_labels,
+          "picard":args.input_picard,
+          "picard_ext":args.input_picard_extension},
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
