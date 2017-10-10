@@ -243,6 +243,10 @@ class SixteenS(Workflow):
         description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
             "First column is the OTU id and the last column is the taxonomy. The remaining",
             "columns are sample names. Values are counts."))
+    file_info["otu_table_open_reference"]=FileInfo("all_samples_taxonomy_open_reference.tsv",
+        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
+            "First column is the OTU id and the last column is the taxonomy. The remaining",
+            "columns are sample names. Values are counts. All OTUs without taxonomy are labeled Unclassified."))
     file_info["read_count_table"]=FileInfo("all_samples_read_counts.tsv",
         description=("A tab-delimited file with samples as rows and counts as columns. ",
             "The counts included are the original read count, total number of reads ",

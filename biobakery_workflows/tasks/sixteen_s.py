@@ -698,7 +698,7 @@ def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_ma
     """
     
     # name the output files
-    open_ref_tsv = utilities.name_files("all_samples_taxonomy_open_reference.tsv", output_folder) 
+    open_ref_tsv = files.SixteenS.path("otu_table_open_reference", output_folder) 
     open_ref_fasta = utilities.name_files("all_samples_open_reference.fasta", output_folder)
     closed_ref_tsv = files.SixteenS.path("otu_table_closed_reference", output_folder)
     closed_ref_fasta = utilities.name_files("all_samples_closed_reference.fasta", output_folder)

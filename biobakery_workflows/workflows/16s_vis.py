@@ -40,7 +40,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 
 # list the required and optional files for the workflow
 # these are expected to be included in the input folder
-input_files={"required":["otu_table_closed_reference","read_count_table","eestats2"]}
+input_files={"required":["otu_table_closed_reference","otu_table_open_reference","read_count_table","eestats2"]}
 
 # create a custom description for the input argument listing all expected input files
 input_desc="A folder containing the final products from the 16s data workflow.\n\nThe input folder should include the following:\n\n"
@@ -65,6 +65,7 @@ args = workflow.parse_args()
 
 # get the paths for the required files and check they are found
 otu_table=files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_found=True)
+otu_open_table=files.SixteenS.path("otu_table_open_reference",args.input, error_if_not_found=True)
 read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
 eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=True)
 
@@ -86,7 +87,7 @@ if not args.exclude_workflow_info:
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=[otu_table, read_count_table], 
+    depends=[otu_table, read_count_table, otu_open_table, eestats_table], 
     targets=workflow.name_output_files("16S_report."+args.format),
     vars={"title":"16S Report",
           "project":args.project_name,
