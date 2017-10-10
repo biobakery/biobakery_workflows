@@ -57,13 +57,6 @@ workflow.add_argument("input-picard-extension",desc="the extensions for the pica
 workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
 workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
-workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
-    default=("The samples from this project were run through the standard workflow for 16S sequencing. The workflow "+
-             " follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction."+
-             " The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction."+
-             " Reads were filtered for quality control using a MAXEE score of 1. Filtered reads were"+
-             " used to generate the OTUs. Reads not passing quality control were kept and used in the step"+
-             " assigning reads to OTUs. First these reads were truncated to a max length of 200 bases."))
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 
@@ -82,7 +75,7 @@ if args.input_metadata:
     metadata=utilities.read_metadata(args.input_metadata, otu_table, ignore_features=args.metadata_exclude, otu_table=True)
     metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
-templates=[document_templates.get_template("header"), document_templates.get_template("16S")]
+templates=[document_templates.get_template("16S")]
 
 # add the template for the data processing information
 log_file=None
@@ -97,7 +90,6 @@ doc_task=workflow.add_document(
     targets=workflow.name_output_files("16S_report."+args.format),
     vars={"title":"16S Report",
           "project":args.project_name,
-          "introduction_text":args.introduction_text,
           "otu_table":otu_table,
           "read_count_table":read_count_table,
           "eestats_table":eestats_table,

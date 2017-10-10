@@ -1,3 +1,34 @@
+#' % <% from anadama2 import PweaveDocument; document=PweaveDocument(); vars = document.get_vars(); print(vars["title"]) %>
+#' % Project: <% print(vars["project"]) %>
+#' % Date: <% import time; print(time.strftime("%m/%d/%Y")) %>
+
+#' # Introduction
+
+#+ echo=False
+# get the variable settings from the data processing workflow
+from anadama2.reporters import LoggerReporter
+try:
+    workflow_settings = LoggerReporter.read_log(vars["log"],"variables")
+except AttributeError:
+    workflow_settings = []
+
+# print a warning if the variables could not be read
+if isinstance(workflow_settings, list):
+    print("WARNING: Unable to read workflow settings from log file.")
+    workflow_settings={}
+
+maxee = workflow_settings.get("maxee","UNK")
+trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
+percent_identity = workflow_settings.get("percent_identity","UNK")
+min_cluster_size = workflow_settings.get("min_size","UNK")
+
+#' The samples from this project were run through the standard workflow for 16S sequencing. The workflow
+#' follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity 
+#' of <%= percent_identity %> and minimum cluster size of <%= min_cluster_size %>. 
+#' The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
+#' Reads were filtered for quality control using a MAXEE score of <%= maxee %>. Filtered reads were
+#' used to generate the OTUs. Reads not passing quality control were kept and used in the step
+#' assigning reads to OTUs. First these reads were truncated to a max length of <%= trunc_len_max %> bases.
 
 #+ echo=False
 import os
@@ -7,13 +38,6 @@ min_abundance=0.01
 min_samples=10
 
 from biobakery_workflows import utilities
-
-from anadama2 import PweaveDocument
-
-document=PweaveDocument()  
-
-# get the variables for this document generation task
-vars = document.get_vars()
 
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
