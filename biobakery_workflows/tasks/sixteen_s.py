@@ -590,7 +590,9 @@ def taxonomic_profile(workflow, filtered_fasta_file, truncated_fasta_file, origi
     otu_fasta = pick_otus(workflow, filtered_fasta_file, output_folder, threads, min_size)
     
     # centroid OTU sequence alignment
-    centroid_fasta = centroid_alignment(workflow, otu_fasta, output_folder, threads)
+    # get the name of the output files
+    centroid_fasta = files.SixteenS.path("msa_nonchimera", output_folder)
+    centroid_alignment(workflow, otu_fasta, centroid_fasta, threads, task_name="clustalo_nonchimera")
     
     # align the reads to the otus
     otu_alignment_uc = utilities.name_files("all_samples_otu_mapping_results.uc", output_folder)
@@ -603,18 +605,23 @@ def taxonomic_profile(workflow, filtered_fasta_file, truncated_fasta_file, origi
     global_alignment(workflow, otu_fasta, reference_usearch, percent_identity, threads, reference_alignment_uc, reference_alignment_tsv, top_hit_only=True)
     
     # create the open/cosed reference tables
-    closed_reference_tsv = build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_alignment_uc, otu_alignment_uc, otu_fasta, original_fasta_file, output_folder)
+    closed_reference_tsv, closed_ref_fasta = build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_alignment_uc, otu_alignment_uc, otu_fasta, original_fasta_file, output_folder)
+    
+    # cluster the closed reference otu fasta sequences
+    centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", output_folder)
+    centroid_alignment(workflow, closed_ref_fasta, centroid_closed_fasta, threads, task_name="clustalo_closed_reference")
     
     return closed_reference_tsv
     
-def centroid_alignment(workflow, fasta_file, output_folder, threads):
+def centroid_alignment(workflow, fasta_file, output_fasta, threads, task_name=None):
     """ Run clustalo for centroid alignment
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         fasta_file (string): The path to the fasta file (otu sequences).
-        output_folder (string): The path of the output folder.
+        output_fasta (string): The path of the output file.
         threads (int): The number of threads/cores for each task.
+        task_name (string): The custom name of the task.
         
     Requires:
         clustal omega: multiple sequence alignment for proteins 
@@ -624,9 +631,6 @@ def centroid_alignment(workflow, fasta_file, output_folder, threads):
 
     """     
     
-    # get the name of the output files
-    output_fasta = utilities.name_files("all_samples_clustalo_aligned.fasta", output_folder)
-    
     # remove existing output file if already exists as clustalo will not overwrite
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "
@@ -634,9 +638,8 @@ def centroid_alignment(workflow, fasta_file, output_folder, threads):
         depends=[fasta_file,TrackedExecutable("clustalo",version_command="echo 'clustalo' `clustalo --version`")],
         targets=output_fasta,
         args=threads,
-        name="clustalo")
-
-    return output_fasta 
+        name=task_name if task_name else "clustalo")
+    
 
 def global_alignment(workflow, fasta_file, database_file, id, threads, output_file_uc, output_file_tsv, top_hit_only=None):
     """ Run global alignment with the database provided 
@@ -693,7 +696,7 @@ def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_ma
         None
         
     Returns:
-        string: The path to the closed refercence otu file
+        list: The path to the closed reference otu files (tsv and fasta)
 
     """
     
@@ -712,7 +715,7 @@ def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_ma
         depends=[reference_taxonomy, reference_fasta, reference_mapping_results_uc, otu_mapping_results_uc, otu_fasta, original_fasta],
         targets=[open_ref_tsv,open_ref_fasta,closed_ref_tsv,closed_ref_fasta,denovo_tsv,read_counts])
     
-    return closed_ref_tsv
+    return closed_ref_tsv, closed_ref_fasta
 
 
 def functional_profile(workflow, closed_reference_tsv, output_folder):

@@ -254,6 +254,12 @@ class SixteenS(Workflow):
             "unclassified OTU."))
     file_info["eestats2"]=FileInfo("all_samples_eestats2.txt",
         description=("A file with maxee as columns and read lengths as rows."))
+    file_info["msa_nonchimera"]=FileInfo("all_samples_clustalo_aligned_nonchimera.fasta",
+        description=("A multiple sequence alignment file generated from the nonchimera sequences ",
+            "using Clustalo."))
+    file_info["msa_closed_reference"]=FileInfo("all_samples_clustalo_aligned_closed_reference.fasta",
+        description=("A multiple sequence alignment file generated from the closed reference sequences ",
+            "using Clustalo."))
     
     
         
