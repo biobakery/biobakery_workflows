@@ -64,14 +64,16 @@ input_files = list(filter(lambda file: not file in index_files, input_files))
 # if a barcode file is provided, then demultiplex
 if args.barcode_file:
     demultiplexed_files=sixteen_s.demultiplex(
-        workflow, input_files, args.output, args.barcode_file, index_files,
+        workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
         args.min_pred_qc_score, args.pair_identifier)
+    # if the original files are gzipped, they will not be compressed after demultiplexing
+    args.input_extension = args.input_extension.replace(".gz","")
 else:
     demultiplexed_files=input_files
         
 # merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
 all_samples_fastq = sixteen_s.merge_samples_and_rename(
-    workflow, demultiplexed_files, args.output, args.pair_identifier, args.threads)        
+    workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        
 
 # add quality control tasks: generate qc report, filter by maxee, and truncate
 filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(

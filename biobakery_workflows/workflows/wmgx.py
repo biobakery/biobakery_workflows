@@ -59,20 +59,27 @@ input_files = utilities.find_files(args.input, extension=args.input_extension, e
 
 ### STEP #1: Run quality control on all input files ###
 if not "fasta" in args.input_extension:
-    qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, input_files, args.output, args.threads, args.contaminate_databases, args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+    qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, 
+        input_files, args.input_extension, args.output, args.threads, args.contaminate_databases, 
+        args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+    # get the new extension, if the original files were gzipped they will not be after quality control
+    args.input_extension = args.input_extension.replace(".gz","")
 else:
     # if the input files are fasta, bypass quality control
     qc_output_files = input_files
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
-merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,qc_output_files,args.output,args.threads,args.input_extension)
+merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
+    qc_output_files,args.output,args.threads,args.input_extension)
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
-genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,qc_output_files,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
+genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,
+    qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
 
 ### STEP #4: Run strain profiling
 if not args.bypass_strain_profiling:
-    shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,args.strain_profiling_options)
+    shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
+        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,args.strain_profiling_options)
 
 # start the workflow
 workflow.go()

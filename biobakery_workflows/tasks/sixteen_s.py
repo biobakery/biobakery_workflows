@@ -31,12 +31,13 @@ from anadama2.tracked import TrackedExecutable
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
-def demultiplex(workflow, input_files, output_folder, barcode_file, index_files, min_phred, pair_identifier):
+def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files for input to ea-utils.
+        extension (string): The extension for all files.
         output_folder (string): The path of the output folder.
         barcode_file (string): A file of barcodes.
         index_files (string): A list of paths to the index files.
@@ -85,7 +86,7 @@ def demultiplex(workflow, input_files, output_folder, barcode_file, index_files,
         targets=expanded_barcode_file)
     
     # check for paired input files
-    input_pair1, input_pair2 = utilities.paired_files(input_files, pair_identifier)
+    input_pair1, input_pair2 = utilities.paired_files(input_files, extension, pair_identifier)
     
     # capture the demultiplex stats in output files, one for each set of input files
     if input_pair1:
@@ -192,13 +193,14 @@ def quality_control(workflow, fastq_file, output_folder, threads, maxee, trunc_l
     
     return filtered_truncated_fasta, truncated_fasta, fasta
 
-def merge_samples_and_rename(workflow, input_files, output_folder, pair_identifier, threads):
+def merge_samples_and_rename(workflow, input_files, extension, output_folder, pair_identifier, threads):
     """ Merge the files, first if pairs, then rename sequence ids to match sample id
          Then merge all files into a single fastq file
 
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files.
+        extension (string): The extension for all files.
         output_folder (string): The path of the output folder.
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set.
@@ -213,7 +215,7 @@ def merge_samples_and_rename(workflow, input_files, output_folder, pair_identifi
     """
     
     # merge the files, if pairs, and then rename sequence ids to match sample ids
-    renamed_files = merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier, threads)
+    renamed_files = merge_pairs_and_rename(workflow, input_files, extension, output_folder, pair_identifier, threads)
     
     # merge the renamed files into a single fastq file
     all_samples_fastq = merge_fastq(workflow, renamed_files, output_folder)
@@ -245,12 +247,13 @@ def merge_pairs(task, threads=1):
     return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, args=threads)
     
 
-def merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier, threads):
+def merge_pairs_and_rename(workflow, input_files, extension, output_folder, pair_identifier, threads):
     """ Merge the files if pairs and rename sequence ids to match sample id
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files.
+        extension (string): The extension for all files.
         output_folder (string): The path of the output folder.
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set.
@@ -264,7 +267,7 @@ def merge_pairs_and_rename(workflow, input_files, output_folder, pair_identifier
         
     """   
     
-    pair1, pair2=utilities.paired_files(input_files, pair_identifier)
+    pair1, pair2=utilities.paired_files(input_files, extension, pair_identifier)
     
     if pair1 and pair2:
         # paired input files were found

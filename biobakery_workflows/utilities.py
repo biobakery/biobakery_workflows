@@ -409,13 +409,14 @@ def partial_function(function, **keywords):
     return partial
         
 
-def paired_files(files, pair_identifier=None):
+def paired_files(files, extension, pair_identifier=None):
     """ Find sets of paired-end reads
     
     This function will find sets of paired end reads from a list of files.
     
     Args:
         files (list): A list of files (with or without the full paths)
+        extension (string): The extension for all files.
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
             
@@ -426,32 +427,33 @@ def paired_files(files, pair_identifier=None):
         list: A list of paired files.
         
     Example:
-        paired_set = paired_reads(["1.R1.fq", "1.R2.fq"])
+        paired_set = paired_reads(["1.R1.fq", "1.R2.fq"],".fq")
         
     """
+    
+    # add period to extension if not included
+    if not extension.startswith("."):
+        extension="."+extension
     
     if pair_identifier is None:
         pair_identifier=".R1"
     
+    # check for the one in the pair identifier
+    if not "1" in pair_identifier:
+        sys.exit("Please provide the identifier for the first pair set (ie R1).")
+    
     pair_identifier2=pair_identifier.replace("1","2",1)
 
-    input_pair1 = list(filter(lambda file: pair_identifier in os.path.basename(file), files))
-    input_pair2 = list(filter(lambda file: pair_identifier2 in os.path.basename(file), files))
-    
-    # in the case where an identifier matches multiple places in a sample name
-    # remove the duplicates from the two sets
-    if len(input_pair1) > len(input_pair2):
-        input_pair1=list(set(input_pair1).difference(input_pair2))
-    elif len(input_pair2) > len(input_pair1):
-        input_pair2=list(set(input_pair2).difference(input_pair1))
+    input_pair1 = list(filter(lambda file: os.path.basename(file).replace(extension,"").endswith(pair_identifier), files))
+    input_pair2 = list(filter(lambda file: os.path.basename(file).replace(extension,"").endswith(pair_identifier2), files))
     
     # only return matching pairs of files in the same order
     paired_file_set = [[],[]]
     for file1 in sorted(input_pair1):
         # find the matching file in the second set
-        name1=sample_names(file1, pair_identifier)
+        name1=sample_names(file1, extension, pair_identifier)
         for file2 in input_pair2:
-            name2=sample_names(file2, pair_identifier2)
+            name2=sample_names(file2, extension, pair_identifier2)
             if name1 and name1 == name2:
                 paired_file_set[0].append(file1)
                 paired_file_set[1].append(file2)
@@ -460,11 +462,12 @@ def paired_files(files, pair_identifier=None):
     
     return paired_file_set
 
-def sample_names(files,pair_identifier=None):
+def sample_names(files,extension,pair_identifier=None):
     """ Return the basenames of the files, without any extensions, as the sample names
     
     Args:
         files (list): A list of files (with or without the full paths)
+        extension (string): The extension for all files.
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         
@@ -475,9 +478,13 @@ def sample_names(files,pair_identifier=None):
         list: A list of sample names (file basenames)
 
     Example:
-        names = sample_names(["1.R1.fq", "1.R2.fq"])
+        names = sample_names(["1.R1.fq", "1.R2.fq"],".fq")
         
     """
+    
+    # add period to extension if not included
+    if not extension.startswith("."):
+        extension="."+extension
     
     # if files is a string, convert to a list
     convert=False
@@ -485,7 +492,7 @@ def sample_names(files,pair_identifier=None):
         files=[files]
         convert=True
         
-    samples=[".".join(os.path.basename(file).replace(".gz","").split(".")[:-1]) for file in files]
+    samples=[os.path.basename(file).replace(extension,"") for file in files]
     
     # remove the pair_idenifier from the sample name, if provided
     if pair_identifier:

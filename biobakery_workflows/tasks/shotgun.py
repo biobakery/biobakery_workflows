@@ -33,7 +33,7 @@ from biobakery_workflows import utilities
 from biobakery_workflows import files
 from biobakery_workflows import data
 
-def kneaddata(workflow, input_files, output_folder, threads, paired=None, 
+def kneaddata(workflow, input_files, extension, output_folder, threads, paired=None, 
     databases=None, pair_identifier=None, additional_options=None, remove_intermediate_output=None):
     """Run kneaddata
     
@@ -44,6 +44,7 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files for input to kneaddata. This
         is a list of lists if the input files are paired.
+        extension (string): The extension for all files.
         output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for kneaddata to use.
         paired (bool): This indicates if the input files are paired.
@@ -78,9 +79,9 @@ def kneaddata(workflow, input_files, output_folder, threads, paired=None,
 
     # get the sample basenames from the input files
     if paired:
-        sample_names=utilities.sample_names(input_files[0],pair_identifier)
+        sample_names=utilities.sample_names(input_files[0],extension,pair_identifier)
     else:
-        sample_names=utilities.sample_names(input_files)
+        sample_names=utilities.sample_names(input_files,extension)
         
     # get the kneaddata final output files
     main_folder=os.path.join("kneaddata","main")
@@ -197,7 +198,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     return kneaddata_read_count_file
 
 
-def quality_control(workflow, input_files, output_folder, threads, databases=None, 
+def quality_control(workflow, input_files, extension, output_folder, threads, databases=None, 
     pair_identifier=None, additional_options=None, remove_intermediate_output=None):
     """Quality control tasks for whole genome shotgun sequences
     
@@ -208,6 +209,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq files for input to kneaddata.
+        extension (string): The extension for all files.
         threads (int): The number of threads/cores for kneaddata to use.
         output_folder (string): The path of the output folder.
         databases (string/list): The databases to use with kneaddata (optional).
@@ -243,7 +245,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
     
     # check for paired input files
     if pair_identifier:
-        input_pair1, input_pair2 = utilities.paired_files(input_files, pair_identifier)
+        input_pair1, input_pair2 = utilities.paired_files(input_files, extension, pair_identifier)
     else:
         input_pair1 = []
     
@@ -253,7 +255,7 @@ def quality_control(workflow, input_files, output_folder, threads, databases=Non
         input_files = [input_pair1, input_pair2]
     
     # create a task for each set of input and output files to run kneaddata
-    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, 
+    kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, extension,
         output_folder, threads, paired, databases, pair_identifier, additional_options,
         remove_intermediate_output)
     
@@ -309,7 +311,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     """
     
     # get the sample names from the input files
-    sample_names=utilities.sample_names(input_files)
+    sample_names=utilities.sample_names(input_files,input_extension)
     
     # get a list of metaphlan2 output files, one for each input file
     metaphlan2_profile_tag="taxonomic_profile"
@@ -359,7 +361,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
 
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
-def functional_profile(workflow,input_files,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
+def functional_profile(workflow,input_files,extension,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
     """Functional profile for whole genome shotgun sequences
     
     This set of tasks performs functional profiling on whole genome shotgun
@@ -370,6 +372,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         input_files (list): A list of paths to fastq (or fasta) files already run through quality control.
+        extension (string): The extension for all files.
         output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for kneaddata to use.
         taxonomic_profiles (list): A set of taxonomic profiles, one per sample (optional).
@@ -403,7 +406,7 @@ def functional_profile(workflow,input_files,output_folder,threads,taxonomic_prof
     """
     
     # get the sample names from the input files
-    sample_names=utilities.sample_names(input_files)
+    sample_names=utilities.sample_names(input_files,extension)
     
     ### Step 1: Run humann2 on all input files ###
 

@@ -267,32 +267,58 @@ class TestUtiltiesFunctions(unittest.TestCase):
     def test_sample_names(self):
         """ Test the sample names function """
         
-        files=["s1.fastq","s1.fastq.gz"]
+        files=["s1.fastq","s2.fastq"]
         
-        self.assertEqual(utilities.sample_names(files), ["s1","s1"])
+        self.assertEqual(utilities.sample_names(files,".fastq"), ["s1","s2"])
+        
+    def test_sample_names_extension(self):
+        """ Test the sample names function without leading period"""
+        
+        files=["s1.fastq","s2.fastq"]
+        
+        self.assertEqual(utilities.sample_names(files,"fastq"), ["s1","s2"])
+        
+    def test_sample_names_period(self):
+        """ Test the sample names function with period included in name"""
+        
+        files=["s1.1.fastq","s2.1.fastq"]
+        
+        self.assertEqual(utilities.sample_names(files,"fastq"), ["s1.1","s2.1"])
         
     def test_sample_names_pair_identifier(self):
         """ Test the sample names function with a pair identifier """
         
-        files=["s1.R1.fastq","s1.R1.fastq.gz"]
+        files=["s1.R1.fastq","s2.R1.fastq"]
         
-        self.assertEqual(utilities.sample_names(files,".R1"), ["s1","s1"])
+        self.assertEqual(utilities.sample_names(files,".fastq",".R1"), ["s1","s2"])
         
     def test_sample_names_pair_identifier_not_found(self):
         """ Test the sample names function with a pair identifier that is not included in the names """
         
-        files=["s1.R1.fastq","s1.R1.fastq.gz"]
+        files=["s1.R1.fastq","s2.R1.fastq"]
         
-        self.assertEqual(utilities.sample_names(files,"_R1"), ["s1.R1","s1.R1"])
+        self.assertEqual(utilities.sample_names(files,".fastq","_R1"), ["s1.R1","s2.R1"])
         
     def test_paired_files(self):
         """ Test the paired files function """
         
-        files=["s1.R1.fastq","s1.R2.fastq","s2.R1.fastq.gz","s2.R2.fastq.gz"]
+        files=["s1.R1.fastq","s1.R2.fastq","s2.R1.fastq","s2.R2.fastq"]
         
-        expected_pairs = [["s1.R1.fastq","s2.R1.fastq.gz"],["s1.R2.fastq","s2.R2.fastq.gz"]]
+        expected_pairs = [["s1.R1.fastq","s2.R1.fastq"],["s1.R2.fastq","s2.R2.fastq"]]
         
-        actual_pairs = utilities.paired_files(files, pair_identifier=".R1")
+        actual_pairs = utilities.paired_files(files, ".fastq", pair_identifier=".R1")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+
+    def test_paired_files_period(self):
+        """ Test the paired files function with periods in sample name"""
+        
+        files=["s1.1.R1.fastq","s1.1.R2.fastq","s2.1.R1.fastq","s2.1.R2.fastq"]
+        
+        expected_pairs = [["s1.1.R1.fastq","s2.1.R1.fastq"],["s1.1.R2.fastq","s2.1.R2.fastq"]]
+        
+        actual_pairs = utilities.paired_files(files, ".fastq", pair_identifier=".R1")
         
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
@@ -300,30 +326,43 @@ class TestUtiltiesFunctions(unittest.TestCase):
     def test_sample_names_pair_identifier_duplicate(self):
         """ Test the sample names function with a pair identifier included in the sample name"""
         
-        files=["s_1_1.fastq","s1_1.fastq.gz"]
+        files=["s_1_1.fastq.gz","s1_1.fastq.gz"]
         
-        self.assertEqual(utilities.sample_names(files,"_1"), ["s_1","s1"])
+        self.assertEqual(utilities.sample_names(files,".fastq.gz","_1"), ["s_1","s1"])
         
     def test_paired_files_duplicate_identifier_1(self):
         """ Test the paired files function with a first identifier duplicated"""
         
-        files=["s_1_1.fastq","s_1_2.fastq","s_1_3_1.fastq.gz","s_1_3_2.fastq.gz"]
+        files=["s_1_1.fastq.gz","s_1_2.fastq.gz","s_1_3_1.fastq.gz","s_1_3_2.fastq.gz"]
         
-        expected_pairs = [["s_1_1.fastq","s_1_3_1.fastq.gz"],["s_1_2.fastq","s_1_3_2.fastq.gz"]]
+        expected_pairs = [["s_1_1.fastq.gz","s_1_3_1.fastq.gz"],["s_1_2.fastq.gz","s_1_3_2.fastq.gz"]]
         
-        actual_pairs = utilities.paired_files(files, pair_identifier="_1")
+        actual_pairs = utilities.paired_files(files, ".fastq.gz", pair_identifier="_1")
         
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
         
     def test_paired_files_duplicate_identifier_2(self):
-        """ Test the paired files function with a second identifier duplicated"""
+        """ Test the paired files function with a second identifier duplicated
+            Also test extension without leading period. """
         
-        files=["s_2_1.fastq","s_2_2.fastq","s_2_3_1.fastq.gz","s_2_3_2.fastq.gz"]
+        files=["s_2_1.fastq","s_2_2.fastq","s_2_3_1.fastq","s_2_3_2.fastq"]
         
-        expected_pairs = [["s_2_1.fastq","s_2_3_1.fastq.gz"],["s_2_2.fastq","s_2_3_2.fastq.gz"]]
+        expected_pairs = [["s_2_1.fastq","s_2_3_1.fastq"],["s_2_2.fastq","s_2_3_2.fastq"]]
         
-        actual_pairs = utilities.paired_files(files, pair_identifier="_1")
+        actual_pairs = utilities.paired_files(files, "fastq", pair_identifier="_1")
+        
+        self.assertEqual(expected_pairs[0],actual_pairs[0])
+        self.assertEqual(expected_pairs[1],actual_pairs[1])
+        
+    def test_paired_files_duplicate_identifier_3(self):
+        """ Test the paired files function with pair identified duplicated """
+        
+        files=["MR100.R1.fastq","MR100.R2.fastq","MR200.R1.fastq","MR200.R2.fastq"]
+        
+        expected_pairs = [["MR100.R1.fastq","MR200.R1.fastq"],["MR100.R2.fastq","MR200.R2.fastq"]]
+        
+        actual_pairs = utilities.paired_files(files, "fastq", pair_identifier="R1")
         
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
@@ -331,11 +370,11 @@ class TestUtiltiesFunctions(unittest.TestCase):
     def test_paired_files_identifier_not_found(self):
         """ Test the paired files function with an identifier that is not found"""
         
-        files=["sample-1.R1.fastq","sample-1.R2.fastq","sample-2.R1.fastq.gz","sample-2.R2.fastq.gz"]
+        files=["sample-1.R1.fastq","sample-1.R2.fastq","sample-2.R1.fastq","sample-2.R2.fastq"]
         
         expected_pairs = [[],[]]
         
-        actual_pairs = utilities.paired_files(files, pair_identifier="_R1.")
+        actual_pairs = utilities.paired_files(files, ".fastq", pair_identifier="_R1.")
         
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
@@ -344,11 +383,11 @@ class TestUtiltiesFunctions(unittest.TestCase):
         """ Test the paired files function with an identifier that is not found because
             it includes the period from the file extension"""
         
-        files=["sample-1.R1.fastq","sample-1.R2.fastq","sample-2.R1.fastq.gz","sample-2.R2.fastq.gz"]
+        files=["sample-1.R1.fastq","sample-1.R2.fastq","sample-2.R1.fastq","sample-2.R2.fastq"]
         
         expected_pairs = [[],[]]
         
-        actual_pairs = utilities.paired_files(files, pair_identifier="R1.")
+        actual_pairs = utilities.paired_files(files, ".fastq", pair_identifier="R1.")
         
         self.assertEqual(expected_pairs[0],actual_pairs[0])
         self.assertEqual(expected_pairs[1],actual_pairs[1])
