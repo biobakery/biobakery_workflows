@@ -361,6 +361,52 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
 
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
+def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
+    """ Merge the paired files into a single file 
+    
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list): A list of paths to fastq (or fasta) files already run through quality control.
+        extension (string): The extension for all files.
+        output_folder (string): The path of the output folder.  
+        
+    Requires:
+        none
+        
+    Returns:
+        list: A list of all of the merged files (the same as the input files if files are not paired)
+        string: The extension for the merged files
+    """
+    
+    # check for paired input files
+    input_pair1, input_pair2 = utilities.paired_files(input_files, extension, pair_identifier)
+    
+    # set the default output extension to be the same as the input
+    output_extension = extension
+    
+    if input_pair1:
+        sample_names=utilities.sample_names(input_pair1,extension,pair_identifier)
+        # determine the command based on the pair identifier
+        if extension.endswith(".gz"):
+            command="gunzip -c "
+            output_extension=extension.replace(".gz","")
+        else:
+            command="cat "
+        # determine the targets based on the output folder and extension
+        merged_files = utilities.name_files(sample_names, output_folder, subfolder="input_merged", extension=output_extension, create_folder=True)  
+        
+        # add a task to merge each pair set
+        for pair1, pair2, target in zip(input_pair1, input_pair2, merged_files):
+            workflow.add_task(
+                command+" [depends[0]] [depends[1]] > [targets[0]]",
+                depends=[pair1,pair2],
+                targets=target)
+    else:
+        merged_files=input_files
+        
+    return merged_files, output_extension
+          
+
 def functional_profile(workflow,input_files,extension,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
     """Functional profile for whole genome shotgun sequences
     
