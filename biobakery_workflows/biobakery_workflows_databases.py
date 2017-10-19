@@ -39,11 +39,12 @@ import shutil
 def check_dependencies(depends):
     """ Check the required software is installed """
     
-    for tool in depends:
+    for tool, package in depends:
         try:
-            subprocess.check_output(["which",tool])
+            subprocess.check_output(["which",tool],stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
-            sys.exit("ERROR: Unable to find tool required for database install: "+tool)
+            sys.exit("ERROR: Unable to find tool required for database install: "+tool+
+                ". Please install "+package+".")
 
 def default_install_location():
     """ Select the default install location based on the permissions """
@@ -145,9 +146,10 @@ def main():
     
     # check required dependencies are installed for wmgx installs
     if "wmgx" in args.install:
-        dependencies=["humann2_databases","kneaddata_database","strainphlan.py","bowtie2-inspect"]
+        dependencies=[("humann2_databases","HUMAnN2"),("kneaddata_database","Kneaddata"),
+            ("strainphlan.py","StrainPhlAn"),("bowtie2-inspect","Bowtie2")]
     else:
-        dependencies=["usearch"]    
+        dependencies=[("usearch","usearch")]    
     check_dependencies(dependencies)
         
     # install humann2 utility dbs for all shotgun workflows
