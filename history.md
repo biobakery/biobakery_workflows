@@ -1,6 +1,18 @@
 
 # bioBakery workflows History #
 
+## v0.9.0 10-19-2017 ##
+
+* Add metadata input option to wmgx and 16s visualization workflows.
+* Add multiple sequence alignment task for closed reference sequences to 16s workflow.
+* Include 16s data products in 16s report archive.
+* Update 16s visualization workflow to pull variables from data processing workflow log to write report introduction.
+* Add optional picard input files to 16s visualization workflow.
+* Add options to bypass quality control and functional profiling to wmgx workflow.
+* Improve error message in database install script printed when required dependencies are not found.
+* Add counter to track PyPI download stats.
+* Update dependencies to require anadama2 v0.4.0.
+
 ## v0.3.1 07-27-2017 ##
 
 * Change the default size of heatmaps in reports based on format. Increase the size in pdf and decrease in html.
