@@ -4,6 +4,7 @@ bioBakery Workflows setup
 To run: python setup.py install
 """
 
+import os
 import sys
 
 # required python version
@@ -29,10 +30,35 @@ try:
     import setuptools
 except ImportError:
     sys.exit("Please install setuptools.")
+
+# try to import urllib.request.urlretrieve for python3
+try:
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib import urlretrieve
     
 from glob import glob    
 
-VERSION = "0.3.1"
+COUNTER_URL="http://bitbucket.org/biobakery/biobakery_workflows/downloads/counter.txt"
+
+def download(url, download_file):
+    """ Download a file from a url """
+
+    try:
+        print("Downloading "+url)
+        file, headers = urlretrieve(url,download_file)
+        # print final return to start new line of stdout
+        print("\n")
+    except EnvironmentError:
+        print("WARNING: Unable to download "+url)
+
+counter_file=os.path.basename(COUNTER_URL)
+if not os.path.isfile(counter_file):
+    print("Downloading counter file to track biobakery_workflows downloads"+
+    " since the global PyPI download stats are currently turned off.")
+    download(COUNTER_URL,counter_file)
+
+VERSION = "0.9.0"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
@@ -66,7 +92,7 @@ setuptools.setup(
         "Programming Language :: Python :: 2.7",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
         ],
-    install_requires=['anadama2>=0.3.1'],
+    install_requires=['anadama2>=0.4.0'],
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
