@@ -94,6 +94,11 @@ def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, sample
     # split into subsets
     split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
     
+    # make sure the last group is not just a single data set
+    if len(split_sorted_metadata_subsets[-1]) == 1:
+        last_set = split_sorted_metadata_subsets.pop()
+        split_sorted_metadata_subsets[-1].append(last_set[0])
+    
     for metadata_subset in split_sorted_metadata_subsets:
         subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
         subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
@@ -102,7 +107,7 @@ def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, sample
         title_add=""
         if len(sorted_metadata_subsets) > max_subsets:
             title_add=" "+metadata_subset[0]+" to "+metadata_subset[-1]
-            
+
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=taxa, 
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
             ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
