@@ -51,6 +51,7 @@ workflow.add_argument("remove-intermediate-output", desc="remove intermediate ou
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
+workflow.add_argument("max-strains", desc="the max number of strains to profile", default=10)
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -86,7 +87,7 @@ if not args.bypass_functional_profiling:
 ### STEP #4: Run strain profiling
 if not args.bypass_strain_profiling:
     shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
-        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,args.strain_profiling_options)
+        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,args.strain_profiling_options,args.max_strains)
 
 # start the workflow
 workflow.go()
