@@ -681,7 +681,6 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         # add the marker files to the command
         all_marker_file=os.path.join(marker_folder,"all_markers.fasta")
         marker_file=os.path.join(marker_folder,profile_clade+".markers.fasta")
-        command += " --ifn_markers "+marker_file
         
         # generate the marker file if it does not already exist
         if not os.path.isfile(marker_file):
@@ -704,7 +703,10 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         # check that the marker file exists
         if not os.path.isfile(marker_file):
             raise EnvironmentError("Unable to find StrainPhlAn markers for clade "+ profile_clade)
-        
+
+        # add the marker file location (default or per workflow) to the command
+        command += " --ifn_markers "+marker_file       
+ 
         # get the list of reference genomes
         genomes=set()
         with open(data.get_file("strainphlan_species_gcf.tsv")) as file_handle:
