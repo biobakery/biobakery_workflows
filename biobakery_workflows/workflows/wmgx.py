@@ -51,7 +51,7 @@ workflow.add_argument("remove-intermediate-output", desc="remove intermediate ou
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
-workflow.add_argument("max-strains", desc="the max number of strains to profile", default=10)
+workflow.add_argument("max-strains", desc="the max number of strains to profile", default=10, type=int)
 
 # get the arguments from the command line
 args = workflow.parse_args()
