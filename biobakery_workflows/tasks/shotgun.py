@@ -786,7 +786,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
         name="strainphlan_print_clades")
     
     ### STEP #3: Run strainphlan on the top set of clades identified
-    clade_logs = utilities.name_files(map(str,range(10)), output_folder, tag="clade", subfolder="strainphlan", extension="log")
+    clade_logs = utilities.name_files(map(str,range(max_species)), output_folder, tag="clade", subfolder="strainphlan", extension="log")
     for clade_number in range(max_species):
         workflow.add_task_gridable(
             utilities.partial_function(strainphlan,threads=threads,clade_number=clade_number,
