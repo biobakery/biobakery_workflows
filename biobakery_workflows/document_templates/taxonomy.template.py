@@ -195,6 +195,11 @@ def plot_grouped_taxonomy(sorted_data, sorted_samples, cat_metadata):
     
     # split into subsets
     split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
+
+    # make sure the last group is not just a single data set
+    if len(split_sorted_metadata_subsets[-1]) == 1:
+        last_set = split_sorted_metadata_subsets.pop()
+        split_sorted_metadata_subsets[-1].append(last_set[0])
     
     for metadata_subset in split_sorted_metadata_subsets:
         subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
