@@ -22,7 +22,12 @@ trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
 
-#' The samples from this project were run through the standard workflow for 16S sequencing. The workflow
+# read in the read count table
+# columns expected are total reads, reads that map to OTUs with taxonomy,
+# and reads that map to OTUs without taxonomy
+columns, samples, data = document.read_table(vars["read_count_table"])
+
+#' The <% print(len(samples)) %> samples from this project were run through the standard 16S workflow. The workflow
 #' follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity 
 #' of <%= percent_identity %> and minimum cluster size of <%= min_cluster_size %>. 
 #' The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
@@ -41,13 +46,6 @@ from biobakery_workflows import utilities
 
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
-
-# read in the read count table
-# columns expected are total reads, reads that map to OTUs with taxonomy,
-# and reads that map to OTUs without taxonomy
-columns, samples, data = document.read_table(vars["read_count_table"])
-
-#' There were a total of <% print(len(samples))%> samples processed with this workflow for this project.
 
 #' <% if pdf_format: print("\clearpage") %>
 
