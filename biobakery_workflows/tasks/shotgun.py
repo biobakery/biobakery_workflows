@@ -715,11 +715,15 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
                     genomes.add(os.path.join(reference_folder,line.rstrip().split("\t")[-1]+".fna.bz2"))
         
         # only use those references found in the folder
-        genomes = filter(os.path.isfile,genomes)
-        
+        genomes = list(filter(os.path.isfile,genomes))
+    
+        # if more than six references are found, limit total used
+        # this resolves e. coli which has so many references it can exceed command line length
+        if len(genomes) > 6:
+            genomes = genomes[:6]    
         
         # add the reference genome files to the command, if any are found
-        if len(list(genomes)):
+        if len(genomes):
             command += " --ifn_ref_genomes " + " --ifn_ref_genomes ".join(genomes)
         
         # write the output to the log
