@@ -640,4 +640,55 @@ class TestUtiltiesFunctions(unittest.TestCase):
         self.assertTrue(below_threshold)
         self.assertEqual(data, expected_data)
         
+    def test_rank_species_average_abundance(self):
+        """ Test the rank species average abundance function with a small merged taxonomy file """
+        
+        file_contents = "\n".join(["#SampleID\tS1\tS2\tS3",
+        "k__Archaea\t0.5\t0.5\t0.5", "k__Archaea|p__Euryarchaeota\t0.5\t0.5\t0.5",
+        "k__Viruses|p__Viruses_noname|c__Viruses_noname|o__Viruses_noname|f__Retroviridae|g__Gammaretrovirus|s__Murine_osteosarcoma_virus\t0.1\t0.2\t0.3",
+        "k__Viruses|p__Viruses_noname|c__Viruses_noname|o__Viruses_noname|f__Retroviridae|g__Gammaretrovirus|s__Murine_osteosarcoma_virus|t__PRJNA14655\t0.2\t0.2\t0.2",
+        "g__Alistipes|s__Alistipes_indistinctus\t0.3\t0.4\t0.5",
+        "g__Alistipes|s__Alistipes_onderdonkii\t0.4\t0.5\t0.6",
+        "g__Alistipes|s__Alistipes_putredinis\t0.1\t0.2\t0.1"])
+
+        expected_species = ["s__Alistipes_onderdonkii","s__Alistipes_indistinctus","s__Murine_osteosarcoma_virus","s__Alistipes_putredinis"]
+
+        temp_file = write_temp(file_contents)
+        
+        ranked_species = utilities.rank_species_average_abundance(temp_file)
+        os.remove(temp_file)
+        
+        self.assertEqual(ranked_species,expected_species)
+        
+    def test_order_clade_list(self):
+        """ Test the order clade list function """
+        
+        taxonomy_file_contents = "\n".join(["#SampleID\tS1\tS2\tS3",
+        "k__Archaea\t0.5\t0.5\t0.5", "k__Archaea|p__Euryarchaeota\t0.5\t0.5\t0.5",
+        "k__Viruses|p__Viruses_noname|c__Viruses_noname|o__Viruses_noname|f__Retroviridae|g__Gammaretrovirus|s__Murine_osteosarcoma_virus\t0.1\t0.2\t0.3",
+        "k__Viruses|p__Viruses_noname|c__Viruses_noname|o__Viruses_noname|f__Retroviridae|g__Gammaretrovirus|s__Murine_osteosarcoma_virus|t__PRJNA14655\t0.2\t0.2\t0.2",
+        "g__Alistipes|s__Alistipes_indistinctus\t0.3\t0.7\t0.5",
+        "g__Alistipes|s__Alistipes_onderdonkii\t0.4\t0.5\t0.6",
+        "g__Alistipes|s__Alistipes_putredinis\t0.1\t0.1\t0.1"])
+
+        clades_list_file_contents = "\n".join(["s__Alistipes_putredinis", 
+            "s__Alistipes_indistinctus", "s__Murine_osteosarcoma_virus", "s__Acidaminococcus_sp_D21"])
+
+        expected_species = ["s__Alistipes_indistinctus","s__Murine_osteosarcoma_virus","s__Alistipes_putredinis"]
+
+        taxonomy_temp_file = write_temp(taxonomy_file_contents)
+        clade_temp_file = write_temp(clades_list_file_contents)
+        output_file = write_temp("")
+        
+        ranked_species = utilities.order_clade_list(None,clade_temp_file,taxonomy_temp_file,output_file)
+        os.remove(taxonomy_temp_file)
+        os.remove(clade_temp_file)
+        
+        with open(output_file) as file_handle:
+            ranked_species=[line.rstrip() for line in file_handle.readlines()]
+        os.remove(output_file)
+        
+        self.assertEqual(ranked_species,expected_species)        
+        
+        
 

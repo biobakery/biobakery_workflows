@@ -51,7 +51,7 @@ workflow.add_argument("remove-intermediate-output", desc="remove intermediate ou
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
-workflow.add_argument("max-strains", desc="the max number of strains to profile", default=10, type=int)
+workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -85,9 +85,11 @@ if not args.bypass_functional_profiling:
         qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
 
 ### STEP #4: Run strain profiling
+# Provide taxonomic profiling output so top strains by abundance will be selected
 if not args.bypass_strain_profiling:
     shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
-        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,args.strain_profiling_options,args.max_strains)
+        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,merged_taxonomic_profile,
+        args.strain_profiling_options,args.max_strains)
 
 # start the workflow
 workflow.go()

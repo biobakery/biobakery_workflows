@@ -108,7 +108,7 @@ if not args.bypass_norm_ratio:
 ### STEP #4: Run strain profiling
 if not args.bypass_strain_profiling:
     shotgun.strain_profile(workflow,wms_taxonomy_sam_files,args.output,args.threads,
-        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers)
+        workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,wms_taxonomic_profile)
 
 # start the workflow
 workflow.go()

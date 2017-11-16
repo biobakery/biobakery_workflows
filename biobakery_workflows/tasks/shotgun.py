@@ -736,8 +736,9 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
     # run the task
     return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, 
         args=[os.path.dirname(task.depends[0].name),os.path.dirname(task.targets[0].name),profile_clade,threads])
+    
 
-def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,options="",max_species=10):
+def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,abundance_file,options="",max_species=20):
     """Strain profile for whole genome shotgun sequences
     
     This set of tasks performs strain profiling on whole genome shotgun
@@ -751,6 +752,8 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
         threads (int): The number of threads/cores to use.
         reference_folder (string): The folder containing the reference files.
         marker_folder (string): The folder containing the marker files.
+        abundance_file (string): The merged taxonomic abundance file to be used to select
+            the top strains by average abundance.
         options (string): Options to apply when running strainphlan.
         max_species (int): The maximum number of species to profile.
         
@@ -789,14 +792,21 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
         args=os.path.dirname(strainphlan_markers[0]),
         name="strainphlan_print_clades")
     
+    # order the clades list by average abundance
+    ordered_clade_list = utilities.name_files("clades_list_order_by_average_abundance.txt", output_folder, subfolder="strainphlan")
+    workflow.add_task(
+        utilities.partial_function(utilities.order_clade_list,clade_list=clade_list,abundance_file=abundance_file,output_file=ordered_clade_list),
+        depends=[clade_list, abundance_file],
+        targets=ordered_clade_list)
+    
     ### STEP #3: Run strainphlan on the top set of clades identified
     clade_logs = utilities.name_files(map(str,range(max_species)), output_folder, tag="clade", subfolder="strainphlan", extension="log")
     for clade_number in range(max_species):
         workflow.add_task_gridable(
             utilities.partial_function(strainphlan,threads=threads,clade_number=clade_number,
-                clade_list=clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder),
+                clade_list=ordered_clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder),
                 options=options),
-            depends=strainphlan_markers+[clade_list],
+            depends=strainphlan_markers+[ordered_clade_list],
             targets=clade_logs[clade_number-1],                           
             time=6*60, # 6 hours
             mem=10*1024, # 10 GB
