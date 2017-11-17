@@ -270,7 +270,7 @@ class ShotGun(Workflow):
     captions["qc_intro_table"]="\nThe tables and plots are annotated as follows:\n \n"+\
         " * raw : Untouched fastq reads.\n"+\
         " * trim : Number of reads remaining after trimming bases with Phred score < 20. If the "+\
-        "trimmed reads is < 70% of original length then it is removed altogether.\n"
+        "trimmed reads is < 50% of original length then it is removed altogether.\n"
         
     # set descriptions for command qc databases
     captions["qc_databases"]={}
