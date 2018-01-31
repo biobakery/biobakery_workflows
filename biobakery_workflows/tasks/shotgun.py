@@ -265,7 +265,7 @@ def quality_control(workflow, input_files, extension, output_folder, threads, da
     return kneaddata_output_fastq, kneaddata_read_count_file
 
 
-def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension):
+def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension,already_profiled=False):
     """Taxonomic profile for whole genome shotgun sequences
     
     This set of tasks performs taxonomic profiling on whole genome shotgun
@@ -278,6 +278,8 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
         output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for metaphlan2 to use.
         input_extension (string): The extension for the input files.
+        already_profiled (bool): Indicates if the input files need to be run through metaphlan2.
+            If not, just join profiles and count species.
         
     Requires:
         metaphlan2 v2.5.0+: A tool to profile the composition of microbial communities.
@@ -327,16 +329,21 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
         input_type="fastq"
     
     # run metaphlan2 on each of the kneaddata output files
-    for sample, depend_fastq, target_profile, target_sam in zip(sample_names, input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
-        workflow.add_task_gridable(
-            "metaphlan2.py [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
-            depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
-            targets=[target_profile,target_sam],
-            args=[threads,metaphlan2_output_folder,input_type],
-            time=3*60, # 3 hours
-            mem=12*1024, # 12 GB
-            cores=threads, # time/mem based on 8 cores
-            name=utilities.name_task(sample,"metaphlan2"))
+    if not already_profiled:
+        for sample, depend_fastq, target_profile, target_sam in zip(sample_names, input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
+            workflow.add_task_gridable(
+                "metaphlan2.py [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
+                depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
+                targets=[target_profile,target_sam],
+                args=[threads,metaphlan2_output_folder,input_type],
+                time=3*60, # 3 hours
+                mem=12*1024, # 12 GB
+                cores=threads, # time/mem based on 8 cores
+                name=utilities.name_task(sample,"metaphlan2"))
+    else:
+        # set the names of the already profiled outputs
+        metaphlan2_output_files_profile = input_files
+        metaphlan2_output_folder = os.path.dirname(input_files[0])
     
     # merge all of the metaphlan taxonomy tables
     metaphlan2_merged_output = files.ShotGun.path("taxonomic_profile", output_folder)
