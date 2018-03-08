@@ -100,13 +100,13 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         second_input_option=" --input [depends[1]] --cat-final-output "
         # determine time/memory equations based on the two input files
         time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*6*60"
-        mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 2*12*1024"
+        mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*12*1024"
     else:
         # the second input option is not used since these are single-end input files
         second_input_option=" "
         # determine time/memory equations based on the single input file
         time_equation="6*60 if file_size('[depends[0]]') < 25 else 4*6*60"
-        mem_equation="12*1024 if file_size('[depends[0]]') < 25 else 2*12*1024"
+        mem_equation="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -336,8 +336,8 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
                 depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
                 targets=[target_profile,target_sam],
                 args=[threads,metaphlan2_output_folder,input_type],
-                time=3*60, # 3 hours
-                mem=12*1024, # 12 GB
+                time="3*60 if file_size('[depends[0]]') < 25 else 4*3*60", # 3 hours or more depending on input file size
+                mem="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024", # 12 GB or more depending on input file size
                 cores=threads, # time/mem based on 8 cores
                 name=utilities.name_task(sample,"metaphlan2"))
     else:
