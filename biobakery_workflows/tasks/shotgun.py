@@ -99,14 +99,14 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         # also add the option to cat the final output files into a single file
         second_input_option=" --input [depends[1]] --cat-final-output "
         # determine time/memory equations based on the two input files
-        time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*6*60"
-        mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 25 else 4*12*1024"
+        time_equation="6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 4*6*60"
+        mem_equation="12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 5*12*1024"
     else:
         # the second input option is not used since these are single-end input files
         second_input_option=" "
         # determine time/memory equations based on the single input file
-        time_equation="6*60 if file_size('[depends[0]]') < 25 else 4*6*60"
-        mem_equation="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024"
+        time_equation="6*60 if file_size('[depends[0]]') < 10 else 4*6*60"
+        mem_equation="12*1024 if file_size('[depends[0]]') < 10 else 5*12*1024"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -495,8 +495,8 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             depends=utilities.add_to_list(depend_fastq,TrackedExecutable("humann2")),
             targets=[target_gene, target_path, target_coverage, target_log],
             args=[humann2_output_folder, threads],
-            time="24*60 if file_size('[depends[0]]') < 25 else 4*24*60", # 24 hours or more depending on file size
-            mem="32*1024 if file_size('[depends[0]]') < 25 else 2*32*1024", # 32 GB or more depending on file size
+            time="24*60 if file_size('[depends[0]]') < 25 else 6*24*60", # 24 hours or more depending on file size
+            mem="32*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
             cores=threads,
             name=utilities.name_task(sample,"humann2"))
 
