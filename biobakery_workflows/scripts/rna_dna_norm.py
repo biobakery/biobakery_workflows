@@ -162,7 +162,10 @@ def compute_rna_dna_norm(samples, rna_features, rna_samples, rna_data,
             try:
                 norm=rna_value/dna_value
             except ZeroDivisionError:
-                norm=0
+                if rna_value == 0:
+                    norm="NaN"
+                else:
+                    norm="Inf"
             norm_data[index].append(norm)
         
     return norm_data, norm_features
