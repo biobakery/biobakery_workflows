@@ -26,9 +26,85 @@ THE SOFTWARE.
 import os
 import copy
 import sys
+import subprocess
+import tempfile
+import shutil
 
 from . import utilities
 
+def plot_hallagram(feature_set_1_data, feature_set_2_data, axis1_label, axis2_label, model=None, title=None, output_folder=None, strongest=10):
+    """ Run halla on the two feature sets and plot the hallagram with the strongest associations 
+        The first data line for each feature set should be a header of sample ids
+        Requires halla v0.8.3
+    """
+
+    from matplotlib._png import read_png
+    import matplotlib.pyplot as pyplot
+
+    # create a temp output folder, if not provided
+    if output_folder:
+        outfolder = output_folder
+        # if folder does not exist, then create
+        if not os.path.isdir(outfolder):
+            os.makedirs(outfolder)
+    else:
+        outfolder=tempfile.mkdtemp(suffix="biobakery_workflows_halla",dir=output_folder)
+
+    # write the lines for the two feature set files
+    feature_set_1 = os.path.join(outfolder,"feature1.tsv")
+    feature_set_2 = os.path.join(outfolder,"feature2.tsv")
+    for lines, file_name in [[feature_set_1_data,feature_set_1],[feature_set_2_data,feature_set_2]]:
+        with open(file_name,"w") as file_handle:
+            file_handle.write("\n".join(["\t".join(map(str,l)) for l in lines]))
+
+    # run halla
+    halla_command = ["halla","-X", feature_set_1, "-Y", feature_set_2,"--output", outfolder, "--header"]
+    if model:
+        halla_command += ["-m",model]
+    try:
+        subprocess.check_call(halla_command)
+    except subprocess.CalledProcessError:
+        print("Error: Unable to run halla")
+    
+    # run hallagram
+    output_png = os.path.join(outfolder,"hallagram.png")
+    hallagram_command = ["hallagram",os.path.join(outfolder,"similarity_table.txt"),
+        os.path.join(outfolder,"hypotheses_tree.txt"), os.path.join(outfolder,"associations.txt"),
+        "--outfile",output_png,"--strongest",str(strongest),"--axlabels",axis1_label,axis2_label]
+    if model:
+        hallagram_command += ["--similarity",model]
+    try:
+        subprocess.check_call(hallagram_command)
+    except subprocess.CalledProcessError:
+        print("Error: Unable to run hallagram")
+
+    if os.path.isfile(output_png):
+        hallagram_png=read_png(output_png)        
+
+        # create a subplot and remove the frame and axis labels
+        fig = pyplot.figure()
+        subplot = fig.add_subplot(111, frame_on=False)
+        subplot.xaxis.set_visible(False)
+        subplot.yaxis.set_visible(False)
+        
+        # set title if provided
+        if title:
+            fig.suptitle(title, fontsize=16)
+
+        # show but do not interpolate (as this will make the text hard to read)
+        try:
+            pyplot.imshow(hallagram_png, interpolation="none")
+        except TypeError:
+            print("Unable to display hallagram plot")
+            pass
+
+        # this is needed to increase the image size (to fit in the increased figure)
+        pyplot.tight_layout()
+
+    # remove the temp folder
+    if not output_folder:
+        shutil.rmtree(outfolder) 
+    
 def qc_read_counts(document, file):
     """ Read in the file of read counts compiled from kneaddata logs with the utility script """
     
