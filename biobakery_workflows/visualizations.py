@@ -104,6 +104,23 @@ def plot_hallagram(feature_set_1_data, feature_set_2_data, axis1_label, axis2_la
     # remove the temp folder
     if not output_folder:
         shutil.rmtree(outfolder) 
+
+def plot_pcoa_top_average_abundance(document, samples, feature_names, feature_data, feature_type, scale_data=None, legend_title="% Abundance", max_sets=6):
+    """ Plot multiple pcoa in a single figure for the top abundances for the feature set """
+
+    # if function is provided, scale the abundance data
+    if scale_data:
+        new_data = []
+        for row in feature_data:
+            new_data.append(map(scale_data,row))
+        feature_data = new_data
+
+    # get the top features by average abundance
+    top_names, top_data = utilities.top_rows(feature_names, feature_data, max_sets, function="average")
+
+    top_abundances=dict((x,y) for x,y in zip(["#"+str(i+1)+" "+x for i,x in enumerate(top_names[:max_sets])], top_data[:max_sets]))
+    document.show_pcoa_multiple_plots(samples, feature_names, feature_data,
+        "PCoA Ordination of "+feature_type+", top "+str(max_sets)+" "+feature_type+" by average abundance", top_abundances, legend_title)
     
 def qc_read_counts(document, file):
     """ Read in the file of read counts compiled from kneaddata logs with the utility script """
