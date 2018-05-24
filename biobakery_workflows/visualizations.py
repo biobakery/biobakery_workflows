@@ -32,10 +32,12 @@ import shutil
 
 from . import utilities
 
-def plot_hallagram(feature_set_1_data, feature_set_2_data, axis1_label, axis2_label, model=None, title=None, output_folder=None, strongest=10):
+def plot_hallagram(document, feature_set_1_data, feature_set_2_data, axis1_label, axis2_label, model=None, title=None,
+    output_folder=None, strongest=10, show_table=False,q_value=0.1):
     """ Run halla on the two feature sets and plot the hallagram with the strongest associations 
         The first data line for each feature set should be a header of sample ids
-        Requires halla v0.8.3
+        Requires halla v0.8.7
+        If show_table is set, then instead of including heatmap include a table of associations
     """
 
     from matplotlib._png import read_png
@@ -66,40 +68,61 @@ def plot_hallagram(feature_set_1_data, feature_set_2_data, axis1_label, axis2_la
     except subprocess.CalledProcessError:
         print("Error: Unable to run halla")
     
-    # run hallagram
-    output_png = os.path.join(outfolder,"hallagram.png")
-    hallagram_command = ["hallagram",os.path.join(outfolder,"similarity_table.txt"),
-        os.path.join(outfolder,"hypotheses_tree.txt"), os.path.join(outfolder,"associations.txt"),
-        "--outfile",output_png,"--strongest",str(strongest),"--axlabels",axis1_label,axis2_label]
-    if model:
-        hallagram_command += ["--similarity",model]
-    try:
-        subprocess.check_call(hallagram_command)
-    except subprocess.CalledProcessError:
-        print("Error: Unable to run hallagram")
+    if show_table:
+        # display the table of associations instead of including the heatmap
+        associations_file = os.path.join(outfolder,"associations.txt")
+        # check that the file is not empty
+        with open(associations_file) as file_handle:
+            associations_total = len(file_handle.readlines())-1
 
-    if os.path.isfile(output_png):
-        hallagram_png=read_png(output_png)        
+        if associations_total > 0:
+            columns, row_names, halla_data = document.read_table(associations_file, format_data=str)
 
-        # create a subplot and remove the frame and axis labels
-        fig = pyplot.figure()
-        subplot = fig.add_subplot(111, frame_on=False)
-        subplot.xaxis.set_visible(False)
-        subplot.yaxis.set_visible(False)
+            # reduce data to only those columns to display in the table
+            cluster_results = [[row[0].replace(";","\n"),row[2].replace(";","\n"),"{0:.7f}".format(float(row[4])),"{0:.3f}".format(float(row[5]))] for row in halla_data]
+            # filter any results that are more than the max q_value
+            cluster_results = list(filter(lambda row: float(row[-1]) < q_value, cluster_results))
         
-        # set title if provided
-        if title:
-            fig.suptitle(title, fontsize=16)
-
-        # show but do not interpolate (as this will make the text hard to read)
+            row_labels = list(map(lambda x: str(x)+"   ",range(1,len(cluster_results)+1)))
+            column_labels = [axis1_label, axis2_label,"  p-value  ","q-value"]
+            document.show_table(cluster_results, row_labels, column_labels, title, font=6)
+        else:
+            print("No associations found for "+title)
+    else:
+        # run hallagram
+        output_png = os.path.join(outfolder,"hallagram.png")
+        hallagram_command = ["hallagram",os.path.join(outfolder,"similarity_table.txt"),
+            os.path.join(outfolder,"hypotheses_tree.txt"), os.path.join(outfolder,"associations.txt"),
+            "--outfile",output_png,"--strongest",str(strongest),"--axlabels",axis1_label,axis2_label]
+        if model:
+            hallagram_command += ["--similarity",model]
         try:
-            pyplot.imshow(hallagram_png, interpolation="none")
-        except TypeError:
-            print("Unable to display hallagram plot")
-            pass
+            subprocess.check_call(hallagram_command)
+        except subprocess.CalledProcessError:
+            print("Error: Unable to run hallagram")
 
-        # this is needed to increase the image size (to fit in the increased figure)
-        pyplot.tight_layout()
+        if os.path.isfile(output_png):
+            hallagram_png=read_png(output_png)        
+
+            # create a subplot and remove the frame and axis labels
+            fig = pyplot.figure()
+            subplot = fig.add_subplot(111, frame_on=False)
+            subplot.xaxis.set_visible(False)
+            subplot.yaxis.set_visible(False)
+        
+            # set title if provided
+            if title:
+                fig.suptitle(title, fontsize=16)
+
+            # show but do not interpolate (as this will make the text hard to read)
+            try:
+                pyplot.imshow(hallagram_png, interpolation="none")
+            except TypeError:
+                print("Unable to display hallagram plot")
+                pass
+
+            # this is needed to increase the image size (to fit in the increased figure)
+            pyplot.tight_layout()
 
     # remove the temp folder
     if not output_folder:
