@@ -86,7 +86,7 @@ closed_reference_tsv = sixteen_s.taxonomic_profile(
     workflow_config.greengenes_taxonomy, args.min_size)
 
 # functional profiling
-predict_metagenomes_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()

@@ -752,7 +752,7 @@ def functional_profile(workflow, closed_reference_tsv, output_folder):
     return functional_data_tsv
 
 def picrust(workflow,otu_table_biom,output_folder):
-    """ Runs picrust normalize, then predict
+    """ Runs picrust normalize, then predict, then categorize
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
@@ -779,7 +779,7 @@ def picrust(workflow,otu_table_biom,output_folder):
         name="normalize_by_copy_number.py")
     
     # predict metagenomes
-    predict_metagenomes_table=utilities.name_files("all_samples_predict_metagenomes.biom", output_folder)
+    predict_metagenomes_table=utilities.name_files("all_samples_predict_metagenomesX.biom", output_folder)
     # first remove target file as picrust will not overwrite
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
@@ -787,8 +787,20 @@ def picrust(workflow,otu_table_biom,output_folder):
         depends=[normalized_otu_table,TrackedExecutable("predict_metagenomes.py")],
         targets=predict_metagenomes_table,
         name="predict_metagenomes.py")
+
+
+     # categorize by function
+     categorized_function_table=utilities.name_files("all_samples_categorize_by_function.biom", output_folder)
+    # first remove target file as picrust will not overwrite
+    workflow.add_task(
+        "remove_if_exists.py [targets[0]] ; "+\
+        "categorize_by_function.py -f -i [depends[0]] -o [targets[0]] --level 3 -c KEGG_Pathways",
+        depends=[predict_metagenomes_table,TrackedExecutable("categorize_by_function.py")],
+        targets=categorized_function_table,
+        name="categorize_by_function.py")
     
-    return predict_metagenomes_table
+    
+    return categorized_function_table
     
 
 def convert_to_biom_from_tsv(workflow, tsv_file, biom_file, table_type="OTU table", options=""):
