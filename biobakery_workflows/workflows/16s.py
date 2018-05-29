@@ -32,6 +32,7 @@ from biobakery_workflows.tasks import sixteen_s
 from biobakery_workflows import utilities, config
 
 
+
 # create a workflow instance, providing the version number and description
 workflow = Workflow(version="0.1", description="A workflow for 16S sequencing data")
 

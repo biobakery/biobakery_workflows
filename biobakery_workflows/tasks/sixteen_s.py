@@ -31,6 +31,8 @@ from anadama2.tracked import TrackedExecutable
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
+
+
 def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)
     
@@ -766,7 +768,7 @@ def picrust(workflow,otu_table_biom,output_folder):
         string: The path to the functional data file in biom format.
     
     """
-
+    
     # normalize the otu table
     normalized_otu_table=utilities.name_files("all_samples_normalize_by_copy_number.biom", output_folder)
     # first remove target file as picrust will not overwrite
@@ -779,7 +781,7 @@ def picrust(workflow,otu_table_biom,output_folder):
         name="normalize_by_copy_number.py")
     
     # predict metagenomes
-    predict_metagenomes_table=utilities.name_files("all_samples_predict_metagenomesX.biom", output_folder)
+    predict_metagenomes_table=utilities.name_files("all_samples_predict_metagenomes.biom", output_folder)
     # first remove target file as picrust will not overwrite
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
@@ -789,8 +791,8 @@ def picrust(workflow,otu_table_biom,output_folder):
         name="predict_metagenomes.py")
 
 
-     # categorize by function
-     categorized_function_table=utilities.name_files("all_samples_categorize_by_function.biom", output_folder)
+    # categorize by function
+    categorized_function_table=utilities.name_files("all_samples_categorize_by_function.biom", output_folder)
     # first remove target file as picrust will not overwrite
     workflow.add_task(
         "remove_if_exists.py [targets[0]] ; "+\
