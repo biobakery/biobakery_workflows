@@ -56,6 +56,11 @@ workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonom
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
 workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
 
+workflow.add_argument("barcode-file", desc="the barcode file", default="")
+workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
+workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
+
+
 # get the arguments from the command line
 args = workflow.parse_args()
 
@@ -63,11 +68,23 @@ args = workflow.parse_args()
 # return an error if no files are found
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
+
+# if a barcode file is provided, then demultiplex
+if args.barcode_file:
+    demultiplexed_files=shotgun.demultiplex(
+        workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
+        args.min_pred_qc_score, args.pair_identifier)
+    # if the original files are gzipped, they will not be compressed after demultiplexing
+    args.input_extension = args.input_extension.replace(".gz","")
+else:
+    demultiplexed_files=input_files
+
+
 ### STEP #1: Run quality control on all input files ###
 original_extension = args.input_extension
 if args.bypass_quality_control:
     # merge files if they are paired
-    qc_output_files, args.input_extension = shotgun.merge_pairs(workflow, input_files, args.input_extension, args.pair_identifier, args.output)
+    qc_output_files, args.input_extension = shotgun.merge_pairs(workflow, demultiplexed_files, args.input_extension, args.pair_identifier, args.output)
     
 elif not "fasta" in args.input_extension:
     qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, 
