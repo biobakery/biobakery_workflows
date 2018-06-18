@@ -169,32 +169,41 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
 
 
 def filter_trim(workflow, input_folder, output_folder, pool):
+
+         read_counts_file_path = output_folder + "/Read_QC/Read_counts_after_filtering.tsv"
        
          workflow.add_task(
              "biobakery_workflows/scripts/filter_and_trim.R --input_dir=[args[0]] --output_dir=[args[1]]",
-             targets ="/Users/anamailyan/dada_output/Read_QC/Read_counts_after_filtering.tsv",
-             args=[input_folder, output_folder]
+             targets = [read_counts_file_path],
+             args = [input_folder, output_folder]
              )
 
 
 
 def learn_error(workflow,output_folder,pool):
+
+         read_counts_file_path = output_folder + "/Read_QC/Read_counts_after_filtering.tsv"
+         error_ratesF_path = output_folder + "/error_rates_F.rds"
+         error_ratesR_path = output_folder + "/error_rates_R.rds"
        
          workflow.add_task(
              "biobakery_workflows/scripts/learn_error_rates.R  --output_dir=[args[0]]",
-             depends="/Users/anamailyan/dada_output/Read_QC/Read_counts_after_filtering.tsv",
-             targets=["/Users/anamailyan/dada_output/error_rates_F.rds","/Users/anamailyan/dada_output/error_rates_R.rds"],   
-             args=[output_folder]
+             depends = [read_counts_file_path],
+             targets = [error_ratesF_path, error_ratesR_path],  
+             args = [output_folder]
              )
         
  
 
 
 def merge_paired_ends(workflow, input_folder, output_folder, pool):
+
+        error_rates_data_path = output_folder + "/error_rates_R.rds"
+        mergers_data_path = output_folder + "/mergers.rds"
          
         workflow.add_task("biobakery_workflows/scripts/merge_paired_ends.R --input_dir=[args[0]] --output_dir=[args[1]]",
-            depends=["/Users/anamailyan/dada_output/error_rates_F.rds","/Users/anamailyan/dada_output/error_rates_R.rds"],
-            targets="/Users/anamailyan/dada_output/mergers.rds",                       
+            depends = [error_rates_data_path],
+            targets= [mergers_data_path],                       
             args=[input_folder, output_folder]
             )
         
@@ -202,8 +211,14 @@ def merge_paired_ends(workflow, input_folder, output_folder, pool):
 
 def const_seq_table(workflow, input_folder, output_folder, pool):
 
-         workflow.add_task("biobakery_workflows/scripts/const_seq_table.R  --output_dir=[args[0]]",
-             args=[output_folder])
+         mergers_data_path = output_folder + "/mergers.rds"
+         read_counts_steps = output_folder +"/Read_QC/Read_counts_at_each_step.tsv"
+
+         workflow.add_task("biobakery_workflows/scripts/const_seq_table.R --input_dir=[args[0]] --output_dir=[args[1]]",
+            depends=[mergers_data_path],
+            targets=[read_counts_steps],                              
+            args=[input_folder, output_folder]
+            )
          
 
    

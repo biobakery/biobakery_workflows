@@ -93,4 +93,5 @@ rd.counts$ratio <- round( rd.counts$reads.out / rd.counts$reads.in, digits = 2 )
 rd.counts
 
 # Write rd.counts table to file in readQC.folder
+saveRDS(rd.counts, paste0( readQC.folder, "/Read_counts_filt.rds" ))
 write.table( rd.counts, paste0( readQC.folder, "/Read_counts_after_filtering.tsv" ), sep = "\t", quote = F, eol = "\n", col.names = NA )
