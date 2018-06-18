@@ -162,7 +162,8 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
         "bash -c \"[ -e [targets[0]] ] || touch [targets[0]]\"",
         depends=[demultiplex_log]*len(demultiplex_fastq_files),
         targets=demultiplex_fastq_files,
-        name="check_demultiplex")
+        name="check_demultiplex"
+        )
 
     return demultiplex_fastq_files
     
@@ -201,7 +202,8 @@ def merge_paired_ends(workflow, input_folder, output_folder, pool):
         error_rates_data_path = output_folder + "/error_rates_R.rds"
         mergers_data_path = output_folder + "/mergers.rds"
          
-        workflow.add_task("biobakery_workflows/scripts/merge_paired_ends.R --input_dir=[args[0]] --output_dir=[args[1]]",
+        workflow.add_task(
+            "biobakery_workflows/scripts/merge_paired_ends.R --input_dir=[args[0]] --output_dir=[args[1]]",
             depends = [error_rates_data_path],
             targets= [mergers_data_path],                       
             args=[input_folder, output_folder]
@@ -214,7 +216,8 @@ def const_seq_table(workflow, input_folder, output_folder, pool):
          mergers_data_path = output_folder + "/mergers.rds"
          read_counts_steps = output_folder +"/Read_QC/Read_counts_at_each_step.tsv"
 
-         workflow.add_task("biobakery_workflows/scripts/const_seq_table.R --input_dir=[args[0]] --output_dir=[args[1]]",
+         workflow.add_task(
+            "biobakery_workflows/scripts/const_seq_table.R --input_dir=[args[0]] --output_dir=[args[1]]",
             depends=[mergers_data_path],
             targets=[read_counts_steps],                              
             args=[input_folder, output_folder]
@@ -226,11 +229,40 @@ def phylogeny(workflow, output_folder, pool):
          seqtab_data_path = output_folder + "/seqtab_final.rds"
          msa_fasta_file = output_folder + "/msa.fasta"
 
-         workflow.add_task("biobakery_workflows/scripts/phylogeny.R --output_dir=[args[0]]",
+         workflow.add_task(
+            "biobakery_workflows/scripts/phylogeny.R --output_dir=[args[0]]",
             depends=[seqtab_data_path],
             targets=[msa_fasta_file],                              
             args=[output_folder]
             )
-         
+
+
+def assign_taxonomy(workflow, output_folder, pool):
+
+         seqtab_data_path = output_folder + "/seqtab_final.rds"
+         all_samples_taxonomy = output_folder + "/all_samples_GG13-8-taxonomy.tsv"
+         all_samples_sv_gg13 = output_folder + "/all_samples_SV-counts_and_GG13-8-taxonomy.tsv"
+ 
+         workflow.add_task(
+            "biobakery_workflows/scripts/assign_taxonomy.R --output_dir=[args[0]]",
+            depends=[seqtab_data_path],
+            targets=[all_samples_taxonomy, all_samples_sv_gg13],                              
+            args=[output_folder]
+            )
+
+                  
+
+def assign_silva_rdp(workflow, output_folder, pool):
+
+         seqtab_data_path = output_folder + "/seqtab_final.rds"
+         all_samples_silva = output_folder + "/all_samples_SV-counts_and_SILVA-taxonomy.tsv"
+         all_samples_silva_rdp = output_folder + "/all_samples_SV-counts_and_RDP-taxonomy.tsv"
+ 
+         workflow.add_task(
+            "biobakery_workflows/scripts/assign_silva_rdp.R --output_dir=[args[0]]",
+            depends=[seqtab_data_path],
+            targets=[all_samples_silva, all_samples_silva_rdp],                              
+            args=[output_folder]
+            )
 
    

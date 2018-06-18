@@ -43,21 +43,11 @@ filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq.gz", list.files(filt.pa
 readQC.folder <- file.path(output.path, "Read_QC")
 ifelse(!dir.exists(readQC.folder), dir.create(readQC.folder, recursive = TRUE), FALSE)
 
-
 set.seed(100)
 # Filtered forward reads
 errF <- learnErrors(filtFs, nread=1e3, multithread=TRUE)
 # Filtered reverse reads
 errR <- learnErrors(filtRs, nread=1e3, multithread=TRUE)
-# Visualize the estimated error rates
-# Forward
-#plotErrors(errF, nominalQ=TRUE)
-# Save to file 
-ggsave(paste0(readQC.folder,"/Error_rates_per_sample_FWD.pdf"), plotErrors(errF, nominalQ=TRUE) , device = "pdf")
-# Reverse
-#plotErrors(errR, nominalQ=TRUE)
-# Save to file 
-ggsave(paste0(readQC.folder,"/Error_rates_per_sample_REV.pdf"), plotErrors(errR, nominalQ=TRUE) , device = "pdf")
 
 #save as rds files
 saveRDS(errF, paste0(output.path, "/error_rates_F.rds")) 
