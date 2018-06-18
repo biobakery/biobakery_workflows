@@ -219,6 +219,18 @@ def const_seq_table(workflow, input_folder, output_folder, pool):
             targets=[read_counts_steps],                              
             args=[input_folder, output_folder]
             )
+
+
+def phylogeny(workflow, output_folder, pool):
+
+         seqtab_data_path = output_folder + "/seqtab_final.rds"
+         msa_fasta_file = output_folder + "/msa.fasta"
+
+         workflow.add_task("biobakery_workflows/scripts/phylogeny.R --output_dir=[args[0]]",
+            depends=[seqtab_data_path],
+            targets=[msa_fasta_file],                              
+            args=[output_folder]
+            )
          
 
    

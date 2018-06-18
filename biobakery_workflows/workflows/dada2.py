@@ -80,5 +80,6 @@ dadatwo.filter_trim(workflow,args.input, args.output, args.pool)
 dadatwo.learn_error(workflow, args.output, args.pool)
 dadatwo.merge_paired_ends(workflow, args.input, args.output, args.pool)
 dadatwo.const_seq_table(workflow, args.input, args.output, args.pool)
+dadatwo.phylogeny(workflow, args.output, args.pool)
 # start the workflow
 workflow.go()
