@@ -65,21 +65,22 @@ input_files = list(filter(lambda file: not file in index_files, input_files))
 
 # if a barcode file is provided, then demultiplex
 if args.barcode_file:
-    demultiplexed_files=sixteen_s.demultiplex(
+    demultiplex_output_folder=dadatwo.demultiplex(
         workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
         args.min_pred_qc_score, args.pair_identifier)
     # if the original files are gzipped, they will not be compressed after demultiplexing
     args.input_extension = args.input_extension.replace(".gz","")
 else:
     demultiplexed_files=input_files
+    demultiplex_output_folder=args.input
 
 
         
 # call  workflow tasks
-dadatwo.filter_trim(workflow,args.input, args.output, args.pool)
+dadatwo.filter_trim(workflow, demultiplex_output_folder, args.output, args.pool)
 dadatwo.learn_error(workflow, args.output, args.pool)
-dadatwo.merge_paired_ends(workflow, args.input, args.output, args.pool)
-dadatwo.const_seq_table(workflow, args.input, args.output, args.pool)
+dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output, args.pool)
+dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output, args.pool)
 dadatwo.phylogeny(workflow, args.output, args.pool)
 dadatwo.assign_taxonomy(workflow, args.output, args.pool)
 dadatwo.assign_silva_rdp(workflow, args.output, args.pool)

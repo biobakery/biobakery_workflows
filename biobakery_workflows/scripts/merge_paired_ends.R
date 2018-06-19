@@ -89,4 +89,4 @@ for(sam in sample.names) {
   mergers[[sam]] <- merger
 }
 rm(derepF); rm(derepR)
-saveRDS(mergers, paste0( "/Users/anamailyan/dada_output", "/mergers.rds"))
+saveRDS(mergers, paste0(output.path, "/mergers.rds"))

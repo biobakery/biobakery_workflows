@@ -148,10 +148,10 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
         else:
             workflow.add_task(
                 "fastq-multx -l [depends[0]] [depends[1]] -o [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, input_files[0]],
-                args=[min_phred, demultiplex_output_folder, pair_identifier, fastq_multx_tracked],
-                targets=demultiplex_log,
-                name="demultiplex")
+                depends = [ expanded_barcode_file, input_files[0]],
+                args = [min_phred, demultiplex_output_folder, pair_identifier, fastq_multx_tracked],
+                targets = demultiplex_log,
+                name = "demultiplex")
             
     # fastq-multx only creates files for those samples with reads mapping to barcodes
     # if a sample in the barcode file does not have any reads, the expected files for 
@@ -160,12 +160,12 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
     
     workflow.add_task_group(
         "bash -c \"[ -e [targets[0]] ] || touch [targets[0]]\"",
-        depends=[demultiplex_log]*len(demultiplex_fastq_files),
-        targets=demultiplex_fastq_files,
-        name="check_demultiplex"
+        depends = [demultiplex_log]*len(demultiplex_fastq_files),
+        targets = demultiplex_fastq_files,
+        name = "check_demultiplex"
         )
 
-    return demultiplex_fastq_files
+    return demultiplex_output_folder
     
 
 
@@ -175,8 +175,10 @@ def filter_trim(workflow, input_folder, output_folder, pool):
        
          workflow.add_task(
              "biobakery_workflows/scripts/filter_and_trim.R --input_dir=[args[0]] --output_dir=[args[1]]",
+             depends = input_folder,
              targets = [read_counts_file_path],
-             args = [input_folder, output_folder]
+             args = [input_folder, output_folder],
+             name ="filter_and_trim"
              )
 
 
@@ -191,7 +193,8 @@ def learn_error(workflow,output_folder,pool):
              "biobakery_workflows/scripts/learn_error_rates.R  --output_dir=[args[0]]",
              depends = [read_counts_file_path],
              targets = [error_ratesF_path, error_ratesR_path],  
-             args = [output_folder]
+             args = [output_folder],
+             name = "learn_eror_rates"
              )
         
  
@@ -205,8 +208,9 @@ def merge_paired_ends(workflow, input_folder, output_folder, pool):
         workflow.add_task(
             "biobakery_workflows/scripts/merge_paired_ends.R --input_dir=[args[0]] --output_dir=[args[1]]",
             depends = [error_rates_data_path],
-            targets= [mergers_data_path],                       
-            args=[input_folder, output_folder]
+            targets = [mergers_data_path],                       
+            args = [input_folder, output_folder],
+            name = "dereplicate_and_merge"
             )
         
 
@@ -218,9 +222,10 @@ def const_seq_table(workflow, input_folder, output_folder, pool):
 
          workflow.add_task(
             "biobakery_workflows/scripts/const_seq_table.R --input_dir=[args[0]] --output_dir=[args[1]]",
-            depends=[mergers_data_path],
-            targets=[read_counts_steps],                              
-            args=[input_folder, output_folder]
+            depends = [mergers_data_path],
+            targets = [read_counts_steps],                              
+            args = [input_folder, output_folder],
+            name = "construct_sequence_table"
             )
 
 
@@ -231,9 +236,10 @@ def phylogeny(workflow, output_folder, pool):
 
          workflow.add_task(
             "biobakery_workflows/scripts/phylogeny.R --output_dir=[args[0]]",
-            depends=[seqtab_data_path],
-            targets=[msa_fasta_file],                              
-            args=[output_folder]
+            depends = [seqtab_data_path],
+            targets = [msa_fasta_file],                              
+            args = [output_folder],
+            name = "phylogeny"
             )
 
 
@@ -245,9 +251,10 @@ def assign_taxonomy(workflow, output_folder, pool):
  
          workflow.add_task(
             "biobakery_workflows/scripts/assign_taxonomy.R --output_dir=[args[0]]",
-            depends=[seqtab_data_path],
-            targets=[all_samples_taxonomy, all_samples_sv_gg13],                              
-            args=[output_folder]
+            depends = [seqtab_data_path],
+            targets = [all_samples_taxonomy, all_samples_sv_gg13],                              
+            args = [output_folder],
+            name = "assign_taxonomy"
             )
 
                   
@@ -260,9 +267,11 @@ def assign_silva_rdp(workflow, output_folder, pool):
  
          workflow.add_task(
             "biobakery_workflows/scripts/assign_silva_rdp.R --output_dir=[args[0]]",
-            depends=[seqtab_data_path],
-            targets=[all_samples_silva, all_samples_silva_rdp],                              
-            args=[output_folder]
+            depends = [seqtab_data_path],
+            targets = [all_samples_silva, all_samples_silva_rdp],                              
+            args = [output_folder],
+            name = "assign_silva_rdp"
+            
             )
 
    
