@@ -37,8 +37,12 @@ print(output.path)
 
 filt.path = file.path(output.path,"filtered_input")
 
-filtFs <- file.path(filt.path,sort(grep( "*_F_filt.fastq.gz", list.files(filt.path), value = T ) ))
-filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq.gz", list.files(filt.path), value = T ) ))
+#filtFs <- file.path(filt.path,sort(grep( "*_F_filt.fastq.gz", list.files(filt.path), value = T ) ))
+#filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq.gz", list.files(filt.path), value = T ) ))
+
+filtFs <- file.path(filt.path,sort(grep( "*_F_filt.fastq*", list.files(filt.path), value = T ) ))
+filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq*", list.files(filt.path), value = T ) ))
+
 
 readQC.folder <- file.path(output.path, "Read_QC")
 ifelse(!dir.exists(readQC.folder), dir.create(readQC.folder, recursive = TRUE), FALSE)

@@ -6,6 +6,7 @@ library(ggplot2)
 library(msa)
 library(gridExtra)
 library(phangorn)
+library(tools)
 
 args <- commandArgs(TRUE)
 
@@ -27,7 +28,9 @@ for( i in names(args.list) ) {
 }
 
 # print contents of folder
-cat( grep( "*\\.fastq.gz", list.files(args.list$output_dir), value=T ), sep = "\n" )
+#cat( grep( "*\\.fastq.gz", list.files(args.list$output_dir), value=T ), sep = "\n" )
+
+cat( grep( "*\\.fastq*", list.files(args.list$output_dir), value=T ), sep = "\n" )
 
 # these variables are passed to the workflow
 output.path <- normalizePath( args.list$output_dir )
@@ -48,9 +51,18 @@ input.file.list <- grep( "*fastq", list.files( input.path ), value = T )
 fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
 fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
 
+
 # Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-sample.names <- gsub( "_R1.*\\.fastq(\\.gz)?", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R2.*\\.fastq(\\.gz)?", "", fnRs, perl = T)
+#sample.names <- gsub( "_R1.*\\.fastq(\\.gz)?", "", fnFs, perl = T)
+#sample.namesR <- gsub( "_R2.*\\.fastq(\\.gz)?", "", fnRs, perl = T)
+
+sample.names <- gsub( "_R1.*\\.fastq*", "", fnFs, perl = T)
+sample.namesR <- gsub( "_R2.*\\.fastq*", "", fnRs, perl = T)
+
+sample.ext <- file_ext(fnFs)
+if(identical(sample.ext[1],"gz")) sample.ext <- "fastq.gz"
+
+
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
 
 
@@ -65,8 +77,11 @@ filt_path <- file.path(output.path, "filtered_input")
 ifelse(!dir.exists(filt_path), dir.create(filt_path, recursive = TRUE), FALSE)
 
 # Define filenames for filtered input files
-filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
-filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.fastq.gz"))
+filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
+filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
+
+#filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
+#filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.fastq.gz"))
 
 
 errF <- readRDS(file.path(output.path,"error_rates_F.rds"))

@@ -219,11 +219,12 @@ def const_seq_table(workflow, input_folder, output_folder, pool):
 
          mergers_data_path = output_folder + "/mergers.rds"
          read_counts_steps = output_folder +"/Read_QC/Read_counts_at_each_step.tsv"
+         seqtab_data_path = output_folder + "/seqtab_final.rds"
 
          workflow.add_task(
             "biobakery_workflows/scripts/const_seq_table.R --input_dir=[args[0]] --output_dir=[args[1]]",
             depends = [mergers_data_path],
-            targets = [read_counts_steps],                              
+            targets = [read_counts_steps, seqtab_data_path],                              
             args = [input_folder, output_folder],
             name = "construct_sequence_table"
             )

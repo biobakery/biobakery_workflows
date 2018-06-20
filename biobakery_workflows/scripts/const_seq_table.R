@@ -41,8 +41,12 @@ fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
 fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
 
 # Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-sample.names <- gsub( "_R1.*\\.fastq(\\.gz)?", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R2.*\\.fastq(\\.gz)?", "", fnRs, perl = T)
+#sample.names <- gsub( "_R1.*\\.fastq(\\.gz)?", "", fnFs, perl = T)
+#sample.namesR <- gsub( "_R2.*\\.fastq(\\.gz)?", "", fnRs, perl = T)
+
+sample.names <- gsub( "_R1.*\\.fastq*", "", fnFs, perl = T)
+sample.namesR <- gsub( "_R2.*\\.fastq*", "", fnRs, perl = T)
+
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
 
 mergers <- readRDS(file.path(output.path,"mergers.rds"))
