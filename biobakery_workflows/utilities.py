@@ -1031,6 +1031,44 @@ def read_otu_table(file):
             data.append([float(i) for i in data_points])
             
     return samples, ids, taxonomy, data
+    
+def read_dada_otu_table(file):
+    """ Read in an otu table. Remove extra brackets from taxonomy names if present.
+    
+        Args:
+            file (string): A file containing the otu table (tsv format).
+                
+        Requires:
+            None
+        
+        Returns:
+            (list): A list of samples.
+            (list): A list of otu ids.
+            (list): A list of taxons.
+            (list): A list of lists of data.
+            
+        Example:
+            samples, ids, taxonomy, data = read_otu_table("otu_table.tsv")
+    """
+        
+    data=[]
+    samples=[]
+    taxonomy=[]
+    ids=[]
+    with open(file) as file_handle:
+        samples = file_handle.readline().rstrip().split("\t")[1:-7]
+        for line in file_handle:
+            data_points=line.rstrip().split("\t")
+            ids.append(data_points.pop(0))
+            taxrows = ""
+            for j in range(6):
+            	taxrows += data_points.pop().replace("[","").replace("]","")
+            	taxrows += "; "
+            taxrows += data_points.pop().replace("[","").replace("]","")	
+            taxonomy.append(taxrows)          	
+            data.append([float(i) for i in data_points])
+            
+    return samples, ids, taxonomy, data    
 
 def sort_data(data, samples):
     """ Sort the data with those with the largest values first
