@@ -214,8 +214,8 @@ import numpy
 # read in the otu table data
 
 samples, ids, taxonomy, data = utilities.read_dada_otu_table(vars["otu_table_gg_file"],7)
-#samples_silva, ids_silva, taxonomy_silva, data_silva = utilities.read_dada_otu_table(vars["otu_table_silva_file"],6)
-#samples_rdp, ids_rdp, taxonomy_rdp, data_rdp = utilities.read_dada_otu_table(vars["otu_table_rdp_file"],6)
+samples_silva, ids_silva, taxonomy_silva, data_silva = utilities.read_dada_otu_table(vars["otu_table_silva_file"],6)
+samples_rdp, ids_rdp, taxonomy_rdp, data_rdp = utilities.read_dada_otu_table(vars["otu_table_rdp_file"],6)
 
 
 # plot the top taxa by genus level, plotting the relative abundance values
@@ -223,25 +223,23 @@ max_taxa=15
 
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data)
-#relab_data_silva = utilities.relative_abundance(data_silva)
-#relab_data_rdp = utilities.relative_abundance(data_rdp)
+relab_data_silva = utilities.relative_abundance(data_silva)
+relab_data_rdp = utilities.relative_abundance(data_rdp)
 
 # get the taxa summarized by genus level
 genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
-
-
-#genus_level_taxa_silva, genus_level_data_silva = utilities.taxa_by_level(taxonomy_silva, relab_data_silva, level=5)
-#genus_level_taxa_rdp, genus_level_data_rdp = utilities.taxa_by_level(taxonomy_rdp, relab_data_rdp, level=5)
+genus_level_taxa_silva, genus_level_data_silva = utilities.taxa_by_level(taxonomy_silva, relab_data_silva, level=5)
+genus_level_taxa_rdp, genus_level_data_rdp = utilities.taxa_by_level(taxonomy_rdp, relab_data_rdp, level=5)
 
 # get the top rows of the relative abundance data
 top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
-#top_taxa_silva, top_data_silva = utilities.top_rows(genus_level_taxa_silva, genus_level_data_silva, max_taxa, function="average")
-#top_taxa_rdp, top_data_rdp = utilities.top_rows(genus_level_taxa_rdp, genus_level_data_rdp, max_taxa, function="average")
+top_taxa_silva, top_data_silva = utilities.top_rows(genus_level_taxa_silva, genus_level_data_silva, max_taxa, function="average")
+top_taxa_rdp, top_data_rdp = utilities.top_rows(genus_level_taxa_rdp, genus_level_data_rdp, max_taxa, function="average")
 
 # shorten the top taxa names to just the genus level for plotting
 top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
-#top_taxa_short_names_silva = utilities.taxa_shorten_name(top_taxa_silva, level=5, remove_identifier=True)
-#top_taxa_short_names_rdp = utilities.taxa_shorten_name(top_taxa_rdp, level=5, remove_identifier=True)
+top_taxa_short_names_silva = utilities.taxa_shorten_name(top_taxa_silva, level=5, remove_identifier=True)
+top_taxa_short_names_rdp = utilities.taxa_shorten_name(top_taxa_rdp, level=5, remove_identifier=True)
 
 
 
@@ -253,21 +251,23 @@ if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
     # reduce legend size to fit names
     legend_size = 5
     
-#if len(top_taxa_short_names_silva) != len(list(set(top_taxa_short_names_silva))):
+if len(top_taxa_short_names_silva) != len(list(set(top_taxa_short_names_silva))):
     # if duplicate names, then add family to the taxonomy
-#    top_taxa_short_names_silva = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa_silva, level=4),utilities.taxa_shorten_name(top_taxa_silva, level=5))]
+    top_taxa_short_names_silva = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa_silva, level=4),utilities.taxa_shorten_name(top_taxa_silva, level=5))]
     # reduce legend size to fit names
-#    legend_size = 5
+    legend_size = 5
     
-#if len(top_taxa_short_names_rdp) != len(list(set(top_taxa_short_names_rdp))):
+if len(top_taxa_short_names_rdp) != len(list(set(top_taxa_short_names_rdp))):
     # if duplicate names, then add family to the taxonomy
-#    top_taxa_short_names_rdp = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa_rdp, level=4),utilities.taxa_shorten_name(top_taxa_rdp, level=5))]
+   top_taxa_short_names_rdp = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa_rdp, level=4),utilities.taxa_shorten_name(top_taxa_rdp, level=5))]
     # reduce legend size to fit names
-#    legend_size = 5
+   legend_size = 5
     
 
 # sort the data so those with the top genera are shown first
 sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
+#sorted_samples_silva, sorted_data_silva = utilities.sort_data(top_data_silva[0], samples_silva)
+#sorted_samples_rdp, sorted_data_rdp = utilities.sort_data(top_data_rdp[0], samples_rdp)
 
 transpose_top_data = numpy.transpose(top_data)
 sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
