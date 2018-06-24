@@ -1032,7 +1032,7 @@ def read_otu_table(file):
             
     return samples, ids, taxonomy, data
     
-def read_dada_otu_table(file):
+def read_dada_otu_table(file, taxcolumns):
     """ Read in an otu table. Remove extra brackets from taxonomy names if present.
     
         Args:
@@ -1056,12 +1056,12 @@ def read_dada_otu_table(file):
     taxonomy=[]
     ids=[]
     with open(file) as file_handle:
-        samples = file_handle.readline().rstrip().split("\t")[1:-7]
+        samples = file_handle.readline().rstrip().split("\t")[1:-taxcolumns]
         for line in file_handle:
             data_points=line.rstrip().split("\t")
             ids.append(data_points.pop(0))
             taxrows = ""
-            for j in range(6):
+            for j in range(taxcolumns-1):
             	taxrows += data_points.pop().replace("[","").replace("]","")
             	taxrows += "; "
             taxrows += data_points.pop().replace("[","").replace("]","")	

@@ -40,7 +40,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 
 # list the required and optional files for the workflow
 # these are expected to be included in the input folder
-input_files={"required":["counts_each_step","otu_table_gg","otu_table_rdp","otu_table_silva","msa_nonchimera"]}
+input_files={"required":["counts_each_step","otu_table_gg","otu_table_rdp","otu_table_silva","msa_nonchimera","error_ratesF","error_ratesR","readF_qc","readR_qc"]}
 
 # create a custom description for the input argument listing all expected input files
 input_desc="A folder containing the final products from the DADA2 data workflow.\n\nThe input folder should include the following:\n\n"
@@ -69,6 +69,10 @@ otu_table_gg_file = files.DADA2.path("otu_table_gg",args.input, error_if_not_fou
 otu_table_rdp_file = files.DADA2.path("otu_table_rdp", args.input, error_if_not_found=True)
 otu_table_silva_file = files.DADA2.path("otu_table_silva", args.input, error_if_not_found=True)
 msa_nochimera_file = files.DADA2.path("msa_nonchimera", args.input, error_if_not_found=True)
+error_ratesF_file = files.DADA2.path("error_ratesF", args.input, error_if_not_found=True)
+error_ratesR_file = files.DADA2.path("error_ratesR", args.input, error_if_not_found=True)
+readF_qc_file = files.DADA2.path("readF_qc", args.input, error_if_not_found=True)
+readR_qc_file = files.DADA2.path("readR_qc", args.input, error_if_not_found=True)
 
 # read and label the metadata
 metadata=None
@@ -88,14 +92,19 @@ if not args.exclude_workflow_info:
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=[counts_each_step_file,otu_table_gg_file,otu_table_rdp_file,otu_table_silva_file,msa_nochimera_file], 
+    depends=[counts_each_step_file,otu_table_gg_file,otu_table_rdp_file,otu_table_silva_file,msa_nochimera_file,error_ratesF_file,error_ratesR_file,readF_qc_file,readR_qc_file], 
     targets=workflow.name_output_files("DADA2_report."+args.format),
     vars={"title":"DADA2 Report",
           "project":args.project_name,
+          "outputdir":args.output,
           "otu_table_gg_file":otu_table_gg_file,
           "otu_table_silva_file":otu_table_silva_file,
           "otu_table_rdp_file":otu_table_rdp_file,
           "counts_each_step_file":counts_each_step_file,
+          "error_ratesF_file":error_ratesF_file,
+          "error_ratesR_file":error_ratesR_file,
+          "readF_qc_file":readF_qc_file,
+          "readR_qc_file":readR_qc_file,
           "format":args.format,
           "log":log_file,
           "metadata":metadata,

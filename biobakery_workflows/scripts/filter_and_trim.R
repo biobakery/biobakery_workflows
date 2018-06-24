@@ -2,10 +2,10 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-#library(ggplot2)
-#library(msa)
-#library(gridExtra)
-#library(phangorn)
+library(ggplot2)
+library(msa)
+library(gridExtra)
+library(phangorn)
 library(tools)
 
 ## Collect arguments
@@ -80,6 +80,33 @@ ifelse(!dir.exists(filt_path), dir.create(filt_path, recursive = TRUE), FALSE)
 
 readQC.folder <- file.path(output.dir, "Read_QC")
 ifelse(!dir.exists(readQC.folder), dir.create(readQC.folder, recursive = TRUE), FALSE)
+
+# Generate plots and save to file
+
+# Forward reads
+fwd.qc.plots.list <- list()
+for( i in 1 : length(fnFs)) {
+  fwd.qc.plots.list[[i]] <- plotQualityProfile(fnFs[i])
+  rm(i)
+}
+# Save to file
+png(paste0(output.dir,"/FWD_read_plot.png"))
+marrangeGrob( fwd.qc.plots.list, ncol=2, nrow=3, top = NULL )
+dev.off()
+rm(fwd.qc.plots.list)
+
+# Reverse reads
+rev.qc.plots.list <- list()
+for( i in 1 : length(fnRs)) {
+  rev.qc.plots.list[[i]] <- plotQualityProfile(fnRs[i])
+  rm(i)
+}
+# Save to file
+png(paste0(output.dir,"/REV_read_plot.png"))
+marrangeGrob( rev.qc.plots.list, ncol=2, nrow=3, top = NULL )
+dev.off()
+rm(rev.qc.plots.list)
+
 
 # Define filenames for filtered input files
 #filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))

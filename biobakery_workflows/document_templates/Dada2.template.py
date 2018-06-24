@@ -27,7 +27,7 @@ min_cluster_size = workflow_settings.get("min_size","UNK")
 
 columns, samples, data = document.read_table(vars["counts_each_step_file"])
 
-#' The <% print(len(samples)) %>  samples from this project were run through the standard DADA2 workflow.
+#' The <% print(len(samples)) %>, <% print(vars["outputdir"]) %>  samples from this project were run through the standard DADA2 workflow.
 
 
 #+ echo=False
@@ -47,7 +47,27 @@ pdf_format = True if vars["format"] == "pdf" else False
 #' # Quality Control
 
 #+ echo=False
+#' Forward Read Quality Plot by Sample     
+#' ![FWD Read](<% print(vars["outputdir"]) %>/data/FWD_read_plot.png)
 
+#' <% if pdf_format: print("\clearpage") %>
+
+#' Reverse Read Quality Plot  by Sample  
+#' ![REV Read](<% print(vars["outputdir"]) %>/data/REV_read_plot.png)
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' Forward Read Error Rates by Sample    
+#' ![FWD Error Rates](<% print(vars["outputdir"]) %>/data/Error_rates_per_sample_FWD.png)
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' Reverse Read Error Rates by Sample  
+#' ![REV Error Rates](<% print(vars["outputdir"]) %>/data/Error_rates_per_sample_REV.png)
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
 def sort_data(top_data, samples):
     # sort the top data so it is ordered with the top sample/abundance first
     sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
@@ -148,6 +168,7 @@ sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
 
 
 
+
 sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
 
 
@@ -192,19 +213,38 @@ import numpy
 
 # read in the otu table data
 
-samples, ids, taxonomy, data = utilities.read_dada_otu_table(vars["otu_table_gg_file"])
+samples, ids, taxonomy, data = utilities.read_dada_otu_table(vars["otu_table_gg_file"],7)
+#samples_silva, ids_silva, taxonomy_silva, data_silva = utilities.read_dada_otu_table(vars["otu_table_silva_file"],6)
+#samples_rdp, ids_rdp, taxonomy_rdp, data_rdp = utilities.read_dada_otu_table(vars["otu_table_rdp_file"],6)
 
 
 # plot the top taxa by genus level, plotting the relative abundance values
 max_taxa=15
+
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data)
+#relab_data_silva = utilities.relative_abundance(data_silva)
+#relab_data_rdp = utilities.relative_abundance(data_rdp)
+
 # get the taxa summarized by genus level
 genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
+
+
+#genus_level_taxa_silva, genus_level_data_silva = utilities.taxa_by_level(taxonomy_silva, relab_data_silva, level=5)
+#genus_level_taxa_rdp, genus_level_data_rdp = utilities.taxa_by_level(taxonomy_rdp, relab_data_rdp, level=5)
+
 # get the top rows of the relative abundance data
 top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
+#top_taxa_silva, top_data_silva = utilities.top_rows(genus_level_taxa_silva, genus_level_data_silva, max_taxa, function="average")
+#top_taxa_rdp, top_data_rdp = utilities.top_rows(genus_level_taxa_rdp, genus_level_data_rdp, max_taxa, function="average")
+
 # shorten the top taxa names to just the genus level for plotting
 top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+#top_taxa_short_names_silva = utilities.taxa_shorten_name(top_taxa_silva, level=5, remove_identifier=True)
+#top_taxa_short_names_rdp = utilities.taxa_shorten_name(top_taxa_rdp, level=5, remove_identifier=True)
+
+
+
 # check for duplicate genera in list
 legend_size = 7
 if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
@@ -212,11 +252,26 @@ if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
     top_taxa_short_names = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa, level=4),utilities.taxa_shorten_name(top_taxa, level=5))]
     # reduce legend size to fit names
     legend_size = 5
+    
+#if len(top_taxa_short_names_silva) != len(list(set(top_taxa_short_names_silva))):
+    # if duplicate names, then add family to the taxonomy
+#    top_taxa_short_names_silva = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa_silva, level=4),utilities.taxa_shorten_name(top_taxa_silva, level=5))]
+    # reduce legend size to fit names
+#    legend_size = 5
+    
+#if len(top_taxa_short_names_rdp) != len(list(set(top_taxa_short_names_rdp))):
+    # if duplicate names, then add family to the taxonomy
+#    top_taxa_short_names_rdp = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa_rdp, level=4),utilities.taxa_shorten_name(top_taxa_rdp, level=5))]
+    # reduce legend size to fit names
+#    legend_size = 5
+    
 
 # sort the data so those with the top genera are shown first
 sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
+
 transpose_top_data = numpy.transpose(top_data)
 sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
+
 
 document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names, 
     column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
@@ -225,6 +280,8 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
 #+ echo=False
 plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
     title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera", legend_size=legend_size)
+
+
 
 #' ## Terminal Taxa
 

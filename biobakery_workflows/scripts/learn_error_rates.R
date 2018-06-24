@@ -53,6 +53,11 @@ errF <- learnErrors(filtFs, nread=1e3, multithread=TRUE)
 # Filtered reverse reads
 errR <- learnErrors(filtRs, nread=1e3, multithread=TRUE)
 
+
+# Visualize the estimated error rates
+ggsave(paste0(output.path,"/Error_rates_per_sample_FWD.png"), plotErrors(errF, nominalQ=TRUE) , device = "png")
+ggsave(paste0(output.path,"/Error_rates_per_sample_REV.png"), plotErrors(errR, nominalQ=TRUE) , device = "png")
+
 #save as rds files
 saveRDS(errF, paste0(output.path, "/error_rates_F.rds")) 
 saveRDS(errR, paste0(output.path, "/error_rates_R.rds"))

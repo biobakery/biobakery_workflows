@@ -267,6 +267,14 @@ class DADA2(Workflow):
     file_info=copy.copy(Workflow.file_info)
     
     # set the names for the otu tables and read count files
+    file_info["error_ratesF"]=FileInfo("Error_rates_per_sample_FWD.png",
+        description=("Plots of forwrad read error rates"))
+    file_info["error_ratesR"]=FileInfo("Error_rates_per_sample_REV.png",
+        description=("Plots of reverse read error rates"))
+    file_info["readF_qc"]=FileInfo("FWD_read_plot.png",
+        description=("Plots of reverse read error rates"))
+    file_info["readR_qc"]=FileInfo("REV_read_plot.png",
+        description=("Plots of reverse read error rates"))
     file_info["otu_table_gg"]=FileInfo("all_samples_SV-counts_and_GG13-8-taxonomy.tsv",
         description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
             "First column is the OTU id and the last column is the taxonomy. The remaining",
