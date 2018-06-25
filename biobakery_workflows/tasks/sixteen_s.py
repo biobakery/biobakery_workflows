@@ -610,12 +610,14 @@ def taxonomic_profile(workflow, filtered_fasta_file, truncated_fasta_file, origi
     # create the open/cosed reference tables
     closed_reference_tsv, closed_ref_fasta = build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_alignment_uc, otu_alignment_uc, otu_fasta, original_fasta_file, output_folder)
     
-    # cluster the closed reference otu fasta sequences
+    # cluster the closed reference otu fasta sequences and generate a tree
     centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", output_folder)
+    closed_tree = utilities.name_files("closed_reference.tre", output_folder)
     centroid_alignment(workflow, closed_ref_fasta, centroid_closed_fasta, threads, task_name="clustalo_closed_reference")
-    
+    create_tree(workflow, centroid_closed_fasta, closed_tree)    
+
     return closed_reference_tsv
-    
+
 def centroid_alignment(workflow, fasta_file, output_fasta, threads, task_name=None):
     """ Run clustalo for centroid alignment
     
@@ -642,7 +644,27 @@ def centroid_alignment(workflow, fasta_file, output_fasta, threads, task_name=No
         targets=output_fasta,
         args=threads,
         name=task_name if task_name else "clustalo")
+
+def create_tree(workflow, msa_file, tree_file):
+    """ Run fasttree to generate phylogenetic tree
     
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        msa_file (string): The path to the multiple sequence alignment file.
+        tree_file (string): The path of the output tree file.
+
+    Requires:
+        fasttree: phylogenetic trees from alignments of nucleotide or protein sequences
+
+    Returns:
+        None
+
+    # run fasttree on msa file with default settings
+    workflow.add_task(
+        "FastTree [depends[0]] > [targets[0]]",
+        depends=msa_file,
+        targets=tree_file,
+        name="fasttree")
 
 def global_alignment(workflow, fasta_file, database_file, id, threads, output_file_uc, output_file_tsv, top_hit_only=None):
     """ Run global alignment with the database provided 
