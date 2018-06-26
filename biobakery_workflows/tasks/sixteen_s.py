@@ -658,6 +658,7 @@ def create_tree(workflow, msa_file, tree_file):
 
     Returns:
         None
+    """
 
     # run fasttree on msa file with default settings
     workflow.add_task(
