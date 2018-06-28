@@ -48,10 +48,7 @@ def find_workflows():
         # look for files with the expected extension
         if file.endswith(WORKFLOW_EXTENSION):
             # do not need to add full path as these are also installed as executable scripts
-            if os.path.exists("biobakery_workflows/"+ WORKFLOW_FOLDER):
-                workflows[file.replace(WORKFLOW_EXTENSION,"")]=os.path.join(workflow_folder,file)
-            else:
-                workflows[file.replace(WORKFLOW_EXTENSION,"")]=file
+            workflows[file.replace(WORKFLOW_EXTENSION,"")]=file
     
     return workflows
 
