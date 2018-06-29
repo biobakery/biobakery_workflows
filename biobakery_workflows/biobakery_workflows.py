@@ -49,6 +49,7 @@ def find_workflows():
         if file.endswith(WORKFLOW_EXTENSION):
             # do not need to add full path as these are also installed as executable scripts
             workflows[file.replace(WORKFLOW_EXTENSION,"")]=file
+    
     return workflows
 
 def parse_arguments(args,workflows):
@@ -74,7 +75,7 @@ def run_workflow(args, workflow):
     """ Run the workflow with the arguments provided """
     
     try:
-        command=[workflow]+args[2:]
+	command = [workflow]+args[2:]
         subprocess.call(command)
     except ( subprocess.CalledProcessError, EnvironmentError):
         sys.exit("Error: Unable to run workflow: " +" ".join(command))

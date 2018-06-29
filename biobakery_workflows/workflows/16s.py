@@ -32,6 +32,7 @@ from biobakery_workflows.tasks import sixteen_s
 from biobakery_workflows import utilities, config
 
 
+
 # create a workflow instance, providing the version number and description
 workflow = Workflow(version="0.1", description="A workflow for 16S sequencing data")
 
@@ -86,7 +87,7 @@ closed_reference_tsv = sixteen_s.taxonomic_profile(
     workflow_config.greengenes_taxonomy, args.min_size)
 
 # functional profiling
-predict_metagenomes_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()
