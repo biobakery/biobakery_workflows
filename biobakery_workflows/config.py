@@ -143,5 +143,19 @@ class SixteenS(Workflow):
         description="This is the GreenGenes taxonomy file matching the fasta file.",
         url="ftp://greengenes.microbio.me/greengenes_release/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt")
 
+    
+class DADA2(Workflow):
+    vars={}
+    vars["greengenes_fasta"] = DBInfo("GREEN_GENES_FASTA_DB",
+        description="This is the GreenGenes fasta file.",
+        url="ftp://greengenes.microbio.me/greengenes_release/gg_13_8_otus/rep_set/97_otus.fasta")
+    vars["greengenes_usearch"] = DBInfo("GREEN_GENES_USEARCH_DB",
+        description="This is the GreenGenes fasta file formatted for Usearch. "+\
+            "A fasta formatted file can also be used.",
+        file_name=vars["greengenes_fasta"].file_name.replace(".fasta",".udb"))
+    vars["greengenes_taxonomy"] = DBInfo("GREEN_GENES_TAXONOMY_DB",
+        description="This is the GreenGenes taxonomy file matching the fasta file.",
+        url="ftp://greengenes.microbio.me/greengenes_release/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt")
+
 
 
