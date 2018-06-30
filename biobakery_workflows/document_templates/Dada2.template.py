@@ -27,7 +27,7 @@ min_cluster_size = workflow_settings.get("min_size","UNK")
 
 columns, samples, data = document.read_table(vars["counts_each_step_file"])
 
-#' The <% print(len(samples)) %>, <% print(vars["outputdir"]) %>  samples from this project were run through the standard DADA2 workflow.
+#' The <% print(len(samples)) %> samples from this project were run through the standard DADA2 workflow.
 
 
 #+ echo=False

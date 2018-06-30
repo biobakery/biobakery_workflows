@@ -286,7 +286,7 @@ class DADA2(Workflow):
         description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
             "First column is the OTU id and the last column is the taxonomy. The remaining",
             "columns are sample names. Values are counts. Reference DB is RDP"))        
-    file_info["counts_each_step"]=FileInfo("Read_QC/Read_counts_at_each_step.tsv",
+    file_info["counts_each_step"]=FileInfo("Read_counts_at_each_step.tsv",
         description=("A tab-delimited file with samples as rows and counts as columns. ",
             "The counts included in each step of workflow process"))
     file_info["msa_nonchimera"]=FileInfo("msa.fasta",

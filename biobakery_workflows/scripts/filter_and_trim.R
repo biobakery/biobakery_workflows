@@ -31,9 +31,6 @@ for( i in names(args.list) ) {
 # print contents of folder
 cat( grep( "*\\.fastq", list.files(args.list$input_dir), value=T ), sep = "\n" )
 
-#print args.list$input_dir
-#print args.list$output_dir 
-
 # these variables are passed to the workflow
 input.path <- normalizePath( args.list$input_dir )
 #input.path <- args.list$input_dir
@@ -42,22 +39,13 @@ output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_
 pool.samples <- args.list$pool
 
 
-# Variable "input.path" containing path to input fastq files directory 
-# is inherited from wrapper script dada2_cli.r.
-
-input.file.list <- grep( "*fastq", list.files( input.path ), value = T )
-#input.path <- normalizePath("input/")
-
 # List of input files
 
 # Sort ensures forward/reverse reads are in same order
 fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
 fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
 
-# Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-
-#sample.names <- gsub( "_R1.*\\.fastq(\\.gz)?", "", fnFs, perl = T)
-#sample.namesR <- gsub( "_R2.*\\.fastq(\\.gz)?", "", fnRs, perl = T)
+# Extract sample names, allowing variable filenames
 
 sample.names <- gsub( "_R1.*\\.fastq*", "", fnFs, perl = T)
 sample.namesR <- gsub( "_R2.*\\.fastq*", "", fnRs, perl = T)
@@ -71,18 +59,12 @@ if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do n
 
 fnFs <- file.path(input.path, fnFs)
 fnRs <- file.path(input.path, fnRs)
-cat(fnFs)
-cat(fnRs)
 
 # Create filtered_input/ subdirectory for storing filtered fastq reads
 filt_path <- file.path(output.dir, "filtered_input") 
 ifelse(!dir.exists(filt_path), dir.create(filt_path, recursive = TRUE), FALSE)
 
-readQC.folder <- file.path(output.dir, "Read_QC")
-ifelse(!dir.exists(readQC.folder), dir.create(readQC.folder, recursive = TRUE), FALSE)
-
 # Generate plots and save to file
-
 # Forward reads
 fwd.qc.plots.list <- list()
 for( i in 1 : length(fnFs)) {
@@ -109,9 +91,6 @@ rm(rev.qc.plots.list)
 
 
 # Define filenames for filtered input files
-#filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
-#filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.fastq.gz"))
-
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
 filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 
@@ -130,8 +109,7 @@ rd.counts <- as.data.frame(
 )
 # Table of before/after read counts
 rd.counts$ratio <- round( rd.counts$reads.out / rd.counts$reads.in, digits = 2 )
-rd.counts
 
-# Write rd.counts table to file in readQC.folder
-saveRDS(rd.counts, paste0( readQC.folder, "/Read_counts_filt.rds" ))
-write.table( rd.counts, paste0( readQC.folder, "/Read_counts_after_filtering.tsv" ), sep = "\t", quote = F, eol = "\n", col.names = NA )
+# Write rd.counts table to file in output folder
+saveRDS(rd.counts, paste0(output.dir, "/Read_counts_filt.rds" ))
+write.table( rd.counts, paste0(output.dir, "/Read_counts_after_filtering.tsv" ), sep = "\t", quote = F, eol = "\n", col.names = NA )

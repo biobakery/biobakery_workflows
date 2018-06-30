@@ -171,7 +171,7 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
 
 def filter_trim(workflow, input_folder, output_folder, pool):
 
-         read_counts_file_path = output_folder + "/Read_QC/Read_counts_after_filtering.tsv"
+         read_counts_file_path = output_folder + "/Read_counts_after_filtering.tsv"
        
          workflow.add_task(
              "biobakery_workflows/scripts/filter_and_trim.R --input_dir=[args[0]] --output_dir=[args[1]]",
@@ -185,7 +185,7 @@ def filter_trim(workflow, input_folder, output_folder, pool):
 
 def learn_error(workflow,output_folder,pool):
 
-         read_counts_file_path = output_folder + "/Read_QC/Read_counts_after_filtering.tsv"
+         read_counts_file_path = output_folder + "/Read_counts_after_filtering.tsv"
          error_ratesF_path = output_folder + "/error_rates_F.rds"
          error_ratesR_path = output_folder + "/error_rates_R.rds"
        
@@ -218,7 +218,7 @@ def merge_paired_ends(workflow, input_folder, output_folder, pool):
 def const_seq_table(workflow, input_folder, output_folder, pool):
 
          mergers_data_path = output_folder + "/mergers.rds"
-         read_counts_steps = output_folder +"/Read_QC/Read_counts_at_each_step.tsv"
+         read_counts_steps = output_folder +"/Read_counts_at_each_step.tsv"
          seqtab_data_path = output_folder + "/seqtab_final.rds"
 
          workflow.add_task(

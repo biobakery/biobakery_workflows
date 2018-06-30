@@ -33,21 +33,17 @@ input.path <- normalizePath( args.list$input_dir )
 output.path <- normalizePath( args.list$output_dir )
 pool.samples <- args.list$pool
 
-readQC.folder <- file.path(output.path, "Read_QC")
-ifelse(!dir.exists(readQC.folder), dir.create(readQC.folder, recursive = TRUE), FALSE)
+#Filtered files folder path
+filt_path <- file.path(output.path, "filtered_input") 
 
 # Sort ensures forward/reverse reads are in same order
-fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
-fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
+fnFs <- sort(grep( "_F_filt.*\\.fastq", list.files(filt_path), value = T ) )
+fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
-# Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-#sample.names <- gsub( "_R1.*\\.fastq(\\.gz)?", "", fnFs, perl = T)
-#sample.namesR <- gsub( "_R2.*\\.fastq(\\.gz)?", "", fnRs, perl = T)
 
-sample.names <- gsub( "_R1.*\\.fastq*", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R2.*\\.fastq*", "", fnRs, perl = T)
-
-if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
+# Extract sample names, allowing variable filenames
+sample.names <- gsub( "_F_filt.*\\.fastq*", "", fnFs, perl = T)
+sample.namesR <- gsub( "_R_filt.*\\.fastq*", "", fnRs, perl = T)
 
 mergers <- readRDS(file.path(output.path,"mergers.rds"))
 
@@ -67,12 +63,16 @@ write.table( t(seqtab.nochim), paste0( output.path, "/all_samples_SV-counts.tsv"
 # write OTU table to file
 saveRDS(seqtab.nochim, paste0(output.path, "/seqtab_final.rds"))
 
-rd.counts <- readRDS(paste0(readQC.folder, "/Read_counts_filt.rds" ))
+rd.counts <- readRDS(paste0(output.path, "/Read_counts_filt.rds" ))
+# remove rows with 0 reads after filtering and trimming
+rdf.counts <- rd.counts[-row(rd.counts)[rd.counts == 0],]
+
+
 getN <- function(x) sum(getUniques(x))
-track <- cbind(rd.counts, sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
+track <- cbind(rdf.counts, sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
 colnames(track) <- c("input", "filtered", "ratio", "merged", "tabled", "nonchim")
 rownames(track) <- sample.names
 # print table
 track
 # save to file
-write.table( track, paste0( readQC.folder, "/Read_counts_at_each_step.tsv" ), sep = "\t", quote = F, eol = "\n", col.names = NA )
+write.table( track, paste0(output.path, "/Read_counts_at_each_step.tsv" ), sep = "\t", quote = F, eol = "\n", col.names = NA )
