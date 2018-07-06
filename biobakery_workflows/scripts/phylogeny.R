@@ -28,7 +28,7 @@ for( i in names(args.list) ) {
 }
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
-pool.samples <- args.list$pool
+#pool.samples <- args.list$pool
 output.path <- normalizePath( args.list$output_dir )
 
 

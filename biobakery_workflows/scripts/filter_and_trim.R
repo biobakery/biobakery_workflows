@@ -36,7 +36,7 @@ input.path <- normalizePath( args.list$input_dir )
 #input.path <- args.list$input_dir
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
-pool.samples <- args.list$pool
+#pool.samples <- args.list$pool
 
 
 # List of input files

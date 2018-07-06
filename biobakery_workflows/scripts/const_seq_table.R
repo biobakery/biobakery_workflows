@@ -31,7 +31,7 @@ for( i in names(args.list) ) {
 # these variables are passed to the workflow
 input.path <- normalizePath( args.list$input_dir )
 output.path <- normalizePath( args.list$output_dir )
-pool.samples <- args.list$pool
+#pool.samples <- args.list$pool
 
 #Filtered files folder path
 filt_path <- file.path(output.path, "filtered_input") 

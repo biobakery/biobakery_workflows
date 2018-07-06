@@ -169,7 +169,7 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
     
 
 
-def filter_trim(workflow, input_folder, output_folder, pool):
+def filter_trim(workflow, input_folder, output_folder):
 
          read_counts_file_path = output_folder + "/Read_counts_after_filtering.tsv"
        
@@ -183,7 +183,7 @@ def filter_trim(workflow, input_folder, output_folder, pool):
 
 
 
-def learn_error(workflow,output_folder,pool):
+def learn_error(workflow,output_folder):
 
          read_counts_file_path = output_folder + "/Read_counts_after_filtering.tsv"
          error_ratesF_path = output_folder + "/error_rates_F.rds"
@@ -200,7 +200,7 @@ def learn_error(workflow,output_folder,pool):
  
 
 
-def merge_paired_ends(workflow, input_folder, output_folder, pool):
+def merge_paired_ends(workflow, input_folder, output_folder):
 
         error_rates_data_path = output_folder + "/error_rates_R.rds"
         mergers_data_path = output_folder + "/mergers.rds"
@@ -215,7 +215,7 @@ def merge_paired_ends(workflow, input_folder, output_folder, pool):
         
 
 
-def const_seq_table(workflow, input_folder, output_folder, pool):
+def const_seq_table(workflow, input_folder, output_folder):
 
          mergers_data_path = output_folder + "/mergers.rds"
          read_counts_steps = output_folder +"/Read_counts_at_each_step.tsv"
@@ -230,7 +230,7 @@ def const_seq_table(workflow, input_folder, output_folder, pool):
             )
 
 
-def phylogeny(workflow, output_folder, pool):
+def phylogeny(workflow, output_folder):
 
          seqtab_data_path = output_folder + "/seqtab_final.rds"
          msa_fasta_file = output_folder + "/msa.fasta"
@@ -244,7 +244,7 @@ def phylogeny(workflow, output_folder, pool):
             )
 
 
-def assign_taxonomy(workflow, output_folder, pool):
+def assign_taxonomy(workflow, output_folder):
 
          seqtab_data_path = output_folder + "/seqtab_final.rds"
          all_samples_taxonomy = output_folder + "/all_samples_GG13-8-taxonomy.tsv"
@@ -260,7 +260,7 @@ def assign_taxonomy(workflow, output_folder, pool):
 
                   
 
-def assign_silva_rdp(workflow, output_folder, pool):
+def assign_silva_rdp(workflow, output_folder):
 
          seqtab_data_path = output_folder + "/seqtab_final.rds"
          all_samples_silva = output_folder + "/all_samples_SV-counts_and_SILVA-taxonomy.tsv"

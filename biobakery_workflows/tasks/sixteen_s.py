@@ -161,7 +161,7 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
         targets=demultiplex_fastq_files,
         name="check_demultiplex")
 
-    return demultiplex_fastq_files
+    return demultiplex_fastq_files, demultiplex_output_folder
     
 def quality_control(workflow, fastq_file, output_folder, threads, maxee, trunc_len):
     """ Create a quality report, filter fastq, and then truncate fasta files

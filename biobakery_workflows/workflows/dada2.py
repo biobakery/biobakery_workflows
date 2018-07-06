@@ -48,7 +48,6 @@ workflow.add_argument("maxee", desc="the maxee value to use for quality control 
 workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
-workflow.add_argument("pool", desc="if provided then samples are pooled for analysis, default setting is analysis of each sample independently", default="FALSE")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -77,13 +76,13 @@ else:
 
         
 # call  workflow tasks
-dadatwo.filter_trim(workflow, demultiplex_output_folder, args.output, args.pool)
-dadatwo.learn_error(workflow, args.output, args.pool)
-dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output, args.pool)
-dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output, args.pool)
-dadatwo.phylogeny(workflow, args.output, args.pool)
-dadatwo.assign_taxonomy(workflow, args.output, args.pool)
-dadatwo.assign_silva_rdp(workflow, args.output, args.pool)
+dadatwo.filter_trim(workflow, demultiplex_output_folder, args.output)
+dadatwo.learn_error(workflow, args.output)
+dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output)
+dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output)
+dadatwo.phylogeny(workflow, args.output)
+dadatwo.assign_taxonomy(workflow, args.output)
+dadatwo.assign_silva_rdp(workflow, args.output)
 
 # start the workflow
 workflow.go()
