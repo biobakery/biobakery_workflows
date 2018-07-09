@@ -163,16 +163,6 @@ else:
 # listing all expected input files
 input_desc+=files.SixteenS.list_file_path_description("",input_files)
 
-print(method)
-print("---method--------")
-print(log_file)	
-print("-----log_file-------")
-print(methodvars)
-print("----methodvars-------")
-print(input_files)
-print("----input_files-------")
-print(templates)
-print("----templates-------")
 
 if not args.exclude_workflow_info:
     templates+=[document_templates.get_template("workflow_info")]

@@ -1060,13 +1060,10 @@ def read_dada_otu_table(file, taxcolumns):
         for line in file_handle:
             data_points=line.rstrip().split("\t")
             ids.append(data_points.pop(0))
-            taxrows = ""
-            for j in range(taxcolumns-1):
-            	taxrows += data_points.pop().replace("[","").replace("]","")
-            	taxrows += "; "
-            taxrows += data_points.pop().replace("[","").replace("]","")	
-            taxonomy.append(taxrows)          	
-            data.append([float(i) for i in data_points])
+            taxrows = '; '.join(data_points[len(data_points)-taxcolumns:])
+            taxonomy.append(taxrows)
+            datarow = data_points[:len(data_points)-taxcolumns]          	
+            data.append([float(i) for i in datarow])
             
     return samples, ids, taxonomy, data    
 

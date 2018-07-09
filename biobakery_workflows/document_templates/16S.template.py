@@ -34,8 +34,6 @@ else:
     columns, samples, data = document.read_table(vars["read_count_table"])
 
 
-#' <% print(samples) %>
-
 
 #' The <% print(len(samples)) %>,  samples from this project were run through the standard 16S workflow. The workflow
 #' follows the <% print(method) %> OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity 
@@ -135,7 +133,7 @@ def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, sample
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
             ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
         
-#+ echo=False
+
 # if picard files are provided, then plot those that do not meet a threshold
 picard_text = ""
 if vars["picard"]:
@@ -211,7 +209,6 @@ if vars["method"] == "dada2":
     ["total","filtered","merged","tabled","nochimera"], title="Read counts in each step by sample", ylabel="Total Reads")
 
     # <% if vars["method"] == "dada2": print("This figure shows counts of reads in each step of workflow process") %>
-    # <% if vars["method"] == "dada2": print("\clearpage") %>
     print("This figure shows counts of reads in each step of workflow process")
 
 else:
@@ -230,9 +227,7 @@ else:
 #' <% if vars["method"] != "dada2": print("\clearpage") %>
 
 #' # Taxonomy
-
 #' ## Average Abundance
-
 #+ echo=False
 import numpy
 
@@ -244,16 +239,18 @@ else:
 
 # plot the top taxa by genus level, plotting the relative abundance values
 max_taxa=15
+
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data)
-#' <% print(relab_data) %>
+
 # get the taxa summarized by genus level
 genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
 # get the top rows of the relative abundance data
 top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
+
 # shorten the top taxa names to just the genus level for plotting
-#top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
-top_taxa_short_names = top_taxa
+top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+#top_taxa_short_names = top_taxa
 # check for duplicate genera in list
 legend_size = 7
 if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
@@ -264,7 +261,7 @@ if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
 
 # sort the data so those with the top genera are shown first
 sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
-#' <% print(sorted_samples) %>
+
 transpose_top_data = numpy.transpose(top_data)
 sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
 
@@ -272,7 +269,7 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
     column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
     ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size)
 
-#+ echo=False
+
 plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
     title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera", legend_size=legend_size)
 
