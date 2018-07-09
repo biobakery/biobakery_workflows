@@ -27,15 +27,14 @@ min_cluster_size = workflow_settings.get("min_size","UNK")
 # and reads that map to OTUs without taxonomy
 
 method = vars["method"]
-#' <% if method == "dada2": print("The workflow is  Dada2 inside print--------------------") %>The workflow is  Dada2--------------------
-if vars["method"] == "dada2":
-	#' <% if method == "dada2": print("The workflow is  Dada2 inside if and print--------------------") %>The workflow is  Dada2--------------------
-	columns, samples, data = document.read_table(vars["counts_each_step"])
-	#' <% print(samples) %> inside if
+
+if method == "dada2":
+    columns, samples, data = document.read_table(vars["counts_each_step"])
 else:
-	#' The workflow is  Usearch------------------
-	columns, samples, data = document.read_table(vars["read_count_table"])
-#' <% print(samples) %> outside if
+    columns, samples, data = document.read_table(vars["read_count_table"])
+
+
+#' <% print(samples) %>
 
 
 #' The <% print(len(samples)) %>,  samples from this project were run through the standard 16S workflow. The workflow
@@ -62,40 +61,32 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #' # Quality Control
 
-if vars["method"] == "dada2":
-	#+ echo=False
-	#' Forward Read Quality Plot by Sample     
-	#' ![FWD Read](<% print(vars["outputdir"]) %>/data/FWD_read_plot.png)
-
-	#' <% if pdf_format: print("\clearpage") %>
-
-	#' Reverse Read Quality Plot  by Sample  
-	#' ![REV Read](<% print(vars["outputdir"]) %>/data/REV_read_plot.png)
-
-	#' <% if pdf_format: print("\clearpage") %>
-
-	#' Forward Read Error Rates by Sample    
-	#' ![FWD Error Rates](<% print(vars["outputdir"]) %>/data/Error_rates_per_sample_FWD.png)
-
-	#' <% if pdf_format: print("\clearpage") %>
-
-	#' Reverse Read Error Rates by Sample  
-	#' ![REV Error Rates](<% print(vars["outputdir"]) %>/data/Error_rates_per_sample_REV.png)
-
-	#' <% if pdf_format: print("\clearpage") %>
-	
-else:
-	#+ echo=False
-	# read the eestats2 table and add table to document
-	eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
-
-	document.show_table(eestats_data, eestats_rows, eestats_columns, 
-		"Expected error filter by read length",font="10")
-
-	#' The general stats for this data set are: <%= overall_stats %> .
-	#' This table shows the number of reads based on length for different error filters.
-
 #+ echo=False
+
+#' <% if method == "dada2": print("Forward Read Quality Plot by Sample") %> 
+#' <% if method == "dada2": print("![FWD Read](" + vars["outputdir"]  + ") /data/" + vars["readF_qc"] + ")") %>
+#' <% if method == "dada2": print("\clearpage")  %> 
+
+#' <% if method == "dada2": print("Reverse Read Quality Plot  by Sample") %>
+#' <% if method == "dada2": print("![REV Read](" +  vars["outputdir"]  + ") /data/" + vars["readR_qc"] + ")") %>
+#' <% if method == "dada2": print("\clearpage") %> 
+
+#' <% if method == "dada2": print("Forward Read Error Rates by Sample") %>
+#' <% if method == "dada2": print("![FWD Error Rates](" + vars["outputdir"] + ") /data/" + vars["error_ratesF"] +")") %>
+#' <% if method == "dada2": print("\clearpage") %>
+
+#' <% if method == "dada2": print("Reverse Read Error Rates by Sample") %>
+#' <% if method == "dada2": print("![REV Error Rates](" + vars["outputdir"] + ") /data/" + vars["error_ratesR"] + ")") %>
+#' <% if method == "dada2": print("\clearpage") %>
+#+ echo=False
+
+if method != "dada2":
+    eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
+    document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
+#' <% if method != "dada2": print("The general stats for this data set are:" + overall_stats) %>
+#' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
+#+ echo=False
+
 def sort_data(top_data, samples):
     # sort the top data so it is ordered with the top sample/abundance first
     sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
@@ -121,7 +112,7 @@ def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, sample
     except ValueError:
         pass
     
-	max_subsets=8
+    max_subsets=8
     
     # split into subsets
     split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
@@ -181,12 +172,10 @@ if vars["picard"]:
         picard_text+=" The following samples did not have any quality scores below the threshold: " + above_threshold_list + "."
     else:
         picard_text+=" None of the samples had all quality scores above the threshold."
-                    
+
 
 #' <% if picard_text: print(picard_text) %>
-
 #' # Read Count
-
 #+ echo=False
 
 # sort the samples/data by read count with the largest original read count first
@@ -195,60 +184,50 @@ sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
 sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
 
 def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, ylabel, legend_title="", legend_size=7):
-		""" Generate a plot of each set of categorical metadata """
-    	if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
-    		# get the metadata organized into the same sample columns as the data
-      	  	new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
-        	# split the data and metadata 
-       	 	ordered_metadata=new_data[0:len(vars['metadata'])-1]
-      	 	ordered_sorted_data=new_data[len(vars['metadata'])-1:]
-       		# get the categorical metadata
-       	 	categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
-        	# plot a bar chart for a set of categorical data
-        	for cat_metadata in categorical_metadata:
-           	 	plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel, legend_title, legend_size)
-
+    """ Generate a plot of each set of categorical metadata """
+    if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
+        # get the metadata organized into the same sample columns as the data
+        new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
+        # split the data and metadata 
+        ordered_metadata=new_data[0:len(vars['metadata'])-1]
+        ordered_sorted_data=new_data[len(vars['metadata'])-1:]
+        # get the categorical metadata
+        categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
+        # plot a bar chart for a set of categorical data
+        for cat_metadata in categorical_metadata:
+            plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel, legend_title, legend_size)
 
 if vars["method"] == "dada2":
 
-	filtered_reads = [row[1] for row in sorted_all_read_data]
-	merged_reads = [row[3] for row in sorted_all_read_data]
-	tabled_reads = [row[4] for row in sorted_all_read_data]
-	nochim_reads = [row[5] for row in sorted_all_read_data]
+    filtered_reads = [row[1] for row in sorted_all_read_data]
+    merged_reads = [row[3] for row in sorted_all_read_data]
+    tabled_reads = [row[4] for row in sorted_all_read_data]
+    nochim_reads = [row[5] for row in sorted_all_read_data]
+    # plot the read counts
+    document.plot_grouped_barchart([sorted_total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads],
+           ["Original","Filtered","Merged","Tabled","Nochimera"], sorted_samples,
+           title="Read counts by Sample", xlabel="Samples", ylabel="Total Reads")
+    plot_all_categorical_metadata(sorted_samples, [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads], 
+    ["total","filtered","merged","tabled","nochimera"], title="Read counts in each step by sample", ylabel="Total Reads")
 
-	# plot the read counts
-	document.plot_grouped_barchart([sorted_total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads],
-   		["Original","Filtered","Merged","Tabled","Nochimera"], sorted_samples,
-   		title="Read counts by Sample", xlabel="Samples", ylabel="Total Reads")
-
-	#' This figure shows counts of reads in each step of workflow process
-
-	#' <% if pdf_format: print("\clearpage") %>
-
-	#+ echo=False
-	plot_all_categorical_metadata(sorted_samples, [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads], 
-    	["total","filtered","merged","tabled","nochimera"], title="Read counts in each step by sample", ylabel="Total Reads")
+    # <% if vars["method"] == "dada2": print("This figure shows counts of reads in each step of workflow process") %>
+    # <% if vars["method"] == "dada2": print("\clearpage") %>
+    print("This figure shows counts of reads in each step of workflow process")
 
 else:
-
-	known_reads = [row[1] for row in sorted_all_read_data]
-	unknown_reads = [row[2] for row in sorted_all_read_data]
-	unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
-
-	# plot the read counts
-	document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
-    	title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
-
-	#' This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,
-	#' 2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these
-	#' three read counts for each sample is the total original read count not including filtering prior to OTU clustering.
-
-	#' <% if pdf_format: print("\clearpage") %>
-
-	#+ echo=False
-	
-	plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
-    	["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
+    known_reads = [row[1] for row in sorted_all_read_data]
+    unknown_reads = [row[2] for row in sorted_all_read_data]
+    unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
+    # plot the read counts
+    document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
+        title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
+    plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
+        ["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
+    
+#' <% if vars["method"] != "dada2": print("This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,") %>
+#' <% if vars["method"] != "dada2": print("2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these") %>
+#' <% if vars["method"] != "dada2": print("three read counts for each sample is the total original read count not including filtering prior to OTU clustering.") %>
+#' <% if vars["method"] != "dada2": print("\clearpage") %>
 
 #' # Taxonomy
 
@@ -259,20 +238,22 @@ import numpy
 
 # read in the otu table data
 if vars["method"] == "dada2":
-	samples, ids, taxonomy, data = utilities.read_dada_otu_table(vars["otu_table"],7)
+    samples, ids, taxonomy, data = utilities.read_dada_otu_table(vars["otu_table"],7)
 else:
-	samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
+    samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
 
 # plot the top taxa by genus level, plotting the relative abundance values
 max_taxa=15
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data)
+#' <% print(relab_data) %>
 # get the taxa summarized by genus level
 genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
 # get the top rows of the relative abundance data
 top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
 # shorten the top taxa names to just the genus level for plotting
-top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+#top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+top_taxa_short_names = top_taxa
 # check for duplicate genera in list
 legend_size = 7
 if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
@@ -283,6 +264,7 @@ if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
 
 # sort the data so those with the top genera are shown first
 sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
+#' <% print(sorted_samples) %>
 transpose_top_data = numpy.transpose(top_data)
 sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
 
