@@ -70,7 +70,7 @@ otu.silva.tax.table <- merge( t(seqtab.nochim), taxa.silva.2, by = 'row.names' )
 rownames( otu.silva.tax.table ) <- otu.silva.tax.table[,1]
 otu.silva.tax.table <- otu.silva.tax.table[,-1]
 
-write.table(otu.silva.tax.table, paste0(output.path, "/all_samples_SV-counts_and_SILVA-taxonomy.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.silva.tax.table, paste0(output.path, "/all_samples_taxonomy_closed_reference_silva.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
 
 # Assign RDP taxonomy
 taxa.rdp <- assignTaxonomy(seqtab.nochim, paste0(output.path,"/../dada2_reference_databases/rdp_train_set_16.fa.gz"), multithread = TRUE)
@@ -89,4 +89,4 @@ otu.rdp.tax.table <- merge( t(seqtab.nochim), taxa.rdp.2, by = 'row.names' )
 rownames( otu.rdp.tax.table ) <- otu.rdp.tax.table[,1]
 otu.rdp.tax.table <- otu.rdp.tax.table[,-1]
 
-write.table(otu.rdp.tax.table, paste0( output.path, "/all_samples_SV-counts_and_RDP-taxonomy.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.rdp.tax.table, paste0( output.path, "/all_samples_taxonomy_closed_reference_rdp.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)

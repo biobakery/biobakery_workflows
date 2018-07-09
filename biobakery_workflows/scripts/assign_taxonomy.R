@@ -59,7 +59,7 @@ taxa.gg13_8 <- assignTaxonomy(seqtab.nochim, paste0(output.path,"/../dada2_refer
 unname(head(taxa.gg13_8))
 
 # Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
-taxa.gg13_8.2 <- replaceNA.in.assignedTaxonomy( taxa.gg13_8 )
+taxa.gg13_8.2 <- replaceNA.in.assignedTaxonomy(taxa.gg13_8 )
 
 # Write taxa table to file
 write.table( taxa.gg13_8.2, paste0( output.path, "/all_samples_GG13-8-taxonomy.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA )
@@ -69,4 +69,4 @@ otu.gg.tax.table <- merge( t(seqtab.nochim), taxa.gg13_8.2, by = 'row.names' )
 rownames( otu.gg.tax.table ) <- otu.gg.tax.table[,1]
 otu.gg.tax.table <- otu.gg.tax.table[,-1]
 
-write.table(otu.gg.tax.table, paste0( output.path, "/all_samples_SV-counts_and_GG13-8-taxonomy.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.gg.tax.table, paste0( output.path, "/all_samples_taxonomy_closed_reference.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)

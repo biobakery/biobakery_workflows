@@ -45,11 +45,16 @@ fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
 
 # Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-sample.names <- gsub( "_F_filt.*\\.fastq*", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R_filt.*\\.fastq*", "", fnRs, perl = T)
+sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
+sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
 
 sample.ext <- file_ext(fnFs)
-if(identical(sample.ext[1],"gz")) sample.ext <- "fastq.gz"
+if(identical("gz",sample.ext[1])){
+  sample.ext <- "fastq.gz"
+  # Extract sample names, allowing variable filenames
+  sample.names <- gsub( "_F_filt.*\\.fastq.gz", "", fnFs, perl = T)
+  sample.namesR <- gsub( "_R_filt.*\\.fastq.gz", "", fnRs, perl = T)
+}
 
 
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")

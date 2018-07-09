@@ -80,6 +80,7 @@ if args.method == "dada2":
 	dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output)
 	dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output)
 	dadatwo.phylogeny(workflow, args.output)
+	dadatwo.fasttree(workflow, args.output)
 	dadatwo.assign_taxonomy(workflow, args.output)
 	dadatwo.assign_silva_rdp(workflow, args.output)	
 else:    

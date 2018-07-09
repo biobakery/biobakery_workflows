@@ -662,7 +662,7 @@ def create_tree(workflow, msa_file, tree_file):
 
     # run fasttree on msa file with default settings
     workflow.add_task(
-        "FastTree [depends[0]] > [targets[0]]",
+        "FastTree -gtr -nt [depends[0]] > [targets[0]]",
         depends=msa_file,
         targets=tree_file,
         name="fasttree")

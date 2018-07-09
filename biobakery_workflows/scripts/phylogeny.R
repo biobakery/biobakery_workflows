@@ -41,11 +41,7 @@ names(seqs) <- seqs # This propagates to the tip labels of the tree
 mult <- msa(seqs, method="ClustalOmega", type="dna", order="input")
 # Save msa to file; convert first to phangorn object
 phang.align <- as.phyDat(mult, type="DNA", names=getSequences(seqtab.nochim))
-write.phyDat(phang.align, format = 'fasta', file = paste0( output.path,"/msa.fasta") )
-
-# Call FastTree (via 'system') to reconstruct phylogeny
-system( paste( "FastTree -gtr -nt ", output.path, "/msa.fasta > ", output.path, "/FastTree.tre", sep = '' ) )
-
+write.phyDat(phang.align, format = 'fasta', file = paste0( output.path,"/all_samples_clustalo_aligned_nonchimera.fasta") )
 
 detach("package:phangorn", unload=TRUE)
 detach("package:msa", unload=TRUE)

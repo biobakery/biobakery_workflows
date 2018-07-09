@@ -61,20 +61,20 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #+ echo=False
 
-#' <% if method == "dada2": print("Forward Read Quality Plot by Sample") %> 
-#' <% if method == "dada2": print("![FWD Read](" + vars["outputdir"]  + ") /data/" + vars["readF_qc"] + ")") %>
+#' ## <% if method == "dada2": print("Forward Read Quality Plot by Sample") %>   \
+#' <% if method == "dada2": print("![FWD Read](" + vars["readF_qc"] + ")") %> 
 #' <% if method == "dada2": print("\clearpage")  %> 
 
-#' <% if method == "dada2": print("Reverse Read Quality Plot  by Sample") %>
-#' <% if method == "dada2": print("![REV Read](" +  vars["outputdir"]  + ") /data/" + vars["readR_qc"] + ")") %>
-#' <% if method == "dada2": print("\clearpage") %> 
-
-#' <% if method == "dada2": print("Forward Read Error Rates by Sample") %>
-#' <% if method == "dada2": print("![FWD Error Rates](" + vars["outputdir"] + ") /data/" + vars["error_ratesF"] +")") %>
+#' ## <% if method == "dada2": print("Reverse Read Quality Plot  by Sample") %>   \
+#' <% if method == "dada2": print("![REV Read](" + vars["readR_qc"] + ")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 
-#' <% if method == "dada2": print("Reverse Read Error Rates by Sample") %>
-#' <% if method == "dada2": print("![REV Error Rates](" + vars["outputdir"] + ") /data/" + vars["error_ratesR"] + ")") %>
+#' ## <% if method == "dada2": print("Forward Read Error Rates by Sample") %>  \
+#' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
+#' <% if method == "dada2": print("\clearpage") %>
+
+#' ## <% if method == "dada2": print("Reverse Read Error Rates by Sample") %>   \
+#' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 #+ echo=False
 

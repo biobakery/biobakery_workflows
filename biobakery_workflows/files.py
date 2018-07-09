@@ -269,51 +269,8 @@ class SixteenS(Workflow):
         description=("Plots of reverse read error rates"))
     file_info["readR_qc"]=FileInfo("REV_read_plot.png",
         description=("Plots of reverse read error rates"))
-    file_info["otu_table_gg"]=FileInfo("all_samples_SV-counts_and_GG13-8-taxonomy.tsv",
-        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
-            "First column is the OTU id and the last column is the taxonomy. The remaining",
-            "columns are sample names. Values are counts. Referernce DB is GG13.8"))
-    file_info["otu_table_silva"]=FileInfo("all_samples_SV-counts_and_SILVA-taxonomy.tsv",
-        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
-            "First column is the OTU id and the last column is the taxonomy. Reference DB os SILVA"))
-    file_info["otu_table_rdp"]=FileInfo("all_samples_SV-counts_and_RDP-taxonomy.tsv",
-        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
-            "First column is the OTU id and the last column is the taxonomy. The remaining",
-            "columns are sample names. Values are counts. Reference DB is RDP"))        
     file_info["counts_each_step"]=FileInfo("Read_counts_at_each_step.tsv",
         description=("A tab-delimited file with samples as rows and counts as columns. ",
             "The counts included in each step of workflow process"))
-    
-class DADA2(Workflow):
-    """ A collection of information of folders/files created by the DADA2 tasks """
-    
-    file_info=copy.copy(Workflow.file_info)
-    
-    # set the names for the otu tables and read count files
-    file_info["error_ratesF"]=FileInfo("Error_rates_per_sample_FWD.png",
-        description=("Plots of forwrad read error rates"))
-    file_info["error_ratesR"]=FileInfo("Error_rates_per_sample_REV.png",
-        description=("Plots of reverse read error rates"))
-    file_info["readF_qc"]=FileInfo("FWD_read_plot.png",
-        description=("Plots of reverse read error rates"))
-    file_info["readR_qc"]=FileInfo("REV_read_plot.png",
-        description=("Plots of reverse read error rates"))
-    file_info["otu_table_gg"]=FileInfo("all_samples_SV-counts_and_GG13-8-taxonomy.tsv",
-        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
-            "First column is the OTU id and the last column is the taxonomy. The remaining",
-            "columns are sample names. Values are counts. Referernce DB is GG13.8"))
-    file_info["otu_table_silva"]=FileInfo("all_samples_SV-counts_and_SILVA-taxonomy.tsv",
-        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
-            "First column is the OTU id and the last column is the taxonomy. Reference DB os SILVA"))
-    file_info["otu_table_rdp"]=FileInfo("all_samples_SV-counts_and_RDP-taxonomy.tsv",
-        description=("A tab-delimited file with samples/taxonomy as columns and taxonomy as rows. ",
-            "First column is the OTU id and the last column is the taxonomy. The remaining",
-            "columns are sample names. Values are counts. Reference DB is RDP"))        
-    file_info["counts_each_step"]=FileInfo("Read_counts_at_each_step.tsv",
-        description=("A tab-delimited file with samples as rows and counts as columns. ",
-            "The counts included in each step of workflow process"))
-    file_info["msa_nonchimera"]=FileInfo("msa.fasta",
-        description=("A multiple sequence alignment file generated from the nonchimera sequences "))
 
-    
         

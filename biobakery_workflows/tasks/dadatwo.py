@@ -194,7 +194,7 @@ def learn_error(workflow,output_folder):
              depends = [read_counts_file_path],
              targets = [error_ratesF_path, error_ratesR_path],  
              args = [output_folder],
-             name = "learn_eror_rates"
+             name = "learn_error_rates"
              )
         
  
@@ -233,7 +233,7 @@ def const_seq_table(workflow, input_folder, output_folder):
 def phylogeny(workflow, output_folder):
 
          seqtab_data_path = output_folder + "/seqtab_final.rds"
-         msa_fasta_file = output_folder + "/msa.fasta"
+         msa_fasta_file = output_folder + "/all_samples_clustalo_aligned_nonchimera.fasta"
 
          workflow.add_task(
             "biobakery_workflows/scripts/phylogeny.R --output_dir=[args[0]]",
@@ -243,12 +243,25 @@ def phylogeny(workflow, output_folder):
             name = "phylogeny"
             )
 
+def fasttree(workflow, output_folder):
+
+         msa_fasta_file = output_folder + "/all_samples_clustalo_aligned_nonchimera.fasta"
+         fasttree_file = output_folder + "/closed_reference.tre"
+
+         workflow.add_task(
+            "FastTree -gtr -nt  [depends[0]] >  [targets[0]]",
+            depends = [msa_fasta_file],
+            targets = [fasttree_file],                              
+            args = [output_folder],
+            name = "fasttree"
+            )
+
 
 def assign_taxonomy(workflow, output_folder):
 
          seqtab_data_path = output_folder + "/seqtab_final.rds"
          all_samples_taxonomy = output_folder + "/all_samples_GG13-8-taxonomy.tsv"
-         all_samples_sv_gg13 = output_folder + "/all_samples_SV-counts_and_GG13-8-taxonomy.tsv"
+         all_samples_sv_gg13 = output_folder + "/all_samples_taxonomy_closed_reference.tsv"
  
          workflow.add_task(
             "biobakery_workflows/scripts/assign_taxonomy.R --output_dir=[args[0]]",
@@ -263,8 +276,8 @@ def assign_taxonomy(workflow, output_folder):
 def assign_silva_rdp(workflow, output_folder):
 
          seqtab_data_path = output_folder + "/seqtab_final.rds"
-         all_samples_silva = output_folder + "/all_samples_SV-counts_and_SILVA-taxonomy.tsv"
-         all_samples_silva_rdp = output_folder + "/all_samples_SV-counts_and_RDP-taxonomy.tsv"
+         all_samples_silva = output_folder + "/all_samples_taxonomy_closed_reference_silva.tsv"
+         all_samples_silva_rdp = output_folder + "/all_samples_taxonomy_closed_reference_rdp.tsv"
  
          workflow.add_task(
             "biobakery_workflows/scripts/assign_silva_rdp.R --output_dir=[args[0]]",

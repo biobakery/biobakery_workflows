@@ -45,13 +45,21 @@ output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_
 fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
 fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
 
-# Extract sample names, allowing variable filenames
-
-sample.names <- gsub( "_R1.*\\.fastq*", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R2.*\\.fastq*", "", fnRs, perl = T)
-
+# Extract sample files extension
 sample.ext <- file_ext(fnFs)
-if(identical("gz",sample.ext[1])) sample.ext <- "fastq.gz"
+
+# Extract sample names, allowing variable filenames
+sample.names <- gsub( "_R1.*\\.fastq", "", fnFs, perl = T)
+sample.namesR <- gsub( "_R2.*\\.fastq", "", fnRs, perl = T)
+
+if(identical("gz",sample.ext[1])){
+  sample.ext <- "fastq.gz"
+  # Extract sample names, allowing variable filenames
+  sample.names <- gsub( "_R1.*\\.fastq.gz", "", fnFs, perl = T)
+  sample.namesR <- gsub( "_R2.*\\.fastq.gz", "", fnRs, perl = T)
+}
+
+
 
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
 

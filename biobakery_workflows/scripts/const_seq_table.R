@@ -6,6 +6,7 @@ library(dada2); packageVersion("dada2")
 #library(msa)
 #library(gridExtra)
 #library(phangorn)
+library(tools)
 
 ## Collect arguments
 args <- commandArgs(TRUE)
@@ -41,9 +42,18 @@ fnFs <- sort(grep( "_F_filt.*\\.fastq", list.files(filt_path), value = T ) )
 fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
 
-# Extract sample names, allowing variable filenames
-sample.names <- gsub( "_F_filt.*\\.fastq*", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R_filt.*\\.fastq*", "", fnRs, perl = T)
+# Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
+sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
+sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
+
+sample.ext <- file_ext(fnFs)
+if(identical("gz",sample.ext[1])){
+  sample.ext <- "fastq.gz"
+  # Extract sample names, allowing variable filenames
+  sample.names <- gsub( "_F_filt.*\\.fastq.gz", "", fnFs, perl = T)
+  sample.namesR <- gsub( "_R_filt.*\\.fastq.gz", "", fnRs, perl = T)
+}
+
 
 mergers <- readRDS(file.path(output.path,"mergers.rds"))
 
@@ -65,8 +75,8 @@ saveRDS(seqtab.nochim, paste0(output.path, "/seqtab_final.rds"))
 
 rd.counts <- readRDS(paste0(output.path, "/Read_counts_filt.rds" ))
 # remove rows with 0 reads after filtering and trimming
-rdf.counts <- rd.counts[-row(rd.counts)[rd.counts == 0],]
-
+#rdf.counts <- rd.counts[row(rd.counts)[rd.counts$reads.out != 0],]
+rdf.counts <- rd.counts
 
 getN <- function(x) sum(getUniques(x))
 track <- cbind(rdf.counts, sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
