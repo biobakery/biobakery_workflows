@@ -262,13 +262,13 @@ class SixteenS(Workflow):
             "using Clustalo."))
     # set the names for the otu tables and read count files
     file_info["error_ratesF"]=FileInfo("Error_rates_per_sample_FWD.png",
-        description=("Plots of forwrad read error rates"))
+        description=("Plots of forward read error rates in dada2 workflow for each sample"))
     file_info["error_ratesR"]=FileInfo("Error_rates_per_sample_REV.png",
-        description=("Plots of reverse read error rates"))
+        description=("Plots of reverse read error rates in dada2 workflow for each sample"))
     file_info["readF_qc"]=FileInfo("FWD_read_plot.png",
-        description=("Plots of reverse read error rates"))
+        description=("Plots of quality of forward reads for each sample"))
     file_info["readR_qc"]=FileInfo("REV_read_plot.png",
-        description=("Plots of reverse read error rates"))
+        description=("Plots of quality of reverse reads for each sample"))
     file_info["counts_each_step"]=FileInfo("Read_counts_at_each_step.tsv",
         description=("A tab-delimited file with samples as rows and counts as columns. ",
             "The counts included in each step of workflow process"))

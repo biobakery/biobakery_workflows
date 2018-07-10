@@ -74,9 +74,9 @@ write.table( t(seqtab.nochim), paste0( output.path, "/all_samples_SV-counts.tsv"
 saveRDS(seqtab.nochim, paste0(output.path, "/seqtab_final.rds"))
 
 rd.counts <- readRDS(paste0(output.path, "/Read_counts_filt.rds" ))
+
 # remove rows with 0 reads after filtering and trimming
-#rdf.counts <- rd.counts[row(rd.counts)[rd.counts$reads.out != 0],]
-rdf.counts <- rd.counts
+rdf.counts <- rd.counts[which(rd.counts$reads.out != 0),]
 
 getN <- function(x) sum(getUniques(x))
 track <- cbind(rdf.counts, sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))

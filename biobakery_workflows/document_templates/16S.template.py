@@ -34,11 +34,23 @@ else:
     columns, samples, data = document.read_table(vars["read_count_table"])
 
 
+#' <% if method == "dada2": print("Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA") %>
+#' <% if method == "dada2": print("gene amplicon paired-end sequencing reads,adopting the tutorial from") %>
+#' <% if method == "dada2": print("https://benjjneb.github.io/dada2/tutorial.html and ") %>
+#' <% if method == "dada2": print("https://benjjneb.github.io/dada2/bigdata_paired.html with minor adjustments.") %> 
+#' <% if method == "dada2": print("This report captures all the workflow steps necessary to reproduce the analysis.") %>
 
+#' <% if method != "dada2": print("The" + len(samples)+ ",  samples from this project were run through the standard 16S workflow. The workflow") %>
+#' <% if method != "dada2": print("follows the" + method + "OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity") %> 
+#' <% if method != "dada2": print(percent_identity + "and minimum cluster size of" + min_cluster_size + ".") %>
+    
+#' The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
 #' The <% print(len(samples)) %>,  samples from this project were run through the standard 16S workflow. The workflow
 #' follows the <% print(method) %> OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity 
 #' of <%= percent_identity %> and minimum cluster size of <%= min_cluster_size %>. 
-#' The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
+#'The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
+    
+    
 #' Reads were filtered for quality control using a MAXEE score of <%= maxee %>. Filtered reads were
 #' used to generate the OTUs. Reads not passing quality control were kept and used in the step
 #' assigning reads to OTUs. First these reads were truncated to a max length of <%= trunc_len_max %> bases.
@@ -68,6 +80,21 @@ pdf_format = True if vars["format"] == "pdf" else False
 #' ## <% if method == "dada2": print("Reverse Read Quality Plot  by Sample") %>   \
 #' <% if method == "dada2": print("![REV Read](" + vars["readR_qc"] + ")") %>
 #' <% if method == "dada2": print("\clearpage") %>
+#+ echo=False
+
+if method != "dada2":
+    eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
+    document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
+    
+#' <% if method != "dada2": print("The general stats for this data set are:" + overall_stats) %>
+#' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
+
+#' ## <% if method == "dada2": print("Error rates") %>
+#' <% if method == "dada2": print("The DADA2 algorithm depends on a parametric error model (err) and every amplicon dataset has a different set of error rates.") %>
+#' <% if method == "dada2": print("The  learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of") %>
+#' <% if method == "dada2": print("sample composition until they converge on a jointly consistent solution. As in many optimization problems, the algorithm must") %>
+#' <% if method == "dada2": print("begin with an initial guess, for which the maximum possible error rates in this data are used") %>
+#' <% if method == "dada2": print("the error rates if only the most abundant sequence is correct and all the rest are errors).") %>
 
 #' ## <% if method == "dada2": print("Forward Read Error Rates by Sample") %>  \
 #' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
@@ -76,15 +103,16 @@ pdf_format = True if vars["format"] == "pdf" else False
 #' ## <% if method == "dada2": print("Reverse Read Error Rates by Sample") %>   \
 #' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
 #' <% if method == "dada2": print("\clearpage") %>
-#+ echo=False
 
-if method != "dada2":
-    eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
-    document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
-#' <% if method != "dada2": print("The general stats for this data set are:" + overall_stats) %>
-#' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
-#+ echo=False
+#' <% if method == "dada2": print("The error rates for each possible transition (eg. A->T,A->G, etc) are shown.") %>
+#' <% if method == "dada2": print("Points are the observed error rates for each consensus quality score.") %>
+#' <% if method == "dada2": print("he black line shows the estimated error rates after convergence.") %>
+#' <% if method == "dada2": print("The red line shows the error rates expected under the nominal definition of the Q-value.") %>
+#' <% if method == "dada2": print("If the black line (the estimated rates) fits the observed rates well,") %>
+#' <% if method == "dada2": print("and the error rates drop with increased quality as expected, then everything looks reasonable ") %>
+#' <% if method == "dada2": print("and can proceed with confidence.") %>
 
+#+ echo=False
 def sort_data(top_data, samples):
     # sort the top data so it is ordered with the top sample/abundance first
     sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)

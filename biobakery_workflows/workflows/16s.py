@@ -24,11 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-import os
 
 from anadama2 import Workflow
 
-from biobakery_workflows.tasks import sixteen_s, dadatwo
+from biobakery_workflows.tasks import sixteen_s, dadatwo, general
 from biobakery_workflows import utilities, config
 
 
@@ -64,7 +63,7 @@ input_files = list(filter(lambda file: not file in index_files, input_files))
 
 # if a barcode file is provided, then demultiplex
 if args.barcode_file:
-    demultiplexed_files, demultiplex_output_folder=sixteen_s.demultiplex(
+    demultiplexed_files, demultiplex_output_folder=general.demultiplex(
         workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
         args.min_pred_qc_score, args.pair_identifier)
     # if the original files are gzipped, they will not be compressed after demultiplexing
@@ -74,14 +73,29 @@ else:
     demultiplex_output_folder=args.input
     
 if args.method == "dada2":
-	# call dada2 workflow tasks
+	 # call dada2 workflow tasks
+     #filter reads and trim
 	dadatwo.filter_trim(workflow, demultiplex_output_folder, args.output)
+    
+     #learn error rates
 	dadatwo.learn_error(workflow, args.output)
+    
+     #merge pairs
 	dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output)
+    
+     #construct otu
 	dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output)
+    
+     #phylogeny
 	dadatwo.phylogeny(workflow, args.output)
+    
+     #create tree 
 	dadatwo.fasttree(workflow, args.output)
+    
+     #assign taxonomy green genes 
 	dadatwo.assign_taxonomy(workflow, args.output)
+    
+     #assign taxonomy silva and rdp
 	dadatwo.assign_silva_rdp(workflow, args.output)	
 else:    
 	# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file

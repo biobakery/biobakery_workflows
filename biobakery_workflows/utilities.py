@@ -1033,13 +1033,14 @@ def read_otu_table(file):
     return samples, ids, taxonomy, data
     
 def read_dada_otu_table(file, taxcolumns):
-    """ Read in an otu table. Remove extra brackets from taxonomy names if present.
+    """ Read in an dada2 workflow output otu table. Remove extra brackets from taxonomy names if present.
     
         Args:
             file (string): A file containing the otu table (tsv format).
+            number of taxonomy columns in otu table (dada2 has each level in separate column)
                 
         Requires:
-            None
+            none
         
         Returns:
             (list): A list of samples.
@@ -1061,7 +1062,7 @@ def read_dada_otu_table(file, taxcolumns):
             data_points=line.rstrip().split("\t")
             ids.append(data_points.pop(0))
             taxrows = '; '.join(data_points[len(data_points)-taxcolumns:])
-            taxonomy.append(taxrows)
+            taxonomy.append(taxrows.replace("[","").replace("]",""))
             datarow = data_points[:len(data_points)-taxcolumns]          	
             data.append([float(i) for i in datarow])
             
@@ -1272,8 +1273,11 @@ def taxonomy_trim(taxa):
             
         else:
             most_specific_clade = taxon_reduced.split(delimiter)[-1]
-            data = taxon_full.split(most_specific_clade)
-            trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
+            if not most_specific_clade:
+                trimmed_taxa.append(taxon_reduced.replace(delimiter,".")) 
+            else:
+                data = taxon_full.split(most_specific_clade)
+                trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
             
     return trimmed_taxa
         
