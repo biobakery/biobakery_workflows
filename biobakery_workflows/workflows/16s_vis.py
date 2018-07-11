@@ -84,7 +84,7 @@ if not args.exclude_workflow_info:
 if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
 	method = "dada2"
 	input_files={
-	 "required":[
+       "required":[
 		"otu_table_closed_reference",
 		"msa_nonchimera",
 		"counts_each_step",
@@ -106,8 +106,8 @@ if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_f
 #variables	
 	methodvars={
 		"title":"DADA2 16s Report",
-        "project":args.project_name,
-        "method":method,
+         "project":args.project_name,
+         "method":method,
 		"outputdir":args.output,
 		"otu_table":otu_table,
 		"counts_each_step":counts_each_step,

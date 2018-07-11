@@ -22,38 +22,83 @@ trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
 
-# read in the read count table
-# columns expected are total reads, reads that map to OTUs with taxonomy,
-# and reads that map to OTUs without taxonomy
 
-method = vars["method"]
+method=vars["method"]
 
-if method == "dada2":
+if vars["method"] == "dada2":
     columns, samples, data = document.read_table(vars["counts_each_step"])
+    
+    dada2intro="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
+        gene amplicon paired-end sequencing reads,adopting the tutorial from \
+        https://benjjneb.github.io/dada2/tutorial.html and \
+        https://benjjneb.github.io/dada2/bigdata_paired.html with minor adjustments.\
+        This report captures all the workflow steps necessary to reproduce the analysis.\
+        Multiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
+        which is required for calculating UniFrac beta-diversity distances between microbiome samples."
+    
+    dada2errorintro="The DADA2 algorithm depends on a parametric error model (err) and every amplicon dataset has a different set of error rates. \
+        The  learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
+        sample composition until they converge on a jointly consistent solution. As in many optimization problems, the algorithm must \
+        begin with an initial guess, for which the maximum possible error rates in this data are used \
+        the error rates if only the most abundant sequence is correct and all the rest are errors)."
+    
+    dada2errorinfo="The error rates for each possible transition (eg. A->T,A->G, etc) are shown. \
+        Points are the observed error rates for each consensus quality score. \
+        the black line shows the estimated error rates after convergence. \
+        The red line shows the error rates expected under the nominal definition of the Q-value. \
+        If the black line (the estimated rates) fits the observed rates well, \
+        and the error rates drop with increased quality as expected, then everything looks reasonable \
+        and can proceed with confidence."
+
+    dada2stepsinfo="Dereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
+        the number of reads with that unique sequence. DADA2 retains a summary of the quality information associated with each unique sequence.\
+        The consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
+        These quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2s accuracy. \
+        The sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
+        Spurious sequence variants are further reduced by merging overlapping reads. The core function here is mergePairs \
+        which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
+        The core dada method removes substitution and indel errors, but chimeras remain.\
+        Fortunately, the accuracy of the sequences after denoising makes identifying chimeras simpler than it is when dealing with fuzzy OTUs\
+        all sequences which can be exactly reconstructed as a bimera (two-parent chimera) from more abundant sequence." \
+         + "IMPORTANT: Most of reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though).\
+        If most of your reads were removed as chimeric, upstream processing may need to be revisited.\
+        In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline."  
+    
+    dada2countsinfo="This figure shows the number of reads that made it through each step in the pipeline\
+        Outside of filtering (depending on how stringent it is) there should no step in which a majority of reads are lost.\
+        If a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
+        and make sure that the truncated reads span your amplicon.\
+        If a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
+        as the ambiguous nucleotides in unremoved primers interfere with chimera identification."   
+
+    dada2taxinfo="The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
+        and outputs the taxonomic assignments with at least minBoot bootstrap confidence.\
+        Formatted training datasets for taxonomic assignments can be downloaded from here\
+        https://benjjneb.github.io/dada2/training.html.\
+        assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007"  \
+        + "In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
+        of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
+        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level."
+        
 else:
     columns, samples, data = document.read_table(vars["read_count_table"])
+    
+    usearchintro="The" + str(len(samples)) + ",  samples from this project were run through the standard 16S workflow.  \
+        follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity" \
+        + str(percent_identity) + "and minimum cluster size of" + str(min_cluster_size) + "." \
+        + "The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
+        Reads were filtered for quality control using a MAXEE score of" + str(maxee) + ". Filtered reads were \
+        used to generate the OTUs. Reads not passing quality control were kept and used in the step \
+        assigning reads to OTUs. First these reads were truncated to a max length of" + str(trunc_len_max) + " bases."
+        
+    usearchcountsinfo="This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,\
+        2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these\
+        three read counts for each sample is the total original read count not including filtering prior to OTU clustering."
 
 
-#' <% if method == "dada2": print("Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA") %>
-#' <% if method == "dada2": print("gene amplicon paired-end sequencing reads,adopting the tutorial from") %>
-#' <% if method == "dada2": print("https://benjjneb.github.io/dada2/tutorial.html and ") %>
-#' <% if method == "dada2": print("https://benjjneb.github.io/dada2/bigdata_paired.html with minor adjustments.") %> 
-#' <% if method == "dada2": print("This report captures all the workflow steps necessary to reproduce the analysis.") %>
-
-#' <% if method != "dada2": print("The" + len(samples)+ ",  samples from this project were run through the standard 16S workflow. The workflow") %>
-#' <% if method != "dada2": print("follows the" + method + "OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity") %> 
-#' <% if method != "dada2": print(percent_identity + "and minimum cluster size of" + min_cluster_size + ".") %>
-    
-#' The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
-#' The <% print(len(samples)) %>,  samples from this project were run through the standard 16S workflow. The workflow
-#' follows the <% print(method) %> OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity 
-#' of <%= percent_identity %> and minimum cluster size of <%= min_cluster_size %>. 
-#'The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
-    
-    
-#' Reads were filtered for quality control using a MAXEE score of <%= maxee %>. Filtered reads were
-#' used to generate the OTUs. Reads not passing quality control were kept and used in the step
-#' assigning reads to OTUs. First these reads were truncated to a max length of <%= trunc_len_max %> bases.
+#' <% if vars["method"] == "dada2": print(dada2intro) %>
+#' <% if vars["method"] == "dada2": print(dada2stepsinfo) %>
+#' <% if vars["method"] != "dada2": print(usearchintro) %>
 
 #+ echo=False
 import os
@@ -67,11 +112,16 @@ from biobakery_workflows import utilities
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
+
+
 #' <% if pdf_format: print("\clearpage") %>
 
 #' # Quality Control
 
-#+ echo=False
+# read in the read count table
+# columns expected are total reads, reads that map to OTUs with taxonomy,
+# and reads that map to OTUs without taxonomy
+
 
 #' ## <% if method == "dada2": print("Forward Read Quality Plot by Sample") %>   \
 #' <% if method == "dada2": print("![FWD Read](" + vars["readF_qc"] + ")") %> 
@@ -86,32 +136,24 @@ if method != "dada2":
     eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
     document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
     
-#' <% if method != "dada2": print("The general stats for this data set are:" + overall_stats) %>
+#' <% if method != "dada2": print("The general stats for this data set are:" + str(overall_stats)) %>
 #' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
 
-#' ## <% if method == "dada2": print("Error rates") %>
-#' <% if method == "dada2": print("The DADA2 algorithm depends on a parametric error model (err) and every amplicon dataset has a different set of error rates.") %>
-#' <% if method == "dada2": print("The  learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of") %>
-#' <% if method == "dada2": print("sample composition until they converge on a jointly consistent solution. As in many optimization problems, the algorithm must") %>
-#' <% if method == "dada2": print("begin with an initial guess, for which the maximum possible error rates in this data are used") %>
-#' <% if method == "dada2": print("the error rates if only the most abundant sequence is correct and all the rest are errors).") %>
+#' # <% if method == "dada2": print("Error rates") %>
+    
 
+#' <% if method == "dada2": print(dada2errorintro) %>  
+    
 #' ## <% if method == "dada2": print("Forward Read Error Rates by Sample") %>  \
 #' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 
 #' ## <% if method == "dada2": print("Reverse Read Error Rates by Sample") %>   \
 #' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
-#' <% if method == "dada2": print("\clearpage") %>
 
-#' <% if method == "dada2": print("The error rates for each possible transition (eg. A->T,A->G, etc) are shown.") %>
-#' <% if method == "dada2": print("Points are the observed error rates for each consensus quality score.") %>
-#' <% if method == "dada2": print("he black line shows the estimated error rates after convergence.") %>
-#' <% if method == "dada2": print("The red line shows the error rates expected under the nominal definition of the Q-value.") %>
-#' <% if method == "dada2": print("If the black line (the estimated rates) fits the observed rates well,") %>
-#' <% if method == "dada2": print("and the error rates drop with increased quality as expected, then everything looks reasonable ") %>
-#' <% if method == "dada2": print("and can proceed with confidence.") %>
-
+#' <% if method == "dada2": print(dada2errorinfo) %> 
+#' <% if pdf_format: print("\clearpage") %>
+      
 #+ echo=False
 def sort_data(top_data, samples):
     # sort the top data so it is ordered with the top sample/abundance first
@@ -236,7 +278,6 @@ if vars["method"] == "dada2":
     plot_all_categorical_metadata(sorted_samples, [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads], 
     ["total","filtered","merged","tabled","nochimera"], title="Read counts in each step by sample", ylabel="Total Reads")
 
-    # <% if vars["method"] == "dada2": print("This figure shows counts of reads in each step of workflow process") %>
     print("This figure shows counts of reads in each step of workflow process")
 
 else:
@@ -248,14 +289,17 @@ else:
         title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
     plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
         ["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
-    
-#' <% if vars["method"] != "dada2": print("This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,") %>
-#' <% if vars["method"] != "dada2": print("2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these") %>
-#' <% if vars["method"] != "dada2": print("three read counts for each sample is the total original read count not including filtering prior to OTU clustering.") %>
-#' <% if vars["method"] != "dada2": print("\clearpage") %>
+ 
+#' <% if vars["method"] == "dada2": print(dada2countsinfo) %>  
+#' <% if vars["method"] != "dada2": print(usearchcountsinfo) %> 
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' # Taxonomy
 #' ## Average Abundance
+    
+#' <% if vars["method"] == "dada2": print(dada2taxinfo) %>      
+    
 #+ echo=False
 import numpy
 
@@ -327,9 +371,7 @@ plot_all_categorical_metadata(sorted_samples_terminal, sorted_top_terminal_data,
     title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance", legend_title="Terminal taxa")
 
 #' # Ordination
-
 #+ echo=False
-
 # plot the top terminal node taxa in a PCOA
 # provide data as values [0-1] organized as samples as columns and features as rows
 
