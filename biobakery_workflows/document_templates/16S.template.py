@@ -1,7 +1,12 @@
 #' % <% from anadama2 import PweaveDocument; document=PweaveDocument(); vars = document.get_vars(); print(vars["title"]) %>
 #' % Project: <% print(vars["project"]) %>
 #' % Date: <% import time; print(time.strftime("%m/%d/%Y")) %>
+#+ echo=False
 
+# determine the document format
+pdf_format=True if vars["format"] == "pdf" else False
+
+#' <% if pdf_format: print("\clearpage") %>
 #' # Introduction
 
 #+ echo=False
@@ -25,60 +30,60 @@ min_cluster_size = workflow_settings.get("min_size","UNK")
 
 method=vars["method"]
 
-if vars["method"] == "dada2":
+if method == "dada2":
     columns, samples, data = document.read_table(vars["counts_each_step"])
     
     dada2intro="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
         gene amplicon paired-end sequencing reads,adopting the tutorial from \
-        https://benjjneb.github.io/dada2/tutorial.html and \
-        https://benjjneb.github.io/dada2/bigdata_paired.html with minor adjustments.\
-        This report captures all the workflow steps necessary to reproduce the analysis.\
-        Multiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
-        which is required for calculating UniFrac beta-diversity distances between microbiome samples."
+         https://benjjneb.github.io/dada2/tutorial.html and \
+        \n https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
+        \n\nThis report captures all the workflow steps necessary to reproduce the analysis.\
+        \nMultiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
+        which is required for calculating UniFrac beta-diversity distances between microbiome samples.\n"
     
     dada2errorintro="The DADA2 algorithm depends on a parametric error model (err) and every amplicon dataset has a different set of error rates. \
-        The  learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
-        sample composition until they converge on a jointly consistent solution. As in many optimization problems, the algorithm must \
+        \nThe learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
+        sample composition until they converge on a jointly consistent solution.\n\nAs in many optimization problems, the algorithm must \
         begin with an initial guess, for which the maximum possible error rates in this data are used \
-        the error rates if only the most abundant sequence is correct and all the rest are errors)."
+        the error rates if only the most abundant sequence is correct and all the rest are errors).\n"
     
     dada2errorinfo="The error rates for each possible transition (eg. A->T,A->G, etc) are shown. \
         Points are the observed error rates for each consensus quality score. \
-        the black line shows the estimated error rates after convergence. \
-        The red line shows the error rates expected under the nominal definition of the Q-value. \
-        If the black line (the estimated rates) fits the observed rates well, \
+        \nThe black line shows the estimated error rates after convergence. \
+        \nThe red line shows the error rates expected under the nominal definition of the Q-value. \
+        \n\nIf the black line (the estimated rates) fits the observed rates well, \
         and the error rates drop with increased quality as expected, then everything looks reasonable \
-        and can proceed with confidence."
+        and can proceed with confidence.\n"
 
-    dada2stepsinfo="Dereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
+    dada2stepsinfo="\nDereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
         the number of reads with that unique sequence. DADA2 retains a summary of the quality information associated with each unique sequence.\
-        The consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
-        These quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2s accuracy. \
-        The sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
-        Spurious sequence variants are further reduced by merging overlapping reads. The core function here is mergePairs \
+        \nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
+        \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2s accuracy. \
+        \n\nThe sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
+        Spurious sequence variants are further reduced by merging overlapping reads. \nThe core function here is mergePairs \
         which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
-        The core dada method removes substitution and indel errors, but chimeras remain.\
+        \n\nThe core dada method removes substitution and indel errors, but chimeras remain.\
         Fortunately, the accuracy of the sequences after denoising makes identifying chimeras simpler than it is when dealing with fuzzy OTUs\
         all sequences which can be exactly reconstructed as a bimera (two-parent chimera) from more abundant sequence." \
-         + "IMPORTANT: Most of reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though).\
+         + "\n\nIMPORTANT: Most of reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though).\
         If most of your reads were removed as chimeric, upstream processing may need to be revisited.\
-        In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline."  
+        In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline.\n"  
     
     dada2countsinfo="This figure shows the number of reads that made it through each step in the pipeline\
-        Outside of filtering (depending on how stringent it is) there should no step in which a majority of reads are lost.\
-        If a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
+        \n\nOutside of filtering (depending on how stringent it is) there should no step in which a majority of reads are lost.\
+        \n\nIf a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
         and make sure that the truncated reads span your amplicon.\
-        If a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
-        as the ambiguous nucleotides in unremoved primers interfere with chimera identification."   
+        \n\nIf a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
+        as the ambiguous nucleotides in unremoved primers interfere with chimera identification.\n"   
 
     dada2taxinfo="The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
         and outputs the taxonomic assignments with at least minBoot bootstrap confidence.\
-        Formatted training datasets for taxonomic assignments can be downloaded from here\
+        \n\nFormatted training datasets for taxonomic assignments can be downloaded from here\
         https://benjjneb.github.io/dada2/training.html.\
-        assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007"  \
-        + "In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
+        \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007"  \
+        + "\nIn short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
         of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
-        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level."
+        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n"
         
 else:
     columns, samples, data = document.read_table(vars["read_count_table"])
@@ -86,14 +91,14 @@ else:
     usearchintro="The" + str(len(samples)) + ",  samples from this project were run through the standard 16S workflow.  \
         follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity" \
         + str(percent_identity) + "and minimum cluster size of" + str(min_cluster_size) + "." \
-        + "The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
-        Reads were filtered for quality control using a MAXEE score of" + str(maxee) + ". Filtered reads were \
+        + "\n\nThe GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
+        \n\nReads were filtered for quality control using a MAXEE score of" + str(maxee) + ". Filtered reads were \
         used to generate the OTUs. Reads not passing quality control were kept and used in the step \
-        assigning reads to OTUs. First these reads were truncated to a max length of" + str(trunc_len_max) + " bases."
+        assigning reads to OTUs. First these reads were truncated to a max length of" + str(trunc_len_max) + " bases.\n"
         
-    usearchcountsinfo="This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,\
-        2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these\
-        three read counts for each sample is the total original read count not including filtering prior to OTU clustering."
+    usearchcountsinfo="This figure shows counts of reads in three categories: \n\n1) classified: reads that align to OTUs with known taxonomy,\
+        \n2) reads that align to OTUs of unknown taxonomy, \n3) reads that do not align to any OTUs. The sum of these\
+        three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
 
 
 #' <% if vars["method"] == "dada2": print(dada2intro) %>
@@ -109,18 +114,14 @@ min_samples=10
 
 from biobakery_workflows import utilities
 
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
-
-
-
-#' <% if pdf_format: print("\clearpage") %>
-
-#' # Quality Control
-
 # read in the read count table
 # columns expected are total reads, reads that map to OTUs with taxonomy,
 # and reads that map to OTUs without taxonomy
+
+#' <% if pdf_format: print("\clearpage") %>
+
+
+#' # Quality Control
 
 
 #' ## <% if method == "dada2": print("Forward Read Quality Plot by Sample") %>   \
@@ -265,7 +266,7 @@ def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, yl
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel, legend_title, legend_size)
 
-if vars["method"] == "dada2":
+if method == "dada2":
 
     filtered_reads = [row[1] for row in sorted_all_read_data]
     merged_reads = [row[3] for row in sorted_all_read_data]
@@ -384,7 +385,7 @@ document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordina
 #' to have at least <% print(min_abundance)%> % abundance in at least 
 #' <% print(min_samples) %> % of all samples.
 
-
+#' <% if pdf_format: print("\clearpage") %>
 #+ echo=False
 if 'metadata' in vars and vars['metadata']:
     # organize metadata for plot if available
