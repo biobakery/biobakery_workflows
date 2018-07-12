@@ -91,6 +91,21 @@ class ReportHook():
                     "{:2.0f}".format(estimated_seconds) + " sec "
             status+="        \r"
             sys.stdout.write(status)
+
+def read_file_n_lines(file,n):
+    """ Read a file n lines at a time """
+
+    line_set=[]
+    with open(file) as file_handle:
+        for line in file_handle:
+            if len(line_set) == n:
+                yield line_set
+                line_set=[]
+            line_set.append(line)
+
+    # yield the last set
+    if len(line_set) == n:
+        yield line_set
             
 def read_file_catch(file, delimiter="\t"):
     """ Try to read the file, catch on error. Split data by delimiter. """
