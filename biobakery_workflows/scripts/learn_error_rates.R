@@ -3,10 +3,6 @@
 # load packages
 library(dada2); packageVersion("dada2")
 library(ggplot2)
-#library(msa)
-#library(gridExtra)
-#library(phangorn)
-
 
 ## Collect arguments
 args <- commandArgs(TRUE)
@@ -42,14 +38,14 @@ filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq*", list.files(filt.path
 
 set.seed(100)
 # Filtered forward reads
-errF <- learnErrors(filtFs, nread=1e3, multithread=TRUE)
+errF <- dada2::learnErrors(filtFs, nread=1e3, multithread=TRUE)
 # Filtered reverse reads
-errR <- learnErrors(filtRs, nread=1e3, multithread=TRUE)
+errR <- dada2::learnErrors(filtRs, nread=1e3, multithread=TRUE)
 
 
 # Visualize the estimated error rates
-ggsave(paste0(output.path,"/Error_rates_per_sample_FWD.png"), plotErrors(errF, nominalQ=TRUE) , device = "png")
-ggsave(paste0(output.path,"/Error_rates_per_sample_REV.png"), plotErrors(errR, nominalQ=TRUE) , device = "png")
+ggplot2::ggsave(paste0(output.path,"/Error_rates_per_sample_FWD.png"), dada2::plotErrors(errF, nominalQ=TRUE) , device = "png")
+ggplot2::ggsave(paste0(output.path,"/Error_rates_per_sample_REV.png"), dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
 
 #save as rds files
 saveRDS(errF, paste0(output.path, "/error_rates_F.rds")) 

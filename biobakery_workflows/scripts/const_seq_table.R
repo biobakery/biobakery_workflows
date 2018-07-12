@@ -2,10 +2,6 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-#library(ggplot2)
-#library(msa)
-#library(gridExtra)
-#library(phangorn)
 library(tools)
 
 ## Collect arguments
@@ -28,11 +24,8 @@ for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
 }
 
-
 # these variables are passed to the workflow
-input.path <- normalizePath( args.list$input_dir )
 output.path <- normalizePath( args.list$output_dir )
-#pool.samples <- args.list$pool
 
 #Filtered files folder path
 filt_path <- file.path(output.path, "filtered_input") 
@@ -46,7 +39,7 @@ fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
 sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
 
-sample.ext <- file_ext(fnFs)
+sample.ext <- tools::file_ext(fnFs)
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
   # Extract sample names, allowing variable filenames
@@ -57,12 +50,12 @@ if(identical("gz",sample.ext[1])){
 
 mergers <- readRDS(file.path(output.path,"mergers.rds"))
 
-seqtab <- makeSequenceTable(mergers)
+seqtab <- dada2::makeSequenceTable(mergers)
 dim(seqtab)
 # Inspect distribution of sequence lengths
 table(nchar(getSequences(seqtab)))
 # The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants. # Remove chimeric sequences:
-seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
 
 dim(seqtab.nochim)
 # ratio of chimeric sequence reads

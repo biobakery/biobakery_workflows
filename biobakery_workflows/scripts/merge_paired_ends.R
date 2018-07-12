@@ -2,10 +2,6 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-library(ggplot2)
-library(msa)
-library(gridExtra)
-library(phangorn)
 library(tools)
 
 args <- commandArgs(TRUE)
@@ -31,10 +27,8 @@ for( i in names(args.list) ) {
 cat( grep( "*\\.fastq*", list.files(args.list$output_dir), value=T ), sep = "\n" )
 
 # these variables are passed to the workflow
-output.path <- normalizePath( args.list$output_dir )
+output.path <- normalizePath(args.list$output_dir )
 print(output.path)
-
-input.path <- normalizePath( args.list$input_dir )
 
 #Filtered files folder path
 filt_path <- file.path(output.path, "filtered_input") 
@@ -48,7 +42,7 @@ fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
 sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
 
-sample.ext <- file_ext(fnFs)
+sample.ext <- tools::file_ext(fnFs)
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
   # Extract sample names, allowing variable filenames
@@ -77,11 +71,11 @@ names(filtRs) <- sample.names
 for(sam in sample.names) {
   cat("Processing:", sam, "\n")
   print(filtFs[[sam]])
-  derepF <- derepFastq(filtFs[[sam]])
-  ddF <- dada(derepF, err=errF, multithread=TRUE)
-  derepR <- derepFastq(filtRs[[sam]])
-  ddR <- dada(derepR, err=errR, multithread=TRUE)
-  merger <- mergePairs(ddF, derepF, ddR, derepR)
+  derepF <- dada2::derepFastq(filtFs[[sam]])
+  ddF <- dada2::dada(derepF, err=errF, multithread=TRUE)
+  derepR <- dada2::derepFastq(filtRs[[sam]])
+  ddR <- dada2::dada(derepR, err=errR, multithread=TRUE)
+  merger <- dada2::mergePairs(ddF, derepF, ddR, derepR)
   mergers[[sam]] <- merger
 }
 rm(derepF); rm(derepR)

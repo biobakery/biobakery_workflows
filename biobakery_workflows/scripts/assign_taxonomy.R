@@ -2,12 +2,6 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-#library(ggplot2)
-#library(msa)
-#library(gridExtra)
-#library(phangorn)
-
-
 
 # Helper function to replace NAs in taxonomy assignment table with prefix corresponding to tax rank
 replaceNA.in.assignedTaxonomy <- 
@@ -53,7 +47,7 @@ output.path <- normalizePath( args.list$output_dir )
 seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
 
 # Assign taxonomy:
-taxa.gg13_8 <- assignTaxonomy(seqtab.nochim, paste0(output.path,"/../dada2_reference_databases/gg_13_8_train_set_97.fa.gz"), multithread=TRUE, tryRC=TRUE)
+taxa.gg13_8 <- dada2::assignTaxonomy(seqtab.nochim, paste0(output.path,"/../dada2_reference_databases/gg_13_8_train_set_97.fa.gz"), multithread=TRUE, tryRC=TRUE)
 
 # Print first 6 rows of taxonomic assignment
 unname(head(taxa.gg13_8))

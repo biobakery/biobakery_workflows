@@ -2,10 +2,7 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-library(ggplot2)
-library(msa)
 library(gridExtra)
-library(phangorn)
 library(tools)
 
 ## Collect arguments
@@ -33,20 +30,16 @@ cat( grep( "*\\.fastq", list.files(args.list$input_dir), value=T ), sep = "\n" )
 
 # these variables are passed to the workflow
 input.path <- normalizePath( args.list$input_dir )
-#input.path <- args.list$input_dir
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
-#pool.samples <- args.list$pool
-
 
 # List of input files
-
 # Sort ensures forward/reverse reads are in same order
 fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
 fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
 
 # Extract sample files extension
-sample.ext <- file_ext(fnFs)
+sample.ext <- tools::file_ext(fnFs)
 
 # Extract sample names, allowing variable filenames
 sample.names <- gsub( "_R1.*\\.fastq", "", fnFs, perl = T)
@@ -58,8 +51,6 @@ if(identical("gz",sample.ext[1])){
   sample.names <- gsub( "_R1.*\\.fastq.gz", "", fnFs, perl = T)
   sample.namesR <- gsub( "_R2.*\\.fastq.gz", "", fnRs, perl = T)
 }
-
-
 
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
 
@@ -76,24 +67,24 @@ ifelse(!dir.exists(filt_path), dir.create(filt_path, recursive = TRUE), FALSE)
 # Forward reads
 fwd.qc.plots.list <- list()
 for( i in 1 : length(fnFs)) {
-  fwd.qc.plots.list[[i]] <- plotQualityProfile(fnFs[i])
+  fwd.qc.plots.list[[i]] <- dada2::plotQualityProfile(fnFs[i])
   rm(i)
 }
 # Save to file
 png(paste0(output.dir,"/FWD_read_plot.png"))
-marrangeGrob( fwd.qc.plots.list, ncol=2, nrow=3, top = NULL )
+gridExtra::marrangeGrob( fwd.qc.plots.list, ncol=2, nrow=3, top = NULL )
 dev.off()
 rm(fwd.qc.plots.list)
 
 # Reverse reads
 rev.qc.plots.list <- list()
 for( i in 1 : length(fnRs)) {
-  rev.qc.plots.list[[i]] <- plotQualityProfile(fnRs[i])
+  rev.qc.plots.list[[i]] <- dada2::plotQualityProfile(fnRs[i])
   rm(i)
 }
 # Save to file
 png(paste0(output.dir,"/REV_read_plot.png"))
-marrangeGrob( rev.qc.plots.list, ncol=2, nrow=3, top = NULL )
+gridExtra::marrangeGrob( rev.qc.plots.list, ncol=2, nrow=3, top = NULL )
 dev.off()
 rm(rev.qc.plots.list)
 
@@ -111,7 +102,7 @@ filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 # 4. Output files are compressed by default.
 
 rd.counts <- as.data.frame(
-  filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240,200),
+  dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(240,200),
                 maxN=0, maxEE=c(1,2), truncQ=2, rm.phix=TRUE,
                 compress=TRUE, multithread=TRUE) 
 )

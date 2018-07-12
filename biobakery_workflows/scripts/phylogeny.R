@@ -2,9 +2,7 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-#library(ggplot2)
 library(msa)
-#library(gridExtra)
 library(phangorn)
 
 ## Collect arguments
@@ -28,19 +26,18 @@ for( i in names(args.list) ) {
 }
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
-#pool.samples <- args.list$pool
 output.path <- normalizePath( args.list$output_dir )
 
 
 seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
 
 # Get sequences
-seqs <- getSequences(seqtab.nochim)
+seqs <- dada2::getSequences(seqtab.nochim)
 names(seqs) <- seqs # This propagates to the tip labels of the tree
 # Multiple seqeuence alignment
-mult <- msa(seqs, method="ClustalOmega", type="dna", order="input")
+mult <- msa::msa(seqs, method="ClustalOmega", type="dna", order="input")
 # Save msa to file; convert first to phangorn object
-phang.align <- as.phyDat(mult, type="DNA", names=getSequences(seqtab.nochim))
+phang.align <- phangorn::as.phyDat(mult, type="DNA", names=dada2::getSequences(seqtab.nochim))
 write.phyDat(phang.align, format = 'fasta', file = paste0( output.path,"/all_samples_clustalo_aligned_nonchimera.fasta") )
 
 detach("package:phangorn", unload=TRUE)
