@@ -194,7 +194,7 @@ plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmappe
 
 #' # Taxonomy
 
-#' ## Average Abundance
+#' ## Top Genera
 
 #+ echo=False
 import numpy
@@ -235,32 +235,7 @@ plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_na
 
 #' <% if pdf_format: print("\clearpage") %>
 
-#' ### Heatmaps
-
-#+ echo=False
-max_sets_heatmap=25
-
-#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera",method="Spearman or Bray-Curtis") %>
-
-#+ echo=False
-
-# update the figure size based on output format for the heatmaps
-utilities.change_pweave_figure_size_heatmap(pdf_format)
-
-visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
-    pdf_format,"Top {} genera by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
-
-#' <% if pdf_format: print("\clearpage") %>
-
-#+ echo=False
-visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
-    pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
-
-#+ echo=False
-# reset the figure size to the defaults
-utilities.reset_pweave_figure_size()
-
-#' ## Terminal Taxa
+#' ## Top Terminal Taxa
 
 #+ echo=False
 
@@ -284,6 +259,48 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
 
 plot_all_categorical_metadata(sorted_samples_terminal, sorted_top_terminal_data, shorted_names,
     title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance", legend_title="Terminal taxa")
+
+#' # Heatmaps
+
+#+ echo=False
+max_sets_heatmap=25
+
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera and terminal taxa",method="Spearman and Bray-Curtis") %>
+
+#' ## Top Genera
+
+#+ echo=False
+# update the figure size based on output format for the heatmaps
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    pdf_format,"Top {} genera by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
+utilities.reset_pweave_figure_size()
+
+#' ## Top Terminal Taxa
+
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
+    pdf_format,"Top {} terminal taxa by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
+    pdf_format,"Top {} terminal taxa by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
+utilities.reset_pweave_figure_size()
+
+#' <% if pdf_format: print("\clearpage") %>
 
 #' # Ordination
 
