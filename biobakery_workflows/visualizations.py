@@ -32,6 +32,26 @@ import shutil
 
 from . import utilities
 
+def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=None,max_sets_heatmap=25,method="correlation"):
+    """ Generate a heatmap using the doc function. Include metadata if available. """
+
+    # set the default title if not provided
+    if not title:
+        title = "Top {} species by average abundance".format(max_sets_heatmap)
+
+    # if there is metadata, add it to the top taxonomy data
+    if 'metadata' in vars and vars['metadata']:
+        merged_data, metadata_samples=utilities.merge_metadata(vars['metadata'], samples,
+            [[top_taxonomy[i]]+top_data[i] for i in range(len(top_taxonomy))])
+        metadata_taxonomy=[row.pop(0) for row in merged_data]
+        # get the metadata row numbers
+        metadata_rows=range(1,len(vars['metadata']))
+        document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
+            title=title, metadata_rows=metadata_rows, method=method)
+    else:
+        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method)
+
+
 def plot_hallagram(document, feature_set_1_data, feature_set_2_data, axis1_label, axis2_label, model=None, title=None,
     output_folder=None, strongest=10, show_table=False,q_value=0.1):
     """ Run halla on the two feature sets and plot the hallagram with the strongest associations 
@@ -333,12 +353,12 @@ class ShotGun(Workflow):
         "[UniRef](http://www.uniprot.org/help/uniref), "+\
         "and [MetaCyc](https://metacyc.org/)."
         
-    captions["pathway_abundance_intro"]="Hierarchical clustering of samples "+\
-        "and pathways, using top {max_sets} pathways "+\
+    captions["heatmap_intro"]="Hierarchical clustering of samples "+\
+        "and {type}, using top {max_sets} {type} "+\
         "with highest mean relative abundance among samples. "+\
         "The 'average linkage' clustering on the Euclidean "+\
-        "distance metric was used to cluster samples. The pathway "+\
-        "dendrogram is based on pairwise (Spearman) correlation between pathways."+\
+        "distance metric was used to cluster samples. The {type} "+\
+        "dendrogram is based on pairwise ( {method} ) correlation between pathways. "+\
         "Samples are columns and pathway are rows. The heatmaps were generated "+\
         "with [Hclust2](https://bitbucket.org/nsegata/hclust2)."
         

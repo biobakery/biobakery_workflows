@@ -106,34 +106,13 @@ if 'metadata' in vars and vars['metadata']:
 
 #' ## Heatmap
 
-#' The top <% print(max_sets_heatmap) %> species based on average relative abundance are
-#' shown in the heatmap. The heatmap was generated with [Hclust2](https://bitbucket.org/nsegata/hclust2).
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="species and genera",method="Spearman and Bray-Curtis") %>
 
 #+ echo=False
 # update the figure size based on output format for the heatmaps
 utilities.change_pweave_figure_size_heatmap(pdf_format)
 
-#+ echo=False
-# if there is metadata, add it to the top taxonomy data
-if 'metadata' in vars and vars['metadata']:
-    merged_data, metadata_samples=utilities.merge_metadata(vars['metadata'], samples, 
-        [[top_taxonomy[i]]+top_data[i] for i in range(len(top_taxonomy))])
-    metadata_taxonomy=[row.pop(0) for row in merged_data]
-    # get the metadata row numbers
-    metadata_rows=range(1,len(vars['metadata']))
-    document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
-        title="Top "+str(max_sets_heatmap)+" species by average abundance",
-        metadata_rows=metadata_rows)
-else:
-    document.show_hclust2(samples,top_taxonomy,top_data,
-        title="Top "+str(max_sets_heatmap)+" species by average abundance")
-
-#' Hierarchical clustering of samples and species, using top <%= max_sets_heatmap %> species with highest mean 
-#' relative abundance among samples.  Abundances were log10 transformed prior to clustering, and the "average linkage" 
-#' clustering on the Euclidean distance metric was used to cluster samples.  The species dendrogram is based on pairwise 
-#' (Spearman) correlation between species.  Samples are columns and species are rows. The color bar represents relative 
-#' abundances on a log10 scale.
-
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,max_sets_heatmap=max_sets_heatmap)
 
 #' <% if pdf_format: print("\clearpage") %>
 

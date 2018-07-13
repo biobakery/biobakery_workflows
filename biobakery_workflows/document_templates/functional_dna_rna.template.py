@@ -32,7 +32,7 @@ dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descr
 
 #' ## Pathway Abundance
 
-#' <%= visualizations.ShotGun.format_caption("pathway_abundance_intro",max_sets=max_sets) %>
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets,type="pathways",method="Spearman") %>
 
 #+ echo=False
 document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,

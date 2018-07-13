@@ -42,7 +42,7 @@ import numpy
 min_abundance=0.01
 min_samples=10
 
-from biobakery_workflows import utilities
+from biobakery_workflows import utilities, visualizations
 
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
@@ -232,6 +232,33 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
 #+ echo=False
 plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
     title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera", legend_size=legend_size)
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' ### Heatmaps
+
+#+ echo=False
+max_sets_heatmap=25
+
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera",method="Spearman or Bray-Curtis") %>
+
+#+ echo=False
+
+# update the figure size based on output format for the heatmaps
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    pdf_format,"Top {} genera by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
+
+#+ echo=False
+# reset the figure size to the defaults
+utilities.reset_pweave_figure_size()
 
 #' ## Terminal Taxa
 
