@@ -32,6 +32,53 @@ import shutil
 
 from . import utilities
 
+def sort_data(top_data, samples, sort_by_name=False):
+    # sort the top data so it is ordered with the top sample/abundance first
+    if sort_by_name:
+        sorted_sample_indexes=[samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(samples)]
+    else:
+        sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
+
+    sorted_samples=[samples[i] for i in sorted_sample_indexes]
+    sorted_data=[]
+    for row in top_data:
+        sorted_data.append([row[i] for i in sorted_sample_indexes])
+    return sorted_data, sorted_samples
+
+def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
+    ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=8):
+    """ Plot the grouped taxonomy with samples sorted by species abundance for a each feature """
+
+    # group the samples by metadata
+    sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
+    # sort the data by abundance
+    for metadata_type in sorted_data_grouped:
+        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
+
+    # print out a plot for each group of metadata
+    sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
+   
+    # split into subsets
+    split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
+   
+    # make sure the last group is not just a single data set
+    if len(split_sorted_metadata_subsets[-1]) == 1:
+        last_set = split_sorted_metadata_subsets.pop()
+        split_sorted_metadata_subsets[-1].append(last_set[0])
+
+    for metadata_subset in split_sorted_metadata_subsets:
+        subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
+        subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
+
+        # get title addition for subset
+        title_add=""
+        if len(sorted_metadata_subsets) > max_subsets:
+            title_add=" "+metadata_subset[0]+" to "+metadata_subset[-1]
+
+        document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy,
+            column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
+            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
+
 def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=None,max_sets_heatmap=25,method="correlation"):
     """ Generate a heatmap using the doc function. Include metadata if available. """
 

@@ -62,55 +62,6 @@ document.show_table(eestats_data, eestats_rows, eestats_columns,
 #' This table shows the number of reads based on length for different error filters.
 
 #+ echo=False
-def sort_data(top_data, samples):
-    # sort the top data so it is ordered with the top sample/abundance first
-    sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
-    sorted_samples=[samples[i] for i in sorted_sample_indexes]
-    sorted_data=[]
-    for row in top_data:
-        sorted_data.append([row[i] for i in sorted_sample_indexes])
-    return sorted_data, sorted_samples
-
-def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, samples_found, ylabel, legend_title, legend_size):
-    """ Plot the grouped taxonomy sorted by species abundance for a single feature """
-    # group the samples by metadata
-    sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
-    # sort the data by abundance
-    for metadata_type in sorted_data_grouped:
-        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
-
-    # print out a plot for each group of metadata if there are lots of categories
-    sorted_metadata_subsets=sorted(sorted_data_grouped.keys())
-    
-    try:
-        sorted_metadata_subsets=sorted(sorted_data_grouped.keys(), key=float)
-    except ValueError:
-        pass
-    
-    max_subsets=8
-    
-    # split into subsets
-    split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
-    
-    # make sure the last group is not just a single data set
-    if len(split_sorted_metadata_subsets[-1]) == 1:
-        last_set = split_sorted_metadata_subsets.pop()
-        split_sorted_metadata_subsets[-1].append(last_set[0])
-    
-    for metadata_subset in split_sorted_metadata_subsets:
-        subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
-        subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
-        
-        # get title addition for subset
-        title_add=""
-        if len(sorted_metadata_subsets) > max_subsets:
-            title_add=" "+metadata_subset[0]+" to "+metadata_subset[-1]
-
-        document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=taxa, 
-            column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
-        
-#+ echo=False
 # if picard files are provided, then plot those that do not meet a threshold
 picard_text = ""
 if vars["picard"]:
@@ -187,7 +138,7 @@ def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, yl
         categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
         # plot a barchart for a set of categorical data
         for cat_metadata in categorical_metadata:
-            plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel, legend_title, legend_size)
+            visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, labels, samples_found, title, ylabel, legend_title, legend_size)
 
 plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
     ["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
