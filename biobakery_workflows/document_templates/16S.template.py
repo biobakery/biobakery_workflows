@@ -3,13 +3,6 @@
 #' % Date: <% import time; print(time.strftime("%m/%d/%Y")) %>
 #+ echo=False
 
-# determine the document format
-pdf_format=True if vars["format"] == "pdf" else False
-
-#' <% if pdf_format: print("\clearpage") %>
-#' # Introduction
-
-#+ echo=False
 # get the variable settings from the data processing workflow
 from anadama2.reporters import LoggerReporter
 try:
@@ -27,14 +20,13 @@ trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
 
-
 method=vars["method"]
 
 if method == "dada2":
     columns, samples, data = document.read_table(vars["counts_each_step"])
     
     dada2intro="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
-        gene amplicon paired-end sequencing reads,adopting the tutorial from \
+        gene amplicon paired-end sequencing reads,adopting the tutorial from\n\n \
          https://benjjneb.github.io/dada2/tutorial.html and \
         \n https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
         \n\nThis report captures all the workflow steps necessary to reproduce the analysis.\
@@ -58,7 +50,7 @@ if method == "dada2":
     dada2stepsinfo="\nDereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
         the number of reads with that unique sequence. DADA2 retains a summary of the quality information associated with each unique sequence.\
         \nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
-        \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2s accuracy. \
+        \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2's accuracy. \
         \n\nThe sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
         Spurious sequence variants are further reduced by merging overlapping reads. \nThe core function here is mergePairs \
         which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
@@ -88,26 +80,33 @@ if method == "dada2":
 else:
     columns, samples, data = document.read_table(vars["read_count_table"])
     
-    usearchintro="The" + str(len(samples)) + ",  samples from this project were run through the standard 16S workflow.  \
-        follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity" \
-        + str(percent_identity) + "and minimum cluster size of" + str(min_cluster_size) + "." \
+    usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
+        follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
+        + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
         + "\n\nThe GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
-        \n\nReads were filtered for quality control using a MAXEE score of" + str(maxee) + ". Filtered reads were \
+        \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Filtered reads were \
         used to generate the OTUs. Reads not passing quality control were kept and used in the step \
-        assigning reads to OTUs. First these reads were truncated to a max length of" + str(trunc_len_max) + " bases.\n"
+        assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
         
     usearchcountsinfo="This figure shows counts of reads in three categories: \n\n1) classified: reads that align to OTUs with known taxonomy,\
         \n2) reads that align to OTUs of unknown taxonomy, \n3) reads that do not align to any OTUs. The sum of these\
         three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
 
+import os
+import numpy
+
+# determine the document format
+pdf_format=True if vars["format"] == "pdf" else False
+
+#' <% if pdf_format: print("\clearpage") %>
+#' # Introduction
 
 #' <% if vars["method"] == "dada2": print(dada2intro) %>
 #' <% if vars["method"] == "dada2": print(dada2stepsinfo) %>
 #' <% if vars["method"] != "dada2": print(usearchintro) %>
 
 #+ echo=False
-import os
-import numpy
+
 
 min_abundance=0.01
 min_samples=10
@@ -140,9 +139,8 @@ if method != "dada2":
 #' <% if method != "dada2": print("The general stats for this data set are:" + str(overall_stats)) %>
 #' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
 
-#' # <% if method == "dada2": print("Error rates") %>
+#' # <% if method == "dada2": print("Error rates") %> 
     
-
 #' <% if method == "dada2": print(dada2errorintro) %>  
     
 #' ## <% if method == "dada2": print("Forward Read Error Rates by Sample") %>  \
@@ -302,13 +300,9 @@ else:
 #' <% if vars["method"] == "dada2": print(dada2taxinfo) %>      
     
 #+ echo=False
-import numpy
 
 # read in the otu table data
-if vars["method"] == "dada2":
-    samples, ids, taxonomy, data = utilities.read_dada_otu_table(vars["otu_table"],7)
-else:
-    samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
+samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
 
 # plot the top taxa by genus level, plotting the relative abundance values
 max_taxa=15

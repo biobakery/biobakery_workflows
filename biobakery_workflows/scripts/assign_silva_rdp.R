@@ -2,12 +2,6 @@
 
 # load packages
 library(dada2); packageVersion("dada2")
-#library(ggplot2)
-#library(msa)
-#library(gridExtra)
-#library(phangorn)
-
-
 
 # Helper function to replace NAs in taxonomy assignment table with prefix corresponding to tax rank
 replaceNA.in.assignedTaxonomy <- 

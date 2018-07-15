@@ -32,7 +32,8 @@ names(args.list) <- args.df$V1
 
 ## Arg1 default
 if(is.null(args.list$output_dir)) {
-  stop("At least one argument must be supplied (output folder).\n", call.=FALSE)
+stop("At least one argument must be supplied (output folder).\n", call.=FALSE)
+  
 }
 
 # Print args list to STDOUT
@@ -41,7 +42,6 @@ for( i in names(args.list) ) {
 }
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
-#pool.samples <- args.list$pool
 output.path <- normalizePath( args.list$output_dir )
 
 seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
@@ -63,4 +63,23 @@ otu.gg.tax.table <- merge( t(seqtab.nochim), taxa.gg13_8.2, by = 'row.names' )
 rownames( otu.gg.tax.table ) <- otu.gg.tax.table[,1]
 otu.gg.tax.table <- otu.gg.tax.table[,-1]
 
-write.table(otu.gg.tax.table, paste0( output.path, "/all_samples_taxonomy_closed_reference.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+otu.gg.tax.table_taxcombined <- cbind(otu.gg.tax.table)
+colnum <- length(otu.gg.tax.table_taxcombined[1,])
+
+otu.gg.tax.table_taxcombined <- otu.gg.tax.table_taxcombined[, -c((colnum-6): colnum)]
+
+taxonomy <- vector()
+taxonomy<- paste0(as.character(otu.gg.tax.table$Kingdom),"; ",
+                 as.character(otu.gg.tax.table$Phylum),"; ",
+                 as.character(otu.gg.tax.table$Class),"; ",
+                 as.character(otu.gg.tax.table$Order),"; ",
+                 as.character(otu.gg.tax.table$Family),"; ",
+                 as.character(otu.gg.tax.table$Genus),"; ",
+                 as.character(otu.gg.tax.table$Species))
+
+
+otu.gg.tax.table_taxcombined <- cbind(otu.gg.tax.table_taxcombined,taxonomy)
+
+write.table(otu.gg.tax.table, paste0(output.path, "/all_samples_taxonomy_closed_reference_taxcolumns.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.gg.tax.table_taxcombined, paste0(output.path, "/all_samples_taxonomy_closed_reference.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+
