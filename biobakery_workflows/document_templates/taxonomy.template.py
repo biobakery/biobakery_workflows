@@ -104,20 +104,22 @@ if 'metadata' in vars and vars['metadata']:
         document.show_pcoa(samples, top_taxonomy, pcoa_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity - "+name,
             metadata=metadata_mapping)
 
-#' ## Heatmap
+#' ## Heatmaps
 
 #' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="species and genera",method="Spearman and Bray-Curtis") %>
 
 #+ echo=False
 # update the figure size based on output format for the heatmaps
 utilities.change_pweave_figure_size_heatmap(pdf_format)
-
-visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,max_sets_heatmap=max_sets_heatmap)
-
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,
+    pdf_format, "Top {} species by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
-# reset the figure size to the defaults
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,
+    pdf_format,"Top {} species by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
 utilities.reset_pweave_figure_size()
 
 #' ## Barplot
