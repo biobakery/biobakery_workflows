@@ -93,10 +93,10 @@ if args.method == "dada2":
 	dadatwo.fasttree(workflow, args.output)
     
      #assign taxonomy green genes 
-	dadatwo.assign_taxonomy(workflow, args.output)
+	dadatwo.assign_taxonomy(workflow, args.output,workflow_config.greengenes_dada2)
     
      #assign taxonomy silva and rdp
-	dadatwo.assign_silva_rdp(workflow, args.output)	
+	dadatwo.assign_silva_rdp(workflow, args.output, workflow_config.rdp_dada2, workflow_config.silva_dada2)	
 else:    
 	# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
 	all_samples_fastq = sixteen_s.merge_samples_and_rename(

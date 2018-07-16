@@ -142,7 +142,18 @@ class SixteenS(Workflow):
     vars["greengenes_taxonomy"] = DBInfo("GREEN_GENES_TAXONOMY_DB",
         description="This is the GreenGenes taxonomy file matching the fasta file.",
         url="ftp://greengenes.microbio.me/greengenes_release/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt")
-
+    vars["greengenes_dada2"] = DBInfo("GREEN_GENES_DADA2_DB",
+        description="This is the GreenGenes dada2 database",
+        url="https://zenodo.org/record/158955/files/gg_13_8_train_set_97.fa.gz")
+    vars["rdp_dada2"] = DBInfo("RDP_DADA2_DB",
+        description="This is the rdp dada2 database",
+        url="https://zenodo.org/record/158955/files/rdp_train_set_14.fa.gz")
+    vars["silva_dada2"] = DBInfo("SILVA_DADA2_DB",
+        description="This is the silva dada2 database",
+        url="https://zenodo.org/record/1172783/files/silva_nr_v132_train_set.fa.gz")
+    vars["rdp_species_dada2"] = DBInfo("RDP_SPECIES_DADA2_DB",
+        description="This is the rdp species assignment dada2 database",
+        url="https://zenodo.org/record/1172783/files/silva_nr_v132_train_set.fa.gz")
 
 
 

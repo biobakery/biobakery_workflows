@@ -43,11 +43,12 @@ for( i in names(args.list) ) {
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 output.path <- normalizePath( args.list$output_dir )
+gg.path <- normalizePath( args.list$gg_path )
 
 seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
 
 # Assign taxonomy:
-taxa.gg13_8 <- dada2::assignTaxonomy(seqtab.nochim, paste0(output.path,"/../dada2_reference_databases/gg_13_8_train_set_97.fa.gz"), multithread=TRUE, tryRC=TRUE)
+taxa.gg13_8 <- dada2::assignTaxonomy(seqtab.nochim, gg.path, multithread=TRUE, tryRC=TRUE)
 
 # Print first 6 rows of taxonomic assignment
 unname(head(taxa.gg13_8))

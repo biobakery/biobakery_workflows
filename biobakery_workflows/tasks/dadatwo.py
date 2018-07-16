@@ -190,7 +190,7 @@ def fasttree(workflow, output_folder):
             )
 
 
-def assign_taxonomy(workflow, output_folder):
+def assign_taxonomy(workflow, output_folder, gg_path):
     
          """ Assigns taxonomy using gg database
             
@@ -210,15 +210,15 @@ def assign_taxonomy(workflow, output_folder):
          all_samples_sv_gg13 = output_folder + "/all_samples_taxonomy_closed_reference.tsv"
  
          workflow.add_task(
-            "biobakery_workflows/scripts/assign_taxonomy.R --output_dir=[args[0]]",
+            "biobakery_workflows/scripts/assign_taxonomy.R --output_dir=[args[0]] --gg_path=[args[1]]",
             depends = [seqtab_data_path],
             targets = [all_samples_taxonomy, all_samples_sv_gg13],                              
-            args = [output_folder],
+            args = [output_folder, gg_path],
             name = "assign_taxonomy"
             )
                
 
-def assign_silva_rdp(workflow, output_folder):
+def assign_silva_rdp(workflow, output_folder, rdp_path, silva_path):
     
          """ Assigns taxonomy using silva and rdp database
             
@@ -238,10 +238,10 @@ def assign_silva_rdp(workflow, output_folder):
          all_samples_silva_rdp = output_folder + "/all_samples_taxonomy_closed_reference_rdp.tsv"
  
          workflow.add_task(
-            "biobakery_workflows/scripts/assign_silva_rdp.R --output_dir=[args[0]]",
+            "biobakery_workflows/scripts/assign_silva_rdp.R --output_dir=[args[0]] --rdp_path=[args[1]] --silva_path=[args[2]]",
             depends = [seqtab_data_path],
             targets = [all_samples_silva, all_samples_silva_rdp],                              
-            args = [output_folder],
+            args = [output_folder, rdp_path, silva_path],
             name = "assign_silva_rdp"
             
             )

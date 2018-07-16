@@ -108,7 +108,7 @@ def parse_arguments(args):
     parser.add_argument(
         "--install",
         metavar="<workflow>",
-        choices=["wmgx","wmgx_demo","wmgx_wmtx","16s"],
+        choices=["wmgx","wmgx_demo","wmgx_wmtx","16s","dada2"],
         help="install the databases for the selected workflow\n")
     parser.add_argument(
         "--location", 
@@ -131,7 +131,8 @@ def main():
             "wmgx: The full databases for the whole metagenome workflow\n"+
             "wmgx_demo: The demo databases for the whole metagenome workflow\n"+
             "wmgx_wmtx: The full databases for the whole metagenome and metatranscriptome workflow\n"+
-            "16s: The full databases for the 16s workflow")
+            "16s: The full databases for the 16s workflow\n" +
+            "dada2: The full databases for the dada2 workflow")
         sys.exit(0)
     
     # Check the install location
@@ -203,7 +204,21 @@ def main():
         try_create_folder(usearch_db_folder)
         run_command(["usearch","-makeudb_usearch",usearch_fasta_install_path,
             "-output",os.path.join(args.location,config.SixteenS.vars["greengenes_usearch"].default_path)])
+ 
+    elif args.install == "dada2":
+        # download the green genes fasta and taxonomy files
+        print("Downloading dada2 green genes database files")
+        dada2_install_path=os.path.join(args.location,config.SixteenS.vars["greengenes_dada2"].default_path)
+        utilities.download_file(config.SixteenS.vars["greengenes_dada2"].url,
+            dada2_install_path)
+        utilities.download_file(config.SixteenS.vars["rdp_dada2"].url,
+            os.path.join(args.location,config.SixteenS.vars["rdp_dada2"].default_path))
+        utilities.download_file(config.SixteenS.vars["silva_dada2"].url,
+            os.path.join(args.location,config.SixteenS.vars["silva_dada2"].default_path))
+        utilities.download_file(config.SixteenS.vars["rdp_species_dada2"].url,
+            os.path.join(args.location,config.SixteenS.vars["rdp_species_dada2"].default_path))
 
+       
     # if metatranscriptome workflow, install the additional kneaddata database
     if args.install == "wmgx_wmtx":
         print("Installing mRNA kneaddata database")
