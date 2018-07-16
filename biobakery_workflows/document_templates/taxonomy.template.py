@@ -126,7 +126,7 @@ utilities.reset_pweave_figure_size()
 top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_sets_barplot,
     function="average") 
 
-sorted_data, sorted_samples = visualizations.sort_data(top_data, samples)
+sorted_data, sorted_samples = visualizations.sort_data(document, top_data, samples)
 
 # add other to the taxonomy data
 # other represents the total abundance of all species not included in the top set
@@ -146,49 +146,16 @@ document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
 #' Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order. 
 
 #+ echo=False
-categorical_metadata=[]
-if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
-    # get the metadata organized into the same sample columns as the data
-    new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
-    # split the data and metadata 
-    ordered_metadata=new_data[0:len(vars['metadata'])-1]
-    ordered_sorted_data=new_data[len(vars['metadata'])-1:]
-    # get the categorical metadata
-    categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
-    # plot a barchart for a set of categorical data
+# plot a barchart for a set of categorical data
+if visualizations.metadata_provided(vars):
+    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples, 
+        sorted_data)
     for cat_metadata in categorical_metadata:
-        visualizations.plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy,
+        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
             samples_found,title="Top {} species by average abundance".format(max_sets_barplot))
-
-#+ echo=False
-def plot_average_taxonomy(sorted_data, sorted_samples, cat_metadata):
-    """ Plot the average taxonomy sorted by species abundance for a single feature """
-    # group the samples by metadata
-    sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, ordered_sorted_data, samples_found)
-    metadata_names=[]
-    average_data=[]
-    for name, row in sorted_data_grouped.items():
-        metadata_names.append(name)
-        average_data.append([sum(group)/(1.0*len(group)) for group in row])
-    
-    # reorder average data so it is grouped by taxonomy
-    average_data = zip(*average_data)
-        
-    # sort the data by abundance or name (depending on metadata type, use name if numeric)
-    sort_by_name=False
-    if document.sorted_data_numerical_or_alphabetical(metadata_names) != sorted(metadata_names):
-        sort_by_name = True
-        
-    sorted_data, sorted_names = visualizations.sort_data(average_data, metadata_names, sort_by_name=sort_by_name)
-    
-    document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
-        column_labels=sorted_names, title="Top "+str(max_sets_barplot)+" species by average abundance, group average - "+str(cat_metadata[0]),
-        ylabel="Relative abundance", legend_title="Species", legend_style="italic")
-
-#+ echo=False
-# plot average for all samples grouped by categorical metadata
-for cat_metadata in categorical_metadata:
-    plot_average_taxonomy(sorted_data, sorted_samples, cat_metadata)
+    # plot average for all samples grouped by categorical metadata
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title="species")
     
 #' <% if categorical_metadata: print("Stacked barplot of average abundance among samples grouped by metadata.") %>
 

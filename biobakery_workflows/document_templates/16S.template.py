@@ -126,22 +126,13 @@ document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["cla
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
-def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, ylabel, legend_title="", legend_size=7):
-    """ Generate a plot of each set of categorical metadata """
-    if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
-        # get the metadata organized into the same sample columns as the data
-        new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
-        # split the data and metadata 
-        ordered_metadata=new_data[0:len(vars['metadata'])-1]
-        ordered_sorted_data=new_data[len(vars['metadata'])-1:]
-        # get the categorical metadata
-        categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
-        # plot a barchart for a set of categorical data
-        for cat_metadata in categorical_metadata:
-            visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, labels, samples_found, title, ylabel, legend_title, legend_size)
-
-plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
-    ["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
+# plot grouped taxonomy for all categorical data provided
+if visualizations.metadata_provided(vars):
+    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples, 
+        [known_reads,unknown_reads,unmapped_reads])
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"], 
+            samples_found, title="Read counts by Sample", ylabel="Total Reads", legend_title="")
 
 #' # Taxonomy
 
@@ -181,8 +172,17 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
     ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size)
 
 #+ echo=False
-plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
-    title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera", legend_size=legend_size)
+if visualizations.metadata_provided(vars):
+    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples, sorted_top_data)
+    # plot taxonomy grouped by feature
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxa_short_names, 
+            samples_found, title="Top {} genera by average abundance".format(max_taxa), ylabel="Relative abundance", 
+            legend_title="Genera", legend_size=legend_size)
+    # plot taxonomy average for all samples, grouped by feature
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxa_short_names,
+            cat_metadata, max_taxa, legend_title="Genera")
 
 #' <% if pdf_format: print("\clearpage") %>
 
@@ -208,8 +208,15 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
-plot_all_categorical_metadata(sorted_samples_terminal, sorted_top_terminal_data, shorted_names,
-    title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance", legend_title="Terminal taxa")
+if visualizations.metadata_provided(vars):
+    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples_terminal, 
+        sorted_top_terminal_data)
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, shorted_names, samples_found,
+            title="Top {} terminal taxa by average abundance".format(max_taxa), ylabel="Relative abundance", legend_title="Terminal taxa")
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_average_taxonomy(document, ordered_sorted_data, samples_found, shorted_names, 
+            cat_metadata, max_taxa, legend_title="Terminal taxa")
 
 #' # Heatmaps
 

@@ -32,7 +32,87 @@ import shutil
 
 from . import utilities
 
-def sort_data(top_data, samples, sort_by_name=False):
+def metadata_provided(vars):
+    """ Check if metadata was provided by the user for this visualization run 
+
+        Args:
+            vars (dict): The dictionary of input variables provided for the visualization run 
+
+        Returns:
+            bool : True if metadata was provided from the user for this run
+
+    """
+
+    if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
+        return True
+    else:
+        return False
+
+def merge_categorical_metadata(vars, sorted_samples, sorted_data):
+    """ Merge data with metadata and filter continuous data 
+
+        Args:
+            vars (dict): The dictionary of input variables provided for the visualization run
+            sorted_samples (list): A list of sample names sorted to match the data provided
+            sorted_data (list): The full set of data (taxonomy or other)
+
+        Returns: 
+            list: A list of metadata strings (one for each categorical feature)
+            list: The data modified to only include those samples with metadata
+            list: The metadata sorted to match the order of the data (categorical and continuous)
+            list: The metadata sorted to match the order of the data (only categorical)
+    """
+
+    # get the metadata organized into the same sample columns as the data
+    new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
+    # split the data and metadata
+    ordered_metadata=new_data[0:len(vars['metadata'])-1]
+    ordered_sorted_data=new_data[len(vars['metadata'])-1:]
+    # get the categorical metadata
+    categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
+
+    return categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found
+
+
+def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title):
+    """ Plot the average taxonomy sorted by species abundance for a single feature.
+
+        Args:
+            document (anadama2.document): Document to use to add plots
+            ordered_sorted_data (list): A list of sorted/ordered data (to match the sample names and metadata)
+            samples_found (list): An ordered list of sample names (to match the data/metadata)
+            top_taxonomy (list): A list of the taxonomy names ordered to match the data
+            cat_metadata (list): The ordered categorical metadata (for a single feature)
+            max_sets_barplot (int): The max number of taxonomic values (to use for the title)
+            legend_title (string): The legend title for the plots
+
+        Returns: None
+    """
+
+    # group the samples by metadata
+    sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, ordered_sorted_data, samples_found)
+    metadata_names=[]
+    average_data=[]
+    for name, row in sorted_data_grouped.items():
+        metadata_names.append(name)
+        average_data.append([sum(group)/(1.0*len(group)) for group in row])
+
+    # reorder average data so it is grouped by taxonomy
+    average_data = zip(*average_data)
+
+    # sort the data by abundance or name (depending on metadata type, use name if numeric)
+    sort_by_name=False
+    if document.sorted_data_numerical_or_alphabetical(metadata_names) != sorted(metadata_names):
+        sort_by_name = True
+
+    sorted_data, sorted_names = sort_data(document, average_data, metadata_names, sort_by_name=sort_by_name)
+
+    document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
+        column_labels=sorted_names, 
+        title="Top {} {} by average abundance, group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
+        ylabel="Relative abundance", legend_title=legend_title, legend_style="italic")
+
+def sort_data(document, top_data, samples, sort_by_name=False):
     # sort the top data so it is ordered with the top sample/abundance first
     if sort_by_name:
         sorted_sample_indexes=[samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(samples)]
@@ -47,13 +127,28 @@ def sort_data(top_data, samples, sort_by_name=False):
 
 def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
     ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=8):
-    """ Plot the grouped taxonomy with samples sorted by species abundance for a each feature """
+    """ Plot the grouped taxonomy with samples sorted by species abundance for each feature.
+
+        Args:
+            document (anadama2.document): Document to use to add plots
+            sorted_data (list): A list of sorted/ordered data (to match the sample names and metadata)
+            cat_metadata (list): A list of metadata (feature) names
+            top_taxonomy (list): A list of the taxonomy names ordered to match the data
+            samples_found (list): An ordered list of sample names (to match the data/metadata)
+            title (string): The base string for the title for all plots
+            ylabel (string): The label for the y-axis
+            legend_title (string): The legend title for the plots
+            legend_size (int): The font size for the legend
+            max_subsets (int): The max number of subsets to use for each plot
+
+        Return: None
+    """
 
     # group the samples by metadata
     sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
     # sort the data by abundance
     for metadata_type in sorted_data_grouped:
-        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
+        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
 
     # print out a plot for each group of metadata
     sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
