@@ -75,19 +75,19 @@ else:
 if args.method == "dada2":
 	 # call dada2 workflow tasks
      #filter reads and trim
-	dadatwo.filter_trim(workflow, demultiplex_output_folder, args.output)
+	read_counts_file = dadatwo.filter_trim(workflow, demultiplex_output_folder, args.output)
     
      #learn error rates
-	dadatwo.learn_error(workflow, args.output)
+	error_ratesF_file, error_ratesR_file = dadatwo.learn_error(workflow, args.output, read_counts_file)
     
      #merge pairs
-	dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output)
+	merged_file = dadatwo.merge_paired_ends(workflow, demultiplex_output_folder, args.output, error_ratesF_file, error_ratesR_file)
     
      #construct otu
-	dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output)
+	seqtab_data_file,read_counts_steps_file = dadatwo.const_seq_table(workflow, demultiplex_output_folder, args.output, merged_file)
     
      #phylogeny
-	dadatwo.phylogeny(workflow, args.output)
+	msa_fasta_file = dadatwo.phylogeny(workflow, args.output, seqtab_data_file)
     
      #create tree 
 	dadatwo.fasttree(workflow, args.output)

@@ -38,7 +38,7 @@ names(seqs) <- seqs # This propagates to the tip labels of the tree
 mult <- msa::msa(seqs, method="ClustalOmega", type="dna", order="input")
 # Save msa to file; convert first to phangorn object
 phang.align <- phangorn::as.phyDat(mult, type="DNA", names=dada2::getSequences(seqtab.nochim))
-write.phyDat(phang.align, format = 'fasta', file = paste0( output.path,"/all_samples_clustalo_aligned_nonchimera.fasta") )
+write.phyDat(phang.align, format = 'fasta', file = paste0( output.path, args.list$seqtab_file) )
 
 detach("package:phangorn", unload=TRUE)
 detach("package:msa", unload=TRUE)

@@ -40,18 +40,22 @@ def filter_trim(workflow, input_folder, output_folder):
                 Creates file that contains read counts before and after filtering
          """
 
-         read_counts_file_path = output_folder + "/Read_counts_after_filtering.tsv"
+         read_counts_file = "/Read_counts_after_filtering.tsv"
+         read_counts_file_path = output_folder + read_counts_file
        
          workflow.add_task(
-             "biobakery_workflows/scripts/filter_and_trim.R --input_dir=[args[0]] --output_dir=[args[1]]",
+             "biobakery_workflows/scripts/filter_and_trim.R \
+               --input_dir=[args[0]]\
+               --output_dir=[args[1]]\
+               --readcounts_file=[args[2]]",
              depends = input_folder,
              targets = [read_counts_file_path],
-             args = [input_folder, output_folder],
+             args = [input_folder, output_folder, read_counts_file],
              name ="filter_and_trim"
              )
+         return read_counts_file
 
-
-def learn_error(workflow,output_folder):
+def learn_error(workflow,output_folder,read_counts_file):
     
          """ Learns error rates for each sample
             
@@ -66,20 +70,24 @@ def learn_error(workflow,output_folder):
                 Creates files that contain forward and reverse error rates for each sample
          """
 
-         read_counts_file_path = output_folder + "/Read_counts_after_filtering.tsv"
-         error_ratesF_path = output_folder + "/error_rates_F.rds"
-         error_ratesR_path = output_folder + "/error_rates_R.rds"
+         read_counts_file_path = output_folder + read_counts_file
+         error_rates_F_file = "/error_rates_F.rds"
+         error_rates_R_file = "/error_rates_R.rds"
+         error_ratesF_path = output_folder + error_rates_F_file
+         error_ratesR_path = output_folder + error_rates_R_file
        
          workflow.add_task(
-             "biobakery_workflows/scripts/learn_error_rates.R  --output_dir=[args[0]]",
+             "biobakery_workflows/scripts/learn_error_rates.R\
+               --output_dir=[args[0]]\
+               --error_ratesF=" + error_rates_F_file + " --error_ratesR=" + error_rates_R_file,
              depends = [read_counts_file_path],
              targets = [error_ratesF_path, error_ratesR_path],  
              args = [output_folder],
              name = "learn_error_rates"
              )
-        
+         return error_rates_F_file, error_rates_R_file
 
-def merge_paired_ends(workflow, input_folder, output_folder):
+def merge_paired_ends(workflow, input_folder, output_folder, error_ratesF, error_ratesR):
     
         """ Dereplicates and merges paired reads
             
@@ -95,19 +103,23 @@ def merge_paired_ends(workflow, input_folder, output_folder):
                 Creates files that contain merged and dereplicated reads
          """
 
-        error_rates_data_path = output_folder + "/error_rates_R.rds"
-        mergers_data_path = output_folder + "/mergers.rds"
-         
+        mergers_file = "/mergers.rds"
+        mergers_file_path = output_folder + mergers_file
+        error_ratesF_path = output_folder + error_ratesF
+        error_ratesR_path = output_folder + error_ratesR
         workflow.add_task(
-            "biobakery_workflows/scripts/merge_paired_ends.R --input_dir=[args[0]] --output_dir=[args[1]]",
-            depends = [error_rates_data_path],
-            targets = [mergers_data_path],                       
+            "biobakery_workflows/scripts/merge_paired_ends.R\
+              --input_dir=[args[0]]\
+              --output_dir=[args[1]]\
+              --error_ratesF=" + error_ratesF + " --error_ratesR=" + error_ratesR,
+            depends = [error_ratesF_path, error_ratesR_path],
+            targets = [mergers_file_path],                       
             args = [input_folder, output_folder],
             name = "dereplicate_and_merge"
             )
-        
+        return mergers_file
 
-def const_seq_table(workflow, input_folder, output_folder):
+def const_seq_table(workflow, input_folder, output_folder, merged_file):
     
          """ Builds sequence table, removes chimeras
             
@@ -124,20 +136,26 @@ def const_seq_table(workflow, input_folder, output_folder):
                 Creates file that contains read counts on each step  
          """
 
-         mergers_data_path = output_folder + "/mergers.rds"
-         read_counts_steps = output_folder +"/Read_counts_at_each_step.tsv"
-         seqtab_data_path = output_folder + "/seqtab_final.rds"
+         merged_file_path = output_folder + merged_file
+         read_counts_steps_file = "/Read_counts_at_each_step.tsv"
+         read_counts_steps_path = output_folder + read_counts_steps_file
+         seqtab_data_file = "/seqtab_final.rds"
+         seqtab_data_file_path = output_folder + seqtab_data_file
 
          workflow.add_task(
-            "biobakery_workflows/scripts/const_seq_table.R --input_dir=[args[0]] --output_dir=[args[1]]",
-            depends = [mergers_data_path],
-            targets = [read_counts_steps, seqtab_data_path],                              
+            "biobakery_workflows/scripts/const_seq_table.R\
+              --input_dir=[args[0]]\
+              --output_dir=[args[1]]\
+              --merged_file= " + merged_file + " --read_counts_steps=" + read_counts_steps_file,
+            depends = [merged_file_path],
+            targets = [read_counts_steps_path, seqtab_data_file_path],                              
             args = [input_folder, output_folder],
             name = "construct_sequence_table"
             )
+         return seqtab_data_file, read_counts_steps_file
 
 
-def phylogeny(workflow, output_folder):
+def phylogeny(workflow, output_folder, seqtab_data_file ):
     
          """ Aligns sequences and reconstructs phylogeny
             
@@ -152,16 +170,20 @@ def phylogeny(workflow, output_folder):
                 Creates file that contains pylogeny
          """
 
-         seqtab_data_path = output_folder + "/seqtab_final.rds"
-         msa_fasta_file = output_folder + "/all_samples_clustalo_aligned_nonchimera.fasta"
+         seqtab_data_path = output_folder + seqtab_data_file
+         msa_fasta_file = "/all_samples_clustalo_aligned_nonchimera.fasta"
+         msa_fasta_path = output_folder + msa_fasta_file
 
          workflow.add_task(
-            "biobakery_workflows/scripts/phylogeny.R --output_dir=[args[0]]",
+            "biobakery_workflows/scripts/phylogeny.R\
+              --output_dir=[args[0]]\
+              --seqtab_file=" + seqtab_data_file,
             depends = [seqtab_data_path],
-            targets = [msa_fasta_file],                              
+            targets = [msa_fasta_path],                              
             args = [output_folder],
             name = "phylogeny"
             )
+         return msa_fasta_file
 
 def fasttree(workflow, output_folder):
     
