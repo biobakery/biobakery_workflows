@@ -40,10 +40,10 @@ samples=[s.replace("_taxonomic_profile","") for s in samples]
 
 # filter to only include data for the species level
 # get the rows with species but not strain information
-species_taxonomy, species_data = utilities.filter_species(taxonomy,data)
+species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,data)
 
 # now filter species also applying min abundance and min samples
-filtered_species_taxonomy, filtered_species_data = utilities.filter_species(taxonomy,
+filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,
     data, min_abundance=min_abundance, min_samples=min_samples)
 
 #' A total of <% print(len(species_taxonomy)) %> species were identified. After basic

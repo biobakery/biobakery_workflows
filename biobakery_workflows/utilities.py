@@ -943,7 +943,7 @@ def pathway_names(pathways):
     return path_names
         
 
-def filter_taxa(taxonomy, data, min_abundance, min_samples):
+def filter_taxa_abundance(taxonomy, data, min_abundance, min_samples):
     """ Remove the taxons by min abundance and min samples.
     
         Args:
@@ -960,7 +960,7 @@ def filter_taxa(taxonomy, data, min_abundance, min_samples):
             (list): A list of lists of the data.
             
         Example:
-            filter_taxa(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]],10,2)
+            filter_taxa_abundance(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]],10,2)
     """ 
 
     filtered_data=[]
@@ -976,9 +976,10 @@ def filter_taxa(taxonomy, data, min_abundance, min_samples):
     
     return filtered_taxonomy, filtered_data
 
-def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
-    """ Remove the taxons that are not a species level from the data set.
-        Also filter the species if filters are provided.
+def filter_taxa_level_metaphlan2_format(taxonomy, data, min_abundance=None, min_samples=None, level=6):
+    """ Remove the taxons that are not a species level (or set a different level with keyword) from the data set.
+        Also filter the species if filters are provided. Metaphlan2 format with "|" delimiters and tiered
+        abundances (so genus level is split and repeated stratified by species).
     
         Args:
             taxonomy (list): A list of taxonomy strings for each row.
@@ -986,6 +987,7 @@ def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
             min_abundance (float): If set, remove data without min abundance. To
                 be used with min_samples.
             min_samples (float): If set, remove data not in min samples.
+            level (int): Taxonomic level (default set to species)
                 
         Requires:
             None
@@ -995,22 +997,28 @@ def filter_species(taxonomy, data, min_abundance=None, min_samples=None):
             (list): A list of lists of the data.
             
         Example:
-            filter_species(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]])
+            filter_taxa_level_metaphlan2_format(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]])
     """
-    
+
+    taxonomic_levels=["|k__","|p__","|c__","|o__","|f__","|g__","|s__","|t__"]
+
+    # get the level indicator to search for and the next level to filter
+    search_taxa = taxonomic_levels[level]
+    remove_taxa = taxonomic_levels[level+1] if level+1 < len(taxonomic_levels) else "\n"
+
     species_data=[]
     species_taxonomy=[]
     # identify the species data in the data set
     # filter out those with species and strain information
     for taxon, data_row in zip(taxonomy, data):
-        if "|s__" in taxon and not "|t__" in taxon:
-            species_taxonomy.append(taxon.split("|")[-1].replace("s__","").replace("_"," "))
+        if search_taxa in taxon and not remove_taxa in taxon:
+            species_taxonomy.append(taxon.split("|")[-1].replace(search_taxa[1:],"").replace("_"," "))
             species_data.append(data_row)
 
     # if filters are provided, then filter the data by both min abundance
     # and min samples
     if min_abundance is not None and min_samples is not None:
-        species_taxonomy, species_data = filter_taxa(species_taxonomy, species_data, min_abundance, min_samples)
+        species_taxonomy, species_data = filter_taxa_abundance(species_taxonomy, species_data, min_abundance, min_samples)
 
     return species_taxonomy, species_data
 

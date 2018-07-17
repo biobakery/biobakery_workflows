@@ -252,7 +252,7 @@ utilities.reset_pweave_figure_size()
 # provide data as values [0-1] organized as samples as columns and features as rows
 
 # filter the data by min abundance and min samples
-filtered_taxonomy, filtered_data = utilities.filter_taxa(terminal_taxa_relab, terminal_data_relab, min_abundance, min_samples)
+filtered_taxonomy, filtered_data = utilities.filter_taxa_abundance(terminal_taxa_relab, terminal_data_relab, min_abundance, min_samples)
 
 document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity")
 
