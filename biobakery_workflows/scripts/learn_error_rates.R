@@ -44,8 +44,8 @@ errR <- dada2::learnErrors(filtRs, nread=1e3, multithread=TRUE)
 
 
 # Visualize the estimated error rates
-ggplot2::ggsave(paste0(output.path,"/Error_rates_per_sample_FWD.png"), dada2::plotErrors(errF, nominalQ=TRUE) , device = "png")
-ggplot2::ggsave(paste0(output.path,"/Error_rates_per_sample_REV.png"), dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
+ggplot2::ggsave(args.list$error_ratesF_png, dada2::plotErrors(errF, nominalQ=TRUE) , device = "png")
+ggplot2::ggsave(args.list$error_ratesR_png, dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
 
 #save as rds files
 saveRDS(errF, args.list$error_ratesF_path) 

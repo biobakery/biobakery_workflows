@@ -37,7 +37,7 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()
 workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2"])
-workflow.add_argument("dada2-db", desc="reference database for dada2 workflow", default="gg", choices=["gg","rdp","silva"])
+workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="gg", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
@@ -99,22 +99,15 @@ if args.method == "dada2":
     fasttree_path = dadatwo.fasttree(
             workflow, args.output,msa_fasta_path)
     
-#   if args.dada2-db == "silva":
-            #assign taxonomy silva and rdp
-    otu_closed_ref_silva_path, otu_closed_ref_rdp_path = dadatwo.assign_silva_rdp(
-                 workflow, args.output, seqtab_file_path, workflow_config.rdp_dada2, workflow_config.silva_dada2)	
-#   else:    
-            #assign taxonomy green genes 
+    
+    #assign taxonomy 
     otu_closed_ref_path = dadatwo.assign_taxonomy(
-                 workflow, args.output, seqtab_file_path, workflow_config.greengenes_dada2)
+            workflow, args.output, seqtab_file_path, args.dada_db)
     
-    dadatwo.remove_tmp_files(
-                 workflow, args.output, otu_closed_ref_path, otu_closed_ref_rdp_path, otu_closed_ref_silva_path,
-                 msa_fasta_path, fasttree_path)
+#    dadatwo.remove_tmp_files(workflow, args.output, otu_closed_ref_path, msa_fasta_path, fasttree_path) 
     
-    
-    
-else:    
+else:  
+    #call usearch workflow tasks
 	# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
 	all_samples_fastq = sixteen_s.merge_samples_and_rename(
     	       workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        
@@ -129,9 +122,9 @@ else:
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
             workflow_config.greengenes_taxonomy, args.min_size)
 
-	# functional profiling
-	predict_metagenomes_tsv = sixteen_s.functional_profile(
-            workflow, closed_reference_tsv, args.output)
+# functional profiling
+predict_metagenomes_tsv = sixteen_s.functional_profile(
+    workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()

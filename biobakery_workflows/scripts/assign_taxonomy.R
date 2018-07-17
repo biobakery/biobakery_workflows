@@ -43,7 +43,7 @@ for( i in names(args.list) ) {
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 output.path <- normalizePath( args.list$output_dir )
-gg.path <- normalizePath( args.list$gg_path )
+gg.path <- normalizePath( args.list$refdb_path )
 
 seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 

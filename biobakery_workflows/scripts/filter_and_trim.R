@@ -71,7 +71,7 @@ for( i in 1 : length(fnFs)) {
   rm(i)
 }
 # Save to file
-png(paste0(output.dir,"/FWD_read_plot.png"))
+png(args.list$reads_plotF)
 gridExtra::marrangeGrob( fwd.qc.plots.list, ncol=2, nrow=3, top = NULL )
 dev.off()
 rm(fwd.qc.plots.list)
@@ -83,7 +83,7 @@ for( i in 1 : length(fnRs)) {
   rm(i)
 }
 # Save to file
-png(paste0(output.dir,"/REV_read_plot.png"))
+png(args.list$reads_plotR)
 gridExtra::marrangeGrob( rev.qc.plots.list, ncol=2, nrow=3, top = NULL )
 dev.off()
 rm(rev.qc.plots.list)
@@ -110,5 +110,5 @@ rd.counts <- as.data.frame(
 rd.counts$ratio <- round( rd.counts$reads.out / rd.counts$reads.in, digits = 2 )
 
 # Write rd.counts table to file in output folder
-saveRDS(rd.counts, paste0(output.dir, "/Read_counts_filt.rds" ))
-write.table( rd.counts, args.list$readcounts_file_path, sep = "\t", quote = F, eol = "\n", col.names = NA )
+saveRDS(rd.counts,  args.list$readcounts_rds_path )
+write.table( rd.counts, args.list$readcounts_tsv_path, sep = "\t", quote = F, eol = "\n", col.names = NA )
