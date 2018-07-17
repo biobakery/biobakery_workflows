@@ -59,8 +59,8 @@ cwd <- getwd()
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
 filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 
-errF <- readRDS(file.path(output.path,"error_rates_F.rds"))
-errR <- readRDS(file.path(output.path,"error_rates_R.rds"))
+errF <- readRDS(args.list$error_ratesF_path)
+errR <- readRDS(args.list$error_ratesR_path)
 
 
 # Sample inference of dereplicated reads, and merger of paired-end reads
@@ -79,4 +79,4 @@ for(sam in sample.names) {
   mergers[[sam]] <- merger
 }
 rm(derepF); rm(derepR)
-saveRDS(mergers, paste0(output.path, "/mergers.rds"))
+saveRDS(mergers, args.list$mergers_file_path)

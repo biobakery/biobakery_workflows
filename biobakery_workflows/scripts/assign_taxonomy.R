@@ -45,7 +45,7 @@ output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_
 output.path <- normalizePath( args.list$output_dir )
 gg.path <- normalizePath( args.list$gg_path )
 
-seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
+seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
 # Assign taxonomy:
 taxa.gg13_8 <- dada2::assignTaxonomy(seqtab.nochim, gg.path, multithread=TRUE, tryRC=TRUE)
@@ -57,7 +57,7 @@ unname(head(taxa.gg13_8))
 taxa.gg13_8.2 <- replaceNA.in.assignedTaxonomy(taxa.gg13_8 )
 
 # Write taxa table to file
-write.table( taxa.gg13_8.2, paste0( output.path, "/all_samples_GG13-8-taxonomy.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA )
+write.table( taxa.gg13_8.2, args.list$allsamples_gg_tax_path, sep = "\t", eol = "\n", quote = F, col.names = NA )
 
 ## Merge OTU and GG13-8 taxonomy tables
 otu.gg.tax.table <- merge( t(seqtab.nochim), taxa.gg13_8.2, by = 'row.names' )
@@ -81,6 +81,6 @@ taxonomy<- paste0(as.character(otu.gg.tax.table$Kingdom),"; ",
 
 otu.gg.tax.table_taxcombined <- cbind(otu.gg.tax.table_taxcombined,taxonomy)
 
-write.table(otu.gg.tax.table, paste0(output.path, "/all_samples_taxonomy_closed_reference_taxcolumns.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
-write.table(otu.gg.tax.table_taxcombined, paste0(output.path, "/all_samples_taxonomy_closed_reference.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.gg.tax.table, paste0(gsub(".tsv", "", args.list$otu_closed_ref_path),"_taxcolumns.tsv"), sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.gg.tax.table_taxcombined, args.list$otu_closed_ref_path, sep = "\t", eol = "\n", quote = F, col.names = NA)
 

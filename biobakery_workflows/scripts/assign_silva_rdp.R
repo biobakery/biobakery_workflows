@@ -3,18 +3,6 @@
 # load packages
 library(dada2); packageVersion("dada2")
 
-# Helper function to replace NAs in taxonomy assignment table with prefix corresponding to tax rank
-addprefix.assignedTaxonomy <- 
-  function( tax.table ) {
-    prefix <- c( 'k__', 'p__', 'c__', 'o__', 'f__', 'g__', 's__' )
-    
-    for( i in 1 : length( colnames( tax.table ) ) ) {
-      tax.table[ ,i ] <- prefix[i] + tax.table[ ,i ]
-    }
-    rm(i)
-    return( tax.table )
-  }
-
 
 ## Collect arguments
 args <- commandArgs(TRUE)
@@ -42,7 +30,7 @@ output.path <- normalizePath( args.list$output_dir )
 rdp.path <- normalizePath( args.list$rdp_path )
 silva.path <- normalizePath( args.list$silva_path )
 
-seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
+seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
 ## Asign SILVA and RDP taxonomies and merge with OTU table
 
@@ -52,9 +40,6 @@ taxa.silva <- dada2::assignTaxonomy(seqtab.nochim, silva.path, multithread = TRU
 # Print first 6 rows of taxonomic assignment
 unname(head(taxa.silva))
 
-# Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
-#taxa.silva.2 <- addprefix.assignedTaxonomy( taxa.silva )
-taxa.silva.2 <-  taxa.silva 
 
 # OMIT APPENDING SPECIES FOR SILVA DUE TO MEMORY CONSTRAINTS
 # Append species. Note that appending the argument 'allowMultiple=3' will return up to 3 different matched
@@ -62,18 +47,33 @@ taxa.silva.2 <-  taxa.silva
 #taxa.silva.species <- addSpecies(taxa.silva, silva.species.path)
 
 # Merge with OTU table and save to file
-otu.silva.tax.table <- merge( t(seqtab.nochim), taxa.silva.2, by = 'row.names' )
+otu.silva.tax.table <- merge( t(seqtab.nochim), taxa.silva, by = 'row.names' )
 rownames( otu.silva.tax.table ) <- otu.silva.tax.table[,1]
 otu.silva.tax.table <- otu.silva.tax.table[,-1]
 
-write.table(otu.silva.tax.table, paste0(output.path, "/all_samples_taxonomy_closed_reference_silva.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+otu.silva.tax.table_taxcombined <- cbind(otu.silva.tax.table)
+colnum <- length(otu.silva.tax.table_taxcombined[1,])
+
+otu.silva.tax.table_taxcombined <- otu.silva.tax.table_taxcombined[, -c((colnum-5): colnum)]
+
+taxonomy <- vector()
+taxonomy<- paste0("k__",as.character(otu.silva.tax.table$Kingdom),"; ",
+                  "p__",as.character(otu.silva.tax.table$Phylum),"; ",
+                  "c__",as.character(otu.silva.tax.table$Class),"; ",
+                  "o__",as.character(otu.silva.tax.table$Order),"; ",
+                  "f__",as.character(otu.silva.tax.table$Family),"; ",
+                  "g__",as.character(otu.silva.tax.table$Genus),"; ")
+
+
+otu.silva.tax.table_taxcombined <- cbind(otu.silva.tax.table_taxcombined,taxonomy)
+
+
+write.table(otu.silva.tax.table_taxcombined, args.list$tax_closed_ref_silva , sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.silva.tax.table, paste0(gsub(".tsv", "", args.list$tax_closed_ref_silva),"_taxcolumns.tsv") , sep = "\t", eol = "\n", quote = F, col.names = NA)
 
 # Assign RDP taxonomy
 taxa.rdp <- dada2::assignTaxonomy(seqtab.nochim,rdp.path, multithread = TRUE)
 
-# Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
-#taxa.rdp.2 <- addprefix.assignedTaxonomy( taxa.rdp )
-taxa.rdp.2 <- taxa.rdp
 
 # OMIT APPENDING SPECIES FOR RDP DUE TO MEMORY CONSTRAINTS
 # Append species. Note that appending the argument 'allowMultiple=3' will return up to 3 different matched
@@ -82,8 +82,27 @@ taxa.rdp.2 <- taxa.rdp
 
 
 # Merge with OTU table and save to file
-otu.rdp.tax.table <- merge( t(seqtab.nochim), taxa.rdp.2, by = 'row.names' )
+otu.rdp.tax.table <- merge( t(seqtab.nochim), taxa.rdp, by = 'row.names' )
 rownames( otu.rdp.tax.table ) <- otu.rdp.tax.table[,1]
 otu.rdp.tax.table <- otu.rdp.tax.table[,-1]
 
-write.table(otu.rdp.tax.table, paste0( output.path, "/all_samples_taxonomy_closed_reference_rdp.tsv" ), sep = "\t", eol = "\n", quote = F, col.names = NA)
+
+otu.rdp.tax.table_taxcombined <- cbind(otu.rdp.tax.table)
+colnum <- length(otu.rdp.tax.table_taxcombined[1,])
+
+otu.rdp.tax.table_taxcombined <- otu.rdp.tax.table_taxcombined[, -c((colnum-5): colnum)]
+
+taxonomy <- vector()
+taxonomy<- paste0("k__",as.character(otu.rdp.tax.table$Kingdom),"; ",
+                  "p__",as.character(otu.rdp.tax.table$Phylum),"; ",
+                  "c__",as.character(otu.rdp.tax.table$Class),"; ",
+                  "o__",as.character(otu.rdp.tax.table$Order),"; ",
+                  "f__",as.character(otu.rdp.tax.table$Family),"; ",
+                  "g__",as.character(otu.rdp.tax.table$Genus),"; ")
+
+
+otu.rdp.tax.table_taxcombined <- cbind(otu.rdp.tax.table_taxcombined,taxonomy)
+
+
+write.table(otu.rdp.tax.table_taxcombined, args.list$tax_closed_ref_rdp, sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.rdp.tax.table, paste0(gsub(".tsv", "", args.list$tax_closed_ref_rdp, "_taxcolumns.tsv"), "_taxcolumns.tsv"), sep = "\t", eol = "\n", quote = F, col.names = NA)

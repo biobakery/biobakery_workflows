@@ -29,7 +29,7 @@ output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_
 output.path <- normalizePath( args.list$output_dir )
 
 
-seqtab.nochim <- readRDS(paste0(output.path, "/seqtab_final.rds"))
+seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
 # Get sequences
 seqs <- dada2::getSequences(seqtab.nochim)
@@ -38,7 +38,7 @@ names(seqs) <- seqs # This propagates to the tip labels of the tree
 mult <- msa::msa(seqs, method="ClustalOmega", type="dna", order="input")
 # Save msa to file; convert first to phangorn object
 phang.align <- phangorn::as.phyDat(mult, type="DNA", names=dada2::getSequences(seqtab.nochim))
-write.phyDat(phang.align, format = 'fasta', file = paste0( output.path, args.list$seqtab_file) )
+write.phyDat(phang.align, format = 'fasta', file = args.list$msa_fasta_path)
 
 detach("package:phangorn", unload=TRUE)
 detach("package:msa", unload=TRUE)

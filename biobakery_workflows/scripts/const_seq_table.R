@@ -64,7 +64,7 @@ dim(seqtab.nochim)
 # write sequence variants count table to file
 write.table( t(seqtab.nochim), paste0( output.path, "/all_samples_SV-counts.tsv"), sep = "\t", eol = "\n", quote = F, col.names = NA )
 # write OTU table to file
-saveRDS(seqtab.nochim, paste0(output.path, "/seqtab_final.rds"))
+saveRDS(seqtab.nochim, args.list$seqtab_file_path)
 
 rd.counts <- readRDS(paste0(output.path, "/Read_counts_filt.rds" ))
 
@@ -78,4 +78,4 @@ rownames(track) <- sample.names
 # print table
 track
 # save to file
-write.table( track, paste0(output.path, "/Read_counts_at_each_step.tsv" ), sep = "\t", quote = F, eol = "\n", col.names = NA )
+write.table( track, args.list$read_counts_steps_path, sep = "\t", quote = F, eol = "\n", col.names = NA )

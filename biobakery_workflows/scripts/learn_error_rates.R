@@ -48,5 +48,5 @@ ggplot2::ggsave(paste0(output.path,"/Error_rates_per_sample_FWD.png"), dada2::pl
 ggplot2::ggsave(paste0(output.path,"/Error_rates_per_sample_REV.png"), dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
 
 #save as rds files
-saveRDS(errF, paste0(output.path, args.list$error_ratesF)) 
-saveRDS(errR, paste0(output.path, args.list$error_ratesR))
+saveRDS(errF, args.list$error_ratesF_path) 
+saveRDS(errR, args.list$error_ratesR_path)
