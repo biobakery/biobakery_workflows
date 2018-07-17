@@ -249,7 +249,7 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path):
                   --output_dir=[args[0]]\
                   --refdb_path=[vars[0]]\
                   --seqtab_file_path=[depends[0]]\
-                  --tax_closed_ref=[targets[0]]",
+                  --otu_closed_ref_path=[targets[0]]",
                 depends = [seqtab_file_path],
                 targets = [otu_closed_ref_path],                              
                 args = [output_folder],
@@ -264,7 +264,7 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path):
                   --output_dir=[args[0]]\
                   --refdb_path=[vars[0]]\
                   --seqtab_file_path=[depends[0]]\
-                  --tax_closed_ref=[targets[0]]",
+                  --otu_closed_ref_path=[targets[0]]",
                 depends = [seqtab_file_path],
                 targets = [otu_closed_ref_path],                              
                 args = [output_folder],
@@ -309,12 +309,14 @@ def remove_tmp_files(workflow, output_folder, otu_closed_ref_path,
                 None
           """
          
-         
+         rm_out_file = output_folder + "/out.txt"
+         rm_error_file = output_folder + "/error.txt"
              
          workflow.add_task(
-                     "rm  [args[0]]/*.rds",
+                     "rm  [args[0]]/*.rds  > [targets[0]] 2 > [targets[1]] ",
                      depends = [otu_closed_ref_path, msa_fasta_path, fasttree_file_path],
                      args = [output_folder],
+                     targets = [rm_out_file, rm_error_file],
                      name = "rm_tmp_files"
                      )
          

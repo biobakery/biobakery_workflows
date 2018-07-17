@@ -101,10 +101,10 @@ if args.method == "dada2":
     
     
     #assign taxonomy 
-    otu_closed_ref_path = dadatwo.assign_taxonomy(
+    closed_reference_tsv = dadatwo.assign_taxonomy(
             workflow, args.output, seqtab_file_path, args.dada_db)
     
-#    dadatwo.remove_tmp_files(workflow, args.output, otu_closed_ref_path, msa_fasta_path, fasttree_path) 
+    dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path) 
     
 else:  
     #call usearch workflow tasks
@@ -122,9 +122,9 @@ else:
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
             workflow_config.greengenes_taxonomy, args.min_size)
 
-# functional profiling
-predict_metagenomes_tsv = sixteen_s.functional_profile(
-    workflow, closed_reference_tsv, args.output)
+        # functional profiling
+        predict_metagenomes_tsv = sixteen_s.functional_profile(
+                workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()
