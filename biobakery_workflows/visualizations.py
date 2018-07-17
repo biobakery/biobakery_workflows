@@ -32,6 +32,48 @@ import shutil
 
 from . import utilities
 
+def get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa, taxa_level=5):
+    """ Get the top, based on average abundance, set of taxa at the genus level
+
+        Args:
+            taxonomy (list): The full taxonomic names organized to match the data
+            samples (list): The sample names organized to match the data
+            relab_data (list): The relative abundance data
+            max_taxa (int): The max number of genera to identify
+            taxa_level (int): The taxonomy level to select (default of 5 is genus, using 4 would be family)
+
+        Return:
+            list : The sorted sample names (sorted to list the top genera first)
+	    list : The data filtered to only the top genera (sorted by decreasing abundance)
+            list : The data filtered to only the top genera 
+            list : The taxonomic names (short for plotting) of the top taxa
+            int : The recommended font size for the ploting legend (based on the taxonomic names)
+    """ 
+
+    import numpy
+
+    # get the taxa summarized by genus level
+    genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=taxa_level)
+    # get the top rows of the relative abundance data
+    top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
+    # shorten the top taxa names to just the genus level for plotting
+    top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+    # check for duplicate genera in list
+    legend_size = 7
+    if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
+        # if duplicate names, then add family to the taxonomy
+        top_taxa_short_names = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa, level=taxa_level-1),utilities.taxa_shorten_name(top_taxa, level=taxa_level))]
+        # reduce legend size to fit names
+        legend_size = 5
+
+    # sort the data so those with the top genera are shown first
+    sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
+    transpose_top_data = numpy.transpose(top_data)
+    sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
+
+    return sorted_samples, sorted_top_data, top_data, top_taxa_short_names, legend_size
+
+
 def metadata_provided(vars):
     """ Check if metadata was provided by the user for this visualization run 
 

@@ -26,7 +26,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 #' for all DNA samples. These samples were
 #' run through [MetaPhlAn2](http://huttenhower.sph.harvard.edu/metaphlan2).
 
-#' Species abundances are passed through a basic filter requiring each species
+#' Taxonomic abundances are passed through a basic filter requiring each species or genus
 #' to have at least <% print(min_abundance)%> % abundance in at least 
 #' <% print(min_samples) %> % of all samples.
 

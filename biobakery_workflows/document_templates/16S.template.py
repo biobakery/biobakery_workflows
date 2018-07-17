@@ -144,28 +144,12 @@ import numpy
 # read in the otu table data
 samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
 
-# plot the top taxa by genus level, plotting the relative abundance values
-max_taxa=15
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data)
-# get the taxa summarized by genus level
-genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
-# get the top rows of the relative abundance data
-top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
-# shorten the top taxa names to just the genus level for plotting
-top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
-# check for duplicate genera in list
-legend_size = 7
-if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
-    # if duplicate names, then add family to the taxonomy
-    top_taxa_short_names = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa, level=4),utilities.taxa_shorten_name(top_taxa, level=5))]
-    # reduce legend size to fit names
-    legend_size = 5
 
-# sort the data so those with the top genera are shown first
-sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
-transpose_top_data = numpy.transpose(top_data)
-sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
+# get the top taxa by genus level
+max_taxa = 15
+sorted_samples, sorted_top_data, top_data, top_taxa_short_names, legend_size = visualizations.get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa)
 
 document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names, 
     column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
