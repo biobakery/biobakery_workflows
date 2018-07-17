@@ -228,9 +228,9 @@ class ShotGunVis(Workflow):
             "as columns. Includes the read counts for trimming and filtering steps "+\
             "in the quality control workflow. The reads are paired end and these "+\
             "counts are only for orphans.")
-    file_info["species_counts"]=FileInfo("species_counts_table.tsv",
+    file_info["taxa_counts"]=FileInfo("taxa_counts_table.tsv",
         description="A tab-delimited file with samples as rows and counts as "+\
-            "columns. These are the total number of species identified for each "+\
+            "columns. These are the total number of species/genera identified for each "+\
             "sample before and after filtering.")
 
 class SixteenS(Workflow):

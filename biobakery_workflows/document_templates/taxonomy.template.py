@@ -46,10 +46,17 @@ species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan2_format(t
 filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,
     data, min_abundance=min_abundance, min_samples=min_samples)
 
-#' A total of <% print(len(species_taxonomy)) %> species were identified. After basic
-#' filtering <% print(len(filtered_species_taxonomy)) %> species remained. 
+# filter to only include genus level
+genera_taxonomy, genera_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,data,level=5)
 
-#' ## Species Count Table
+# filter genus level plus min abundance and min samples
+filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,
+    data, min_abundance=min_abundance, min_samples=min_samples, level=5)
+
+#' A total of <% print(len(species_taxonomy)) %> species and <% print(len(genera_taxonomy)) %> genera were identified. 
+#' After basic filtering <% print(len(filtered_species_taxonomy)) %> species and <% print(len(filtered_genera_taxonomy)) %> genera remained. 
+
+#' ## Taxonomic Count Table
 
 #+ echo=False
 import numpy
@@ -64,16 +71,19 @@ def count_filtered_columns(data, min):
 
 species_counts=count_filtered_columns(species_data, min=0)
 species_counts_after_filter=count_filtered_columns(filtered_species_data, min=0)
+genera_counts=count_filtered_columns(genera_data, min=0)
+genera_counts_after_filter=count_filtered_columns(filtered_genera_data, min=0)
 
-all_species_counts=[[a,b] for a,b in zip(species_counts, species_counts_after_filter)]
+all_taxa_counts=[[a,b,c,d] for a,b,c,d in zip(species_counts, species_counts_after_filter, genera_counts, genera_counts_after_filter)]
 
 # create a table of the data in the output folder
-document.write_table(["# Sample","Total","After filter"],samples, all_species_counts,
-    files.ShotGunVis.path("species_counts",document.data_folder))
+taxa_counts_column_names = ["# Sample","Species","Species filtered","Genera","Genera filtered"]
+document.write_table(taxa_counts_column_names, samples, all_taxa_counts,
+    files.ShotGunVis.path("taxa_counts",document.data_folder))
 
 # show the table, reducing the rows if there are lots of samples
-table_message=visualizations.show_table_max_rows(document, all_species_counts, samples,
-    ["Total","After filter"],"Total species per sample",files.ShotGunVis.path("species_counts"))
+table_message=visualizations.show_table_max_rows(document, all_taxa_counts, samples,
+    taxa_counts_column_names[1:],"Total taxa per sample",files.ShotGunVis.path("taxa_counts"))
 
 #' <%= table_message %>
 
