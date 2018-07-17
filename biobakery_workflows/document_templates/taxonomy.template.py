@@ -129,6 +129,8 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, 
 
 #' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="species and genera",method="Spearman and Bray-Curtis") %>
 
+#' ## Species
+
 #+ echo=False
 # update the figure size based on output format for the heatmaps
 utilities.change_pweave_figure_size_heatmap(pdf_format)
@@ -141,6 +143,22 @@ utilities.reset_pweave_figure_size()
 utilities.change_pweave_figure_size_heatmap(pdf_format)
 visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,
     pdf_format,"Top {} species by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
+utilities.reset_pweave_figure_size()
+
+#' ## Genera
+
+#+ echo=False
+# update the figure size based on output format for the heatmaps
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,
+    pdf_format, "Top {} genera by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,
+    pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
 utilities.reset_pweave_figure_size()
 
 #' ## Barplot
