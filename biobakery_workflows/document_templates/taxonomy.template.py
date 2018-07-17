@@ -89,6 +89,8 @@ table_message=visualizations.show_table_max_rows(document, all_taxa_counts, samp
 
 #' ## Ordination
 
+#' ### Species
+
 #+ echo=False
 # get the top species by average abundance
 top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_sets_heatmap,
@@ -104,15 +106,24 @@ caption=document.show_pcoa(samples,top_taxonomy,pcoa_data,"Ordination of species
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
-if 'metadata' in vars and vars['metadata']:
-    # organize metadata for plot if available
-    sample_metadata=vars["metadata"][0]
-    for category in vars["metadata"][1:]:
-        name=category[0]
-        metadata_mapping=dict((x,y) for x,y in zip(sample_metadata[1:],category[1:]))
+visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title="PCOA Ordination of species using Bray-Curtis similarity")
 
-        document.show_pcoa(samples, top_taxonomy, pcoa_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity - "+name,
-            metadata=metadata_mapping)
+#' ### Genera
+
+#+ echo=False
+top_taxonomy_genera, top_data_genera = utilities.top_rows(genera_taxonomy, genera_data, max_sets_heatmap,
+    function="average")
+
+# compute and plot pcoa
+pcoa_data_genera=numpy.array(top_data_genera)/100.0
+caption_genera=document.show_pcoa(samples,top_taxonomy_genera,pcoa_data_genera,"Ordination of genera abundances",feature_types="genera")
+
+#' <% print(caption_genera) %>
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, pcoa_data_genera, title="PCOA Ordination of genera using Bray-Curtis similarity")
 
 #' ## Heatmaps
 

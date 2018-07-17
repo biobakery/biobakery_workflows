@@ -32,6 +32,31 @@ import shutil
 
 from . import utilities
 
+def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
+    """ Plot pcoa for each feature if metadata has been provided
+
+        Args:
+            document (anadama2.document): Document to use to add plots
+            vars (dict): The dictionary of input variables provided for the visualization run
+            samples (list): The sample names organized to match the data
+            top_taxonomy (list): The full taxonomic names organized to match the data
+            pcoa_data (list): The data (range 0 to 1) organized to match the samples and taxonomy
+            title (string): The base string for the title for the plots
+ 
+        Return: None
+
+    """
+
+    if 'metadata' in vars and vars['metadata']:
+        # organize metadata for plot if available
+        sample_metadata=vars["metadata"][0]
+        for category in vars["metadata"][1:]:
+            name=category[0]
+            metadata_mapping=dict((x,y) for x,y in zip(sample_metadata[1:],category[1:]))
+
+            document.show_pcoa(samples, top_taxonomy, pcoa_data, title=title+" - "+name,
+                metadata=metadata_mapping)
+
 def get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa, taxa_level=5):
     """ Get the top, based on average abundance, set of taxa at the genus level
 
