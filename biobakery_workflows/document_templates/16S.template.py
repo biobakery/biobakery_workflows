@@ -156,17 +156,8 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
     ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size)
 
 #+ echo=False
-if visualizations.metadata_provided(vars):
-    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples, sorted_top_data)
-    # plot taxonomy grouped by feature
-    for cat_metadata in categorical_metadata:
-        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxa_short_names, 
-            samples_found, title="Top {} genera by average abundance".format(max_taxa), ylabel="Relative abundance", 
-            legend_title="Genera", legend_size=legend_size)
-    # plot taxonomy average for all samples, grouped by feature
-    for cat_metadata in categorical_metadata:
-        visualizations.plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxa_short_names,
-            cat_metadata, max_taxa, legend_title="Genera")
+# plot grouped and average barplots for metadata if provided
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_top_data, top_taxa_short_names, max_taxa, feature="genera")
 
 #' <% if pdf_format: print("\clearpage") %>
 
@@ -192,15 +183,7 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
-if visualizations.metadata_provided(vars):
-    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples_terminal, 
-        sorted_top_terminal_data)
-    for cat_metadata in categorical_metadata:
-        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, shorted_names, samples_found,
-            title="Top {} terminal taxa by average abundance".format(max_taxa), ylabel="Relative abundance", legend_title="Terminal taxa")
-    for cat_metadata in categorical_metadata:
-        visualizations.plot_average_taxonomy(document, ordered_sorted_data, samples_found, shorted_names, 
-            cat_metadata, max_taxa, legend_title="Terminal taxa")
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_terminal, sorted_top_terminal_data, shorted_names, max_taxa, feature="terminal taxa")
 
 #' # Heatmaps
 

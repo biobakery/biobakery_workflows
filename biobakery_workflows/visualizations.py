@@ -32,6 +32,61 @@ import shutil
 
 from . import utilities
 
+def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, max_sets_barplot, feature="species"):
+    """ Plot grouped barplots and average barplots for all of the features provided.
+
+        Args:
+            document (anadama2.document): Document to use to add plots
+            vars (dict): The dictionary of input variables provided for the visualization run
+            sorted_samples (list): The sample names organized to match the data
+            sorted_data (list): The data organized to match the sample/taxonomy
+            top_taxonomy (list): The list of full taxonomy names
+            max_sets_barplot (int): The max number of features (default species) to plot
+            feature (string): The data being plotted (default species)
+
+        Returns: 
+            list: A list of metadata strings (one for each categorical feature plotted)
+    """
+
+    # plot a barchart for a set of categorical data
+    categorical_metadata = []
+    if metadata_provided(vars):
+        categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = merge_categorical_metadata(vars, sorted_samples,
+            sorted_data)
+        for cat_metadata in categorical_metadata:
+            plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
+                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature))
+        # plot average for all samples grouped by categorical metadata
+        for cat_metadata in categorical_metadata:
+            plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature)
+
+    return categorical_metadata
+
+def fill_taxonomy_other(top_taxonomy, sorted_data):
+    """ Fill the taxonomy abundances provided with 'other' so each totals 100.
+
+        Args:
+            top_taxonomy (list): The list of full taxonomy names
+            sorted_data (list): The data sorted by abundance matched to the taxonomy list
+
+        Returns:
+            list : The list of full taxonomy names plus 'other'
+            list : The list of data filled with the 'other' abundance
+    """
+
+    import numpy
+
+    # add other to the taxonomy data
+    # other represents the total abundance of all species not included in the top set
+    top_taxonomy.append("other")
+    other_abundances=[]
+    for column in numpy.transpose(sorted_data):
+        other_abundances.append(100-sum(column))
+    sorted_data.append(other_abundances)
+
+    return top_taxonomy, sorted_data
+
+
 def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
     """ Plot pcoa for each feature if metadata has been provided
 
