@@ -313,14 +313,13 @@ def remove_tmp_files(workflow, output_folder, otu_closed_ref_path,
                 None
           """
          
-         rm_out_file = output_folder + "/out.txt"
-         rm_error_file = output_folder + "/error.txt"
+         rm_out_file = output_folder + "/tmp_rm.txt"
              
          workflow.add_task(
-                     "rm  [args[0]]/*.rds  > [targets[0]] 2 > [targets[1]] ",
+                     "rm  [args[0]]/*.rds  &>[targets[0]] ",
                      depends = [otu_closed_ref_path, msa_fasta_path, fasttree_file_path],
                      args = [output_folder],
-                     targets = [rm_out_file, rm_error_file],
+                     targets = [rm_out_file],
                      name = "rm_tmp_files"
                      )
          

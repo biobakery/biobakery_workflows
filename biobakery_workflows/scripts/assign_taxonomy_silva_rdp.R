@@ -71,7 +71,7 @@ otu.refdb.tax.table <- otu.refdb.tax.table[,-1]
 otu.refdb.tax.table_taxcombined <- cbind(otu.refdb.tax.table)
 colnum <- length(otu.refdb.tax.table_taxcombined[1,])
 
-otu.refdb.tax.table_taxcombined <- otu.refdb.tax.table_taxcombined[, -c((colnum-5): colnum)]
+otu.refdb.tax.table_taxcombined <- otu.refdb.tax.table_taxcombined[, -c((colnum-6): colnum)]
 
 taxonomy <- vector()
 taxonomy<- paste0("k__",as.character(otu.refdb.tax.table$Kingdom),"; ",
