@@ -217,6 +217,8 @@ def main():
             os.path.join(args.location,config.SixteenS.vars["silva_dada2"].default_path))
         utilities.download_file(config.SixteenS.vars["rdp_species_dada2"].url,
             os.path.join(args.location,config.SixteenS.vars["rdp_species_dada2"].default_path))
+        utilities.download_file(config.SixteenS.vars["silva_species_dada2"].url,
+            os.path.join(args.location,config.SixteenS.vars["silva_species_dada2"].default_path))
 
        
     # if metatranscriptome workflow, install the additional kneaddata database

@@ -243,32 +243,36 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path):
          otu_closed_ref_path  = files.SixteenS.path("otu_table_closed_reference", output_folder)
          
          if ref_path == "silva": 
-             refdb_path = config.SixteenS().silva_dada2  
+             refdb_path = config.SixteenS().silva_dada2 
+             refdb_species_path = config.SixteenS().silva_species_dada2  
              workflow.add_task(
                 "biobakery_workflows/scripts/assign_taxonomy_silva_rdp.R\
                   --output_dir=[args[0]]\
                   --refdb_path=[vars[0]]\
+                  --refdb_species_path=[vars[1]]\
                   --seqtab_file_path=[depends[0]]\
                   --otu_closed_ref_path=[targets[0]]",
                 depends = [seqtab_file_path],
                 targets = [otu_closed_ref_path],                              
                 args = [output_folder],
-                vars =[refdb_path],
+                vars =[refdb_path, refdb_species_path],
                 name = "assign_silva"
                 
                 )
          elif ref_path == "rdp":
-             refdb_path = config.SixteenS().rdp_dada2  
+             refdb_path = config.SixteenS().rdp_dada2 
+             refdb_species_path = config.SixteenS().rdp_species_dada2  
              workflow.add_task(
                 "biobakery_workflows/scripts/assign_taxonomy_silva_rdp.R\
                   --output_dir=[args[0]]\
                   --refdb_path=[vars[0]]\
+                  --refdb_species_path=[vars[1]]\
                   --seqtab_file_path=[depends[0]]\
                   --otu_closed_ref_path=[targets[0]]",
                 depends = [seqtab_file_path],
                 targets = [otu_closed_ref_path],                              
                 args = [output_folder],
-                vars = [refdb_path],
+                vars = [refdb_path,refdb_species_path],
                 name = "assign_rdp"
                 
                 )

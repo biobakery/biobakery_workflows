@@ -44,6 +44,7 @@ for( i in names(args.list) ) {
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 output.path <- normalizePath( args.list$output_dir )
 refdb.path <- normalizePath( args.list$refdb_path )
+refdb.species.path <- normalizePath( args.list$refdb_species_path )
 
 seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
@@ -60,7 +61,7 @@ taxa.refdb.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb )
 # OMIT APPENDING SPECIES DUE TO MEMORY CONSTRAINTS
 # Append species. Note that appending the argument 'allowMultiple=3' will return up to 3 different matched
 # species, but if 4 or more are matched it returns NA.
-#taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
+taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
 
 # Merge with OTU table and save to file
 otu.refdb.tax.table <- merge( t(seqtab.nochim), taxa.refdb.2, by = 'row.names' )
@@ -78,7 +79,8 @@ taxonomy<- paste0("k__",as.character(otu.refdb.tax.table$Kingdom),"; ",
                   "c__",as.character(otu.refdb.tax.table$Class),"; ",
                   "o__",as.character(otu.refdb.tax.table$Order),"; ",
                   "f__",as.character(otu.refdb.tax.table$Family),"; ",
-                  "g__",as.character(otu.refdb.tax.table$Genus),"; ")
+                  "g__",as.character(otu.refdb.tax.table$Genus),"; ",
+                  "s__",as.character(otu.refdb.tax.table$Genus),"; ")
 
 
 otu.refdb.tax.table_taxcombined <- cbind(otu.refdb.tax.table_taxcombined,taxonomy)

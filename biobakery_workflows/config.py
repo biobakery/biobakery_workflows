@@ -153,7 +153,8 @@ class SixteenS(Workflow):
         url="https://zenodo.org/record/1172783/files/silva_nr_v132_train_set.fa.gz")
     vars["rdp_species_dada2"] = DBInfo("RDP_SPECIES_DADA2_DB",
         description="This is the rdp species assignment dada2 database",
-        url="https://zenodo.org/record/1172783/files/silva_nr_v132_train_set.fa.gz")
-
-
+        url="https://zenodo.org/record/801828/files/rdp_species_assignment_16.fa.gz?download=1")
+    vars["silva_species_dada2"] = DBInfo("SILVA_SPECIES_DADA2_DB",
+        description="This is the silva species assignment dada2 database",
+        url="https://zenodo.org/record/801832/files/silva_species_assignment_v128.fa.gz?download=1")
 
