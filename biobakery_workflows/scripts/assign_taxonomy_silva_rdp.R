@@ -55,17 +55,15 @@ taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = TRU
 # Print first 6 rows of taxonomic assignment
 unname(head(taxa.refdb))
 
-# Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
-taxa.refdb.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb )
-
-
-# OMIT APPENDING SPECIES DUE TO MEMORY CONSTRAINTS
 # Append species. Note that appending the argument 'allowMultiple=3' will return up to 3 different matched
 # species, but if 4 or more are matched it returns NA.
-taxa.refdb.species <- addSpecies(taxa.refdb.2, refdb.species.path)
+taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
+
+# Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
+taxa.refdb.species.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb.species )
 
 # Merge with OTU table and save to file
-otu.refdb.tax.table <- merge( t(seqtab.nochim), taxa.refdb.species, by = 'row.names' )
+otu.refdb.tax.table <- merge( t(seqtab.nochim), taxa.refdb.species.2, by = 'row.names' )
 rownames( otu.refdb.tax.table ) <- otu.refdb.tax.table[,1]
 otu.refdb.tax.table <- otu.refdb.tax.table[,-1]
 
