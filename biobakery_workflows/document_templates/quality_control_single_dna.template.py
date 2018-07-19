@@ -37,8 +37,6 @@ table_message=visualizations.show_table_max_rows(document, dna_data, dna_samples
         
 #' <%= table_message %>
 
-#' <% if pdf_format: print("\clearpage") %>
-
 #+ echo=False
 # compute and plot the microbial reads ratios
 # compute ratios for each database used for qc
