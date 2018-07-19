@@ -104,7 +104,7 @@ if args.method == "dada2":
     closed_reference_tsv = dadatwo.assign_taxonomy(
             workflow, args.output, seqtab_file_path, args.dada_db)
     
-    dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path) 
+ #   dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path) 
     
 else:  
     #call usearch workflow tasks

@@ -246,58 +246,30 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path):
          
          if ref_path == "silva": 
              refdb_path = config.SixteenS().silva_dada2 
-             refdb_species_path = config.SixteenS().silva_species_dada2  
-             workflow.add_task(
-                "biobakery_workflows/scripts/assign_taxonomy_silva_rdp.R\
-                  --output_dir=[args[0]]\
-                  --refdb_path=[vars[0]]\
-                  --refdb_species_path=[vars[1]]\
-                  --seqtab_file_path=[depends[0]]\
-                  --otu_closed_ref_path=[targets[0]]",
-                depends = [seqtab_file_path],
-                targets = [otu_closed_ref_path],                              
-                args = [output_folder],
-                vars =[refdb_path, refdb_species_path],
-                name = "assign_silva"
-                
-                )
+             refdb_species_path = config.SixteenS().silva_species_dada2 
          elif ref_path == "rdp":
              refdb_path = config.SixteenS().rdp_dada2 
              refdb_species_path = config.SixteenS().rdp_species_dada2  
-             workflow.add_task(
-                "biobakery_workflows/scripts/assign_taxonomy_silva_rdp.R\
-                  --output_dir=[args[0]]\
-                  --refdb_path=[vars[0]]\
-                  --refdb_species_path=[vars[1]]\
-                  --seqtab_file_path=[depends[0]]\
-                  --otu_closed_ref_path=[targets[0]]",
-                depends = [seqtab_file_path],
-                targets = [otu_closed_ref_path],                              
-                args = [output_folder],
-                vars = [refdb_path,refdb_species_path],
-                name = "assign_rdp"
-                
-                )
          else:    
              refdb_path = config.SixteenS().greengenes_dada2
-             all_samples_sv_gg13_path = output_folder + "/all_samples_GG13-8-taxonomy.tsv"
-     
-             workflow.add_task(
-                "biobakery_workflows/scripts/assign_taxonomy.R\
-                  --output_dir=[args[0]]\
-                  --refdb_path=[vars[0]]\
-                  --seqtab_file_path=[depends[0]]\
-                  --otu_closed_ref_path=[targets[0]]\
-                  --allsamples_gg_tax_path=[targets[1]]",
-                depends = [seqtab_file_path],
-                targets = [otu_closed_ref_path, all_samples_sv_gg13_path],                              
-                args = [output_folder],
-                vars = [refdb_path],
-                name = "assign_gg"
-            )
+             refdb_species_path = "None"
              
-         return otu_closed_ref_path
+         workflow.add_task(
+            "biobakery_workflows/scripts/assign_taxonomy.R\
+              --output_dir=[args[0]]\
+              --refdb_path=[vars[0]]\
+              --refdb_species_path=[vars[1]]\
+              --seqtab_file_path=[depends[0]]\
+              --otu_closed_ref_path=[targets[0]]",
+            depends = [seqtab_file_path],
+            targets = [otu_closed_ref_path],                              
+            args = [output_folder],
+            vars =[refdb_path, refdb_species_path],
+            name = "assign_taxonomy"
+            )         
      
+         return otu_closed_ref_path
+ 
  
 def remove_tmp_files(workflow, output_folder, otu_closed_ref_path,
                       msa_fasta_path, fasttree_file_path):
