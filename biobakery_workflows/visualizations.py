@@ -78,13 +78,17 @@ def fill_taxonomy_other(top_taxonomy, sorted_data):
 
     # add other to the taxonomy data
     # other represents the total abundance of all species not included in the top set
-    top_taxonomy.append("other")
+    new_top_taxonomy = top_taxonomy + ["other"]
+    new_sorted_data = sorted_data
     other_abundances=[]
     for column in numpy.transpose(sorted_data):
         other_abundances.append(100-sum(column))
-    sorted_data.append(other_abundances)
 
-    return top_taxonomy, sorted_data
+    if isinstance(new_sorted_data,numpy.ndarray):
+        new_sorted_data = new_sorted_data.tolist()
+    new_sorted_data.append(other_abundances)
+
+    return new_top_taxonomy, new_sorted_data
 
 
 def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):

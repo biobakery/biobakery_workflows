@@ -748,11 +748,12 @@ def row_variance(data):
         
     return data_variances
 
-def relative_abundance(data):
+def relative_abundance(data, percent=False):
     """ Compute the relative abundance values for a set of data 
         
         Args:
             data (list of lists): Each list in data represents a row of data. 
+            percent (bool): Abundance is a percent of 100 (30 for 30% instead of 0.3)
                 
         Requires:
             None
@@ -779,6 +780,8 @@ def relative_abundance(data):
             except ZeroDivisionError:
                 new_value=0
             new_row.append(new_value)
+        if percent:
+            new_row = map(lambda x: x * 100.0, new_row)
         relab.append(new_row)
         
     return relab
