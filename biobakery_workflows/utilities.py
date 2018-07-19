@@ -1032,41 +1032,6 @@ def read_otu_table(file):
             
     return samples, ids, taxonomy, data
     
-def read_dada_otu_table(file, taxcolumns):
-    """ Read in an dada2 workflow output otu table. Remove extra brackets from taxonomy names if present.
-    
-        Args:
-            file (string): A file containing the otu table (tsv format).
-            number of taxonomy columns in otu table (dada2 has each level in separate column)
-                
-        Requires:
-            none
-        
-        Returns:
-            (list): A list of samples.
-            (list): A list of otu ids.
-            (list): A list of taxons.
-            (list): A list of lists of data.
-            
-        Example:
-            samples, ids, taxonomy, data = read_otu_table("otu_table.tsv")
-    """
-        
-    data=[]
-    samples=[]
-    taxonomy=[]
-    ids=[]
-    with open(file) as file_handle:
-        samples = file_handle.readline().rstrip().split("\t")[1:-taxcolumns]
-        for line in file_handle:
-            data_points=line.rstrip().split("\t")
-            ids.append(data_points.pop(0))
-            taxrows = '; '.join(data_points[len(data_points)-taxcolumns:])
-            taxonomy.append(taxrows.replace("[","").replace("]",""))
-            datarow = data_points[:len(data_points)-taxcolumns]          	
-            data.append([float(i) for i in datarow])
-            
-    return samples, ids, taxonomy, data    
 
 def sort_data(data, samples):
     """ Sort the data with those with the largest values first
