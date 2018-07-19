@@ -246,7 +246,7 @@ samples_genera, sorted_top_data_genera, top_data_genera, top_taxa_genera, legend
 
 # provide data as values [0-1] organized as samples as columns and features as rows
 top_filtered_data_pcoa=numpy.array(sorted_top_data_genera)/100.0
-document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCOA Ordination of top {} genera using Bray-Curtis similarity".format(max_sets_heatmap))
+document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera using Bray-Curtis similarity".format(max_sets_heatmap))
 
 #' For the PCoA plots, relative abundances are passed through a basic filter requiring each taxon
 #' have at least <% print(min_abundance)%> % abundance in at least 
@@ -254,12 +254,12 @@ document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, titl
 
 #+ echo=False
 visualizations.show_pcoa_metadata(document, vars, samples_genera, top_taxa_genera, top_filtered_data_pcoa,
-    title="PCOA Ordination of top {} genera".format(max_sets_heatmap))
+    title="PCoA Ordination of top {} genera".format(max_sets_heatmap))
 
 #' ## Terminal taxa
 
 #+ echo=False
-# plot the top terminal node taxa in a PCOA
+# plot the top terminal node taxa in a PCoA
 
 # filter the data by min abundance and min samples
 filtered_taxonomy, filtered_data = utilities.filter_taxa_abundance(terminal_taxa_relab, terminal_data_relab, min_abundance, min_samples)
@@ -269,8 +269,8 @@ top_filtered_taxonomy, top_filtered_data = utilities.top_rows(filtered_taxonomy,
 
 # provide data as values [0-1] organized as samples as columns and features as rows
 top_filtered_data_pcoa=numpy.array(top_filtered_data)/100.0
-document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCOA Ordination of top {} terminal taxa using Bray-Curtis similarity".format(max_sets_heatmap))
+document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCoA Ordination of top {} terminal taxa using Bray-Curtis similarity".format(max_sets_heatmap))
 
 visualizations.show_pcoa_metadata(document, vars, samples, top_filtered_taxonomy, top_filtered_data_pcoa,
-    title="PCOA Ordination of top {} terminal taxa".format(max_sets_heatmap))
+    title="PCoA Ordination of top {} terminal taxa".format(max_sets_heatmap))
 

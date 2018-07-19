@@ -99,7 +99,7 @@ top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, max_
 # compute the pcoa and plot
 # provide data as range of [0-1] organised as samples as rows and features as columns
 pcoa_data=numpy.array(top_data)/100.0
-caption=document.show_pcoa(samples,top_taxonomy,pcoa_data,"PCOA Ordination of top {} species using Bray-Curtis similarity".format(max_sets_heatmap))
+caption=document.show_pcoa(samples,top_taxonomy,pcoa_data,"PCoA Ordination of top {} species using Bray-Curtis similarity".format(max_sets_heatmap))
 
 #' <% print(caption) %>
 
@@ -107,7 +107,7 @@ caption=document.show_pcoa(samples,top_taxonomy,pcoa_data,"PCOA Ordination of to
 
 #+ echo=False
 visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data,
-    title="PCOA Ordination of top {} species".format(max_sets_heatmap))
+    title="PCoA Ordination of top {} species".format(max_sets_heatmap))
 
 #' ### Genera
 
@@ -118,7 +118,7 @@ top_taxonomy_genera, top_data_genera = utilities.top_rows(genera_taxonomy, gener
 # compute and plot pcoa
 pcoa_data_genera=numpy.array(top_data_genera)/100.0
 caption_genera=document.show_pcoa(samples,top_taxonomy_genera,pcoa_data_genera,
-    "PCOA Ordination of top {} genera using Bray-Curtis similarity".format(max_sets_heatmap),feature_types="genera")
+    "PCoA Ordination of top {} genera using Bray-Curtis similarity".format(max_sets_heatmap),feature_types="genera")
 
 #' <% print(caption_genera) %>
 
@@ -126,7 +126,7 @@ caption_genera=document.show_pcoa(samples,top_taxonomy_genera,pcoa_data_genera,
 
 #+ echo=False
 visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, pcoa_data_genera,
-    title="PCOA Ordination of top {} genera".format(max_sets_heatmap))
+    title="PCoA Ordination of top {} genera".format(max_sets_heatmap))
 
 #' ## Heatmaps
 
