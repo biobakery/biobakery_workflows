@@ -47,8 +47,6 @@ from biobakery_workflows import utilities, visualizations
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
-#' <% if pdf_format: print("\clearpage") %>
-
 #' # Quality Control
 
 #+ echo=False
