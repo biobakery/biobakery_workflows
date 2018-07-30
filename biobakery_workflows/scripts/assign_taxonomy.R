@@ -70,7 +70,7 @@ if (!identical(args.list$refdb_species_path,"None")) {
  refdb.species.path <- normalizePath( args.list$refdb_species_path )
 # Append species. Note that appending the argument 'allowMultiple=3' will return up to 3 different matched
 # species, but if 4 or more are matched it returns NA.
- taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path, multithread = as.numeric(args.list$threads))
+ taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
 
 # Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
  taxa.refdb.species.2 <- removeNA.in.assignedTaxonomy(taxa.refdb.species )

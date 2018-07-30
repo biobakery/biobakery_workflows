@@ -21,7 +21,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""   
+"""
+from anadama2.tracked import TrackedDirectory
 from biobakery_workflows import files, config
 import os
 
@@ -63,7 +64,7 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, thr
                --reads_plotF=[targets[2]]\
                --reads_plotR=[targets[3]]\
                --threads=[vars[1]]",
-             depends = input_folder,
+             depends = TrackedDirectory(input_folder),
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png, reads_plotR_png],
              args = [input_folder, output_folder, maxee, trunc_len_max],
              vars = [main_folder, threads],
@@ -181,8 +182,7 @@ def const_seq_table(workflow, input_folder, output_folder, mergers_file_path, th
               --merged_file=[depends[0]]\
               --read_counts_steps_path=[targets[0]]\
               --seqtab_file_path=[targets[1]]\
-              --threads=[vars[1]]"
-            ,
+              --threads=[vars[1]]",
             depends = [mergers_file_path],
             targets = [read_counts_steps_path, seqtab_file_path],                              
             args = [input_folder, output_folder],
