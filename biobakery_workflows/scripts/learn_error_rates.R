@@ -38,9 +38,9 @@ filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq*", list.files(filt.path
 
 set.seed(100)
 # Filtered forward reads
-errF <- dada2::learnErrors(filtFs, nread=1e3, multithread=TRUE)
+errF <- dada2::learnErrors(filtFs, nread=1e3, multithread=as.numeric(args.list$threads))
 # Filtered reverse reads
-errR <- dada2::learnErrors(filtRs, nread=1e3, multithread=TRUE)
+errR <- dada2::learnErrors(filtRs, nread=1e3, multithread=as.numeric(args.list$threads))
 
 
 # Visualize the estimated error rates

@@ -64,13 +64,13 @@ refdb.path <- normalizePath( args.list$refdb_path )
 seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
 ## Asign SILVA or  RDP taxonomies and merge with OTU table
-taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = TRUE)
+taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = as.numeric(args.list$threads))
 
 if (!identical(args.list$refdb_species_path,"None")) {
  refdb.species.path <- normalizePath( args.list$refdb_species_path )
 # Append species. Note that appending the argument 'allowMultiple=3' will return up to 3 different matched
 # species, but if 4 or more are matched it returns NA.
- taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
+ taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path, multithread = as.numeric(args.list$threads))
 
 # Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
  taxa.refdb.species.2 <- removeNA.in.assignedTaxonomy(taxa.refdb.species )

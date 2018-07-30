@@ -55,7 +55,7 @@ dim(seqtab)
 # Inspect distribution of sequence lengths
 table(nchar(getSequences(seqtab)))
 # The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants. # Remove chimeric sequences:
-seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=as.numeric(args.list$threads), verbose=TRUE)
 
 dim(seqtab.nochim)
 # ratio of chimeric sequence reads

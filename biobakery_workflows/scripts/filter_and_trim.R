@@ -104,13 +104,10 @@ trunc_len_max2 <- strtoi(args.list$trunc_len_max)
 trunc_len_max1 <- trunc_len_max2 + 40
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
-print("----------maxee trunc-----------")
-cat(maxee1, maxee2, trunc_len_max1, trunc_len_max2)
-print("------------end-----------")
 rd.counts <- as.data.frame(
   dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(trunc_len_max1,trunc_len_max2),
                 maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
-                compress=TRUE, multithread=TRUE) 
+                compress=TRUE, multithread=as.numeric(args.list$threads)) 
 )
 # Table of before/after read counts
 rd.counts$ratio <- round( rd.counts$reads.out / rd.counts$reads.in, digits = 2 )

@@ -72,9 +72,9 @@ for(sam in sample.names) {
   cat("Processing:", sam, "\n")
   print(filtFs[[sam]])
   derepF <- dada2::derepFastq(filtFs[[sam]])
-  ddF <- dada2::dada(derepF, err=errF, multithread=TRUE)
+  ddF <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads))
   derepR <- dada2::derepFastq(filtRs[[sam]])
-  ddR <- dada2::dada(derepR, err=errR, multithread=TRUE)
+  ddR <- dada2::dada(derepR, err=errR, multithread=as.numeric(args.list$threads))
   merger <- dada2::mergePairs(ddF, derepF, ddR, derepR)
   mergers[[sam]] <- merger
 }
