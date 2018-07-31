@@ -77,7 +77,8 @@ if args.method == "dada2":
     # call dada2 workflow tasks
     #filter reads and trim
     read_counts_file_path = dadatwo.filter_trim(
-            workflow, demultiplex_output_folder, args.output, args.maxee, args.trunc_len_max, args.threads)
+            workflow, demultiplex_output_folder,
+            args.output, args.maxee, args.trunc_len_max, args.pair_identifier, args.threads)
     
     #learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(

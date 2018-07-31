@@ -33,10 +33,14 @@ input.path <- normalizePath( args.list$input_dir )
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 
+pair_id0 <- strsplit(args.list$pair_id,"1_")
+pair_id1 <- paste0(pair_id0[[1]][1], "1")
+pair_id2 <- paste0(pair_id0[[1]][1], "2")
+
 # List of input files
 # Sort ensures forward/reverse reads are in same order
-fnFs <- sort(grep( "_R1.*\\.fastq", list.files(input.path), value = T ) )
-fnRs <- sort(grep( "_R2.*\\.fastq", list.files(input.path), value = T ) )
+fnFs <- sort(grep(paste0(pair_id1,".*\\.fastq"), list.files(input.path), value = T ) )
+fnRs <- sort(grep(paste0(pair_id2,".*\\.fastq"), list.files(input.path), value = T ) )
 
 # Extract sample files extension
 sample.ext <- tools::file_ext(fnFs)

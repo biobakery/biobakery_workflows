@@ -27,7 +27,7 @@ from biobakery_workflows import files, config
 import os
 
 
-def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, threads):
+def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pair_id, threads):
     
          """ Filters samples by threshould and trims them
             
@@ -63,11 +63,12 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, thr
                --readcounts_rds_path=[targets[1]]\
                --reads_plotF=[targets[2]]\
                --reads_plotR=[targets[3]]\
-               --threads=[vars[1]]",
+               --pair_id=[args[4]]\
+               --threads=[args[5]]",
              depends = TrackedDirectory(input_folder),
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png, reads_plotR_png],
-             args = [input_folder, output_folder, maxee, trunc_len_max],
-             vars = [main_folder, threads],
+             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads],
+             vars = main_folder,
              name ="filter_and_trim"
              )
          return readcounts_tsv_path
