@@ -2,9 +2,7 @@
 
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
-import os.path
 import sys
-import re
 import argparse
 
 base = importr('base')
@@ -14,7 +12,7 @@ def parse_arguments(args):
     """ Parse the arguments"""
 
     parser = argparse.ArgumentParser(
-        description="Phylogeny\n",
+        description="Phylogeny arguments\n",
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(

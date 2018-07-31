@@ -12,7 +12,7 @@ def parse_arguments(args):
     """ Parse the arguments"""
 
     parser = argparse.ArgumentParser(
-        description="Learn error rates for each sample\n",
+        description="Assign taxonomy arguments\n",
         formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument(

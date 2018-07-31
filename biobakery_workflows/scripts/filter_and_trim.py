@@ -18,7 +18,7 @@ def parse_arguments(args):
     """ Parse the arguments"""
 
     parser = argparse.ArgumentParser(
-        description="filter and trim fastq paired files\n",
+        description="Filter and trim arguments\n",
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--input",

@@ -25,18 +25,7 @@ THE SOFTWARE.
 from biobakery_workflows import files, config
 from anadama2.tracked import TrackedDirectory
 
-from rpy2 import robjects
-from rpy2.robjects.packages import importr
 import os.path
-import sys
-import re
-
-
-base = importr('base')
-dada2 = importr('dada2')
-gridExtra = importr('gridExtra')
-grdevices = importr('grDevices')
-ggplot2 = importr('ggplot2')
 
 
 def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pair_id, threads):

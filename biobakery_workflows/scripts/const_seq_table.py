@@ -2,23 +2,19 @@
 
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
-import os.path
+
 import sys
-import re
 import argparse
 
 base = importr('base')
 dada2 = importr('dada2')
-gridExtra = importr('gridExtra')
-grdevices = importr('grDevices')
-ggplot2 = importr('ggplot2')
 
 
 def parse_arguments(args):
     """ Parse the arguments"""
 
     parser = argparse.ArgumentParser(
-        description="filter and trim fastq paired files\n",
+        description="Construct sequence table arguments\n",
         formatter_class=argparse.RawTextHelpFormatter)
 
 
