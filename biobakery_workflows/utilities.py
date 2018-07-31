@@ -35,7 +35,7 @@ try:
     from urllib.request import urlretrieve
 except ImportError:
     from urllib import urlretrieve
-    
+
 def change_pweave_figure_size_heatmap(pdf_format):
     """ Change the figure size for heatmaps based on the output format"""
     fig_size = (4,4) if pdf_format else (2.5,2.5)
@@ -1058,13 +1058,16 @@ def read_otu_table(file):
             
     return samples, ids, taxonomy, data
 
-def sort_data(data, samples):
-    """ Sort the data with those with the largest values first
+def sort_data(data, samples, sort_by_name=False, sort_by_name_inverse=False):
+    """ Sort the data with those with the largest values first or by sample name
 
         Args:
             data (list): The data points for each sample.
             samples (list): The sample names that correspond to each data point. 
-                
+            sort_by_name (bool): If true, sort by sample name
+            sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
+                this is useful for samples with sample name plus features
+
         Requires:
             None
         
@@ -1073,20 +1076,26 @@ def sort_data(data, samples):
             (list): The sample names that correspond to each data point sorted.
             
     """
+    import numpy
     
-    # if the data is a list of lists, then convert to a list of values
-    if isinstance(data[0], list):
-        max_length=max([len(row) for row in data])
-        if max_length == 1:
-            data_list=[row[0] for row in data]
-            data=data_list
-        else:
-            raise ValueError("Provide data to the sort_data function as a list of floats or ints.")
-        
-    data_by_sample={sample:data_point for sample,data_point in zip(samples,data)}
-    sorted_samples=sorted(data_by_sample,key=data_by_sample.get, reverse=True)
-    sorted_data=[data_by_sample[sample] for sample in sorted_samples]
-    
+    # if the data is a list of lists of single values, then convert to a list of values
+    if isinstance(data[0], list) and max([len(row) for row in data]) == 1:
+        data=[row[0] for row in data]
+       
+    # if set, sort by sample name (samples as columns in the data)
+    if sort_by_name or sort_by_name_inverse:
+        data_by_sample={sample:data_point for sample,data_point in zip(samples,numpy.transpose(data))}
+        sorted_samples=sorted(samples)
+        if sort_by_name_inverse:
+            # use the reverse of the sample names to sort
+            sorted_samples=sorted(samples, key=lambda x: x[::-1])
+        sorted_data_transpose=[data_by_sample[sample] for sample in sorted_samples]
+        sorted_data = numpy.transpose(sorted_data_transpose)
+    else:
+        data_by_sample={sample:data_point for sample,data_point in zip(samples,data)}
+        sorted_samples=sorted(data_by_sample,key=data_by_sample.get, reverse=True)
+        sorted_data=[data_by_sample[sample] for sample in sorted_samples]
+   
     return sorted_samples, sorted_data
 
 def is_paired_table(file):

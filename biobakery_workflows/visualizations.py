@@ -32,7 +32,8 @@ import shutil
 
 from . import utilities
 
-def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, max_sets_barplot, feature="species"):
+def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy,
+    max_sets_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False):
     """ Plot grouped barplots and average barplots for all of the features provided.
 
         Args:
@@ -43,6 +44,9 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             top_taxonomy (list): The list of full taxonomy names
             max_sets_barplot (int): The max number of features (default species) to plot
             feature (string): The data being plotted (default species)
+            sort_by_name (bool): If set, sort data by sample name instead of abundance
+            sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
+                this is useful for samples with sample name plus features
 
         Returns: 
             list: A list of metadata strings (one for each categorical feature plotted)
@@ -55,7 +59,8 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             sorted_data)
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
-                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature))
+                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),sort_by_name=sort_by_name,
+                sort_by_name_inverse=sort_by_name_inverse)
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
             plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature)
@@ -238,10 +243,13 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
         title="Top {} {} by average abundance, group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
         ylabel="Relative abundance", legend_title=legend_title, legend_style="italic")
 
-def sort_data(document, top_data, samples, sort_by_name=False):
+def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inverse=False):
     # sort the top data so it is ordered with the top sample/abundance first
     if sort_by_name:
         sorted_sample_indexes=[samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(samples)]
+    elif sort_by_name_inverse:
+        inverse_samples = [sample[::-1] for sample in samples]
+        sorted_sample_indexes=[inverse_samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(inverse_samples)]
     else:
         sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
 
@@ -252,7 +260,8 @@ def sort_data(document, top_data, samples, sort_by_name=False):
     return sorted_data, sorted_samples
 
 def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
-    ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=8):
+    ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=2, sort_by_name=False,
+    sort_by_name_inverse=False):
     """ Plot the grouped taxonomy with samples sorted by species abundance for each feature.
 
         Args:
@@ -266,15 +275,18 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
             legend_title (string): The legend title for the plots
             legend_size (int): The font size for the legend
             max_subsets (int): The max number of subsets to use for each plot
+            sort_by_name (bool): If set, then sort by sample name instead of abundance
+            sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
+                this is useful for samples with sample name plus features
 
         Return: None
     """
 
     # group the samples by metadata
     sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
-    # sort the data by abundance
+    # sort the data by abundance or sample name
     for metadata_type in sorted_data_grouped:
-        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
+        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type], sort_by_name=sort_by_name, sort_by_name_inverse=sort_by_name_inverse)
 
     # print out a plot for each group of metadata
     sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
