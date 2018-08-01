@@ -496,7 +496,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             targets=[target_gene, target_path, target_coverage, target_log],
             args=[humann2_output_folder, threads],
             time="24*60 if file_size('[depends[0]]') < 25 else 6*24*60", # 24 hours or more depending on file size
-            mem="32*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
+            mem="33*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
             cores=threads,
             name=utilities.name_task(sample,"humann2"))
 
@@ -820,4 +820,251 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             cores=threads,
             name="strainphlan_clade_"+str(clade_number))
 
-     
+
+def sort_fastq_file(workflow, input_files, extension, output_folder, threads):
+    """"Sorts a FASTQ file by name (sequence identifier contents).
+
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list): A list of paths to FASTQ files to sort.
+        extension (string): The extension for all files.
+        output_folder (string): The path of the output folder.
+        threads (int) The number of threads/cores to use during sorting.
+
+    Requires:
+        None
+
+    Returns:
+        list: A list of name-sorted FASTQ files.
+
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import shotgun
+
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+
+        # sort sequences
+        sorted_seqs = shotgun.sort_fastq_files(workflow, ['seqA.fastq', 'seqB.fastq'])       
+            
+        # run the workflow
+        workflow.go()
+    """
+    sample_names = utilities.sample_names(input_files, extension)
+
+    main_folder = os.path.join("sort", "main")
+    sorted_sequences = utilities.name_files(sample_names, output_folder, subfolder=main_folder, create_folder=True)
+
+    time_equation="2*60 if file_size('[depends[0]]') < 6 else 4*60"
+    mem_equation="12*1024 if file_size('[depends[0]]') < 6 else 2*12*1024"
+
+    for (sample, input_file, sorted_sequence) in zip(sample_names, input_files, sorted_sequences):
+        temp_dir = os.path.join(main_folder, "%s.tmp" % sample)
+        workflow.add_task("mkdir -p [targets[0]]]",
+                          depends=[main_folder],
+                          targets=[temp_dir])
+
+        workflow.add_task_gridable("zcat [depends[0]] | paste - - - - | "
+                                   "sort -T [depends[2]] -k1,1 | tr '\t' '\n' > "
+                                   "[targets[0]]",
+                                   depends=[input_file, main_folder, temp_dir],
+                                   targets=sorted_sequence)
+
+        workflow.add_task("rm -rf [depends[0]]",
+                          depends=[temp_dir, sorted_sequence])
+
+
+    return sorted_sequences
+
+
+def extract_orphan_reads(workflow, input_files, extension, output_folder, threads,
+    remove_intermediate_output=None):
+    """Extracts orphan reads from the provided input files. Orphan reads are saved into a separate file 
+    for further downstream analysis.
+
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list): A list of paths to fastq files to extract orphan reads from.
+        extension (string): The extension for all files.
+        output_folder (string): The path of the output folder.
+        threads (int): The number of threads/cores for kneaddata to use.
+        remove_intermediate_output (bool): Remove intermediate output files.
+    """
+    sample_names = utilities.sample_names(input_files, extension)
+
+    main_folder = os.path.join("extract_orphans", "main")
+    orphan_seqs_files = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tags="orphans", extension="fastq")
+    interleaved_seqs_files = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="fastq" )
+
+    for (input_file, orphan_seq_file, intlereaved_seq_file) in zip(input_files, orphan_seqs_files, interleaved_seqs_files):
+        workflow.add_task_gridable('seqtk dropse [depends[0]] > [targets[0]]',
+                                   depends=[input_file, main_folder, orphan_seq_file],
+                                   targets=[interleaved_seq_file],
+                                   cores=threads,
+                                   mem="4*1024 if file_size('[depends[0]]') < 10 else 2*4*1024",
+                                   time="1*60 if file_size('[depends[0]]') < 10 else 2*60")
+
+        workflow.add_task_gridable('extract_orphan_reads.sh [depends[0]] [depends[1]] [depends[2]]',
+                                   depends=[input_file, interleaved_seq_file, main_folder],
+                                   targets=[orphan_seq_file],
+                                   cores=threads,
+                                   mem="4*1024 if file_size('[depends[0]]') < 8 else 2*4*1024",
+                                   time="1*60 if file_size('[depends[0]]') < 8 else 2*60")
+
+    return (interleaved_seqs_files, orphan_seqs_files)
+
+
+def megahit(workflow, input_files, extension, output_folder, threads, paired=False, 
+    pair_identifier=None, additional_options=None, remove_intermediate_output=True):
+    """Run MEGAHIT.
+    
+    This set of tasks will run MEGAHIT on the input files provided to produce contigs via metagenomic
+    assembly. 
+   
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list): A list of paths to fastq files for input to megahit. A list of lists is 
+            provided here containing the reads to assemble and any singleton reads post-QC.
+        extension (string): The extension for all files.
+        output_folder (string): The path of the output folder.
+        threads (int): The number of threads/cores for kneaddata to use.
+        paired (boolean): Whether or not the input files are paired-end
+        pair_identifier (string): The string in the file basename to identify
+            the first pair in the set (optional).
+        additional_options (string): Additional options when running kneaddata (optional).
+        remove_intermediate_output (bool): Remove intermediate output files.
+        
+    Requires:
+        MEGAHIT v1.1.3: A tool to perform metagenomic assembly on 
+            metagenomic sequencing data.
+        
+    Returns:
+        list: A list of the assembled contigs created by MEGAHIT.
+        
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import shotgun
+        
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+        
+        # add quality control tasks for the fastq files
+        assembled_contigs = shotgun.megahit(workflow, ['sequenceA.fastq'], 4, 8192)
+            
+        # run the workflow
+        workflow.go()
+    """
+    megahit_contigs = []
+    sample_names = utilities.sample_names(input_files[0], extension)
+
+    time_equation="8*60 if file_size('[depends[0]]') < 10 else 10*60"
+    mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 4*12*1024"
+        
+    if additional_options is None:
+        additional_options=""
+
+    assembly_dir = os.path.join("assembly", "main")
+    depends = []
+    megahit_template = "megahit %s -t [args[0]] -m 1 -o [targets[0]] --out-prefix [args[1]] [args[3]]"
+
+    for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
+        megahit_contig_dir = os.path.join(assembly_dir, sample_name)
+        intermediate_dir = os.path.join(megahit_contig_dir, 'intermediate_contigs')
+        megahit_contig = os.path.join(megahit_contig_dir, '%s.contigs.fa' % sample_name)
+        completed_file = os.path.join(megahit_contig_dir, 'done')
+
+        if os.path.exists(megahit_contig_dir) and not os.path.isfile(completed_file):
+            additional_options += " --continue "
+        elif os.path.isfile(completed_file):
+            continue
+
+        if paired:
+            megahit_cmd = megahit_template % "-1 [depends[0]] -2 [depends[1]] -r [depends[2]],[depends[3]]"
+            depends = [input_reads[0], input_reads[1], orphan_reads[0], orphan_reads[1]]
+        else:
+            megahit_cmd = megahit_template % "-12 [depends[0]] -r [depends[1]]"
+            depends = [input_reads, orphan_reads]
+
+        workflow.add_task_gridable(megahit_cmd,
+                                   depends=depends,
+                                   targets=[megahit_contig_dir, megahit_contig, intermediate_dir, completed_file],
+                                   args=[args.threads, seq_base, additional_options],
+                                   cores=args.threads,
+                                   mem=mem_equation,
+                                   time=time_equation)
+
+        if remove_intermediate_output:
+            workflow.add_task('rm -rf [depends[0]]',
+                              depends=[intermediate_dir, completed_file]) 
+
+        megahit_contigs.append(megahit_contig)
+    
+    return megahit_contigs
+
+
+def assemble(workflow, input_files, extension, output_folder, threads, pair_identifier=None,
+    additional_options=None, remove_intermediate_output=None):
+    """Metagenomic assembly for whole genome shotgun sequences.
+
+    This set of tasks performs metagenomic assembly on whole genome shotgun input files in either 
+    paired-end or single-end fastq format. 
+        
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        input_files (list) A list of lists of fastq files that have been run through quality control and 
+            produced cleaned sequences and any orphan reads.
+        extension (string): The extension for all files.
+        output_folder (string): The path of the output folder.
+        threads (int): The number of threads/cores to use during assembly.
+        pair_identifier (string): The string in the file basename to identify
+            the first pair in the set (optional).
+        additional_options (string): Additional options when running kneaddata (optional).
+        remove_intermediate_output (bool): Remove intermediate output files.
+        
+    Requires:
+        MEGAHIT v1.1.3: A tool to perform metagenomic assembly on 
+            metagenomic sequencing data.
+        
+    Returns:
+        list: A list of contig files for all samples
+        list: A list of contigs that pass a length filter (DEFAULT: 500bp)
+        
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import shotgun
+        
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+        
+        # add quality control tasks for the fastq files
+        (assembled_contigs, assembled_contigs_filtered) = shotgun.assemble(["cleaned_seqsA.fastq"])
+        
+        # run the workflow
+        workflow.go()
+    """
+    # We expect to be passed in a list of list as input files with the first element being the list of 
+    # cleaned sequences. If we see a second element here it will contain any orphaned reads following 
+    # our QC process and we should separate these out.
+    if len(input_files) > 1:
+        if pair_identifier:
+            orphan_pair1, orphan_pair2 = utilities.paired_end_files(input_files[1], extension, pair_identifier)
+    elif not pair_identifier:
+        # If we have an interleaved sequence file generated by KneadData we can try to extract orphaned reads.
+        sorted_fastq_files = sort_fastq_file(workflow, input-Files, extension, output_folder, threads)
+        (intlerleaved_fastq_files, orphan_fastq_files) = extract_orphan_reads(sorted_fastq_files)
+        input_files = [interleaved_fastq, orphan_fastq]
+
+    if pair_identifier:
+        input_pair1, input_pair2 = utilities.paired_files(input_files[0], extension, pair_identifier)
+    else:
+        input_pair1 = []
+
+    paired = False
+    if input_pair1:
+        paired = True
+        input_files = [(input_pair1, input_pair2), (orphan_pair1, orphan_pair2)]
+
+    assembled_contig_files = megahit(workflow, input_files, extension, paired, pair_identifier,
+                                     output_folder, threads, additional_options, remove_intermediate_output)
+
+    return assembled_contig_files
