@@ -66,7 +66,7 @@ def main():
 
 
     robjects.r('''
-
+    
         filtF <- unlist(filtFs, use.names=FALSE)
         filtR <- unlist(filtRs, use.names=FALSE)
 
@@ -85,8 +85,6 @@ def main():
 
         ''')
 
-    errF = robjects.globalenv["errF"]
-    errR = robjects.globalenv["errR"]
 
 if __name__ == "__main__":
         main()

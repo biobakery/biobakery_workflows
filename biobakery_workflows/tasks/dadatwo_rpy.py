@@ -50,7 +50,6 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
     readcounts_rds_path = output_folder + "/Read_counts_after_filtering.rds"
     dir_path = os.path.dirname(os.path.realpath(__file__))
     main_folder = dir_path + "/.."
-    print(main_folder)
 
     workflow.add_task(
         "[vars[0]]/scripts/filter_and_trim.py \

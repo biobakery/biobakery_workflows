@@ -178,7 +178,6 @@ def main():
     
     ''')
 
-    rd_counts = robjects.globalenv["rd.counts"]
 
 if __name__ == "__main__":
         main()

@@ -106,7 +106,6 @@ def main():
 
         ''')
 
-    seqtab_nochim = robjects.globalenv["seqtab.nochim"]
 
 if __name__ == "__main__":
         main()

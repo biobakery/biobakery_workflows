@@ -102,7 +102,5 @@ def main():
     
         ''')
 
-    mergers = robjects.globalenv["mergers"]
-
 if __name__ == "__main__":
         main()

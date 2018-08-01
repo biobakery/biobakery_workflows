@@ -86,7 +86,9 @@ if args.method == "dada2":
 
     read_counts_steps_path = dadatwo_rpy.const_seq_table(workflow, args.output, args.threads)
 
-    dadatwo_rpy.phylogeny(workflow, args.output)
+    msa_fasta_path = dadatwo_rpy.phylogeny(workflow, args.output)
+
+    fasttree_path = dadatwo_rpy.fasttree(workflow, args.output, msa_fasta_path)
 
     closed_reference_tsv = dadatwo_rpy.assign_taxonomy(workflow, args.output, args.dada_db, args.threads)
 else:
