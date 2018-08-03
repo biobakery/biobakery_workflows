@@ -105,7 +105,7 @@ setuptools.setup(
             'document_templates/*.py',
             'document_templates/*.mdw',
             'data/*',
-            'R/*'
+            'Rscripts/*'
         ]},
     data_files=[
         ("tutorial/input/", glob("examples/tutorial/input/*")),
