@@ -113,12 +113,11 @@ if (!identical(args.list$refdb_species_path,"None")) {
 
 otu.refdb.tax.table_taxcombined <- cbind(otu.refdb.tax.table_taxcombined,taxonomy)
 
-write.table(otu.refdb.tax.table_taxcombined, args.list$otu_closed_ref_path , sep = "\t", eol = "\n", quote = F, col.names = NA)
+write.table(otu.refdb.tax.table_taxcombined, paste0(gsub(".tsv", "", args.list$otu_closed_ref_path),"_withseqs.tsv") , sep = "\t", eol = "\n", quote = F, col.names = NA)
 write.table(otu.refdb.tax.table, paste0(gsub(".tsv", "", args.list$otu_closed_ref_path),"_taxcolumns.tsv") , sep = "\t", eol = "\n", quote = F, col.names = NA)
 
 seqids <- c(1:length(otu.refdb.tax.table_taxcombined[,1]))
 seqids <- paste0("ASV",seqids)
 row.names(otu.refdb.tax.table_taxcombined) <- seqids 
 
-write.table(otu.refdb.tax.table_taxcombined, paste0(gsub(".tsv", "", args.list$otu_closed_ref_path),"_withids.tsv") , sep = "\t", eol = "\n", quote = F, col.names = NA)
-
+write.table(otu.refdb.tax.table_taxcombined, args.list$otu_closed_ref_path , sep = "\t", eol = "\n", quote = F, col.names = NA)
