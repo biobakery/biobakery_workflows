@@ -172,6 +172,7 @@ def const_seq_table(workflow, input_folder, output_folder, mergers_file_path, th
          read_counts_steps_path = files.SixteenS.path("counts_each_step", output_folder)
          
          seqtab_file_path = output_folder + "/seqtab_final.rds"
+         seqs_fasta_path = output_folder + "/sequences.fasta"
 
          dir_path = os.path.dirname(os.path.realpath(__file__))
          main_folder = dir_path + "/.."
@@ -183,14 +184,15 @@ def const_seq_table(workflow, input_folder, output_folder, mergers_file_path, th
               --merged_file=[depends[0]]\
               --read_counts_steps_path=[targets[0]]\
               --seqtab_file_path=[targets[1]]\
+              --seqs_fasta_path=[targets[2]]\
               --threads=[vars[1]]",
             depends = [mergers_file_path],
-            targets = [read_counts_steps_path, seqtab_file_path],                              
+            targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
             args = [input_folder, output_folder],
             vars = [main_folder, threads],
             name = "construct_sequence_table"
             )
-         return seqtab_file_path, read_counts_steps_path
+         return seqtab_file_path, read_counts_steps_path, seqs_fasta_path
 
 
 def phylogeny(workflow, output_folder, seqtab_file_path ):

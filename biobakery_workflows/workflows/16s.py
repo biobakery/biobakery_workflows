@@ -28,7 +28,7 @@ THE SOFTWARE.
 from anadama2 import Workflow
 
 from biobakery_workflows.tasks import sixteen_s, dadatwo, general
-from biobakery_workflows import utilities, config
+from biobakery_workflows import utilities, config, files
 
 
 # create a workflow instance, providing the version number and description
@@ -89,16 +89,20 @@ if args.method == "dada2":
             workflow, demultiplex_output_folder, args.output, error_ratesF_path, error_ratesR_path, args.threads)
 
     #construct otu
-    seqtab_file_path,read_counts_steps_path = dadatwo.const_seq_table(
+    seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
             workflow, demultiplex_output_folder, args.output, mergers_file_path, args.threads)
     
     #phylogeny
-    msa_fasta_path = dadatwo.phylogeny(
-            workflow, args.output, seqtab_file_path)
+    #msa_fasta_path = dadatwo.phylogeny(
+            #workflow, args.output, seqtab_file_path)
+    centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
+    sixteen_s.centroid_alignment(workflow,
+            seqs_fasta_path, centroid_fasta, args.threads, task_name=None)
     
     #create tree 
-    fasttree_path = dadatwo.fasttree(
-            workflow, args.output,msa_fasta_path)
+    #fasttree_path = dadatwo.fasttree(workflow, args.output,msa_fasta_path)
+    closed_tree = utilities.name_files("closed_reference.tre", args.output)
+    sixteen_s.create_tree(workflow, centroid_fasta, closed_tree)
     
     
     #assign taxonomy 
@@ -123,9 +127,9 @@ else:
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
             workflow_config.greengenes_taxonomy, args.min_size)
 
-        # functional profiling
-        predict_metagenomes_tsv = sixteen_s.functional_profile(
-                workflow, closed_reference_tsv, args.output)
+# functional profiling
+predict_metagenomes_tsv = sixteen_s.functional_profile(
+            workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()

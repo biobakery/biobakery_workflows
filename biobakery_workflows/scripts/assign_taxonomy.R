@@ -35,7 +35,6 @@ replaceNA.in.assignedTaxonomy <-
     return( tax.table )
   }
 
-
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -63,7 +62,7 @@ refdb.path <- normalizePath( args.list$refdb_path )
 
 seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
-## Asign SILVA or  RDP taxonomies and merge with OTU table
+## Asign GreenGenes, SILVA or  RDP taxonomies and merge with OTU table
 taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = as.numeric(args.list$threads))
 
 if (!identical(args.list$refdb_species_path,"None")) {
@@ -78,7 +77,7 @@ if (!identical(args.list$refdb_species_path,"None")) {
 # No need to add species, just replacing NAs
  taxa.refdb.species.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb)
 }
-
+taxa.refdb.species.2 <- taxa.refdb
 # Print first 6 rows of taxonomic assignment
 unname(head(taxa.refdb.species.2))
 
@@ -112,10 +111,14 @@ if (!identical(args.list$refdb_species_path,"None")) {
                     as.character(otu.refdb.tax.table$Species))
 }
 
-
 otu.refdb.tax.table_taxcombined <- cbind(otu.refdb.tax.table_taxcombined,taxonomy)
-
 
 write.table(otu.refdb.tax.table_taxcombined, args.list$otu_closed_ref_path , sep = "\t", eol = "\n", quote = F, col.names = NA)
 write.table(otu.refdb.tax.table, paste0(gsub(".tsv", "", args.list$otu_closed_ref_path),"_taxcolumns.tsv") , sep = "\t", eol = "\n", quote = F, col.names = NA)
+
+seqids <- c(1:length(otu.refdb.tax.table_taxcombined[,1]))
+seqids <- paste0("ASV",seqids)
+row.names(otu.refdb.tax.table_taxcombined) <- seqids 
+
+write.table(otu.refdb.tax.table_taxcombined, paste0(gsub(".tsv", "", args.list$otu_closed_ref_path),"_withids.tsv") , sep = "\t", eol = "\n", quote = F, col.names = NA)
 

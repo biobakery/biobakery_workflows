@@ -3,6 +3,7 @@
 # load packages
 library(dada2); packageVersion("dada2")
 library(tools)
+library(seqinr)
 
 ## Collect arguments
 args <- commandArgs(TRUE)
@@ -65,6 +66,16 @@ dim(seqtab.nochim)
 write.table( t(seqtab.nochim), paste0( output.path, "/all_samples_SV-counts.tsv"), sep = "\t", eol = "\n", quote = F, col.names = NA )
 # write OTU table to file
 saveRDS(seqtab.nochim, args.list$seqtab_file_path)
+
+
+# Get sequences, assign ids
+seqs <- dada2::getSequences(seqtab.nochim)
+seqids <- c(1:length(seqs))
+seqids <- paste0("ASV",seqids)
+names(seqs) <- seqids 
+
+# Write sequences to fasta file
+write.fasta(sequences = as.list(seqs), names = names(seqs), file.out=args.list$seqs_fasta_path, open = "w",  nbchar = 60, as.string = FALSE)
 
 rd.counts <- readRDS(paste0(output.path, "/Read_counts_filt.rds" ))
 

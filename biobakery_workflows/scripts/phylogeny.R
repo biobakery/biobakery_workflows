@@ -4,6 +4,7 @@
 library(dada2); packageVersion("dada2")
 library(msa)
 library(phangorn)
+library(seqinr)
 
 ## Collect arguments
 args <- commandArgs(TRUE)
@@ -31,9 +32,14 @@ output.path <- normalizePath( args.list$output_dir )
 
 seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 
-# Get sequences
+# Get sequences, assign ids
 seqs <- dada2::getSequences(seqtab.nochim)
-names(seqs) <- seqs # This propagates to the tip labels of the tree
+seqids <- c(1:length(seqs))
+seqids <- paste0("ASV",seqids)
+names(seqs) <- seqids 
+
+write.fasta(sequences = as.list(seqs), names = names(seqs), file.out=args.list$seqs_fasta_path, open = "w",  nbchar = 60, as.string = FALSE)
+
 # Multiple seqeuence alignment
 mult <- msa::msa(seqs, method="ClustalOmega", type="dna", order="input")
 # Save msa to file; convert first to phangorn object
