@@ -71,13 +71,13 @@ if (!identical(args.list$refdb_species_path,"None")) {
 # species, but if 4 or more are matched it returns NA.
  taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
 
-# Replace NAs in taxonomy assignment table with prefix corresponding to tax rank
+# Remove NAs in taxonomy assignment
  taxa.refdb.species.2 <- removeNA.in.assignedTaxonomy(taxa.refdb.species )
 } else {
-# No need to add species, just replacing NAs
+# No need to add species, just replacing NAs with prefix
  taxa.refdb.species.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb)
 }
-taxa.refdb.species.2 <- taxa.refdb
+
 # Print first 6 rows of taxonomic assignment
 unname(head(taxa.refdb.species.2))
 
@@ -100,7 +100,7 @@ if (!identical(args.list$refdb_species_path,"None")) {
                   "o__",as.character(otu.refdb.tax.table$Order),"; ",
                   "f__",as.character(otu.refdb.tax.table$Family),"; ",
                   "g__",as.character(otu.refdb.tax.table$Genus),"; ",
-                  "s__",as.character(otu.refdb.tax.table$Species),"; ")
+                  "s__",as.character(otu.refdb.tax.table$Species))
 } else{
   taxonomy<- paste0(as.character(otu.refdb.tax.table$Kingdom),"; ",
                     as.character(otu.refdb.tax.table$Phylum),"; ",

@@ -39,6 +39,10 @@ def parse_arguments(args):
         help="path to sample_names\n[REQUIRED]",
     )
     parser.add_argument(
+        "--seqs_fasta_path",
+        help="path to asv fasta file\n[REQUIRED]",
+    )
+    parser.add_argument(
         "--readcounts_rds",
         help="path to read counts rds file\n[REQUIRED]",
     )
@@ -62,9 +66,12 @@ def main():
     robjects.globalenv["seqtab_rds"] = args.seqtab_rds
     robjects.globalenv["readcounts_rds"] = args.readcounts_rds
     robjects.globalenv["threads"] = args.threads
+    robjects.globalenv["seqs_fasta_path"] =args.seqs_fasta_path
 
     robjects.r('''
     
+        library(seqinr)
+        
         mergers <- readRDS(mergers_rds)
         sample_names <- readRDS(sample_names_rds)
         sample.names <- unlist(sample_names, use.names=FALSE)
@@ -88,6 +95,17 @@ def main():
         # write sequence variants count table to file
         write.table(t(seqtab.nochim), all_samples_counts_tsv, sep="\t", eol="\n", quote=F, col.names = NA )
         saveRDS(seqtab.nochim, seqtab_rds)
+        
+                
+        # Get sequences, assign ids
+        seqs <- dada2::getSequences(seqtab.nochim)
+        seqids <- c(1:length(seqs))
+        seqids <- paste0("ASV",seqids)
+        names(seqs) <- seqids 
+        
+        # Write sequences to fasta file
+        write.fasta(sequences = as.list(seqs), names = names(seqs), file.out=seqs_fasta_path, open = "w",  nbchar = 60, as.string = FALSE)
+
         
         rd.counts <- readRDS(readcounts_rds)
         

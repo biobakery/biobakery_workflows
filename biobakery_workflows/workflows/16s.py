@@ -97,7 +97,7 @@ if args.method == "dada2":
             #workflow, args.output, seqtab_file_path)
     centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
     sixteen_s.centroid_alignment(workflow,
-            seqs_fasta_path, centroid_fasta, args.threads, task_name=None)
+            seqs_fasta_path, centroid_fasta, args.threads, task_name="clustalo_nonchimera")
     
     #create tree 
     #fasttree_path = dadatwo.fasttree(workflow, args.output,msa_fasta_path)

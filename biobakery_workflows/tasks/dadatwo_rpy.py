@@ -174,6 +174,7 @@ def const_seq_table(workflow, output_folder, threads):
     sample_names_rds = output_folder + "/sample_names.rds"
     all_counts_tsv = output_folder + "/all_samples_SV_counts.tsv"
     readcounts_rds = output_folder + "/Read_counts_after_filtering.rds"
+    seqs_fasta_path = output_folder + "/sequences.fasta"
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     main_folder = dir_path + "/.."
@@ -184,16 +185,17 @@ def const_seq_table(workflow, output_folder, threads):
           --sample_names_rds=[depends[1]]\
           --readcounts_steps_path=[targets[0]]\
           --seqtab_rds=[targets[1]]\
+          --seqs_fasta_path = [target[3]]\
           --readcounts_rds=[depends[2]]\
           --all_counts_tsv=[targets[2]]\
           --threads=[args[0]]",
         depends=[mergers_rds, sample_names_rds, readcounts_rds],
-        targets=[read_counts_steps_path, seqtab_rds, all_counts_tsv],
+        targets=[read_counts_steps_path, seqtab_rds, all_counts_tsv, seqs_fasta_path],
         args=threads,
         vars=main_folder,
         name="construct_sequence_table"
     )
-    return  read_counts_steps_path
+    return  read_counts_steps_path, seqs_fasta_path
 
 
 def phylogeny(workflow,output_folder):

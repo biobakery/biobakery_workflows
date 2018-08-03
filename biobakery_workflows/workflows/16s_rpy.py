@@ -28,7 +28,7 @@ THE SOFTWARE.
 from anadama2 import Workflow
 
 from biobakery_workflows.tasks import sixteen_s, dadatwo_rpy, general
-from biobakery_workflows import utilities, config
+from biobakery_workflows import utilities, config, files
 
 
 
@@ -84,11 +84,18 @@ if args.method == "dada2":
 
     dadatwo_rpy.merge_paired_ends(workflow, args.output, error_ratesF_rds, error_ratesR_rds, args.threads)
 
-    read_counts_steps_path = dadatwo_rpy.const_seq_table(workflow, args.output, args.threads)
+    read_counts_steps_path, seqs_fasta_path = dadatwo_rpy.const_seq_table(workflow, args.output, args.threads)
 
-    msa_fasta_path = dadatwo_rpy.phylogeny(workflow, args.output)
+    centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
+    sixteen_s.centroid_alignment(workflow,
+                                 seqs_fasta_path, centroid_fasta, args.threads, task_name="clustalo_nonchimera")
 
-    fasttree_path = dadatwo_rpy.fasttree(workflow, args.output, msa_fasta_path)
+    closed_tree = utilities.name_files("closed_reference.tre", args.output)
+    sixteen_s.create_tree(workflow, centroid_fasta, closed_tree)
+
+    #msa_fasta_path = dadatwo_rpy.phylogeny(workflow, args.output)
+
+    #fasttree_path = dadatwo_rpy.fasttree(workflow, args.output, msa_fasta_path)
 
     closed_reference_tsv = dadatwo_rpy.assign_taxonomy(workflow, args.output, args.dada_db, args.threads)
 else:
