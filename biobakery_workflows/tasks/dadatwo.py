@@ -54,7 +54,7 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
 
        
          workflow.add_task(
-             "[vars[0]]/scripts/filter_and_trim.R \
+             "[vars[0]]/Rscripts/filter_and_trim.R \
                --input_dir=[args[0]]\
                --output_dir=[args[1]]\
                --maxee=[args[2]]\
@@ -99,7 +99,7 @@ def learn_error(workflow,output_folder,readcounts_tsv_path, threads):
          main_folder = dir_path + "/.."
        
          workflow.add_task(
-             "[vars[0]]/scripts/learn_error_rates.R\
+             "[vars[0]]/Rscripts/learn_error_rates.R\
                --output_dir=[args[0]]\
                --error_ratesF_png=[targets[0]]\
                --error_ratesR_png=[targets[1]]\
@@ -136,7 +136,7 @@ def merge_paired_ends(workflow, input_folder, output_folder, error_ratesF_path, 
         main_folder = dir_path + "/.."
         
         workflow.add_task(
-            "[vars[0]]/scripts/merge_paired_ends.R\
+            "[vars[0]]/Rscripts/merge_paired_ends.R\
               --input_dir=[args[0]]\
               --output_dir=[args[1]]\
               --error_ratesF_path=[depends[0]]\
@@ -178,7 +178,7 @@ def const_seq_table(workflow, input_folder, output_folder, mergers_file_path, th
          main_folder = dir_path + "/.."
 
          workflow.add_task(
-            "[vars[0]]/scripts/const_seq_table.R\
+            "[vars[0]]/Rscripts/const_seq_table.R\
               --input_dir=[args[0]]\
               --output_dir=[args[1]]\
               --merged_file=[depends[0]]\
@@ -216,7 +216,7 @@ def phylogeny(workflow, output_folder, seqtab_file_path ):
          main_folder = dir_path + "/.."
 
          workflow.add_task(
-            "[vars[0]]/scripts/phylogeny.R\
+            "[vars[0]]/Rscripts/phylogeny.R\
               --output_dir=[args[0]]\
               --seqtab_file_path=[depends[0]]\
               --msa_fasta_path=[targets[0]]",
@@ -288,7 +288,7 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
          main_folder = dir_path + "/.."
              
          workflow.add_task(
-            "[vars[2]]/scripts/assign_taxonomy.R\
+            "[vars[2]]/Rscripts/assign_taxonomy.R\
               --output_dir=[args[0]]\
               --refdb_path=[vars[0]]\
               --refdb_species_path=[vars[1]]\

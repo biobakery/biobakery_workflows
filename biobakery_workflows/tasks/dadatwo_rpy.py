@@ -185,7 +185,7 @@ def const_seq_table(workflow, output_folder, threads):
           --sample_names_rds=[depends[1]]\
           --readcounts_steps_path=[targets[0]]\
           --seqtab_rds=[targets[1]]\
-          --seqs_fasta_path = [target[3]]\
+          --seqs_fasta_path = [targets[3]]\
           --readcounts_rds=[depends[2]]\
           --all_counts_tsv=[targets[2]]\
           --threads=[args[0]]",
