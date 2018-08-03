@@ -28,7 +28,7 @@ THE SOFTWARE.
 from anadama2 import Workflow
 
 # import the document templates from biobakery_workflows
-from biobakery_workflows import document_templates, utilities
+from biobakery_workflows import utilities
 
 # import the files for descriptions and paths
 from biobakery_workflows import files
@@ -78,12 +78,12 @@ if args.input_metadata:
     metadata=utilities.read_metadata(args.input_metadata, otu_table, ignore_features=args.metadata_exclude, otu_table=True)
     metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
-templates=[document_templates.get_template("16S")]
+templates=[utilities.get_package_file("16S")]
 
 # add the template for the data processing information
 log_file=None
 if not args.exclude_workflow_info:
-    templates+=[document_templates.get_template("workflow_info")]
+    templates+=[utilities.get_package_file("workflow_info")]
     log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
 
 # add the document to the workflow

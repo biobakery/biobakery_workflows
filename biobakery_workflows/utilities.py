@@ -36,6 +36,41 @@ try:
 except ImportError:
     from urllib import urlretrieve
 
+def get_package_file(basename, type="template"):
+    """ Get the full path to a file included in the installed python package.
+
+        Args:
+            basename (string) : The basename of the file
+            type (string) : The type of file to find (template or Rscript)
+
+        Returns: 
+            string : The full path to the file
+
+    """
+
+    if type == "template":
+        subfolder = "document_templates"
+        extension = ".template.py"
+    else:
+        subfolder = "Rscripts"
+        extension = ".R"
+
+    # get all of the templates in this folder
+    package_install_folder=os.path.join(os.path.dirname(os.path.realpath(__file__)), subfolder)
+    found_files=filter(lambda file: file.endswith(extension),os.listdir(package_install_folder))
+
+    # return the template with the name
+    matching_file=list(filter(lambda file: file.startswith(basename+extension), found_files))
+
+    if matching_file:
+        matching_file=os.path.join(package_install_folder,matching_file[0])
+    else:
+        matching_file=""
+
+    return matching_file
+    
+
+
 def change_pweave_figure_size_heatmap(pdf_format):
     """ Change the figure size for heatmaps based on the output format"""
     fig_size = (4,4) if pdf_format else (2.5,2.5)
