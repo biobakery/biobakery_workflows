@@ -1064,8 +1064,8 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
         paired = True
         input_files = [(input_pair1, input_pair2), (orphan_pair1, orphan_pair2)]
 
-    assembled_contig_files = megahit(workflow, input_files, extension, paired, pair_identifier,
-                                     output_folder, threads, additional_options, remove_intermediate_output)
+    assembled_contig_files = megahit(workflow, input_files, extension, output_folder, threads, paired, 
+                                     pair_identifier, additional_options, remove_intermediate_output)
 
     return assembled_contig_files
 
