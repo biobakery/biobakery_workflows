@@ -53,6 +53,7 @@ workflow.add_argument("remove-intermediate-output", desc="remove intermediate ou
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonomic profiling tasks (a tsv profile for each sequence file must be included in the input folder using the same sample name)", action="store_true")
+workflow.add_argument("bypass-assembly", desc="do not run the assembly tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
 workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
 
@@ -113,6 +114,11 @@ if not args.bypass_strain_profiling:
     shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
         workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,merged_taxonomic_profile,
         args.strain_profiling_options,args.max_strains)
+
+### STEP 5: Run assembly
+if not args.bypass_assembly:
+    assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier)
+    shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
 
 # start the workflow
 workflow.go()
