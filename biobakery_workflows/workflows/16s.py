@@ -24,13 +24,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-import os
 
 from anadama2 import Workflow
 
-from biobakery_workflows.tasks import sixteen_s
-from biobakery_workflows import utilities, config
-
+from biobakery_workflows.tasks import sixteen_s, dadatwo, general
+from biobakery_workflows import utilities, config, files
 
 
 # create a workflow instance, providing the version number and description
@@ -38,6 +36,8 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()
+workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2"])
+workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
@@ -64,30 +64,72 @@ input_files = list(filter(lambda file: not file in index_files, input_files))
 
 # if a barcode file is provided, then demultiplex
 if args.barcode_file:
-    demultiplexed_files=sixteen_s.demultiplex(
+    demultiplexed_files, demultiplex_output_folder=general.demultiplex(
         workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
         args.min_pred_qc_score, args.pair_identifier)
     # if the original files are gzipped, they will not be compressed after demultiplexing
     args.input_extension = args.input_extension.replace(".gz","")
 else:
     demultiplexed_files=input_files
-        
-# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
-all_samples_fastq = sixteen_s.merge_samples_and_rename(
-    workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        
+    demultiplex_output_folder=args.input
+    
+if args.method == "dada2":
+    # call dada2 workflow tasks
+    #filter reads and trim
+    read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
+            workflow, demultiplex_output_folder,
+            args.output, args.maxee, args.trunc_len_max, args.pair_identifier, args.threads)
+    
+    #learn error rates
+    error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
+            workflow, args.output, filtered_dir, read_counts_file_path, args.threads)
+    
+    #merge pairs
+    mergers_file_path = dadatwo.merge_paired_ends(
+            workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads)
 
-# add quality control tasks: generate qc report, filter by maxee, and truncate
-filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
-    workflow, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
+    #construct otu
+    seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
+            workflow, args.output, filtered_dir, mergers_file_path, args.threads)
+    
+    #phylogeny
+    #msa_fasta_path = dadatwo.phylogeny(
+            #workflow, args.output, seqtab_file_path)
+    centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
+    sixteen_s.centroid_alignment(workflow,
+            seqs_fasta_path, centroid_fasta, args.threads, task_name="clustalo_nonchimera")
+    
+    #create tree 
+    #fasttree_path = dadatwo.fasttree(workflow, args.output,msa_fasta_path)
+    closed_tree = utilities.name_files("closed_reference.tre", args.output)
+    sixteen_s.create_tree(workflow, centroid_fasta, closed_tree)
+    
+    
+    #assign taxonomy 
+    closed_reference_tsv = dadatwo.assign_taxonomy(
+            workflow, args.output, seqtab_file_path, args.dada_db, args.threads)
+    
+ #   dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path) 
+    
+else:  
+    #call usearch workflow tasks
+	# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
+	all_samples_fastq = sixteen_s.merge_samples_and_rename(
+    	       workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        
 
-# taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
-closed_reference_tsv = sixteen_s.taxonomic_profile(
-    workflow, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output, 
-    args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
-    workflow_config.greengenes_taxonomy, args.min_size)
+	# add quality control tasks: generate qc report, filter by maxee, and truncate
+	filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
+            workflow, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
 
-# functional profiling
-categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+	# taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
+	closed_reference_tsv = sixteen_s.taxonomic_profile(
+            workflow, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output, 
+            args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
+            workflow_config.greengenes_taxonomy, args.min_size)
+
+    # functional profiling
+        predict_metagenomes_tsv = sixteen_s.functional_profile(
+            workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()
