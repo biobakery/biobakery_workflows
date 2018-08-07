@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 from anadama2.tracked import TrackedDirectory
-from biobakery_workflows import files, config
+from biobakery_workflows import files, config, utilities
 import os
 
 
@@ -49,13 +49,10 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
          readcounts_tsv_path = os.path.join(output_folder, "Read_counts_after_filtering.tsv")
          readcounts_rds_path = os.path.join(output_folder, "Read_counts_filt.rds")
          filtered_dir = "filtered_input"
-         dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = os.path.join(dir_path ,"..")
-         print(main_folder)
+         script_path = utilities.get_package_file("filter_and_trim", "Rscript")
 
-       
          workflow.add_task(
-             "[vars[0]]/Rscripts/filter_and_trim.R \
+             "[vars[0]] \
                --input_dir=[args[0]]\
                --output_dir=[args[1]]\
                --filtered_dir=[vars[1]]\
@@ -70,7 +67,7 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
              depends = TrackedDirectory(input_folder),
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png, reads_plotR_png],
              args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads],
-             vars = [main_folder,filtered_dir],
+             vars = [script_path,filtered_dir],
              name ="filter_and_trim"
              )
          return readcounts_tsv_path, filtered_dir
@@ -97,11 +94,10 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
          error_ratesF_path= os.path.join(output_folder, "error_ratesFWD.rds")
          error_ratesR_path =os.path.join(output_folder, "error_ratesREV.rds")
 
-         dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = os.path.join(dir_path, "..")
+         script_path = utilities.get_package_file("learn_error_rates", "Rscript")
        
          workflow.add_task(
-             "[vars[0]]/Rscripts/learn_error_rates.R\
+             "[vars[0]] \
                --output_dir=[args[0]]\
                --filtered_dir=[args[1]]\
                --error_ratesF_png=[targets[0]]\
@@ -112,7 +108,7 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
              depends = [readcounts_tsv_path],
              targets = [error_ratesF_png, error_ratesR_png, error_ratesF_path, error_ratesR_path],  
              args = [output_folder, filtered_dir],
-             vars = [main_folder, threads],
+             vars = [script_path, threads],
              name = "learn_error_rates"
              )
          return error_ratesF_path, error_ratesR_path
@@ -135,11 +131,10 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
          """
 
         mergers_file_path = os.path.join(output_dir, "mergers.rds")
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        main_folder = os.path.join(dir_path, "..")
+        script_path = utilities.get_package_file("merge_paired_ends", "Rscript")
         
         workflow.add_task(
-            "[vars[0]]/Rscripts/merge_paired_ends.R\
+            "[vars[0]] \
               --output_dir=[args[0]]\
               --filtered_dir=[args[1]]\
               --error_ratesF_path=[depends[0]]\
@@ -149,7 +144,7 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
             depends = [error_ratesF_path, error_ratesR_path],
             targets = [mergers_file_path],                       
             args = [output_dir, filtered_dir],
-            vars = [main_folder, threads],
+            vars = [script_path, threads],
             name = "dereplicate_and_merge"
             )
         return mergers_file_path
@@ -179,11 +174,10 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
          readcounts_rds = "Read_counts_filt.rds"
          asv_tsv = "all_samples_SV_counts.tsv"
 
-         dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = os.path.join(dir_path,"..")
+         script_path = utilities.get_package_file("const_seq_table", "Rscript")
 
          workflow.add_task(
-            "[vars[0]]/Rscripts/const_seq_table.R\
+            "[vars[0]] \
               --output_dir=[args[0]]\
               --filtered_dir=[args[1]]\
               --merged_file_path=[depends[0]]\
@@ -196,7 +190,7 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
             depends = [mergers_file_path],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
             args = [output_folder, filtered_dir],
-            vars = [main_folder, threads, readcounts_rds, asv_tsv ],
+            vars = [script_path, threads, readcounts_rds, asv_tsv ],
             name = "construct_sequence_table"
             )
          return seqtab_file_path, read_counts_steps_path, seqs_fasta_path
@@ -219,18 +213,17 @@ def phylogeny(workflow, output_folder, seqtab_file_path ):
 
          msa_fasta_path = files.SixteenS.path("msa_nonchimera", output_folder)
 
-         dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = os.path.join(dir_path, "..")
+         script_path = utilities.get_package_file("phylogeny", "Rscript")
 
          workflow.add_task(
-            "[vars[0]]/Rscripts/phylogeny.R\
+            "[vars[0]] \
               --output_dir=[args[0]]\
               --seqtab_file_path=[depends[0]]\
               --msa_fasta_path=[targets[0]]",
             depends = [seqtab_file_path],
             targets = [msa_fasta_path],                              
             args = [output_folder],
-            vars = main_folder,
+            vars = script_path,
             name = "phylogeny"
             )
          return msa_fasta_path
@@ -291,11 +284,10 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
              refdb_path = config.SixteenS().greengenes_dada2
              refdb_species_path = "None"
 
-         dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = os.path.join(dir_path, "..")
+         script_path = utilities.get_package_file("assign_taxonomy", "Rscript")
              
          workflow.add_task(
-            "[vars[2]]/Rscripts/assign_taxonomy.R\
+            "[vars[2]] \
               --output_dir=[args[0]]\
               --refdb_path=[vars[0]]\
               --refdb_species_path=[vars[1]]\
@@ -305,7 +297,7 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
             depends = [seqtab_file_path],
             targets = [otu_closed_ref_path],                              
             args = [output_folder],
-            vars =[refdb_path, refdb_species_path, main_folder, threads],
+            vars =[refdb_path, refdb_species_path, script_path, threads],
             name = "assign_taxonomy"
             )         
      
