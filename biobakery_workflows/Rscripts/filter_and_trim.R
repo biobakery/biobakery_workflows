@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# load packages
+# Load packages
 library(dada2); packageVersion("dada2")
 library(gridExtra)
 library(tools)
@@ -25,10 +25,10 @@ for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
 }
 
-# print contents of folder
+# Print content of folder
 cat( grep( "*\\.fastq", list.files(args.list$input_dir), value=T ), sep = "\n" )
 
-# these variables are passed to the workflow
+# These variables are passed to the workflow
 input.path <- normalizePath( args.list$input_dir )
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
@@ -45,15 +45,17 @@ fnRs <- sort(grep(paste0(pair_id2,".*\\.fastq"), list.files(input.path), value =
 # Extract sample files extension
 sample.ext <- tools::file_ext(fnFs)
 
-# Extract sample names, allowing variable filenames
-sample.names <- gsub( "_R1.*\\.fastq", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R2.*\\.fastq", "", fnRs, perl = T)
-
+# Extract sample names and extension, allowing variable filenames
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
-  # Extract sample names, allowing variable filenames
+  # Extract sample names
   sample.names <- gsub( "_R1.*\\.fastq.gz", "", fnFs, perl = T)
   sample.namesR <- gsub( "_R2.*\\.fastq.gz", "", fnRs, perl = T)
+}else{
+  # Extract sample names
+  sample.names <- gsub( "_R1.*\\.fastq", "", fnFs, perl = T)
+  sample.namesR <- gsub( "_R2.*\\.fastq", "", fnRs, perl = T)
+  
 }
 
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")

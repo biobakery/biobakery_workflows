@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# load packages
+# Load packages
 library(dada2); packageVersion("dada2")
 library(tools)
 
@@ -23,14 +23,14 @@ for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
 }
 
-# print contents of folder
+# Print contents of folder
 cat( grep( "*\\.fastq*", list.files(args.list$output_dir), value=T ), sep = "\n" )
 
-# these variables are passed to the workflow
+# These variables are passed to the workflow
 output.path <- normalizePath(args.list$output_dir )
 print(output.path)
 
-#Filtered files folder path
+# Filtered files folder path
 filt_path <- file.path(output.path, "filtered_input") 
 
 # Sort ensures forward/reverse reads are in same order
@@ -38,16 +38,17 @@ fnFs <- sort(grep( "_F_filt.*\\.fastq", list.files(filt_path), value = T ) )
 fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
 
-# Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
-
+# Extract sample names and extensions, allowing variable filenames; e.g. *_R1[_001].fastq
 sample.ext <- tools::file_ext(fnFs)
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
-  # Extract sample names, allowing variable filenames
+  # Extract sample names
   sample.names <- gsub( "_F_filt.*\\.fastq.gz", "", fnFs, perl = T)
   sample.namesR <- gsub( "_R_filt.*\\.fastq.gz", "", fnRs, perl = T)
+}else{
+  # Extract sample names
+  sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
+  sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
 }
 
 
@@ -59,6 +60,7 @@ cwd <- getwd()
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
 filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 
+# Read error rates from saved files 
 errF <- readRDS(args.list$error_ratesF_path)
 errR <- readRDS(args.list$error_ratesR_path)
 
@@ -79,4 +81,6 @@ for(sam in sample.names) {
   mergers[[sam]] <- merger
 }
 rm(derepF); rm(derepR)
+
+# Save mergers to file 
 saveRDS(mergers, args.list$mergers_file_path)

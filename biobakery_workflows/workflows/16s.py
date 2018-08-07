@@ -37,7 +37,7 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()
 workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2"])
-workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="gg", choices=["gg","rdp","silva"])
+workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
@@ -90,7 +90,7 @@ if args.method == "dada2":
 
     #construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
-            workflow, demultiplex_output_folder, args.output, mergers_file_path, args.threads)
+            workflow, args.output, mergers_file_path, args.threads)
     
     #phylogeny
     #msa_fasta_path = dadatwo.phylogeny(

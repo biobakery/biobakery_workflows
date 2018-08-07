@@ -152,7 +152,7 @@ def merge_paired_ends(workflow, input_folder, output_folder, error_ratesF_path, 
         return mergers_file_path
     
 
-def const_seq_table(workflow, input_folder, output_folder, mergers_file_path, threads):
+def const_seq_table(workflow, output_folder, mergers_file_path, threads):
     
          """ Builds sequence table, removes chimeras
             
@@ -172,24 +172,27 @@ def const_seq_table(workflow, input_folder, output_folder, mergers_file_path, th
          read_counts_steps_path = files.SixteenS.path("counts_each_step", output_folder)
          
          seqtab_file_path = output_folder + "/seqtab_final.rds"
-         seqs_fasta_path = output_folder + "/sequences.fasta"
+         seqs_fasta_path =output_folder + "sequences.fasta"
+         readcounts_rds = "Read_counts_filt.rds"
+         asv_tsv = "all_samples_SV_counts.tsv"
 
          dir_path = os.path.dirname(os.path.realpath(__file__))
          main_folder = dir_path + "/.."
 
          workflow.add_task(
             "[vars[0]]/Rscripts/const_seq_table.R\
-              --input_dir=[args[0]]\
-              --output_dir=[args[1]]\
-              --merged_file=[depends[0]]\
+              --output_dir=[args[0]]\
+              --merged_file_path=[depends[0]]\
               --read_counts_steps_path=[targets[0]]\
+              --readcounts_rds=[vars[2]]\
+              --asv_tsv=[vars[3]]\
               --seqtab_file_path=[targets[1]]\
               --seqs_fasta_path=[targets[2]]\
               --threads=[vars[1]]",
             depends = [mergers_file_path],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
-            args = [input_folder, output_folder],
-            vars = [main_folder, threads],
+            args = [output_folder],
+            vars = [main_folder, threads, readcounts_rds, asv_tsv ],
             name = "construct_sequence_table"
             )
          return seqtab_file_path, read_counts_steps_path, seqs_fasta_path

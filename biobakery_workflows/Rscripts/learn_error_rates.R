@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# load packages
+# Load packages
 library(dada2); packageVersion("dada2")
 library(ggplot2)
 
@@ -24,10 +24,10 @@ for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
 }
 
-# print contents of folder
+# Print content of folder
 cat( grep( "*\\.fastq.gz", list.files(args.list$output_dir), value=T ), sep = "\n" )
 
-# these variables are passed to the workflow
+# These variables are passed to the workflow
 output.path <- normalizePath( args.list$output_dir )
 print(output.path)
 
@@ -37,9 +37,9 @@ filtFs <- file.path(filt.path,sort(grep( "*_F_filt.fastq*", list.files(filt.path
 filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq*", list.files(filt.path), value = T ) ))
 
 set.seed(100)
-# Filtered forward reads
+# Filtered forward read error rates
 errF <- dada2::learnErrors(filtFs, nread=1e3, multithread=as.numeric(args.list$threads))
-# Filtered reverse reads
+# Filtered reverse read error rates
 errR <- dada2::learnErrors(filtRs, nread=1e3, multithread=as.numeric(args.list$threads))
 
 
@@ -47,6 +47,6 @@ errR <- dada2::learnErrors(filtRs, nread=1e3, multithread=as.numeric(args.list$t
 ggplot2::ggsave(args.list$error_ratesF_png, dada2::plotErrors(errF, nominalQ=TRUE) , device = "png")
 ggplot2::ggsave(args.list$error_ratesR_png, dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
 
-#save as rds files
+# Save as rds files
 saveRDS(errF, args.list$error_ratesF_path) 
 saveRDS(errR, args.list$error_ratesR_path)

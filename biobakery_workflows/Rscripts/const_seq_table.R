@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# load packages
+# Load packages
 library(dada2); packageVersion("dada2")
 library(tools)
 library(seqinr)
@@ -25,10 +25,10 @@ for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
 }
 
-# these variables are passed to the workflow
-output.path <- normalizePath( args.list$output_dir )
+# These variables are passed to the workflow
+output.path <- normalizePath(args.list$output_dir )
 
-#Filtered files folder path
+# Filtered files folder path
 filt_path <- file.path(output.path, "filtered_input") 
 
 # Sort ensures forward/reverse reads are in same order
@@ -36,35 +36,39 @@ fnFs <- sort(grep( "_F_filt.*\\.fastq", list.files(filt_path), value = T ) )
 fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
 
-# Extract sample names, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
-sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
-sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
-
+# Extract sample names and extensions, allowing variable filenames; e.g. *_R1[_001].fastq[.gz]
 sample.ext <- tools::file_ext(fnFs)
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
-  # Extract sample names, allowing variable filenames
+  # Extract sample names
   sample.names <- gsub( "_F_filt.*\\.fastq.gz", "", fnFs, perl = T)
   sample.namesR <- gsub( "_R_filt.*\\.fastq.gz", "", fnRs, perl = T)
+}else{
+  # Extract sample names
+  sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
+  sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
 }
 
+# Read merged reads from file
+mergers <- readRDS(args.list$merged_file_path)
 
-mergers <- readRDS(file.path(output.path,"mergers.rds"))
-
+# Construct sequence table (ASV)
 seqtab <- dada2::makeSequenceTable(mergers)
 dim(seqtab)
 # Inspect distribution of sequence lengths
 table(nchar(getSequences(seqtab)))
-# The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants. # Remove chimeric sequences:
-seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=as.numeric(args.list$threads), verbose=TRUE)
+# The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants.
 
+# Remove chimeric sequences:
+seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=as.numeric(args.list$threads), verbose=TRUE)
 dim(seqtab.nochim)
-# ratio of chimeric sequence reads
+
+# Ratio of chimeric sequence reads
 1 - sum(seqtab.nochim)/sum(seqtab)
 
-# write sequence variants count table to file
-write.table( t(seqtab.nochim), paste0( output.path, "/all_samples_SV-counts.tsv"), sep = "\t", eol = "\n", quote = F, col.names = NA )
-# write OTU table to file
+# Write ASV  table to tsv file
+write.table( t(seqtab.nochim), paste0( output.path, "/", args.list$asv_tsv), sep = "\t", eol = "\n", quote = F, col.names = NA )
+# Save ASV table to rds file for further processing
 saveRDS(seqtab.nochim, args.list$seqtab_file_path)
 
 
@@ -74,19 +78,21 @@ seqids <- c(1:length(seqs))
 seqids <- paste0("ASV",seqids)
 names(seqs) <- seqids 
 
-# Write sequences to fasta file
+# Write sequences to fasta file for further processing
 write.fasta(sequences = as.list(seqs), names = names(seqs), file.out=args.list$seqs_fasta_path, open = "w",  nbchar = 60, as.string = FALSE)
 
-rd.counts <- readRDS(paste0(output.path, "/Read_counts_filt.rds" ))
+# Save read counts on each step to rds file
+rd.counts <- readRDS(paste0(output.path, "/", args.list$readcounts_rds ))
 
-# remove rows with 0 reads after filtering and trimming
+# Remove rows with 0 reads after filtering and trimming
 rdf.counts <- rd.counts[which(rd.counts$reads.out != 0),]
 
 getN <- function(x) sum(getUniques(x))
 track <- cbind(rdf.counts, sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
 colnames(track) <- c("input", "filtered", "ratio", "merged", "tabled", "nonchim")
 rownames(track) <- sample.names
-# print table
+
+# Print table
 track
-# save to file
-write.table( track, args.list$read_counts_steps_path, sep = "\t", quote = F, eol = "\n", col.names = NA )
+# Save read count to tsv file
+write.table( track,  args.list$read_counts_steps_path, sep = "\t", quote = F, eol = "\n", col.names = NA )
