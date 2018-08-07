@@ -31,7 +31,7 @@ cat( grep( "*\\.fastq.gz", list.files(args.list$output_dir), value=T ), sep = "\
 output.path <- normalizePath( args.list$output_dir )
 print(output.path)
 
-filt.path = file.path(output.path,"filtered_input")
+filt.path = file.path(output.path,args.list$filtered_dir)
 
 filtFs <- file.path(filt.path,sort(grep( "*_F_filt.fastq*", list.files(filt.path), value = T ) ))
 filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq*", list.files(filt.path), value = T ) ))

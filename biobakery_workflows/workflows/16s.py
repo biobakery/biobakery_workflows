@@ -76,21 +76,21 @@ else:
 if args.method == "dada2":
     # call dada2 workflow tasks
     #filter reads and trim
-    read_counts_file_path = dadatwo.filter_trim(
+    read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
             args.output, args.maxee, args.trunc_len_max, args.pair_identifier, args.threads)
     
     #learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
-            workflow, args.output, read_counts_file_path, args.threads)
+            workflow, args.output, filtered_dir, read_counts_file_path, args.threads)
     
     #merge pairs
     mergers_file_path = dadatwo.merge_paired_ends(
-            workflow, demultiplex_output_folder, args.output, error_ratesF_path, error_ratesR_path, args.threads)
+            workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads)
 
     #construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
-            workflow, args.output, mergers_file_path, args.threads)
+            workflow, args.output, filtered_dir, mergers_file_path, args.threads)
     
     #phylogeny
     #msa_fasta_path = dadatwo.phylogeny(

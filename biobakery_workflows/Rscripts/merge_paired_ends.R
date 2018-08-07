@@ -31,26 +31,21 @@ output.path <- normalizePath(args.list$output_dir )
 print(output.path)
 
 # Filtered files folder path
-filt_path <- file.path(output.path, "filtered_input") 
+filt_path <- file.path(output.path, args.list$filtered_dir) 
 
 # Sort ensures forward/reverse reads are in same order
 fnFs <- sort(grep( "_F_filt.*\\.fastq", list.files(filt_path), value = T ) )
 fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
 
-# Extract sample names and extensions, allowing variable filenames; e.g. *_R1[_001].fastq
+# Extract sample extension
 sample.ext <- tools::file_ext(fnFs)
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
-  # Extract sample names
-  sample.names <- gsub( "_F_filt.*\\.fastq.gz", "", fnFs, perl = T)
-  sample.namesR <- gsub( "_R_filt.*\\.fastq.gz", "", fnRs, perl = T)
-}else{
-  # Extract sample names
-  sample.names <- gsub( "_F_filt.*\\.fastq", "", fnFs, perl = T)
-  sample.namesR <- gsub( "_R_filt.*\\.fastq", "", fnRs, perl = T)
 }
-
+# Extract sample names,allowing variable filenames
+sample.names <- gsub( paste0("_F_filt.*\\.", sample.ext), "", fnFs, perl = T)
+sample.namesR <- gsub( paste0("_R_filt.*\\.", sample.ext), "", fnRs, perl = T)
 
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
 

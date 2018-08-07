@@ -45,28 +45,22 @@ fnRs <- sort(grep(paste0(pair_id2,".*\\.fastq"), list.files(input.path), value =
 # Extract sample files extension
 sample.ext <- tools::file_ext(fnFs)
 
-# Extract sample names and extension, allowing variable filenames
+# Extract sample extension
 if(identical("gz",sample.ext[1])){
   sample.ext <- "fastq.gz"
-  # Extract sample names
-  sample.names <- gsub( "_R1.*\\.fastq.gz", "", fnFs, perl = T)
-  sample.namesR <- gsub( "_R2.*\\.fastq.gz", "", fnRs, perl = T)
-}else{
-  # Extract sample names
-  sample.names <- gsub( "_R1.*\\.fastq", "", fnFs, perl = T)
-  sample.namesR <- gsub( "_R2.*\\.fastq", "", fnRs, perl = T)
-  
-}
+  }
+# Extract sample names  allowing variable filenames
+sample.names <- gsub( paste0(pair_id1,".*\\.",sample.ext), "", fnFs, perl = T)
+sample.namesR <- gsub( paste0(pair_id2,".*\\.",sample.ext), "", fnRs, perl = T)
 
 if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
 
-# Specify the full path to the fnFs and fnRs
-
+# Specify the full path to the fnFs and fnR
 fnFs <- file.path(input.path, fnFs)
 fnRs <- file.path(input.path, fnRs)
 
 # Create filtered_input/ subdirectory for storing filtered fastq reads
-filt_path <- file.path(output.dir, "filtered_input") 
+filt_path <- file.path(output.dir, args.list$filtered_dir) 
 ifelse(!dir.exists(filt_path), dir.create(filt_path, recursive = TRUE), FALSE)
 
 # Generate plots and save to file

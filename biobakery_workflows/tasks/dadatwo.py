@@ -46,10 +46,11 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
          reads_plotF_png = files.SixteenS.path("readF_qc", output_folder)
          reads_plotR_png = files.SixteenS.path("readR_qc", output_folder)
 
-         readcounts_tsv_path = output_folder + "/Read_counts_after_filtering.tsv"
-         readcounts_rds_path = output_folder + "/Read_counts_filt.rds"
+         readcounts_tsv_path = os.path.join(output_folder, "Read_counts_after_filtering.tsv")
+         readcounts_rds_path = os.path.join(output_folder, "Read_counts_filt.rds")
+         filtered_dir = "filtered_input"
          dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = dir_path + "/.."
+         main_folder = os.path.join(dir_path ,"..")
          print(main_folder)
 
        
@@ -57,6 +58,7 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
              "[vars[0]]/Rscripts/filter_and_trim.R \
                --input_dir=[args[0]]\
                --output_dir=[args[1]]\
+               --filtered_dir=[vars[1]]\
                --maxee=[args[2]]\
                --trunc_len_max=[args[3]]\
                --readcounts_tsv_path=[targets[0]]\
@@ -68,13 +70,13 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
              depends = TrackedDirectory(input_folder),
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png, reads_plotR_png],
              args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads],
-             vars = main_folder,
+             vars = [main_folder,filtered_dir],
              name ="filter_and_trim"
              )
-         return readcounts_tsv_path
+         return readcounts_tsv_path, filtered_dir
      
 
-def learn_error(workflow,output_folder,readcounts_tsv_path, threads):
+def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, threads):
     
          """ Learns error rates for each sample
             
@@ -92,15 +94,16 @@ def learn_error(workflow,output_folder,readcounts_tsv_path, threads):
          error_ratesF_png = files.SixteenS.path("error_ratesF", output_folder)
          error_ratesR_png = files.SixteenS.path("error_ratesR", output_folder)
          
-         error_ratesF_path= output_folder + "/error_ratesFWD.rds"
-         error_ratesR_path = output_folder + "/error_ratesREV.rds"
+         error_ratesF_path= os.path.join(output_folder, "error_ratesFWD.rds")
+         error_ratesR_path =os.path.join(output_folder, "error_ratesREV.rds")
 
          dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = dir_path + "/.."
+         main_folder = os.path.join(dir_path, "..")
        
          workflow.add_task(
              "[vars[0]]/Rscripts/learn_error_rates.R\
                --output_dir=[args[0]]\
+               --filtered_dir=[args[1]]\
                --error_ratesF_png=[targets[0]]\
                --error_ratesR_png=[targets[1]]\
                --error_ratesF_path=[targets[2]]\
@@ -108,14 +111,14 @@ def learn_error(workflow,output_folder,readcounts_tsv_path, threads):
                --threads=[vars[1]]",
              depends = [readcounts_tsv_path],
              targets = [error_ratesF_png, error_ratesR_png, error_ratesF_path, error_ratesR_path],  
-             args = [output_folder],
+             args = [output_folder, filtered_dir],
              vars = [main_folder, threads],
              name = "learn_error_rates"
              )
          return error_ratesF_path, error_ratesR_path
      
 
-def merge_paired_ends(workflow, input_folder, output_folder, error_ratesF_path, error_ratesR_path, threads):
+def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads):
     
         """ Dereplicates and merges paired reads
             
@@ -131,28 +134,28 @@ def merge_paired_ends(workflow, input_folder, output_folder, error_ratesF_path, 
                 Creates files that contain merged and dereplicated reads
          """
 
-        mergers_file_path = output_folder + "/mergers.rds"
+        mergers_file_path = os.path.join(output_dir, "mergers.rds")
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        main_folder = dir_path + "/.."
+        main_folder = os.path.join(dir_path, "..")
         
         workflow.add_task(
             "[vars[0]]/Rscripts/merge_paired_ends.R\
-              --input_dir=[args[0]]\
-              --output_dir=[args[1]]\
+              --output_dir=[args[0]]\
+              --filtered_dir=[args[1]]\
               --error_ratesF_path=[depends[0]]\
               --error_ratesR_path=[depends[1]]\
               --mergers_file_path=[targets[0]]\
               --threads=[vars[1]]",
             depends = [error_ratesF_path, error_ratesR_path],
             targets = [mergers_file_path],                       
-            args = [input_folder, output_folder],
+            args = [output_dir, filtered_dir],
             vars = [main_folder, threads],
             name = "dereplicate_and_merge"
             )
         return mergers_file_path
     
 
-def const_seq_table(workflow, output_folder, mergers_file_path, threads):
+def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, threads):
     
          """ Builds sequence table, removes chimeras
             
@@ -171,17 +174,18 @@ def const_seq_table(workflow, output_folder, mergers_file_path, threads):
          
          read_counts_steps_path = files.SixteenS.path("counts_each_step", output_folder)
          
-         seqtab_file_path = output_folder + "/seqtab_final.rds"
-         seqs_fasta_path =output_folder + "sequences.fasta"
+         seqtab_file_path = os.path.join(output_folder, "seqtab_final.rds")
+         seqs_fasta_path = os.path.join(output_folder, "sequences.fasta")
          readcounts_rds = "Read_counts_filt.rds"
          asv_tsv = "all_samples_SV_counts.tsv"
 
          dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = dir_path + "/.."
+         main_folder = os.path.join(dir_path,"..")
 
          workflow.add_task(
             "[vars[0]]/Rscripts/const_seq_table.R\
               --output_dir=[args[0]]\
+              --filtered_dir=[args[1]]\
               --merged_file_path=[depends[0]]\
               --read_counts_steps_path=[targets[0]]\
               --readcounts_rds=[vars[2]]\
@@ -191,7 +195,7 @@ def const_seq_table(workflow, output_folder, mergers_file_path, threads):
               --threads=[vars[1]]",
             depends = [mergers_file_path],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
-            args = [output_folder],
+            args = [output_folder, filtered_dir],
             vars = [main_folder, threads, readcounts_rds, asv_tsv ],
             name = "construct_sequence_table"
             )
@@ -216,7 +220,7 @@ def phylogeny(workflow, output_folder, seqtab_file_path ):
          msa_fasta_path = files.SixteenS.path("msa_nonchimera", output_folder)
 
          dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = dir_path + "/.."
+         main_folder = os.path.join(dir_path, "..")
 
          workflow.add_task(
             "[vars[0]]/Rscripts/phylogeny.R\
@@ -247,7 +251,7 @@ def fasttree(workflow, output_folder, msa_fasta_path):
                 Creates file that contains pylogenic tree
          """
          
-         fasttree_file_path = output_folder + "/closed_reference.tre"
+         fasttree_file_path = os.path.join(output_folder, "closed_reference.tre")
 
          workflow.add_task(
             "FastTree -gtr -nt  [depends[0]] >  [targets[0]]",
@@ -288,7 +292,7 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
              refdb_species_path = "None"
 
          dir_path = os.path.dirname(os.path.realpath(__file__))
-         main_folder = dir_path + "/.."
+         main_folder = os.path.join(dir_path, "..")
              
          workflow.add_task(
             "[vars[2]]/Rscripts/assign_taxonomy.R\
@@ -324,7 +328,7 @@ def remove_tmp_files(workflow, output_folder, otu_closed_ref_path,
                 None
           """
          
-         rm_out_file = output_folder + "/tmp_rm.txt"
+         rm_out_file = os.path.join(output_folder, "tmp_rm.txt")
              
          workflow.add_task(
                      "rm  [args[0]]/*.rds  &>[targets[0]] ",
