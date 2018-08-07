@@ -242,7 +242,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
 
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
-        title="Top {} {} by average abundance, group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
+        title="Top {} {} group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
         ylabel=ylabel, legend_title=legend_title, legend_style="italic")
 
 def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inverse=False):
