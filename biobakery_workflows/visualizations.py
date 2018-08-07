@@ -60,7 +60,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             sorted_data)
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
-                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),sort_by_name=sort_by_name,
+                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),ylabel=ylabel,sort_by_name=sort_by_name,
                 sort_by_name_inverse=sort_by_name_inverse)
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
