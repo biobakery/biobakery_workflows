@@ -33,7 +33,7 @@ import shutil
 from . import utilities
 
 def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy,
-    max_sets_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False):
+    max_sets_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
     """ Plot grouped barplots and average barplots for all of the features provided.
 
         Args:
@@ -47,6 +47,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             sort_by_name (bool): If set, sort data by sample name instead of abundance
             sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
                 this is useful for samples with sample name plus features
+            ylabel (string): The label for the y-axis for the average plots
 
         Returns: 
             list: A list of metadata strings (one for each categorical feature plotted)
@@ -63,7 +64,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
                 sort_by_name_inverse=sort_by_name_inverse)
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
-            plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature)
+            plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature, ylabel=ylabel)
 
     return categorical_metadata
 
@@ -205,7 +206,7 @@ def merge_categorical_metadata(vars, sorted_samples, sorted_data):
     return categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found
 
 
-def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title):
+def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title, ylabel="Relative Abundance"):
     """ Plot the average taxonomy sorted by species abundance for a single feature.
 
         Args:
@@ -216,6 +217,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
             cat_metadata (list): The ordered categorical metadata (for a single feature)
             max_sets_barplot (int): The max number of taxonomic values (to use for the title)
             legend_title (string): The legend title for the plots
+            ylabel (string): The label for the y-axis
 
         Returns: None
     """
@@ -241,7 +243,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
         title="Top {} {} by average abundance, group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
-        ylabel="Relative abundance", legend_title=legend_title, legend_style="italic")
+        ylabel=ylabel, legend_title=legend_title, legend_style="italic")
 
 def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inverse=False):
     # sort the top data so it is ordered with the top sample/abundance first
