@@ -68,7 +68,7 @@ if args.input_metadata:
     metadata=utilities.read_metadata(args.input_metadata, otu_table, ignore_features=args.metadata_exclude, otu_table=True)
     metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
-templates=[document_templates.get_template("16S")]
+templates=[utilities.get_package_file("16S")]
 
 log_file=None
 # add the template for the data processing information
@@ -93,7 +93,7 @@ if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_f
 		"readF_qc",
 		"readR_qc"]}
 			
-# get the paths for the required files and check they are found	
+    # get the paths for the required files and check they are found
 	centroid_fasta = files.SixteenS.path("msa_nonchimera",args.input, error_if_not_found=True)
 	counts_each_step = files.SixteenS.path("counts_each_step",args.input, error_if_not_found=True)
 	error_ratesF = files.SixteenS.path("error_ratesF", args.input, error_if_not_found=True)
@@ -103,7 +103,7 @@ if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_f
 			
 	methoddepends=[counts_each_step,otu_table,centroid_fasta,error_ratesF,error_ratesR,readF_qc,readR_qc] 
     
-#variables	
+    #variables
 	methodvars={
 		"title":"DADA2 16s Report",
          "project":args.project_name,
@@ -134,7 +134,7 @@ else:
 		"msa_nonchimera",
 		"msa_closed_reference"]}
 
-# get the paths for the required files and check they are found
+    # get the paths for the required files and check they are found
 	otu_open_table=files.SixteenS.path("otu_table_open_reference",args.input, error_if_not_found=True)
 	read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
 	eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=True)
@@ -143,7 +143,7 @@ else:
 	       
 	methoddepends=[otu_table, read_count_table, otu_open_table, eestats_table, centroid_fasta, centroid_closed_fasta] 
     
-#variables	
+    #variables
 	methodvars={"title":"USEARCH 16S Report",
           "project":args.project_name,
           "method":method,
@@ -163,7 +163,8 @@ input_desc+=files.SixteenS.list_file_path_description("",input_files)
 
 
 if not args.exclude_workflow_info:
-    templates+=[document_templates.get_template("workflow_info")]
+	templates += [utilities.get_package_file("workflow_info")]
+
 
 # add the document to the workflow
 doc_task=workflow.add_document(

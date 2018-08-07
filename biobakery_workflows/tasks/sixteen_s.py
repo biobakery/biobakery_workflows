@@ -632,15 +632,21 @@ def functional_profile(workflow, closed_reference_tsv, output_folder):
     # convert the tsv file to biom format
     closed_reference_biom_file = utilities.name_files(closed_reference_tsv,output_folder,extension="biom")
     convert_to_biom_from_tsv(workflow,closed_reference_tsv,closed_reference_biom_file,options="--process-obs-metadata=taxonomy --output-metadata-id=taxonomy")
-    
+
     # run picrust to get functional data
-    functional_data_biom = picrust(workflow,closed_reference_biom_file,output_folder)
-    
-    # convert the biom file to tsv
-    functional_data_tsv = utilities.name_files(functional_data_biom,output_folder,extension="tsv")
-    convert_from_biom_to_tsv(workflow,functional_data_biom,functional_data_tsv)
-    
-    return functional_data_tsv
+    functional_data_categorized_biom, functional_data_predicted_biom = picrust(workflow, closed_reference_biom_file,
+                                                                               output_folder)
+
+    # convert the predited biom file to tsv
+    functional_data_predicted_tsv = utilities.name_files(functional_data_predicted_biom, output_folder, extension="tsv")
+    convert_from_biom_to_tsv(workflow, functional_data_predicted_biom, functional_data_predicted_tsv)
+
+    # convert the categorized biom file to tsv
+    functional_data_categorized_tsv = utilities.name_files(functional_data_categorized_biom, output_folder,
+                                                           extension="tsv")
+    convert_from_biom_to_tsv(workflow, functional_data_categorized_biom, functional_data_categorized_tsv)
+
+    return functional_data_categorized_tsv
 
 def picrust(workflow,otu_table_biom,output_folder):
     """ Runs picrust normalize, then predict
@@ -678,8 +684,18 @@ def picrust(workflow,otu_table_biom,output_folder):
         depends=[normalized_otu_table,TrackedExecutable("predict_metagenomes.py")],
         targets=predict_metagenomes_table,
         name="predict_metagenomes.py")
-    
-    return predict_metagenomes_table
+
+    # categorize by function
+    categorized_function_table = utilities.name_files("all_samples_categorize_by_function.biom", output_folder)
+    # first remove target file as picrust will not overwrite
+    workflow.add_task(
+        "remove_if_exists.py [targets[0]] ; " + \
+        "categorize_by_function.py -i [depends[0]] -o [targets[0]] --level 3 -c KEGG_Pathways",
+        depends=[predict_metagenomes_table, TrackedExecutable("categorize_by_function.py")],
+        targets=categorized_function_table,
+        name="categorize_by_function.py")
+
+    return categorized_function_table, predict_metagenomes_table
     
 
 def convert_to_biom_from_tsv(workflow, tsv_file, biom_file, table_type="OTU table", options=""):
