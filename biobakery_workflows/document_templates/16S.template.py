@@ -287,6 +287,7 @@ document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names,
 plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
     title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera", legend_size=legend_size)
 
+
 #' ## Terminal Taxa
 
 #+ echo=False
@@ -312,29 +313,89 @@ document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_name
 plot_all_categorical_metadata(sorted_samples_terminal, sorted_top_terminal_data, shorted_names,
     title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance", legend_title="Terminal taxa")
 
-#' # Ordination
+
+
+#' # Heatmaps
+
 #+ echo=False
-# plot the top terminal node taxa in a PCOA
-# provide data as values [0-1] organized as samples as columns and features as rows
+max_sets_heatmap=25
 
-# filter the data by min abundance and min samples
-filtered_taxonomy, filtered_data = utilities.filter_taxa(terminal_taxa_relab, terminal_data_relab, min_abundance, min_samples)
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera and terminal taxa",method="Spearman and Bray-Curtis") %>
 
-document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity")
+#' ## Genera
 
-#' For the PCoA plot, relative abundances are passed through a basic filter requiring each terminal taxa
-#' to have at least <% print(min_abundance)%> % abundance in at least 
-#' <% print(min_samples) %> % of all samples.
+#+ echo=False
+# update the figure size based on output format for the heatmaps
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    pdf_format,"Top {} genera by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
+#' <% if pdf_format: print("\clearpage") %>
+
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
+utilities.reset_pweave_figure_size()
+
+
+
+#' ## Terminal Taxa
+
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
+    pdf_format,"Top {} terminal taxa by average abundance (Spearman)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
 
 #' <% if pdf_format: print("\clearpage") %>
-#+ echo=False
-if 'metadata' in vars and vars['metadata']:
-    # organize metadata for plot if available
-    sample_metadata=vars["metadata"][0]
-    for category in vars["metadata"][1:]:
-        name=category[0]
-        metadata_mapping=dict((x,y) for x,y in zip(sample_metadata[1:],category[1:]))
 
-        document.show_pcoa(samples, filtered_taxonomy, filtered_data, title="PCOA Ordination of terminal taxa using Bray-Curtis similarity "+name,
-            metadata=metadata_mapping)
+#+ echo=False
+utilities.change_pweave_figure_size_heatmap(pdf_format)
+visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
+    pdf_format,"Top {} terminal taxa by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap)
+utilities.reset_pweave_figure_size()
+
+
+#' # Ordination
+
+#' ## Genera
+
+#+ echo=False
+import numpy
+
+# filter then get top genera
+filtered_taxonomy_all, filtered_relab_data_all = utilities.filter_taxa_abundance(taxonomy, relab_data, min_abundance, min_samples)
+samples_genera, sorted_top_data_genera, top_data_genera, top_taxa_genera, legend_size = visualizations.get_top_taxonomy_by_level(filtered_taxonomy_all, samples, filtered_relab_data_all, max_sets_heatmap)
+
+# provide data as values [0-1] organized as samples as columns and features as rows
+top_filtered_data_pcoa=numpy.array(sorted_top_data_genera)/100.0
+document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera using Bray-Curtis similarity".format(max_sets_heatmap))
+
+#' For the PCoA plots, relative abundances are passed through a basic filter requiring each taxon
+#' have at least <% print(min_abundance)%> % abundance in at least
+#' <% print(min_samples) %> % of all samples.
+
+#+ echo=False
+visualizations.show_pcoa_metadata(document, vars, samples_genera, top_taxa_genera, top_filtered_data_pcoa,
+    title="PCoA Ordination of top {} genera".format(max_sets_heatmap))
+
+#' ## Terminal taxa
+
+#+ echo=False
+# plot the top terminal node taxa in a PCoA
+
+# filter the data by min abundance and min samples
+filtered_taxonomy, filtered_data = utilities.filter_taxa_abundance(terminal_taxa_relab, terminal_data_relab, min_abundance, min_samples)
+
+# get the top set of terminal taxa
+top_filtered_taxonomy, top_filtered_data = utilities.top_rows(filtered_taxonomy, filtered_data, max_sets_heatmap, function="average")
+
+# provide data as values [0-1] organized as samples as columns and features as rows
+top_filtered_data_pcoa=numpy.array(top_filtered_data)/100.0
+document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCoA Ordination of top {} terminal taxa using Bray-Curtis similarity".format(max_sets_heatmap))
+
+visualizations.show_pcoa_metadata(document, vars, samples, top_filtered_taxonomy, top_filtered_data_pcoa,
+    title="PCoA Ordination of top {} terminal taxa".format(max_sets_heatmap))
 

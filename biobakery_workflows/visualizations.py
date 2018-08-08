@@ -621,6 +621,7 @@ class Workflow(object):
     def format_caption(cls,name,**keywords):
         return cls.captions[name].format(**keywords)
 
+
 class ShotGun(Workflow):
     captions={}
     
@@ -737,7 +738,7 @@ class ShotGun(Workflow):
 
 class Sixteen_S(Workflow):
     captions={}
-            
+
     captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
         gene amplicon paired-end sequencing reads,adopting the tutorial from\n\n \
          https://benjjneb.github.io/dada2/tutorial.html and \
