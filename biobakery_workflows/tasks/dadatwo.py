@@ -1,5 +1,5 @@
 """
-bioBakery Workflows: tasks.dada module
+bioBakery Workflows: tasks.dadatwo module
 A collection of tasks for DADA2 workflow with 16s amplicon sequences
 
 Copyright (c) 2017 Harvard School of Public Health
@@ -29,19 +29,24 @@ import os
 
 def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pair_id, threads):
     
-         """ Filters samples by threshould and trims them
+         """ Filters samples by maxee and trims them, renders quality control plots
+         of forward and reverse reads for each sample, creates read counts tsv and rds files.
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                input_folder (string): The path of the input folder.
-                output_folder (string): The path of the output folder.
+                workflow (anadama2.workflow): an instance of the workflow class
+                input_folder (string): path to input folder
+                output_folder (string):  path to output folder
+                maxee (string): maxee value to use for filtering
+                trunc_len_max (string): max length for truncating
+                pair_id (string): pair identifier
+                threads (int): number of threads
                 
             Requires:
-                None
+               dada2, gridExtra,tools r packages
                 
             Returns:
-                Creates folder with filtered and trimed sample files
-                Creates file that contains read counts before and after filtering
+                string: path to file that contains read counts before and after filtering
+                string: path to folder with filtered and trimmed sample files
          """
          reads_plotF_png = files.SixteenS.path("readF_qc", output_folder)
          reads_plotR_png = files.SixteenS.path("readR_qc", output_folder)
@@ -75,17 +80,21 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
 
 def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, threads):
     
-         """ Learns error rates for each sample
+         """ Learns error rates for each sample, renders error rates plots for forward and reverse reads
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                output_folder (string): The path of the output folder.
-                
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string): path to output folder
+                filtered_dir (string): path to directory with filtered files
+                readcounts_tsv_path (string): path to read counts after filtering tsv file
+                threads (int): number of threads
+
             Requires:
-                Path to read counts file
-                
+                dada2, ggplot2 r packages
+
             Returns:
-                Creates files that contain forward and reverse error rates for each sample
+                string: path to file that contains error rates of forward reads
+                string: path to file that contains error rates of reverse reads
          """
 
          error_ratesF_png = files.SixteenS.path("error_ratesF", output_folder)
@@ -119,15 +128,18 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
         """ Dereplicates and merges paired reads
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                input_folder (string): The path of the input folder.
-                output_folder (string): The path of the output folder.
-                
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string): path to output folder
+                filtered_dir (string): path to directory with filtered files
+                error_ratesF_path (string): path to rds file that contains error rates of forward reads
+                error_ratesR_path (string): path to rds file that contains error rates of reverse reads
+                threads (int): number fo threads
+
             Requires:
-                Path to error rates files
+                dada2, tools r packages
                 
             Returns:
-                Creates files that contain merged and dereplicated reads
+                string: path to rds file that contains merged and dereplicated reads
          """
 
         mergers_file_path = os.path.join(output_dir, "mergers.rds")
@@ -152,19 +164,22 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
 
 def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, threads):
     
-         """ Builds sequence table, removes chimeras
+         """ Builds ASV table, removes chimeras, creates read counts at each step, and fasta file with all sequences
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                input_folder (string): The path of the input folder.
-                output_folder (string): The path of the output folder.
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string):  path to output folder
+                filtered_dir (string): path to directory with filtered files
+                mergers_file_path (string): path to rds file that contains merged reads
+                threads (int): number of threads
                 
             Requires:
-                Path to merged reads
-                
+                dada2, tools, seqinr r packages
+
             Returns:
-                Creates file that contains sequence table
-                Creates file that contains read counts on each step  
+                string: path to rds file that contains ASV data
+                string: path to read counts at each step tsv file
+                string: path to fasta file with all sequences
          """
          
          read_counts_steps_path = files.SixteenS.path("counts_each_step", output_folder)
@@ -201,14 +216,16 @@ def phylogeny(workflow, output_folder, seqtab_file_path ):
          """ Aligns sequences and reconstructs phylogeny
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                output_folder (string): The path of the output folder.
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string):  path to output folder
+                seqtab_file_path (string): path to rds file with ASV table data
                 
             Requires:
-                Path to sequence table data
+                dada2, phangorn, msa, seqinr r packages
+                clustalo
                 
             Returns:
-                Creates file that contains pylogeny
+               string: path to msa fasta file
          """
 
          msa_fasta_path = files.SixteenS.path("msa_nonchimera", output_folder)
@@ -234,14 +251,15 @@ def fasttree(workflow, output_folder, msa_fasta_path):
          """ Generates a phylogenetic tree
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                output_folder (string): The path of the output folder.
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string):  path to output folder
+                msa_fasta_path (string): path to msa file
                 
             Requires:
-                Path to phylogeny file
+                fasttree
                 
             Returns:
-                Creates file that contains pylogenic tree
+                string: path to file that contains phylogenetic tree
          """
          
          fasttree_file_path = os.path.join(output_folder, "closed_reference.tre")
@@ -258,22 +276,25 @@ def fasttree(workflow, output_folder, msa_fasta_path):
 
 def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads):
     
-         """ Assigns taxonomy using gg, silva, or rdp database
+         """ Assigns taxonomy using green genes, silva, or rdp database, creates closed reference file
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                output_folder (string): The path of the output folder.
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string): path to output folder
+                seqtab_file_path (string): path to rds file that contains ASV data
+                ref_path (string): reference database name
+                threads (int):
                 
             Requires:
-                Sequence table data
+                dada2 r package
                 
             Returns:
-                Creates closed reference file
+                string: path to closed reference file
          """
-         #check what reference db to use for taxonomy assignment
 
          otu_closed_ref_path  = files.SixteenS.path("otu_table_closed_reference", output_folder)
-         
+
+         # check what reference db to use for taxonomy assignment
          if ref_path == "silva": 
              refdb_path = config.SixteenS().silva_dada2 
              refdb_species_path = config.SixteenS().silva_species_dada2 
@@ -304,20 +325,22 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
          return otu_closed_ref_path
  
  
-def remove_tmp_files(workflow, output_folder, otu_closed_ref_path,
-                      msa_fasta_path, fasttree_file_path):
+def remove_tmp_files(workflow, output_folder, otu_closed_ref_path, msa_fasta_path, fasttree_file_path):
     
-         """ Removes temporary .rds files
+         """ Removes temporary rds files
             
             Args:
-                workflow (anadama2.workflow): An instance of the workflow class.
-                output_folder (string): The path of the output folder.
-                
+                workflow (anadama2.workflow): an instance of the workflow class
+                output_folder (string): path to output folder.
+                otu_closed_ref_path (string): path to closed reference file
+                msa_fasta_path (string): path to msa file
+                fasttree_file_path (string): path to phylogenetic tree file
+
             Requires:
-                Path to output folder
+               None
                 
             Returns:
-                None
+               None
           """
          
          rm_out_file = os.path.join(output_folder, "tmp_rm.txt")

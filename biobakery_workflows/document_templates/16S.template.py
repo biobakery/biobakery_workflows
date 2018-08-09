@@ -264,7 +264,7 @@ top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_
 
 # shorten the top taxa names to just the genus level for plotting
 top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
-#top_taxa_short_names = top_taxa
+
 # check for duplicate genera in list
 legend_size = 7
 if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):

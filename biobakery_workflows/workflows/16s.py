@@ -75,44 +75,44 @@ else:
     
 if args.method == "dada2":
     # call dada2 workflow tasks
-    #filter reads and trim
+    # filter reads and trim
     read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
             args.output, args.maxee, args.trunc_len_max, args.pair_identifier, args.threads)
     
-    #learn error rates
+    # learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
             workflow, args.output, filtered_dir, read_counts_file_path, args.threads)
     
-    #merge pairs
+    # merge pairs
     mergers_file_path = dadatwo.merge_paired_ends(
             workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads)
 
-    #construct otu
+    # construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
             workflow, args.output, filtered_dir, mergers_file_path, args.threads)
     
-    #phylogeny
-    #msa_fasta_path = dadatwo.phylogeny(
-            #workflow, args.output, seqtab_file_path)
+    # phylogeny
+    # msa_fasta_path = dadatwo.phylogeny(workflow, args.output, seqtab_file_path)
+
     centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
     sixteen_s.centroid_alignment(workflow,
             seqs_fasta_path, centroid_fasta, args.threads, task_name="clustalo_nonchimera")
     
-    #create tree 
-    #fasttree_path = dadatwo.fasttree(workflow, args.output,msa_fasta_path)
+    # create tree
+    # fasttree_path = dadatwo.fasttree(workflow, args.output,msa_fasta_path)
+
     closed_tree = utilities.name_files("closed_reference.tre", args.output)
     sixteen_s.create_tree(workflow, centroid_fasta, closed_tree)
-    
-    
-    #assign taxonomy 
+
+    # assign taxonomy
     closed_reference_tsv = dadatwo.assign_taxonomy(
             workflow, args.output, seqtab_file_path, args.dada_db, args.threads)
     
- #   dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path) 
+    # dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path)
     
 else:  
-    #call usearch workflow tasks
+    # call usearch workflow tasks
 	# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
 	all_samples_fastq = sixteen_s.merge_samples_and_rename(
     	       workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        

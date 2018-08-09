@@ -80,7 +80,7 @@ if not args.exclude_workflow_info:
 # identify method and list the required and optional files for the workflow
 # these are expected to be included in the input folder
 
-#for dada2 workflow
+# for dada2 workflow
 if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
 	method = "dada2"
 	input_files={
@@ -122,7 +122,7 @@ if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_f
 		"picard":args.input_picard,
 		"picard_ext":args.input_picard_extension}
  
-#for usearch workflow
+# for usearch workflow
 else:
 	method = "usearch"
 	input_files={
@@ -143,7 +143,7 @@ else:
 	       
 	methoddepends=[otu_table, read_count_table, otu_open_table, eestats_table, centroid_fasta, centroid_closed_fasta] 
     
-    #variables
+    # variables
 	methodvars={"title":"USEARCH 16S Report",
           "project":args.project_name,
           "method":method,
