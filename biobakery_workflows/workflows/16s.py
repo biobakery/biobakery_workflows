@@ -91,17 +91,13 @@ if args.method == "dada2":
     # construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
             workflow, args.output, filtered_dir, mergers_file_path, args.threads)
-    
-    # phylogeny
-    # msa_fasta_path = dadatwo.phylogeny(workflow, args.output, seqtab_file_path)
 
+    # centroid alignment
     centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
     sixteen_s.centroid_alignment(workflow,
             seqs_fasta_path, centroid_fasta, args.threads, task_name="clustalo_nonchimera")
-    
-    # create tree
-    # fasttree_path = dadatwo.fasttree(workflow, args.output,msa_fasta_path)
 
+    # phylogenetic tree
     closed_tree = utilities.name_files("closed_reference.tre", args.output)
     sixteen_s.create_tree(workflow, centroid_fasta, closed_tree)
 

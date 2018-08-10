@@ -211,68 +211,6 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
          return seqtab_file_path, read_counts_steps_path, seqs_fasta_path
 
 
-def phylogeny(workflow, output_folder, seqtab_file_path ):
-    
-         """ Aligns sequences and reconstructs phylogeny
-            
-            Args:
-                workflow (anadama2.workflow): an instance of the workflow class
-                output_folder (string):  path to output folder
-                seqtab_file_path (string): path to rds file with ASV table data
-                
-            Requires:
-                dada2, phangorn, msa, seqinr r packages
-                clustalo
-                
-            Returns:
-               string: path to msa fasta file
-         """
-
-         msa_fasta_path = files.SixteenS.path("msa_nonchimera", output_folder)
-
-         script_path = utilities.get_package_file("phylogeny", "Rscript")
-
-         workflow.add_task(
-            "[vars[0]] \
-              --output_dir=[args[0]]\
-              --seqtab_file_path=[depends[0]]\
-              --msa_fasta_path=[targets[0]]",
-            depends = [seqtab_file_path],
-            targets = [msa_fasta_path],                              
-            args = [output_folder],
-            vars = script_path,
-            name = "phylogeny"
-            )
-         return msa_fasta_path
-     
-
-def fasttree(workflow, output_folder, msa_fasta_path):
-    
-         """ Generates a phylogenetic tree
-            
-            Args:
-                workflow (anadama2.workflow): an instance of the workflow class
-                output_folder (string):  path to output folder
-                msa_fasta_path (string): path to msa file
-                
-            Requires:
-                fasttree
-                
-            Returns:
-                string: path to file that contains phylogenetic tree
-         """
-         
-         fasttree_file_path = os.path.join(output_folder, "closed_reference.tre")
-
-         workflow.add_task(
-            "FastTree -gtr -nt  [depends[0]] >  [targets[0]]",
-            depends = [msa_fasta_path],
-            targets = [fasttree_file_path],                              
-            args = [output_folder],
-            name = "fasttree"
-            )
-         return fasttree_file_path
-
 
 def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads):
     

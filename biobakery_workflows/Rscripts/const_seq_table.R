@@ -75,7 +75,7 @@ seqids <- paste0("ASV",seqids)
 names(seqs) <- seqids 
 
 # Write sequences to fasta file for further processing
-write.fasta(sequences = as.list(seqs), names = names(seqs), file.out=args.list$seqs_fasta_path, open = "w",  nbchar = 60, as.string = FALSE)
+seqinr::write.fasta(sequences = as.list(seqs), names = names(seqs), file.out=args.list$seqs_fasta_path, open = "w",  nbchar = 60, as.string = FALSE)
 
 # Save read counts on each step to rds file
 rd.counts <- readRDS(paste0(output.path, "/", args.list$readcounts_rds ))
