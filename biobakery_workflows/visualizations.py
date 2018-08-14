@@ -741,32 +741,33 @@ class Sixteen_S(Workflow):
 
     captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
         gene amplicon paired-end sequencing reads,adopting the tutorial from\n\n \
-         https://benjjneb.github.io/dada2/tutorial.html and \
-        \n https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
-        \n\nThis report captures all the workflow steps necessary to reproduce the analysis.\
-        \nMultiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
+         https://benjjneb.github.io/dada2/tutorial.html and \n \
+         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
+        \n\nThis report captures all the workflow steps necessary to reproduce the analysis. Notes and descriptions\
+         of the steps are cited from DADA2 tutorial as well.\
+        \n\nMultiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
         which is required for calculating UniFrac beta-diversity distances between microbiome samples.\n"
     
     captions["dada2errorintro"]="The DADA2 algorithm depends on a parametric error model (err) and every amplicon dataset has a different set of error rates. \
-        \nThe learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
+        \n\nThe learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
         sample composition until they converge on a jointly consistent solution.\n\nAs in many optimization problems, the algorithm must \
         begin with an initial guess, for which the maximum possible error rates in this data are used \
-        the error rates if only the most abundant sequence is correct and all the rest are errors).\n"
+        the error rates if only the most abundant sequence is correct and all the rest are errors.\n"
     
     captions["dada2errorinfo"]="The error rates for each possible transition (eg. A->T,A->G, etc) are shown. \
         Points are the observed error rates for each consensus quality score. \
-        \nThe black line shows the estimated error rates after convergence. \
-        \nThe red line shows the error rates expected under the nominal definition of the Q-value. \
+        \n\nThe black line shows the estimated error rates after convergence. \
+         The red line shows the error rates expected under the nominal definition of the Q-value. \
         \n\nIf the black line (the estimated rates) fits the observed rates well, \
         and the error rates drop with increased quality as expected, then everything looks reasonable \
         and can proceed with confidence.\n"
 
     captions["dada2stepsinfo"]="\nDereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
         the number of reads with that unique sequence. DADA2 retains a summary of the quality information associated with each unique sequence.\
-        \nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
+        \n\nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
         \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2's accuracy. \
         \n\nThe sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
-        Spurious sequence variants are further reduced by merging overlapping reads. \nThe core function here is mergePairs \
+        Spurious sequence variants are further reduced by merging overlapping reads. \n\nThe core function here is mergePairs \
         which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
         \n\nThe core dada method removes substitution and indel errors, but chimeras remain.\
         Fortunately, the accuracy of the sequences after denoising makes identifying chimeras simpler than it is when dealing with fuzzy OTUs\
@@ -776,7 +777,7 @@ class Sixteen_S(Workflow):
         In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline.\n"  
     
     captions["dada2countsinfo"]="This figure shows the number of reads that made it through each step in the pipeline\
-        \n\nOutside of filtering (depending on how stringent it is) there should no step in which a majority of reads are lost.\
+        \n\nThere should no be a step in which a majority of reads are lost, except filtering when it is stringent.\
         \n\nIf a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
         and make sure that the truncated reads span your amplicon.\
         \n\nIf a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
@@ -787,12 +788,12 @@ class Sixteen_S(Workflow):
         \n\nFormatted training datasets for taxonomic assignments can be downloaded from here\
         https://benjjneb.github.io/dada2/training.html.\
         \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007"  \
-        + "\nIn short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
+        + "In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
         of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
         and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n"
  
           
     captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n\n1) classified: reads that align to OTUs with known taxonomy,\
-        \n2) reads that align to OTUs of unknown taxonomy, \n3) reads that do not align to any OTUs. The sum of these\
+        \n2) reads that align to OTUs of unknown taxonomy, \n3) reads that do not align to any OTUs.\n\n The sum of these\
         three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
      

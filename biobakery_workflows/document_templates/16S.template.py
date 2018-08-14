@@ -46,8 +46,9 @@ import numpy
 pdf_format=True if vars["format"] == "pdf" else False
 
 #' <% if pdf_format: print("\clearpage") %>
-#' # Introduction
 
+#' # Introduction
+#+ echo=False
 #' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2intro"]) %>
 #' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2stepsinfo"]) %>
 #' <% if vars["method"] != "dada2": print(usearchintro) %>
@@ -70,11 +71,11 @@ from biobakery_workflows import utilities
 #' # Quality Control
 
 
-#' ## <% if method == "dada2": print("Forward Read Quality Plot by Sample") %>   \
+#' <% if method == "dada2": print("## Forward Read Quality Plot by Sample") %>   \
 #' <% if method == "dada2": print("![FWD Read](" + vars["readF_qc"] + ")") %> 
 #' <% if method == "dada2": print("\clearpage")  %> 
 
-#' ## <% if method == "dada2": print("Reverse Read Quality Plot  by Sample") %>   \
+#' <% if method == "dada2": print("## Reverse Read Quality Plot  by Sample") %>   \
 #' <% if method == "dada2": print("![REV Read](" + vars["readR_qc"] + ")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 #+ echo=False
@@ -86,15 +87,15 @@ if method != "dada2":
 #' <% if method != "dada2": print("The general stats for this data set are:" + str(overall_stats)) %>
 #' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
 
-#' # <% if method == "dada2": print("Error rates") %> 
+#' <% if method == "dada2": print("# Error rates") %>
     
 #' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>  
     
-#' ## <% if method == "dada2": print("Forward Read Error Rates by Sample") %>  \
+#' <% if method == "dada2": print("## Forward Read Error Rates by Sample") %>  \
 #' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 
-#' ## <% if method == "dada2": print("Reverse Read Error Rates by Sample") %>   \
+#' <% if method == "dada2": print("## Reverse Read Error Rates by Sample") %>   \
 #' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
 
 #' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorinfo"]) %> 
@@ -224,7 +225,6 @@ if method == "dada2":
     plot_all_categorical_metadata(sorted_samples, [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads], 
     ["total","filtered","merged","tabled","nochimera"], title="Read counts in each step by sample", ylabel="Total Reads")
 
-    print("This figure shows counts of reads in each step of workflow process")
 
 else:
     known_reads = [row[1] for row in sorted_all_read_data]
@@ -399,3 +399,4 @@ document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title
 visualizations.show_pcoa_metadata(document, vars, samples, top_filtered_taxonomy, top_filtered_data_pcoa,
     title="PCoA Ordination of top {} terminal taxa".format(max_sets_heatmap))
 
+#' <% if pdf_format: print("\clearpage") %>

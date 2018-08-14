@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
-from anadama2.tracked import TrackedDirectory
+from anadama2.tracked import TrackedDirectory, TrackedExecutable
 from biobakery_workflows import files, config, utilities
 import os
 
@@ -202,14 +202,13 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
               --seqtab_file_path=[targets[1]]\
               --seqs_fasta_path=[targets[2]]\
               --threads=[vars[1]]",
-            depends = [mergers_file_path],
+            depends = [mergers_file_path,TrackedExecutable("r", version_command="echo 'r' `r -e 'packageVersion(\"dada2\")'`")],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
             args = [output_folder, filtered_dir],
             vars = [script_path, threads, readcounts_rds, asv_tsv ],
             name = "construct_sequence_table"
             )
          return seqtab_file_path, read_counts_steps_path, seqs_fasta_path
-
 
 
 def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads):
