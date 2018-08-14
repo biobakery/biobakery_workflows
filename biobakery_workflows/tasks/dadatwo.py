@@ -191,6 +191,8 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
 
          script_path = utilities.get_package_file("const_seq_table", "Rscript")
 
+         version_command = """echo 'r' `r -e 'packageVersion("dada2")' | grep -C 1 dada2`"""
+
          workflow.add_task(
             "[vars[0]] \
               --output_dir=[args[0]]\
@@ -202,7 +204,7 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
               --seqtab_file_path=[targets[1]]\
               --seqs_fasta_path=[targets[2]]\
               --threads=[vars[1]]",
-            depends = [mergers_file_path,TrackedExecutable("r", version_command="echo 'r' `r -e 'packageVersion(\"dada2\")'`")],
+            depends = [mergers_file_path,TrackedExecutable("r", version_command="echo 'r' `r -e 'library(dada2); sessionInfo()' | grep -C 1 dada2`")],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
             args = [output_folder, filtered_dir],
             vars = [script_path, threads, readcounts_rds, asv_tsv ],
