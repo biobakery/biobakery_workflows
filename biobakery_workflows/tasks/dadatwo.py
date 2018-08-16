@@ -205,7 +205,7 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
               --seqtab_file_path=[targets[1]]\
               --seqs_fasta_path=[targets[2]]\
               --threads=[vars[1]]",
-            depends = [mergers_file_path,TrackedExecutable(version_script, version_command="echo '" +  version_script + "' `" + version_script + "`")],
+            depends = [mergers_file_path,TrackedExecutable("r", version_command="echo '" +  version_script + "' `" + version_script + "`")],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
             args = [output_folder, filtered_dir],
             vars = [script_path, threads, readcounts_rds, asv_tsv ],
