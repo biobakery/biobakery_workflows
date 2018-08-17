@@ -24,146 +24,12 @@ THE SOFTWARE.
 """
 
 import os
-import sys
 
 from anadama2.tracked import TrackedExecutable
 
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
-
-
-def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
-    """Demultiplex the files (single end or paired)
-    
-    Args:
-        workflow (anadama2.workflow): An instance of the workflow class.
-        input_files (list): A list of paths to fastq files for input to ea-utils.
-        extension (string): The extension for all files.
-        output_folder (string): The path of the output folder.
-        barcode_file (string): A file of barcodes.
-        index_files (string): A list of paths to the index files.
-        min_phred (int): The min phred quality score to use in the demultiplex command.
-        pair_identifier (string): The string in the file basename to identify
-            the first pair in the set.
-        
-    Requires:
-        ea-utils fastq-multx: A tool to demultiplex fastq files.
-        
-    Returns:
-        list: A list of the demultiplexed files.
-        
-    """
-    
-    # error if there is more than one index file
-    if len(index_files) > 1:
-        sys.exit("ERROR: Only one index file expected for demultiplexing step.")
-    
-    # read the barcode file to get the expected output files 
-    try:
-        file_handle=open(barcode_file)
-        lines=file_handle.readlines()
-        file_handle.close()
-    except EnvironmentError:
-        sys.exit("ERROR: Unable to read barcode file: " + barcode_file)
-        
-    samples=set()
-    for line in lines:
-        # ignore headers or comment lines
-        if not line.startswith("#"):
-            sample_name=line.rstrip().split("\t")[0]
-            if sample_name:
-                samples.add(sample_name)
-            
-    # get the names of the expected output files
-    demultiplex_fastq_files = utilities.name_files(samples,output_folder,subfolder="demultiplex",extension="fastq")
-    
-    # name the barcode file with the reverse complement barcodes added
-    expanded_barcode_file = utilities.name_files("expanded_barcode_file.txt",output_folder,subfolder="demultiplex",create_folder=True)
-    
-    # create a file that includes the reverse complements of the barcodes
-    workflow.add_task(
-        "reverse_compliment_barcodes.py --input [depends[0]] --output [targets[0]]",
-        depends=barcode_file,
-        targets=expanded_barcode_file)
-    
-    # check for paired input files
-    input_pair1, input_pair2 = utilities.paired_files(input_files, extension, pair_identifier)
-    
-    # capture the demultiplex stats in output files, one for each set of input files
-    if input_pair1:
-        demultiplex_log = utilities.name_files(input_pair1[0],output_folder,subfolder="demultiplex",extension="log")
-    else:
-        demultiplex_log = utilities.name_files(input_files[0],output_folder,subfolder="demultiplex",extension="log")
-        
-    # get the output folder for all files
-    demultiplex_output_folder = os.path.dirname(demultiplex_log)
-    
-    # get the basenames of the output files, one for each sample
-    demultiplex_output_basenames = utilities.name_files(samples,output_folder,subfolder="demultiplex")
-    
-    # create a tracked executable
-    fastq_multx_tracked = TrackedExecutable("fastq-multx",version_command="echo 'fastq-multx' `fastq-multx 2>&1 | grep Version`")
-    
-    if input_pair1 and input_pair2:
-        # this run has paired input files
-        # get the second pair identifier
-        pair_identifier2=pair_identifier.replace("1","2",1)
-        # get the names of the expected output files
-        demultiplex_fastq_files_R1 = [file+pair_identifier+".fastq" for file in demultiplex_output_basenames]
-        demultiplex_fastq_files_R2 = [file+pair_identifier2+".fastq" for file in demultiplex_output_basenames]
-        demultiplex_fastq_files = demultiplex_fastq_files_R1+demultiplex_fastq_files_R2
-        
-        if index_files:
-            # this run has index files
-            workflow.add_task(
-                "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] [depends[3]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, index_files[0], input_pair1[0], input_pair2[0], fastq_multx_tracked],
-                args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
-                targets=demultiplex_log,
-                name="demultiplex")
-            
-        else:
-            workflow.add_task(
-                "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%[args[2]].fastq [args[1]]/%[args[3]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, input_pair1[0], input_pair2[0], fastq_multx_tracked],
-                args=[min_phred, demultiplex_output_folder, pair_identifier, pair_identifier2],
-                targets=demultiplex_log,
-                name="demultiplex")
-        
-    else:
-        # this run has single end input files
-        # get the names of the expected output files
-        demultiplex_fastq_files = [file+pair_identifier+".fastq" for file in demultiplex_output_basenames]
-        
-        if index_files:
-            # this run has index files
-            workflow.add_task(
-                "fastq-multx -l [depends[0]] [depends[1]] [depends[2]] -o [args[1]]/%_I1_001.fastq [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, index_files[0], input_files[0], fastq_multx_tracked],
-                args=[min_phred, demultiplex_output_folder, pair_identifier],
-                targets=demultiplex_log,
-                name="demultiplex")
-            
-        else:
-            workflow.add_task(
-                "fastq-multx -l [depends[0]] [depends[1]] -o [args[1]]/%[args[2]].fastq -q [args[0]] > [targets[0]]",
-                depends=[expanded_barcode_file, input_files[0]],
-                args=[min_phred, demultiplex_output_folder, pair_identifier, fastq_multx_tracked],
-                targets=demultiplex_log,
-                name="demultiplex")
-            
-    # fastq-multx only creates files for those samples with reads mapping to barcodes
-    # if a sample in the barcode file does not have any reads, the expected files for 
-    # that sample will not be created. This task group will create empty files for
-    # any samples that do not have reads so that all expected files exist.
-    workflow.add_task_group(
-        "bash -c \"[ -e [targets[0]] ] || touch [targets[0]]\"",
-        depends=[demultiplex_log]*len(demultiplex_fastq_files),
-        targets=demultiplex_fastq_files,
-        name="check_demultiplex")
-
-    return demultiplex_fastq_files
     
 def quality_control(workflow, fastq_file, output_folder, threads, maxee, trunc_len):
     """ Create a quality report, filter fastq, and then truncate fasta files
@@ -664,7 +530,7 @@ def create_tree(workflow, msa_file, tree_file):
 
     # run fasttree on msa file with default settings
     workflow.add_task(
-        "FastTree [depends[0]] > [targets[0]]",
+        "FastTree -gtr -nt [depends[0]] > [targets[0]]",
         depends=msa_file,
         targets=tree_file,
         name="fasttree")
@@ -756,7 +622,7 @@ def functional_profile(workflow, closed_reference_tsv, output_folder):
         
     Requires:
         Picrust v1.1: Software to predict metagenome function.
-        Biom v2: A tool for general use formatting of biological data._
+        Biom v2: A tool for general use formatting of biological data.
         
     Returns:
         string: The path to the functional data file in tsv format.
@@ -766,22 +632,24 @@ def functional_profile(workflow, closed_reference_tsv, output_folder):
     # convert the tsv file to biom format
     closed_reference_biom_file = utilities.name_files(closed_reference_tsv,output_folder,extension="biom")
     convert_to_biom_from_tsv(workflow,closed_reference_tsv,closed_reference_biom_file,options="--process-obs-metadata=taxonomy --output-metadata-id=taxonomy")
-    
+
     # run picrust to get functional data
-    functional_data_categorized_biom,functional_data_predicted_biom = picrust(workflow,closed_reference_biom_file,output_folder)
-    
+    functional_data_categorized_biom, functional_data_predicted_biom = picrust(workflow, closed_reference_biom_file,
+                                                                               output_folder)
+
     # convert the predited biom file to tsv
-    functional_data_predicted_tsv = utilities.name_files(functional_data_predicted_biom,output_folder,extension="tsv")
-    convert_from_biom_to_tsv(workflow,functional_data_predicted_biom,functional_data_predicted_tsv)
+    functional_data_predicted_tsv = utilities.name_files(functional_data_predicted_biom, output_folder, extension="tsv")
+    convert_from_biom_to_tsv(workflow, functional_data_predicted_biom, functional_data_predicted_tsv)
 
     # convert the categorized biom file to tsv
-    functional_data_categorized_tsv= utilities.name_files(functional_data_categorized_biom,output_folder,extension="tsv")
-    convert_from_biom_to_tsv(workflow,functional_data_categorized_biom,functional_data_categorized_tsv)
-    
+    functional_data_categorized_tsv = utilities.name_files(functional_data_categorized_biom, output_folder,
+                                                           extension="tsv")
+    convert_from_biom_to_tsv(workflow, functional_data_categorized_biom, functional_data_categorized_tsv)
+
     return functional_data_categorized_tsv
 
 def picrust(workflow,otu_table_biom,output_folder):
-    """ Runs picrust normalize, then predict, then categorize
+    """ Runs picrust normalize, then predict
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
@@ -795,7 +663,7 @@ def picrust(workflow,otu_table_biom,output_folder):
         string: The path to the functional data file in biom format.
     
     """
-    
+
     # normalize the otu table
     normalized_otu_table=utilities.name_files("all_samples_normalize_by_copy_number.biom", output_folder)
     # first remove target file as picrust will not overwrite
@@ -817,18 +685,16 @@ def picrust(workflow,otu_table_biom,output_folder):
         targets=predict_metagenomes_table,
         name="predict_metagenomes.py")
 
-
     # categorize by function
-    categorized_function_table=utilities.name_files("all_samples_categorize_by_function.biom", output_folder)
+    categorized_function_table = utilities.name_files("all_samples_categorize_by_function.biom", output_folder)
     # first remove target file as picrust will not overwrite
     workflow.add_task(
-        "remove_if_exists.py [targets[0]] ; "+\
+        "remove_if_exists.py [targets[0]] ; " + \
         "categorize_by_function.py -i [depends[0]] -o [targets[0]] --level 3 -c KEGG_Pathways",
-        depends=[predict_metagenomes_table,TrackedExecutable("categorize_by_function.py")],
+        depends=[predict_metagenomes_table, TrackedExecutable("categorize_by_function.py")],
         targets=categorized_function_table,
         name="categorize_by_function.py")
-    
-    
+
     return categorized_function_table, predict_metagenomes_table
     
 

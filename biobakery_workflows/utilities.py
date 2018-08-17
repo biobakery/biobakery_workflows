@@ -1092,6 +1092,7 @@ def read_otu_table(file):
             data.append([float(i) for i in data_points])
             
     return samples, ids, taxonomy, data
+    
 
 def sort_data(data, samples, sort_by_name=False, sort_by_name_inverse=False):
     """ Sort the data with those with the largest values first or by sample name
@@ -1307,8 +1308,11 @@ def taxonomy_trim(taxa):
             
         else:
             most_specific_clade = taxon_reduced.split(delimiter)[-1]
-            data = taxon_full.split(most_specific_clade)
-            trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
+            if not most_specific_clade:
+                trimmed_taxa.append(taxon_reduced.replace(delimiter,".")) 
+            else:
+                data = taxon_full.split(most_specific_clade)
+                trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
             
     return trimmed_taxa
         
