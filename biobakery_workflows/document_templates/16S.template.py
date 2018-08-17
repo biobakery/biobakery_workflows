@@ -71,11 +71,11 @@ from biobakery_workflows import utilities
 #' # Quality Control
 
 
-#' <% if method == "dada2": print("## Forward Read Quality Plot by Sample") %>   \
+#' <% if method == "dada2": print("## Forward Reads") %>   \
 #' <% if method == "dada2": print("![FWD Read](" + vars["readF_qc"] + ")") %> 
 #' <% if method == "dada2": print("\clearpage")  %> 
 
-#' <% if method == "dada2": print("## Reverse Read Quality Plot  by Sample") %>   \
+#' <% if method == "dada2": print("## Reverse Reads") %>   \
 #' <% if method == "dada2": print("![REV Read](" + vars["readR_qc"] + ")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 #+ echo=False
@@ -91,66 +91,17 @@ if method != "dada2":
     
 #' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>  
     
-#' <% if method == "dada2": print("## Forward Read Error Rates by Sample") %>  \
+#' <% if method == "dada2": print("## Forward Reads") %>  \
 #' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
 #' <% if method == "dada2": print("\clearpage") %>
 
-#' <% if method == "dada2": print("## Reverse Read Error Rates by Sample") %>   \
+#' <% if method == "dada2": print("## Reverse Reads") %>   \
 #' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
 
 #' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorinfo"]) %> 
 #' <% if pdf_format: print("\clearpage") %>
       
 #+ echo=False
-def sort_data(top_data, samples):
-    # sort the top data so it is ordered with the top sample/abundance first
-    sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
-    sorted_samples=[samples[i] for i in sorted_sample_indexes]
-    sorted_data=[]
-    for row in top_data:
-        sorted_data.append([row[i] for i in sorted_sample_indexes])
-    return sorted_data, sorted_samples
-
-def plot_grouped_taxonomy_subsets(sorted_data, cat_metadata, taxa, title, samples_found, ylabel, legend_title, legend_size):
-    """ Plot the grouped taxonomy sorted by species abundance for a single feature """
-    # group the samples by metadata
-    sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
-    # sort the data by abundance
-    for metadata_type in sorted_data_grouped:
-        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
-
-    # print out a plot for each group of metadata if there are lots of categories
-    sorted_metadata_subsets=sorted(sorted_data_grouped.keys())
-    
-    try:
-        sorted_metadata_subsets=sorted(sorted_data_grouped.keys(), key=float)
-    except ValueError:
-        pass
-    
-    max_subsets=8
-    
-    # split into subsets
-    split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
-    
-    # make sure the last group is not just a single data set
-    if len(split_sorted_metadata_subsets[-1]) == 1:
-        last_set = split_sorted_metadata_subsets.pop()
-        split_sorted_metadata_subsets[-1].append(last_set[0])
-    
-    for metadata_subset in split_sorted_metadata_subsets:
-        subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
-        subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
-        
-        # get title addition for subset
-        title_add=""
-        if len(sorted_metadata_subsets) > max_subsets:
-            title_add=" "+metadata_subset[0]+" to "+metadata_subset[-1]
-
-        document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=taxa, 
-            column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
-        
-
 # if picard files are provided, then plot those that do not meet a threshold
 picard_text = ""
 if vars["picard"]:
@@ -198,20 +149,6 @@ total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
 sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
 
-def plot_all_categorical_metadata(sorted_samples, sorted_data, labels, title, ylabel, legend_title="", legend_size=7):
-    """ Generate a plot of each set of categorical metadata """
-    if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
-        # get the metadata organized into the same sample columns as the data
-        new_data, samples_found = utilities.merge_metadata(vars['metadata'], sorted_samples, sorted_data, values_without_names=True)
-        # split the data and metadata 
-        ordered_metadata=new_data[0:len(vars['metadata'])-1]
-        ordered_sorted_data=new_data[len(vars['metadata'])-1:]
-        # get the categorical metadata
-        categorical_metadata=utilities.filter_metadata_categorical(ordered_metadata, vars['metadata_labels'])
-        # plot a bar chart for a set of categorical data
-        for cat_metadata in categorical_metadata:
-            plot_grouped_taxonomy_subsets(ordered_sorted_data, cat_metadata, labels, title, samples_found, ylabel, legend_title, legend_size)
-
 if method == "dada2":
 
     filtered_reads = [row[1] for row in sorted_all_read_data]
@@ -222,9 +159,14 @@ if method == "dada2":
     document.plot_grouped_barchart([sorted_total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads],
            ["Original","Filtered","Merged","Tabled","Nochimera"], sorted_samples,
            title="Read counts by Sample", xlabel="Samples", ylabel="Total Reads")
-    plot_all_categorical_metadata(sorted_samples, [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads], 
-    ["total","filtered","merged","tabled","nochimera"], title="Read counts in each step by sample", ylabel="Total Reads")
-
+    # plot grouped taxonomy for all categorical data provided
+    if visualizations.metadata_provided(vars):
+        categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples,
+            [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads])
+        for cat_metadata in categorical_metadata:
+            visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, 
+                ["total","filtered","merged","tabled","nochimera"], samples_found, 
+                title="Read counts by sample", ylabel="Total Reads", legend_title="")
 
 else:
     known_reads = [row[1] for row in sorted_all_read_data]
@@ -233,19 +175,25 @@ else:
     # plot the read counts
     document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
         title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
-    plot_all_categorical_metadata(sorted_samples, [known_reads,unknown_reads,unmapped_reads], 
-        ["classified","unclassified","unmapped"], title="Read counts by Sample", ylabel="Total Reads")
- 
+    # plot grouped taxonomy for all categorical data provided
+    if visualizations.metadata_provided(vars):
+        categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples,
+            [known_reads,unknown_reads,unmapped_reads])
+        for cat_metadata in categorical_metadata:
+            visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"],
+                samples_found, title="Read counts by sample", ylabel="Total Reads", legend_title="")
+
 #' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>  
 #' <% if vars["method"] != "dada2": print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %> 
 
 #' <% if pdf_format: print("\clearpage") %>
 
 #' # Taxonomy
-#' ## Average Abundance
     
 #' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2taxinfo"]) %>      
-    
+
+#' ## Genera
+ 
 #+ echo=False
 
 # read in the otu table data
@@ -255,38 +203,24 @@ samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
 max_taxa=15
 
 # get the relative abundance values for the samples
-relab_data = utilities.relative_abundance(data)
+relab_data = utilities.relative_abundance(data, percent=True)
 
-# get the taxa summarized by genus level
-genus_level_taxa, genus_level_data = utilities.taxa_by_level(taxonomy, relab_data, level=5)
-# get the top rows of the relative abundance data
-top_taxa, top_data = utilities.top_rows(genus_level_taxa, genus_level_data, max_taxa, function="average")
+# get the top taxa by genus level
+max_taxa = 15
+sorted_samples, sorted_top_data, top_data, top_taxa_short_names, legend_size = visualizations.get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa)
 
-# shorten the top taxa names to just the genus level for plotting
-top_taxa_short_names = utilities.taxa_shorten_name(top_taxa, level=5, remove_identifier=True)
+# add other to the taxonomy data, other represents total genera not shown on plot
+top_taxa_short_names_plus_other, sorted_top_data_plus_other = visualizations.fill_taxonomy_other(top_taxa_short_names, sorted_top_data)
 
-# check for duplicate genera in list
-legend_size = 7
-if len(top_taxa_short_names) != len(list(set(top_taxa_short_names))):
-    # if duplicate names, then add family to the taxonomy
-    top_taxa_short_names = [family+"."+genus for family, genus in zip(utilities.taxa_shorten_name(top_taxa, level=4),utilities.taxa_shorten_name(top_taxa, level=5))]
-    # reduce legend size to fit names
-    legend_size = 5
-
-# sort the data so those with the top genera are shown first
-sorted_samples, sorted_data = utilities.sort_data(top_data[0], samples)
-
-transpose_top_data = numpy.transpose(top_data)
-sorted_top_data = numpy.transpose([transpose_top_data[samples.index(sample)] for sample in sorted_samples])
-
-document.plot_stacked_barchart(sorted_top_data, row_labels=top_taxa_short_names, 
+document.plot_stacked_barchart(sorted_top_data_plus_other, row_labels=top_taxa_short_names_plus_other,
     column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
     ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size)
 
+#+ echo=False
+# plot grouped and average barplots for metadata if provided
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_top_data_plus_other, top_taxa_short_names_plus_other, max_taxa, feature="genera")
 
-plot_all_categorical_metadata(sorted_samples, sorted_top_data, top_taxa_short_names,
-    title="Top "+str(max_taxa)+" genera by average abundance", ylabel="Relative abundance", legend_title="Genera", legend_size=legend_size)
-
+#' <% if pdf_format: print("\clearpage") %>
 
 #' ## Terminal Taxa
 
@@ -306,14 +240,14 @@ sorted_samples_terminal, sorted_data_terminal = utilities.sort_data(top_terminal
 transpose_top_terminal_data = numpy.transpose(top_terminal_data)
 sorted_top_terminal_data = numpy.transpose([transpose_top_terminal_data[samples.index(sample)] for sample in sorted_samples_terminal])
 
-document.plot_stacked_barchart(sorted_top_terminal_data, row_labels=shorted_names, 
+# add the remaining terminal taxa as "other" to the data
+shorted_names_plus_other, sorted_top_terminal_data_plus_other = visualizations.fill_taxonomy_other(shorted_names, sorted_top_terminal_data)
+
+document.plot_stacked_barchart(sorted_top_terminal_data_plus_other, row_labels=shorted_names_plus_other,
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
-plot_all_categorical_metadata(sorted_samples_terminal, sorted_top_terminal_data, shorted_names,
-    title="Top "+str(max_taxa)+" terminal taxa by average abundance", ylabel="Relative abundance", legend_title="Terminal taxa")
-
-
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_terminal, sorted_top_terminal_data_plus_other, shorted_names_plus_other, max_taxa, feature="terminal taxa")
 
 #' # Heatmaps
 
@@ -354,7 +288,7 @@ utilities.reset_pweave_figure_size()
 #+ echo=False
 utilities.change_pweave_figure_size_heatmap(pdf_format)
 visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
-    pdf_format,"Top {} terminal taxa by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap)
+    pdf_format,"Top {} terminal taxa by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
 utilities.reset_pweave_figure_size()
 
 

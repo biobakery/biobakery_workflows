@@ -81,7 +81,7 @@ else:
         title="Top "+str(max_sets)+" pathways by average abundance",
         log_scale=False,zscore=True)
 
-#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets,type="pathways",method="Spearman") %>
+#' <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
 
 #' <% if pdf_format: print("\clearpage") %>
 
