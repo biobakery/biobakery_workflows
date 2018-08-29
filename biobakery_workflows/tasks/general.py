@@ -31,7 +31,7 @@ from anadama2.tracked import TrackedExecutable, TrackedDirectory
 from biobakery_workflows import utilities
 
 
-def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier, dual_indexing):
+def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)
     
     Args:
