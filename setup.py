@@ -92,7 +92,7 @@ setuptools.setup(
         "Programming Language :: Python :: 2.7",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
         ],
-    install_requires=['anadama2>=0.4.0'],
+    install_requires=['anadama2>=0.5.0'],
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [
