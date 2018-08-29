@@ -24,13 +24,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 import sys
-import os
+import os, fnmatch
 
 # import the workflow class from anadama2
 from anadama2 import Workflow
 
 # import the library of biobakery_workflow tasks for shotgun sequences
-from biobakery_workflows.tasks import shotgun
+from biobakery_workflows.tasks import shotgun, general
 
 # import the utilities functions and config settings from biobakery_workflows
 from biobakery_workflows import utilities, config
@@ -43,6 +43,10 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 # add the custom arguments to the workflow
 workflow_config = config.ShotGun()
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz"])
+workflow.add_argument("barcode-file", desc="the barcode file", default="")
+workflow.add_argument("dual-index", desc="the index file if dual indexing", default="")
+workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
+workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
 workflow.add_argument("bypass-quality-control", desc="do not run the quality control tasks", action="store_true")
@@ -63,21 +67,45 @@ args = workflow.parse_args()
 # return an error if no files are found
 input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
 
+
+# if a dual index file is provided, then demultiplex dual indexing
+if args.dual_index:
+    barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*')
+    barcode_files = [os.path.join(args.input,file) for file in barcode_files]
+    dual_index_path = os.path.join(args.input, args.dual_index)
+    input_files = list(filter(lambda file: not file in barcode_files, input_files))
+
+    demultiplexed_files, demultiplex_output_folder = general.demultiplex_dual(workflow,args.output, input_files,
+             args.input_extension, barcode_files, dual_index_path, args.min_pred_qc_score, args.pair_identifier)
+
+# if a barcode file is provided, then demultiplex
+elif args.barcode_file:
+    demultiplexed_files, demultiplex_output_folder=general.demultiplex(
+            workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
+            args.min_pred_qc_score, args.pair_identifier,args.dual_indexing)
+    # if the original files are gzipped, they will not be compressed after demultiplexing
+    args.input_extension = args.input_extension.replace(".gz","")
+else:
+    demultiplexed_files=input_files
+    demultiplex_output_folder=args.input
+
+
 ### STEP #1: Run quality control on all input files ###
 original_extension = args.input_extension
 if args.bypass_quality_control:
     # merge files if they are paired
-    qc_output_files, args.input_extension = shotgun.merge_pairs(workflow, input_files, args.input_extension, args.pair_identifier, args.output)
+    qc_output_files, args.input_extension = shotgun.merge_pairs(workflow,
+        demultiplexed_files, args.input_extension, args.pair_identifier, args.output)
     
 elif not "fasta" in args.input_extension:
-    qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, 
-        input_files, args.input_extension, args.output, args.threads, args.contaminate_databases, 
+    qc_output_files, filtered_read_counts = shotgun.quality_control(workflow,
+        demultiplexed_files, args.input_extension, args.output, args.threads, args.contaminate_databases,
         args.pair_identifier, args.qc_options, args.remove_intermediate_output)
     # get the new extension, if the original files were gzipped they will not be after quality control
     args.input_extension = args.input_extension.replace(".gz","")
 else:
     # if the input files are fasta, bypass quality control
-    qc_output_files = input_files
+    qc_output_files = demultiplexed_files
 
 ### STEP #2: Run taxonomic profiling on all of the filtered files ###
 if not args.bypass_taxonomic_profiling:
@@ -85,9 +113,9 @@ if not args.bypass_taxonomic_profiling:
         qc_output_files,args.output,args.threads,args.input_extension)
 else:
     # get the names of the taxonomic profiling files allowing for pairs
-    input_pair1, input_pair2 = utilities.paired_files(input_files, original_extension, args.pair_identifier)
+    input_pair1, input_pair2 = utilities.paired_files(demultiplexed_files, original_extension, args.pair_identifier)
     sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
-    tsv_profiles = utilities.name_files(sample_names, args.input, tag="taxonomic_profile", extension="tsv")
+    tsv_profiles = utilities.name_files(sample_names, demultiplex_output_folder, tag="taxonomic_profile", extension="tsv")
     # check all of the expected profiles are found
     if len(tsv_profiles) != len(list(filter(os.path.isfile,tsv_profiles))):
         sys.exit("ERROR: Bypassing taxonomic profiling but all of the tsv taxonomy profile files are not found in the input folder. Expecting the following input files:\n"+"\n".join(tsv_profiles))
@@ -95,7 +123,7 @@ else:
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         tsv_profiles,args.output,args.threads,"tsv",already_profiled=True)
     # look for the sam profiles
-    taxonomy_sam_files = utilities.name_files(sample_names, args.input, tag="bowtie2", extension="sam")
+    taxonomy_sam_files = utilities.name_files(sample_names, demultiplex_output_folder, tag="bowtie2", extension="sam")
     # if they do not all exist, then bypass strain profiling if not already set
     if not args.bypass_strain_profiling:
         if len(taxonomy_sam_files) != len(list(filter(os.path.isfile,taxonomy_sam_files))):

@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 
 from anadama2 import Workflow
+import os, fnmatch
 
 from biobakery_workflows.tasks import sixteen_s, dadatwo, general
 from biobakery_workflows import utilities, config, files
@@ -39,6 +40,7 @@ workflow_config = config.SixteenS()
 workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2"])
 workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
+workflow.add_argument("dual-index", desc="the index file if dual indexing", default="")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default="_R1_001")
@@ -62,17 +64,27 @@ index_files = utilities.find_files(args.input, extension=args.index_identifier+"
 # remove the index files, if found, from the set of input files
 input_files = list(filter(lambda file: not file in index_files, input_files))
 
+# if a dual index file is provided, then demultiplex dual indexing
+if args.dual_index:
+    barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*')
+    barcode_files = [os.path.join(args.input,file) for file in barcode_files]
+    dual_index_path = os.path.join(args.input, args.dual_index)
+    input_files = list(filter(lambda file: not file in barcode_files, input_files))
+
+    demultiplexed_files, demultiplex_output_folder = general.demultiplex_dual(workflow,args.output, input_files,
+             args.input_extension, barcode_files, dual_index_path, args.min_pred_qc_score, args.pair_identifier)
+
 # if a barcode file is provided, then demultiplex
-if args.barcode_file:
+elif args.barcode_file:
     demultiplexed_files, demultiplex_output_folder=general.demultiplex(
-        workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
-        args.min_pred_qc_score, args.pair_identifier)
+            workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
+            args.min_pred_qc_score, args.pair_identifier,args.dual_indexing)
     # if the original files are gzipped, they will not be compressed after demultiplexing
     args.input_extension = args.input_extension.replace(".gz","")
 else:
     demultiplexed_files=input_files
     demultiplex_output_folder=args.input
-    
+
 if args.method == "dada2":
     # call dada2 workflow tasks
     # filter reads and trim
@@ -106,25 +118,25 @@ if args.method == "dada2":
             workflow, args.output, seqtab_file_path, args.dada_db, args.threads)
     
     # dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path)
-    
-else:  
+
+else:
     # call usearch workflow tasks
-	# merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
-	all_samples_fastq = sixteen_s.merge_samples_and_rename(
+    #  merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
+    all_samples_fastq = sixteen_s.merge_samples_and_rename(
     	       workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        
 
 	# add quality control tasks: generate qc report, filter by maxee, and truncate
-	filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
+    filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
             workflow, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
 
-	# taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
-	closed_reference_tsv = sixteen_s.taxonomic_profile(
+    # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
+    closed_reference_tsv = sixteen_s.taxonomic_profile(
             workflow, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output, 
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
             workflow_config.greengenes_taxonomy, args.min_size)
 
     # functional profiling
-        categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+    categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
 
 # start the workflow
 workflow.go()

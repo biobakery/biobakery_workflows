@@ -26,12 +26,12 @@ THE SOFTWARE.
 import os
 import sys
 
-from anadama2.tracked import TrackedExecutable
+from anadama2.tracked import TrackedExecutable, TrackedDirectory
 
 from biobakery_workflows import utilities
 
 
-def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
+def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier, dual_indexing):
     """Demultiplex the files (single end or paired)
     
     Args:
@@ -150,17 +150,81 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
                 args=[min_phred, demultiplex_output_folder, pair_identifier, fastq_multx_tracked],
                 targets=demultiplex_log,
                 name="demultiplex")
-            
-    # fastq-multx only creates files for those samples with reads mapping to barcodes
-    # if a sample in the barcode file does not have any reads, the expected files for 
-    # that sample will not be created. This task group will create empty files for
-    # any samples that do not have reads so that all expected files exist.
-    workflow.add_task_group(
-        "bash -c \"[ -e [targets[0]] ] || touch [targets[0]]\"",
-        depends=[demultiplex_log]*len(demultiplex_fastq_files),
-        targets=demultiplex_fastq_files,
-        name="check_demultiplex")
+
+    demultiplex_fastq_files = demultiplex_check(workflow, demultiplex_log, demultiplex_fastq_files)
+
 
     return demultiplex_fastq_files, demultiplex_output_folder
 
 
+def demultiplex_dual(workflow, output_folder, input_files, extension,
+            barcode_files, dual_index_path, min_phred, pair_identifier):
+
+    # capture the demultiplex stats in log file, one for each set of input files
+    demultiplex_log = utilities.name_files(input_files[0],output_folder,subfolder="demultiplex",extension="log",create_folder=True)
+    demultiplex_output_folder = os.path.dirname(demultiplex_log)
+
+    # create a tracked executable
+    fastq_multx_tracked = TrackedExecutable("fastq-multx",
+                                            version_command="echo 'fastq-multx' `fastq-multx 2>&1 | grep Version`")
+
+    # check for paired input files
+    input_pair1, input_pair2 = utilities.paired_files(input_files, extension, pair_identifier)
+
+    # get barcode files
+    barcode1, barcode2 = utilities.paired_files(barcode_files, extension, pair_identifier)
+
+    # get the second pair identifier
+    pair_identifier2 = pair_identifier.replace("1", "2", 1)
+
+    try:
+        file_handle = open(dual_index_path)
+        lines = file_handle.readlines()
+        file_handle.close()
+    except EnvironmentError:
+        sys.exit("ERROR: Unable to read dual index file: " + dual_index_path)
+
+    run_name = os.path.basename(input_pair1[0]).replace(pair_identifier, "").replace("." + extension, "")
+    demultiplex_files = set()
+    for line in lines:
+        # ignore headers or comment lines
+        if not line.startswith("#"):
+            sample_name = line.split(" ")[0]
+
+            if sample_name:
+                nm1 = demultiplex_output_folder + "/" + run_name + "_" + sample_name + pair_identifier + "." + extension
+                nm2 = demultiplex_output_folder + "/" + run_name + "_" + sample_name + pair_identifier2 + "." + extension
+                demultiplex_files.add(nm1)
+                demultiplex_files.add(nm2)
+
+    # get the names of the expected output files
+    # demultiplex_files = utilities.name_files(samples, demultiplex_output_folder, extension=extension)
+
+    workflow.add_task(
+        "fastq-multx -B [depends[0]] [depends[1]] [depends[2]] [depends[3]] [depends[4]]\
+         -o n/a -o n/a -o [args[0]]/[args[5]]_%[args[3]].[args[1]] -o [args[0]]/[args[5]]_%[args[4]].[args[1]]\
+         -q [args[2]] > [targets[0]]",
+        depends=[dual_index_path, barcode1[0], barcode2[0], input_pair1[0], input_pair2[0]],
+        args=[demultiplex_output_folder, extension, min_phred, pair_identifier, pair_identifier2, run_name, fastq_multx_tracked],
+        targets=[demultiplex_log, TrackedDirectory(demultiplex_output_folder)],
+        name="demultiplex_dual")
+
+    demultiplex_files = demultiplex_check(workflow, demultiplex_log, demultiplex_files)
+
+
+    return demultiplex_files, demultiplex_output_folder
+
+
+def demultiplex_check(workflow, demultiplex_log, demultiplex_files):
+
+    # fastq-multx only creates files for those samples with reads mapping to barcodes
+    # if a sample in the barcode file does not have any reads, the expected files for
+    # that sample will not be created. This task group will create empty files for
+    # any samples that do not have reads so that all expected files exist.
+    workflow.add_task_group(
+        "bash -c \"[ -e [targets[0]] ] || touch [targets[0]]\"",
+        depends=[demultiplex_log] * len(demultiplex_files),
+        targets=demultiplex_files,
+        name="check_demultiplex")
+
+    return demultiplex_files
