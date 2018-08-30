@@ -49,7 +49,8 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
         ea-utils fastq-multx: A tool to demultiplex fastq files.
         
     Returns:
-        list: A list of the demultiplexed files.
+        list: A list of the demultiplexed files
+        string: output folder of demultiplexed files
         
     """
     
@@ -160,6 +161,28 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
 def demultiplex_dual(workflow, output_folder, input_files, extension,
             barcode_files, dual_index_path, min_phred, pair_identifier):
 
+    """Demultiplex the files (dual indexed paired)
+
+        Args:
+            workflow (anadama2.workflow): An instance of the workflow class.
+            input_files (list): A list of paths to fastq(gz) files for input to ea-utils.
+            extension (string): The extension for all files.
+            output_folder (string): The path of the output folder.
+            barcode_files (list): A list of barcode files.
+            dual_index_path (string): A paths to the dual index file.
+            min_phred (int): The min phred quality score to use in the demultiplex command.
+            pair_identifier (string): The string in the file basename to identify
+                the first pair in the set.
+
+        Requires:
+            ea-utils fastq-multx: A tool to demultiplex fastq files.
+
+        Returns:
+            list: A list of the demultiplexed files
+            string: output folder of demultiplexed files
+
+        """
+
     # capture the demultiplex stats in log file, one for each set of input files
     demultiplex_log = utilities.name_files(input_files[0],output_folder,subfolder="demultiplex",extension="log",create_folder=True)
     demultiplex_output_folder = os.path.dirname(demultiplex_log)
@@ -228,3 +251,43 @@ def demultiplex_check(workflow, demultiplex_log, demultiplex_files):
         name="check_demultiplex")
 
     return demultiplex_files
+
+def generate_index_file(barcode_files, dual_index_file):
+
+    """Generate dual index file for demultiplexing
+
+        Args:
+            workflow (anadama2.workflow): An instance of the workflow class.
+            barcode_files (list): A list of barcode files.
+            dual_index_file (string): A paths to the dual index file.
+
+        Requires:
+            None
+
+        Returns:
+            Creates dual index file (path dual_index_file)
+        """
+
+    import itertools
+
+    allbarcodes = set()
+    for barcode_file in barcode_files:
+        try:
+            file_handle = open(barcode_file)
+            lines = file_handle.readlines()
+            file_handle.close()
+        except EnvironmentError:
+            sys.exit("ERROR: Unable to read barcode: " + barcode_file)
+        allbarcodes.update(lines[1::4])
+
+    dual_indexes_all = list(itertools.combinations(allbarcodes, 2))
+    dual_indexes = set(dual_indexes_all)
+
+    fh = open(dual_index_file, "w")
+    i = 0
+    for ind in dual_indexes:
+        i += 1
+        fh.write(str(i) + " " + ind[0].replace("\n", "") + "-" + ind[1].replace("\n", "") + " Nextra\n")
+    fh.close()    
+
+    print("Dual index file " + dual_index_file + " has been generated")
