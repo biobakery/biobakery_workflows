@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 
 from anadama2 import Workflow
-import os, fnmatch
+import os, sys, fnmatch
 
 from biobakery_workflows.tasks import sixteen_s, dadatwo, general
 from biobakery_workflows import utilities, config, files
@@ -40,7 +40,7 @@ workflow_config = config.SixteenS()
 workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2"])
 workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
-workflow.add_argument("dual-index", desc="the index file if dual indexing", default="")
+workflow.add_argument("dual-index-identifier", desc="the string to identify the dual index files", default="_I2_001")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default="_R1_001")
@@ -60,25 +60,28 @@ input_files = utilities.find_files(args.input, extension=args.input_extension, e
 
 # check for index files, do not error if they are not found
 index_files = utilities.find_files(args.input, extension=args.index_identifier+"."+args.input_extension)
+dual_index_files = utilities.find_files(args.input, extension=args.dual_index_identifier+".txt")
 
 # remove the index files, if found, from the set of input files
 input_files = list(filter(lambda file: not file in index_files, input_files))
 
 # if a dual index file is provided, then demultiplex dual indexing
-if args.dual_index:
+if dual_index_files:
+    if len(dual_index_files) > 1:
+        sys.exit("ERROR: Only one dual index file expected for demultiplexing step.")
+
     barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*')
     barcode_files = [os.path.join(args.input,file) for file in barcode_files]
-    dual_index_path = os.path.join(args.input, args.dual_index)
     input_files = list(filter(lambda file: not file in barcode_files, input_files))
 
     demultiplexed_files, demultiplex_output_folder = general.demultiplex_dual(workflow,args.output, input_files,
-             args.input_extension, barcode_files, dual_index_path, args.min_pred_qc_score, args.pair_identifier)
+             args.input_extension, barcode_files, dual_index_files[0], args.min_pred_qc_score, args.pair_identifier)
 
 # if a barcode file is provided, then demultiplex
 elif args.barcode_file:
     demultiplexed_files, demultiplex_output_folder=general.demultiplex(
             workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
-            args.min_pred_qc_score, args.pair_identifier,args.dual_indexing)
+            args.min_pred_qc_score, args.pair_identifier)
     # if the original files are gzipped, they will not be compressed after demultiplexing
     args.input_extension = args.input_extension.replace(".gz","")
 else:

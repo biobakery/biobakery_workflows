@@ -7,7 +7,7 @@
 import argparse
 import sys
 import os, fnmatch
-import itertools
+from biobakery_workflows.tasks import general
 
 
 def parse_arguments(args):
@@ -29,28 +29,10 @@ def main():
 
     barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode_*')
     barcode_files = [os.path.join(args.input, file) for file in barcode_files]
-    allbarcodes = set()
-    for barcode_file in barcode_files:
-        try:
-            file_handle = open(barcode_file)
-            lines = file_handle.readlines()
-            file_handle.close()
-        except EnvironmentError:
-            sys.exit("ERROR: Unable to read barcode: " + barcode_file)
-        allbarcodes.update(lines[1::4])
-
-    dual_indexes_all = list(itertools.combinations(allbarcodes, 2))
-    dual_indexes = set(dual_indexes_all)
-
-    dual_index_file = os.path.join(args.input,"barcodes_gen.fil")
-    fh = open(dual_index_file,"w")
-    i=0
-    for ind in dual_indexes:
-        i+= 1
-        fh.write(str(i) + " " + ind[0].replace("\n","")+ "-" + ind[1].replace("\n","") + " Nextra\n")
-    fh.close()
-
-    print("Dual index file " + dual_index_file + " has been generated")
+    # name dual index file
+    dual_index_file = os.path.join(args.input,"barcodes_I2_001.txt")
+    # generate dual index file
+    general.generate_dual_index(barcode_files, dual_index_file)
 
 if __name__ == "__main__":
     main()

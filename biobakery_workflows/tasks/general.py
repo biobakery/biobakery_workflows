@@ -252,7 +252,7 @@ def demultiplex_check(workflow, demultiplex_log, demultiplex_files):
 
     return demultiplex_files
 
-def generate_index_file(barcode_files, dual_index_file):
+def generate_dual_index(barcode_files, dual_index_file):
 
     """Generate dual index file for demultiplexing
 
@@ -284,10 +284,11 @@ def generate_index_file(barcode_files, dual_index_file):
     dual_indexes = set(dual_indexes_all)
 
     fh = open(dual_index_file, "w")
-    i = 0
     for ind in dual_indexes:
-        i += 1
-        fh.write(str(i) + " " + ind[0].replace("\n", "") + "-" + ind[1].replace("\n", "") + " Nextra\n")
-    fh.close()    
+        ind1 = ind[0].replace("\n", "")
+        ind2 = ind[1].replace("\n", "")
+        print(ind1,ind2)
+        fh.write(ind1 + "-" + ind2 + " " + ind1 + "-" + ind2 + " Nextra\n")
+    fh.close()
 
     print("Dual index file " + dual_index_file + " has been generated")
