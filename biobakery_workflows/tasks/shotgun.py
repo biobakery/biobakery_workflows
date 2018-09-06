@@ -1033,8 +1033,8 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
     return megahit_contigs
 
 
-def assemble(workflow, input_files, extension, output_folder, threads, additional_options=None,
-    remove_intermediate_output=None):
+def assemble(workflow, input_files, extension, output_folder, threads, pair_identifier, 
+    additional_options=None, remove_intermediate_output=None):
     """Metagenomic assembly for whole genome shotgun sequences.
 
     This set of tasks performs metagenomic assembly on whole genome shotgun input files in either 
