@@ -994,7 +994,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
     mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 4*12*1024"
         
     if additional_options is None:
-        additional_options=""
+        additional_options= ""
 
     assembly_dir = os.path.join(output_folder, "assembly", "main")
     depends = []
@@ -1011,7 +1011,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
                         targets=[megahit_contig_dir])
 
         if os.path.exists(megahit_contig_dir) and not os.path.isfile(completed_file):
-            additional_options += " --continue "
+            add_opts = additional_options + " --continue "
         elif os.path.isfile(completed_file):
             continue
 
@@ -1021,7 +1021,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
         workflow.add_task_gridable(megahit_cmd,
                                    depends=depends,
                                    targets=[megahit_contig_dir, megahit_contig, intermediate_dir, completed_file],
-                                   args=[threads, sample_name, additional_options],
+                                   args=[threads, sample_name, add_opts],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
