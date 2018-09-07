@@ -16,7 +16,7 @@ RAW_IDS=${OUT_DIR}/${SAMPLE_NAME}.raw_ids.txt
 BALANCED_IDS=${OUT_DIR}/${SAMPLE_NAME}.matched_ids.txt
 ORPHAN_IDS=${OUT_DIR}/${SAMPLE_NAME}.orphan_ids.txt
 
-ORPHAN_SEQS=${OUT_DIR}/${SAMPLE_NAME}.orphans.fastq
+ORPHAN_SEQS=${OUT_DIR}/${SAMPLE_NAME}_orphans.fastq
 
 grep -e '^@.*/[1|2]$' $RAW_SEQS | sed -e 's/^@//' | sort > ${RAW_IDS}
 grep -e '^@.*/[1|2]$' $BALANCED_SEQS | sed -e 's/^@//' | sort > ${BALANCED_IDS}
