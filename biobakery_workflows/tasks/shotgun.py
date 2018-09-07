@@ -1000,10 +1000,6 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
     depends = []
     megahit_template = "megahit %s -t [args[0]] -m 1 -o [targets[0]] --out-prefix [args[1]] [args[2]]"
 
-    workflow.add_task('mkdir [targets[0]]',
-                      depends=[output_folder],
-                      targets=[assembly_dir])
-
     for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
         megahit_contig_dir = os.path.join(assembly_dir, sample_name)
         intermediate_dir = os.path.join(megahit_contig_dir, 'intermediate_contigs')
@@ -1019,7 +1015,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
         elif os.path.isfile(completed_file):
             continue
 
-        megahit_cmd = megahit_template % "-12 [depends[0]] -r [depends[1]]"
+        megahit_cmd = megahit_template % "--12 [depends[0]] -r [depends[1]]"
         depends = [input_reads, orphan_reads]
 
         workflow.add_task_gridable(megahit_cmd,
