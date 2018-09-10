@@ -836,19 +836,6 @@ def sort_fastq_file(workflow, input_files, extension, output_folder, threads):
 
     Returns:
         list: A list of name-sorted FASTQ files.
-
-    Example:
-        from anadama2 import Workflow
-        from biobakery_workflows.tasks import shotgun
-
-        # create an anadama2 workflow instance
-        workflow=Workflow()
-
-        # sort sequences
-        sorted_seqs = shotgun.sort_fastq_files(workflow, ['seqA.fastq', 'seqB.fastq'])       
-            
-        # run the workflow
-        workflow.go()
     """
     sample_names = utilities.sample_names(input_files, extension)
 
@@ -889,6 +876,14 @@ def extract_orphan_reads(workflow, input_files, extension, output_folder, thread
         output_folder (string): The path of the output folder.
         threads (int): The number of threads/cores for kneaddata to use.
         remove_intermediate_output (bool): Remove intermediate output files.
+
+    Requires:
+        seqtk v1.2+: A fast and lightweight tool for processing sequences in the FASTA
+             or FASTQ format
+
+    Returns:
+        list: List containing list of balanced sequences and orphan reads.
+
     """
     sample_names = utilities.sample_names(input_files, extension)
 
@@ -941,19 +936,6 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
         
     Returns:
         list: A list of the assembled contigs created by MEGAHIT.
-        
-    Example:
-        from anadama2 import Workflow
-        from biobakery_workflows.tasks import shotgun
-        
-        # create an anadama2 workflow instance
-        workflow=Workflow()
-        
-        # add quality control tasks for the fastq files
-        assembled_contigs = shotgun.megahit(workflow, ['sequenceA.fastq'], 4, 8192)
-            
-        # run the workflow
-        workflow.go()
     """
     megahit_contigs = []
     sample_names = utilities.sample_names(input_files[0], extension)
@@ -1073,7 +1055,21 @@ def prodigal(workflow, contigs, output_folder, threads):
     Returns: 
         list: A list of GFF3 files containing predicted genes and associated annotations.
         list: A list of predicted gene nucleotide coding sequences.
-        list: A list of predicted gene amino acid coding sequenecs.
+        list: A list of predicted gene amino acid coding sequences.
+
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import shotgun
+        
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+        
+        # add quality control tasks for the fastq files
+        (assembled_contigs, assembled_contigs_filtered) = shotgun.assemble(["cleaned_seqsA.fastq"])
+        shotgun.annoate(workflow, assembled_contigs, "/home/output_folder", 8)
+
+        # run the workflow
+        workflow.go()
     """
     sample_names = utilities.sample_names(contigs, ".fa")
 
