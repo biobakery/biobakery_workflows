@@ -998,7 +998,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
 
     assembly_dir = os.path.join(output_folder, "assembly", "main")
     depends = []
-    megahit_template = "megahit %s -t [args[0]] -m 1 -o [targets[0]] --out-prefix [args[1]] [args[2]]"
+    megahit_template = "megahit %s -t [args[0]] -m 0.99 -o [targets[0]] --out-prefix [args[1]] [args[2]]"
 
     for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
         megahit_contig_dir = os.path.join(assembly_dir, sample_name)
