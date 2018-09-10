@@ -973,6 +973,8 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
                     targets=[assembly_dir])
 
     for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
+        sample_name = sample_name.replace("_sorted_final","")
+
         megahit_contig_dir = os.path.join(assembly_dir, sample_name)
         intermediate_dir = os.path.join(megahit_contig_dir, 'intermediate_contigs')
         megahit_contig = os.path.join(megahit_contig_dir, '%s.contigs.fa' % sample_name)
@@ -998,7 +1000,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
 
         if remove_intermediate_output:
             workflow.add_task('rm -rf [depends[0]]',
-                              depends=[intermediate_dir, completed_file]) 
+                              depends=[intermediate_dir]) 
 
         megahit_contigs.append(megahit_contig)
     

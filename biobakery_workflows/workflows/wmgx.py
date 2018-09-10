@@ -118,7 +118,7 @@ if not args.bypass_strain_profiling:
 
 ### STEP 5: Run assembly
 if not args.bypass_assembly:
-    assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier)
+    assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output)
     shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
 
 # start the workflow
