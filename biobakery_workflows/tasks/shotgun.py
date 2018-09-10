@@ -968,18 +968,20 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
     depends = []
     megahit_template = "megahit %s -t [args[0]] -m 0.99 -o [targets[0]] --out-prefix [args[1]] [args[2]]"
 
+    workflow.add_task('mkdir -p [targets[0]]',
+                    depends=[output_folder],
+                    targets=[assembly_dir])
+
     for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
         megahit_contig_dir = os.path.join(assembly_dir, sample_name)
         intermediate_dir = os.path.join(megahit_contig_dir, 'intermediate_contigs')
         megahit_contig = os.path.join(megahit_contig_dir, '%s.contigs.fa' % sample_name)
         completed_file = os.path.join(megahit_contig_dir, 'done')
 
-        workflow.add_task('mkdir -p [targets[0]]',
-                        depends=[output_folder, input_reads],
-                        targets=[megahit_contig_dir])
 
+        add_opts = additional_options
         if os.path.exists(megahit_contig_dir) and not os.path.isfile(completed_file):
-            add_opts = additional_options + " --continue "
+            add_opts += " --continue "
         elif os.path.isfile(completed_file):
             continue
 
