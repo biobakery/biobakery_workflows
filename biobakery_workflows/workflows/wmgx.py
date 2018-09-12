@@ -45,6 +45,7 @@ workflow_config = config.ShotGun()
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz"])
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
+workflow.add_argument("single-end", desc="if sequence files passed in are not paired-end reads and not interleaved", default=False, action="store_true")
 workflow.add_argument("bypass-quality-control", desc="do not run the quality control tasks", action="store_true")
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
     default=",".join([workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna]))
@@ -118,7 +119,7 @@ if not args.bypass_strain_profiling:
 
 ### STEP 5: Run assembly
 if not args.bypass_assembly:
-    assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output)
+    assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output,args.single_end)
     shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
 
 # start the workflow

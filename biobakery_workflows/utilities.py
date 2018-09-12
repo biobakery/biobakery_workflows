@@ -1540,3 +1540,56 @@ def order_clade_list(task,clade_list,abundance_file,output_file):
             if taxon in clades:
                 file_handle.write(taxon+"\n")
     
+
+def sort_fastq_file(task):
+    """Sorts a FASTQ file by name (sequence identifier contents).
+
+    Args:
+        task (anadama2.task): An instance of the task class.
+
+    Requires:
+        None
+
+    Returns:
+        None
+    """
+    sample_name = os.path.basename(os.path.dirname(tasks.depends[0].name))
+    output_dir = os.path.dirname(tasks.depends[0].name)
+    temp_dir = os.path.join(output_dir, "%s.tmp" % sample_name)
+
+    sort_command = ("cat [depends[0]] | paste - - - - | sort -T [depends[2]] -k1,1 | "
+                    "tr '\t' '\n' > [targets[0]]")
+
+    run_task(sort_command, 
+             depends=task.depends + temp_dir,
+             targets=task.targets)
+
+    run_task("rm -rf [depends[0]]",
+             depends=temp_dir + task.targets)
+
+
+def extract_orphan_reads(task):
+    """Extracts orphan reads from the provided input files. Orphan reads are saved into a separate file 
+    for further downstream analysis.
+
+    Args:
+        task (anadama2.task): An instance of the task class.
+
+    Requires:
+        seqtk v1.2+: A fast and lightweight tool for processing sequences in the FASTA
+             or FASTQ format
+
+    Returns:
+        None
+    """
+    sample_name = os.path.basename(os.path.dirname(tasks.depends[0].name)).replace('_sorted', '')
+    orphans_dir = os.path.dirname(task.targets[0].name)
+
+    utilities.run_task("seqtk dropse [depends[0]] > [targets[0]]",
+                       depends=task.depends,
+                       targets=task.targets[0])
+
+    utilities.run_task("extract_orphan_reads.sh [depends[0]] [args[0]] [depends[1]] [depends[2]]",
+                       depends=[task.depends[0], task.targets[0], orphans_dir],
+                       targets=[task.targets[1]],
+                       args=[".fastq"])

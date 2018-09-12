@@ -911,7 +911,7 @@ def extract_orphan_reads(workflow, input_files, extension, output_folder, thread
 
 
 def megahit(workflow, input_files, extension, output_folder, threads, additional_options=None, 
-    remove_intermediate_output=True):
+    remove_intermediate_output=True, single_end=False):
     """Run MEGAHIT.
     
     This set of tasks will run MEGAHIT on the input files provided to produce contigs via metagenomic
@@ -929,6 +929,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
             the first pair in the set (optional).
         additional_options (string): Additional options when running kneaddata (optional).
         remove_intermediate_output (bool): Remove intermediate output files.
+        single_end (bool): Whether or not the sequence file provided are single-end reads.
         
     Requires:
         MEGAHIT v1.1.3: A tool to perform metagenomic assembly on 
@@ -955,13 +956,12 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
                     targets=[assembly_dir])
 
     for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
-        sample_name = sample_name.replace("_sorted_final","")
+        sample_name = sample_name.replace("_final","")
 
         megahit_contig_dir = os.path.join(assembly_dir, sample_name)
         intermediate_dir = os.path.join(megahit_contig_dir, 'intermediate_contigs')
         megahit_contig = os.path.join(megahit_contig_dir, '%s.contigs.fa' % sample_name)
         completed_file = os.path.join(megahit_contig_dir, 'done')
-
 
         add_opts = additional_options
         if os.path.exists(megahit_contig_dir) and not os.path.isfile(completed_file):
@@ -969,7 +969,11 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
         elif os.path.isfile(completed_file):
             continue
 
-        megahit_cmd = megahit_template % "--12 [depends[0]] -r [depends[1]]"
+        if interleaved:
+            megahit_cmd = megahit_template % "--12 [depends[0]] -r [depends[1]]"
+        else: 
+            megahit_cmd = megahit_template % "-r [depends[0]]"
+
         depends = [input_reads, orphan_reads]
 
         workflow.add_task_gridable(megahit_cmd,
@@ -990,7 +994,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, additional
 
 
 def assemble(workflow, input_files, extension, output_folder, threads, pair_identifier=None,
-    additional_options=None, remove_intermediate_output=None):
+    additional_options=None, remove_intermediate_output=None, single_end=False):
     """Metagenomic assembly for whole genome shotgun sequences.
 
     This set of tasks performs metagenomic assembly on whole genome shotgun input files in either 
@@ -1007,6 +1011,7 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
             the first pair in the set (optional).
         additional_options (string): Additional options when running kneaddata (optional).
         remove_intermediate_output (bool): Remove intermediate output files.
+        single_end (bool): Whether or not the sequence files provided are single-end reads.
         
     Requires:
         MEGAHIT v1.1.3: A tool to perform metagenomic assembly on 
@@ -1029,13 +1034,40 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
         # run the workflow
         workflow.go()
     """
-    sorted_fastq_files = sort_fastq_file(workflow, input_files, extension, output_folder, threads)
-    (balanced_fastq_files, orphan_fastq_files) = extract_orphan_reads(workflow, sorted_fastq_files, extension,
-                                                                      output_folder, threads)
-    input_files = [balanced_fastq_files, orphan_fastq_files]
+    # Start out by sorting our sequences to make sure they are in the proper order (if interleaved)
+    sample_names = utilities.sample_names(input_files, extension)
+
+    sort_dir = os.path.join(output_folder, "sort")
+    sorted_sequences = utilities.name_files(sample_names, sort_dir, tag="sorted", extension="fastq", create_folder=True)
+
+    workflow.add_task_gridable(utilities.sort_fastq_file,
+                               depends = input_files,
+                               targets = sorted_sequences,
+                               time = "2*60 if file_size('[depends[0]]') < 6 else 4*60",
+                               mem="12*1024 if file_size('[depends[0]]') < 6 else 2*12*1024",
+                               cores = threads)
+
+    # Once we've sorted our sequences we can attempt to create a balanced interleaved file and also 
+    # recover any orphan reads
+    orphans_dir = os.path.join(output_folder, "extract_orphans")
+
+    orphan_seqs_files = utilities.name_files(sample_names, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
+    balanced_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="final", extension="fastq")
+
+    if interleaved:
+        workflow.add_task_gridable(utilities.extract_orphan_reads,
+                                   depends = sorted_sequences,
+                                   targets = zip(balanced_seq_files, orphan_seqs_files),
+                                   cores = threads,
+                                   mem = "4*1024 if file_size('[depends[0]]') < 10 else 2*4*1024",
+                                   time = "1*60 if file_size('[depends[0]]') < 10 else 2*60")
+    
+        input_files = [balanced_fastq_files, orphan_fastq_files]
+    else:
+        input_files = sorted_sequences
 
     assembled_contig_files = megahit(workflow, input_files, extension, output_folder, threads,
-                                     additional_options, remove_intermediate_output)
+                                     additional_options, remove_intermediate_output, single_end)
 
     return assembled_contig_files
 
