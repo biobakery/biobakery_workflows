@@ -1553,19 +1553,19 @@ def sort_fastq_file(task):
     Returns:
         None
     """
-    sample_name = os.path.basename(os.path.dirname(tasks.depends[0].name))
-    output_dir = os.path.dirname(tasks.depends[0].name)
+    sample_name = os.path.basename(os.path.dirname(task.depends[0].name))
+    output_dir = os.path.dirname(task.depends[0].name)
     temp_dir = os.path.join(output_dir, "%s.tmp" % sample_name)
 
-    sort_command = ("cat [depends[0]] | paste - - - - | sort -T [depends[2]] -k1,1 | "
+    sort_command = ("cat [depends[0]] | paste - - - - | sort -T [depends[1]] -k1,1 | "
                     "tr '\t' '\n' > [targets[0]]")
 
     run_task(sort_command, 
-             depends=task.depends + temp_dir,
+             depends=task.depends + [temp_dir, output_dir],
              targets=task.targets)
 
     run_task("rm -rf [depends[0]]",
-             depends=temp_dir + task.targets)
+             depends=[temp_dir] + task.targets)
 
 
 def extract_orphan_reads(task):
@@ -1582,7 +1582,7 @@ def extract_orphan_reads(task):
     Returns:
         None
     """
-    sample_name = os.path.basename(os.path.dirname(tasks.depends[0].name)).replace('_sorted', '')
+    sample_name = os.path.basename(os.path.dirname(task.depends[0].name)).replace('_sorted', '')
     orphans_dir = os.path.dirname(task.targets[0].name)
 
     utilities.run_task("seqtk dropse [depends[0]] > [targets[0]]",
