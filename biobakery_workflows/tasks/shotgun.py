@@ -391,6 +391,9 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
     # set the default output extension to be the same as the input
     output_extension = extension
     
+    # Need to keep track if these are paired-end sequences for downstream assembly steps
+    is_paired = False
+
     if input_pair1:
         sample_names=utilities.sample_names(input_pair1,extension,pair_identifier)
         # determine the command based on the pair identifier
@@ -408,10 +411,12 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
                 command+" [depends[0]] [depends[1]] > [targets[0]]",
                 depends=[pair1,pair2],
                 targets=target)
+
+        is_paired = True
     else:
         merged_files=input_files
         
-    return merged_files, output_extension
+    return merged_files, output_extension, is_paired
           
 
 def functional_profile(workflow,input_files,extension,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
