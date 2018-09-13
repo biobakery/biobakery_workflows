@@ -821,97 +821,8 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             name="strainphlan_clade_"+str(clade_number))
 
 
-def sort_fastq_file(workflow, input_files, extension, output_folder, threads):
-    """"Sorts a FASTQ file by name (sequence identifier contents).
-
-    Args:
-        workflow (anadama2.workflow): An instance of the workflow class.
-        input_files (list): A list of paths to FASTQ files to sort.
-        extension (string): The extension for all files.
-        output_folder (string): The path of the output folder.
-        threads (int) The number of threads/cores to use during sorting.
-
-    Requires:
-        None
-
-    Returns:
-        list: A list of name-sorted FASTQ files.
-    """
-    sample_names = utilities.sample_names(input_files, extension)
-
-    sort_dir = os.path.join(output_folder, "sort", "main")
-    sorted_sequences = utilities.name_files(sample_names, sort_dir, create_folder=True, tag="sorted", extension=extension)
-
-    time_equation="2*60 if file_size('[depends[0]]') < 6 else 4*60"
-    mem_equation="12*1024 if file_size('[depends[0]]') < 6 else 2*12*1024"
-
-    for (sample, input_file, sorted_sequence) in zip(sample_names, input_files, sorted_sequences):
-        temp_dir = os.path.join(sort_dir, "%s.tmp" % sample)
-        workflow.add_task("mkdir -p [targets[0]]",
-                          depends=[sort_dir],
-                          targets=[temp_dir])
-
-        workflow.add_task_gridable("cat [depends[0]] | paste - - - - | "
-                                   "sort -T [depends[2]] -k1,1 | tr '\t' '\n' > "
-                                   "[targets[0]]",
-                                   depends=[input_file, sort_dir, temp_dir],
-                                   targets=sorted_sequence)
-
-        workflow.add_task("rm -rf [depends[0]]",
-                          depends=[temp_dir, sorted_sequence])
-
-
-    return sorted_sequences
-
-
-def extract_orphan_reads(workflow, input_files, extension, output_folder, threads,
-    remove_intermediate_output=None):
-    """Extracts orphan reads from the provided input files. Orphan reads are saved into a separate file 
-    for further downstream analysis.
-
-    Args:
-        workflow (anadama2.workflow): An instance of the workflow class.
-        input_files (list): A list of paths to fastq files to extract orphan reads from.
-        extension (string): The extension for all files.
-        output_folder (string): The path of the output folder.
-        threads (int): The number of threads/cores for kneaddata to use.
-        remove_intermediate_output (bool): Remove intermediate output files.
-
-    Requires:
-        seqtk v1.2+: A fast and lightweight tool for processing sequences in the FASTA
-             or FASTQ format
-
-    Returns:
-        list: List containing list of balanced sequences and orphan reads.
-
-    """
-    sample_names = utilities.sample_names(input_files, extension)
-
-    orphans_dir = os.path.join(output_folder, "extract_orphans", "main")
-    orphan_seqs_files = utilities.name_files(sample_names, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
-    balanced_seqs_files = utilities.name_files(sample_names, orphans_dir, tag="final", extension="fastq" )
-
-    for (input_file, orphan_seq_file, balanced_seq_file) in zip(input_files, orphan_seqs_files, balanced_seqs_files):
-        workflow.add_task_gridable('seqtk dropse [depends[0]] > [targets[0]]',
-                                   depends=[input_file, orphans_dir],
-                                   targets=[balanced_seq_file],
-                                   cores=threads,
-                                   mem="4*1024 if file_size('[depends[0]]') < 10 else 2*4*1024",
-                                   time="1*60 if file_size('[depends[0]]') < 10 else 2*60")
-
-        workflow.add_task_gridable('extract_orphan_reads.sh [depends[0]] [args[0]] [depends[1]] [depends[2]]',
-                                   depends=[input_file, balanced_seq_file, orphans_dir],
-                                   targets=[orphan_seq_file],
-                                   args=[".fastq"],
-                                   cores=threads,
-                                   mem="4*1024 if file_size('[depends[0]]') < 8 else 2*4*1024",
-                                   time="1*60 if file_size('[depends[0]]') < 8 else 2*60")
-
-    return (balanced_seqs_files, orphan_seqs_files)
-
-
 def megahit(workflow, input_files, extension, output_folder, threads, remove_intermediate_output=True,
-    single_end=False):
+    additional_options=None, interleaved=False):
     """Run MEGAHIT.
     
     This set of tasks will run MEGAHIT on the input files provided to produce contigs via metagenomic
@@ -928,7 +839,8 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         remove_intermediate_output (bool): Remove intermediate output files.
-        single_end (bool): Whether or not the sequence file provided are single-end reads.
+        additional_options (string): Any additional options to pass onto megahit.
+        interleaved (bool): Whether or not sequence files passed in are interleaved
         
     Requires:
         MEGAHIT v1.1.3: A tool to perform metagenomic assembly on 
@@ -959,13 +871,13 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
         megahit_contig = os.path.join(megahit_contig_dir, '%s.contigs.fa' % sample_name)
         completed_file = os.path.join(megahit_contig_dir, 'done')
 
-        additional_options = ""
+        assembly_opts = additional_options
         if os.path.exists(megahit_contig_dir) and not os.path.isfile(completed_file):
-            additional_options += " --continue "
+            assembly_opts += " --continue "
         elif os.path.isfile(completed_file):
             continue
 
-        if not single_end:
+        if interleaved:
             megahit_cmd = megahit_template % "--12 [depends[0]] -r [depends[1]]"
             depends = [input_reads, orphan_reads]
         else:
@@ -975,7 +887,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
         workflow.add_task_gridable(megahit_cmd,
                                    depends=depends,
                                    targets=[megahit_contig_dir, megahit_contig, intermediate_dir, completed_file],
-                                   args=[threads, sample_name, additional_options],
+                                   args=[threads, sample_name, assembly_opts],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
@@ -990,7 +902,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
 
 
 def assemble(workflow, input_files, extension, output_folder, threads, pair_identifier=None,
-    remove_intermediate_output=None, single_end=False):
+    additional_options=None, remove_intermediate_output=None, additional_options=None, interleaved=False):
     """Metagenomic assembly for whole genome shotgun sequences.
 
     This set of tasks performs metagenomic assembly on whole genome shotgun input files in either 
@@ -1006,7 +918,8 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
         pair_identifier (string): The string in the file basename to identify
             the first pair in the set (optional).
         remove_intermediate_output (bool): Remove intermediate output files.
-        single_end (bool): Whether or not the sequence files provided are single-end reads.
+        additional_options (string): Any additional options to pass onto megahit.
+        interleaved (bool): Whether or not sequence files passed in are interleaved
         
     Requires:
         MEGAHIT v1.1.3: A tool to perform metagenomic assembly on 
@@ -1035,21 +948,18 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
     sort_dir = os.path.join(output_folder, "sort")
     sorted_sequences = utilities.name_files(sample_names, sort_dir, tag="sorted", extension="fastq", create_folder=True)
 
-    workflow.add_task_group_gridable(utilities.sort_fastq_file,
-                                     depends = input_files,
-                                     targets = sorted_sequences,
-                                     time = "2*60 if file_size('[depends[0]]') < 6 else 4*60",
-                                     mem="12*1024 if file_size('[depends[0]]') < 6 else 2*12*1024",
-                                     cores = threads)
+    if interleaved:
+        workflow.add_task_group_gridable(utilities.sort_fastq_file,
+                                        depends = input_files,
+                                        targets = sorted_sequences,
+                                        time = "2*60 if file_size('[depends[0]]') < 6 else 4*60",
+                                        mem="12*1024 if file_size('[depends[0]]') < 6 else 2*12*1024",
+                                        cores = threads)
 
-    # Once we've sorted our sequences we can attempt to create a balanced interleaved file and also 
-    # recover any orphan reads
-    orphans_dir = os.path.join(output_folder, "extract_orphans")
+        orphans_dir = os.path.join(output_folder, "extract_orphans")
+        orphan_seqs_files = utilities.name_files(sample_names, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
+        balanced_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="final", extension="fastq")
 
-    orphan_seqs_files = utilities.name_files(sample_names, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
-    balanced_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="final", extension="fastq")
-
-    if not single_end:
         for (sorted_seq, balanced_seq, orphan_seq) in zip(sorted_sequences, balanced_seqs_files, orphan_seqs_files):
             workflow.add_task_gridable(utilities.extract_orphan_reads,
                                        depends = sorted_seq,
@@ -1057,13 +967,13 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
                                        cores = threads,
                                        mem = "4*1024 if file_size('[depends[0]]') < 10 else 2*4*1024",
                                        time = "1*60 if file_size('[depends[0]]') < 10 else 2*60")
-    
+
         input_files = [balanced_seqs_files, orphan_seqs_files]
     else:
         input_files = [sorted_sequences, [None] * len(sorted_sequences)]
 
     assembled_contig_files = megahit(workflow, input_files, extension, output_folder, threads,
-                                     remove_intermediate_output, single_end)
+                                     additional_options, remove_intermediate_output, interleaved)
 
     return assembled_contig_files
 
