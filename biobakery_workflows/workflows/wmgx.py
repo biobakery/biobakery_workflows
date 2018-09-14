@@ -70,7 +70,7 @@ input_files = utilities.find_files(args.input, extension=args.input_extension, e
 original_extension = args.input_extension
 if args.bypass_quality_control:
     # merge files if they are paired
-    qc_output_files, args.input_extension, is_paired = shotgun.merge_pairs(workflow, input_files, args.input_extension, args.pair_identifier, args.output)
+    qc_output_files, args.input_extension = shotgun.merge_pairs(workflow, input_files, args.input_extension, args.pair_identifier, args.output)
     
 elif not "fasta" in args.input_extension:
     qc_output_files, filtered_read_counts = shotgun.quality_control(workflow, 
@@ -120,7 +120,7 @@ if not args.bypass_strain_profiling:
 
 ### STEP 5: Run assembly
 if not args.bypass_assembly:
-    is_paired = args.interleaved or is_paired
+    is_paired = args.interleaved or utilities.is_paired_end(input_files, original_extension, args.pair_identifier)
 
     assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output, args.assembly_options, is_paired)
     shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)

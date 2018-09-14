@@ -391,9 +391,6 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
     # set the default output extension to be the same as the input
     output_extension = extension
     
-    # Need to keep track if these are paired-end sequences for downstream assembly steps
-    is_paired = False
-
     if input_pair1:
         sample_names=utilities.sample_names(input_pair1,extension,pair_identifier)
         # determine the command based on the pair identifier
@@ -411,12 +408,10 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
                 command+" [depends[0]] [depends[1]] > [targets[0]]",
                 depends=[pair1,pair2],
                 targets=target)
-
-        is_paired = True
     else:
         merged_files=input_files
         
-    return merged_files, output_extension, is_paired
+    return merged_files, output_extension
           
 
 def functional_profile(workflow,input_files,extension,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
@@ -862,25 +857,19 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
         
     assembly_dir = os.path.join(output_folder, "assembly", "main")
     depends = []
-    megahit_template = "megahit %s -t [args[0]] -m 0.99 -o [targets[0]] --out-prefix [args[1]] [args[2]]"
+    megahit_template = "megahit %s -t [args[0]] -m 0.99 -f -o [targets[0]] --out-prefix [args[1]] [args[2]]"
 
     workflow.add_task('mkdir -p [targets[0]]',
                       depends=[output_folder],
                       targets=[assembly_dir])
 
     for (sample_name, input_reads, orphan_reads) in zip(sample_names, input_files[0], input_files[1]):
-        sample_name = sample_name.replace("_final","")
+        sample_name = sample_name.replace("_sorted_final","")
 
         megahit_contig_dir = os.path.join(assembly_dir, sample_name)
         intermediate_dir = os.path.join(megahit_contig_dir, 'intermediate_contigs')
         megahit_contig = os.path.join(megahit_contig_dir, '%s.contigs.fa' % sample_name)
         completed_file = os.path.join(megahit_contig_dir, 'done')
-
-        assembly_opts = additional_options
-        if os.path.exists(megahit_contig_dir) and not os.path.isfile(completed_file):
-            assembly_opts += " --continue "
-        elif os.path.isfile(completed_file):
-            continue
 
         if interleaved:
             megahit_cmd = megahit_template % "--12 [depends[0]] -r [depends[1]]"
@@ -892,7 +881,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
         workflow.add_task_gridable(megahit_cmd,
                                    depends=depends,
                                    targets=[megahit_contig_dir, megahit_contig, intermediate_dir, completed_file],
-                                   args=[threads, sample_name, assembly_opts],
+                                   args=[threads, sample_name, additional_options],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
@@ -907,7 +896,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
 
 
 def assemble(workflow, input_files, extension, output_folder, threads, pair_identifier=None,
-    additional_options=None, remove_intermediate_output=None, additional_options=None, interleaved=False):
+    remove_intermediate_output=None, additional_options=None, interleaved=False):
     """Metagenomic assembly for whole genome shotgun sequences.
 
     This set of tasks performs metagenomic assembly on whole genome shotgun input files in either 
@@ -950,10 +939,10 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
     # Start out by sorting our sequences to make sure they are in the proper order (if interleaved)
     sample_names = utilities.sample_names(input_files, extension)
 
-    sort_dir = os.path.join(output_folder, "sort")
-    sorted_sequences = utilities.name_files(sample_names, sort_dir, tag="sorted", extension="fastq", create_folder=True)
-
     if interleaved:
+        sort_dir = os.path.join(output_folder, "sort", "main")
+        sorted_sequences = utilities.name_files(sample_names, sort_dir, tag="sorted", extension="fastq", create_folder=True)
+
         workflow.add_task_group_gridable(utilities.sort_fastq_file,
                                         depends = input_files,
                                         targets = sorted_sequences,
@@ -961,8 +950,8 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
                                         mem="12*1024 if file_size('[depends[0]]') < 6 else 2*12*1024",
                                         cores = threads)
 
-        orphans_dir = os.path.join(output_folder, "extract_orphans")
-        orphan_seqs_files = utilities.name_files(sample_names, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
+        orphans_dir = os.path.join(output_folder, "extract_orphans", "main")
+        orphan_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
         balanced_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="final", extension="fastq")
 
         for (sorted_seq, balanced_seq, orphan_seq) in zip(sorted_sequences, balanced_seqs_files, orphan_seqs_files):
@@ -975,10 +964,10 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
 
         input_files = [balanced_seqs_files, orphan_seqs_files]
     else:
-        input_files = [sorted_sequences, [None] * len(sorted_sequences)]
+        input_files = [input_files, [None] * len(input_files)]
 
     assembled_contig_files = megahit(workflow, input_files, extension, output_folder, threads,
-                                     additional_options, remove_intermediate_output, interleaved)
+                                     remove_intermediate_output, additional_options, interleaved)
 
     return assembled_contig_files
 
@@ -1025,7 +1014,7 @@ def prodigal(workflow, contigs, output_folder, threads):
     aa_cds_files = utilities.name_files(sample_names, annotation_dir, extension="faa")
 
     for (input_contig, gff3_file, nuc_cds_file, aa_cds_file) in zip(contigs, gff3_files, nuc_cds_files, aa_cds_files):
-        workflow.add_task_gridable("prodigal -p meta -i [depends[0]] -f gff -o [targets[0]] -d [targets[1]] -a [targets[2]]",
+        workflow.add_task_gridable("prodigal -q -p meta -i [depends[0]] -f gff -o [targets[0]] -d [targets[1]] -a [targets[2]]",
                                    depends=[input_contig, annotation_dir],
                                    targets=[gff3_file, nuc_cds_file, aa_cds_file],
                                    cores=threads,
