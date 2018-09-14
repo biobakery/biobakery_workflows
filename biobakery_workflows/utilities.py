@@ -1553,14 +1553,18 @@ def sort_fastq_file(task):
     Returns:
         None
     """
-    sample_name = os.path.basename(os.path.dirname(task.depends[0].name))
-    output_dir = os.path.dirname(task.depends[0].name)
+    sample_name = os.path.basename(task.depends[0].name)
+    output_dir = os.path.dirname(task.targets[0].name)
     temp_dir = os.path.join(output_dir, "%s.tmp" % sample_name)
 
     sort_command = ("cat [depends[0]] | paste - - - - | sort -T [depends[1]] -k1,1 | "
                     "tr '\t' '\n' > [targets[0]]")
 
-    run_task(sort_command, 
+    run_task('mkdir -p [targets[0]]',
+             depends=[output_dir],
+             targets=[temp_dir])
+
+    run_task(sort_command,
              depends=task.depends + [temp_dir, output_dir],
              targets=task.targets)
 
@@ -1582,14 +1586,34 @@ def extract_orphan_reads(task):
     Returns:
         None
     """
-    sample_name = os.path.basename(os.path.dirname(task.depends[0].name)).replace('_sorted', '')
+    sample_name = os.path.basename(os.path.dirname(task.depends[0].name))
     orphans_dir = os.path.dirname(task.targets[0].name)
 
-    utilities.run_task("seqtk dropse [depends[0]] > [targets[0]]",
-                       depends=task.depends,
-                       targets=task.targets[0])
+    run_task("seqtk dropse [depends[0]] > [targets[0]]",
+             depends=task.depends,
+             targets=task.targets[0])
 
-    utilities.run_task("extract_orphan_reads.sh [depends[0]] [args[0]] [depends[1]] [depends[2]]",
-                       depends=[task.depends[0], task.targets[0], orphans_dir],
-                       targets=[task.targets[1]],
-                       args=[".fastq"])
+    run_task("extract_orphan_reads.sh [depends[0]] [args[0]] [depends[1]] [depends[2]]",
+             depends=[task.depends[0], task.targets[0], orphans_dir],
+             targets=[task.targets[1]],
+             args=[".fastq"])
+
+
+def is_paired_end(input_files, extension, pair_identifier):
+    """Returns true if the provided set of input files are paired-end.
+
+    Args:
+        input_files (list): A list of files to verify if paired-end data.
+        extension (string): The extension for all files.
+        pair_identifier (string): The string in the file basename to identify
+            the first pair in the set.
+
+    Requires:
+        None
+
+    Returns:
+        bool: True if paired-end datasets; False otherwise.
+    """
+    input_pair1, input_pair2 = paired_files(input_files, extension, pair_identifier)
+    
+    return True if input_pair1 else False
