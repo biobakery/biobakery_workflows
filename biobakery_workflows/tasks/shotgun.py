@@ -496,7 +496,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             targets=[target_gene, target_path, target_coverage, target_log],
             args=[humann2_output_folder, threads],
             time="24*60 if file_size('[depends[0]]') < 25 else 6*24*60", # 24 hours or more depending on file size
-            mem="33*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
+            mem="32*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
             cores=threads,
             name=utilities.name_task(sample,"humann2"))
 
