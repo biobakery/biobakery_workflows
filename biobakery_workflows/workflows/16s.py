@@ -66,7 +66,7 @@ input_files = list(filter(lambda file: not file in index_files, input_files))
 
 # if a dual index file is provided, then demultiplex dual indexing
 if args.dual_barcode_file:
-    barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*')
+    barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*.fastq*')
     barcode_files = [os.path.join(args.input,file) for file in barcode_files]
     input_files = list(filter(lambda file: not file in barcode_files, input_files))
 
