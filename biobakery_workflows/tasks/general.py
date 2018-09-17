@@ -159,7 +159,7 @@ def demultiplex(workflow, input_files, extension, output_folder, barcode_file, i
 
 
 def demultiplex_dual(workflow, output_folder, input_files, extension,
-            barcode_files, dual_index_path, min_phred, pair_identifier):
+            barcode_files, dual_barcode_path, min_phred, pair_identifier):
 
     """Demultiplex the files (dual indexed paired)
 
@@ -201,18 +201,18 @@ def demultiplex_dual(workflow, output_folder, input_files, extension,
     pair_identifier2 = pair_identifier.replace("1", "2", 1)
 
     try:
-        file_handle = open(dual_index_path)
+        file_handle = open(dual_barcode_path)
         lines = file_handle.readlines()
         file_handle.close()
     except EnvironmentError:
-        sys.exit("ERROR: Unable to read dual index file: " + dual_index_path)
+        sys.exit("ERROR: Unable to read dual barcode file: " + dual_barcode_path)
 
     run_name = os.path.basename(input_pair1[0]).replace(pair_identifier, "").replace("." + extension, "")
     demultiplex_files = set()
     for line in lines:
         # ignore headers or comment lines
         if not line.startswith("#"):
-            sample_name = line.split(" ")[0]
+            sample_name = line.split("\t")[0]
 
             if sample_name:
                 nm1 = demultiplex_output_folder + "/" + run_name + "_" + sample_name + pair_identifier + "." + extension
@@ -227,7 +227,7 @@ def demultiplex_dual(workflow, output_folder, input_files, extension,
         "fastq-multx -B [depends[0]] [depends[1]] [depends[2]] [depends[3]] [depends[4]]\
          -o n/a -o n/a -o [args[0]]/[args[5]]_%[args[3]].[args[1]] -o [args[0]]/[args[5]]_%[args[4]].[args[1]]\
          -q [args[2]] > [targets[0]]",
-        depends=[dual_index_path, barcode1[0], barcode2[0], input_pair1[0], input_pair2[0]],
+        depends=[dual_barcode_path, barcode1[0], barcode2[0], input_pair1[0], input_pair2[0]],
         args=[demultiplex_output_folder, extension, min_phred, pair_identifier, pair_identifier2, run_name, fastq_multx_tracked],
         targets=[demultiplex_log, TrackedDirectory(demultiplex_output_folder)],
         name="demultiplex_dual")
@@ -252,14 +252,14 @@ def demultiplex_check(workflow, demultiplex_log, demultiplex_files):
 
     return demultiplex_files
 
-def generate_dual_index(barcode_files, dual_index_file):
+def generate_dual_barcode(barcode_files, dual_barcode_file):
 
-    """Generate dual index file for demultiplexing
+    """Generate dual barcode file for demultiplexing
 
         Args:
             workflow (anadama2.workflow): An instance of the workflow class.
             barcode_files (list): A list of barcode files.
-            dual_index_file (string): A paths to the dual index file.
+            dual_barcode_file (string): A paths to the dual barcode file.
 
         Requires:
             None
@@ -283,12 +283,15 @@ def generate_dual_index(barcode_files, dual_index_file):
     dual_indexes_all = list(itertools.combinations(allbarcodes, 2))
     dual_indexes = set(dual_indexes_all)
 
-    fh = open(dual_index_file, "w")
+    fh = open(dual_barcode_file, "w")
+    i = 0
     for ind in dual_indexes:
+        i+= 1
         ind1 = ind[0].replace("\n", "")
         ind2 = ind[1].replace("\n", "")
         print(ind1,ind2)
-        fh.write(ind1 + "-" + ind2 + " " + ind1 + "-" + ind2 + " Nextra\n")
+        write_string = "Sample_" + str(i) + "\t" + ind1 + "-" + ind2 + "\tNextra\n"
+        fh.write(write_string)
     fh.close()
 
-    print("Dual index file " + dual_index_file + " has been generated")
+    print("Dual barcode file " + dual_barcode_file + " has been generated")

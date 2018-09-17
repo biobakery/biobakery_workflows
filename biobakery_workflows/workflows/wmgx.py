@@ -44,7 +44,7 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 workflow_config = config.ShotGun()
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
-workflow.add_argument("dual-index-identifier", desc="the string to identify the dual index files", default="_I2_001")
+workflow.add_argument("dual-barcode-file", desc="the string to identify the dual barcode file", default="")
 workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
 workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
@@ -69,23 +69,18 @@ input_files = utilities.find_files(args.input, extension=args.input_extension, e
 
 # check for index files, do not error if they are not found
 index_files = utilities.find_files(args.input, extension=args.index_identifier+"."+args.input_extension)
-dual_index_files = utilities.find_files(args.input, extension=args.dual_index_identifier+".txt")
 
 # remove the index files, if found, from the set of input files
 input_files = list(filter(lambda file: not file in index_files, input_files))
 
-
 # if a dual index file is provided, then demultiplex dual indexing
-if dual_index_files:
-    if len(dual_index_files) > 1:
-        sys.exit("ERROR: Only one dual index file expected for demultiplexing step.")
-
+if args.dual_barcode_file:
     barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*')
     barcode_files = [os.path.join(args.input,file) for file in barcode_files]
     input_files = list(filter(lambda file: not file in barcode_files, input_files))
 
     demultiplexed_files, demultiplex_output_folder = general.demultiplex_dual(workflow,args.output, input_files,
-             args.input_extension, barcode_files, dual_index_files[0], args.min_pred_qc_score, args.pair_identifier)
+             args.input_extension, barcode_files, args.dual_barcode_file, args.min_pred_qc_score, args.pair_identifier)
 
 # if a barcode file is provided, then demultiplex
 elif args.barcode_file:
