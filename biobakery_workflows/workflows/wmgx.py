@@ -81,6 +81,9 @@ if args.dual_barcode_file:
 
     demultiplexed_files, demultiplex_output_folder = general.demultiplex_dual(workflow,args.output, input_files,
              args.input_extension, barcode_files, args.dual_barcode_file, args.min_pred_qc_score, args.pair_identifier)
+    
+    # if the original files are gzipped, they will not be compressed after demultiplexing
+    args.input_extension = args.input_extension.replace(".gz", "")
 
 # if a barcode file is provided, then demultiplex
 elif args.barcode_file:
