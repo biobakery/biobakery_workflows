@@ -637,11 +637,11 @@ def global_alignment(workflow, method, fasta_file, database_file, id, threads, o
     """    
     
     optional_flags=""
-    if top_hit_only:
-        optional_flags=" -top_hit_only"
     
     # remove existing output file if already exists as clustalo will not overwrite
     if method == "vsearch":
+        if top_hit_only:
+            optional_flags = " -top_hits_only"
         workflow.add_task_gridable(
             "export OMP_NUM_THREADS=[args[0]]; " + \
             "vsearch -usearch_global [depends[0]] -db [depends[1]] -strand plus -id [args[1]] -uc [targets[0]] -otutabout [targets[1]] -threads [args[0]]" + optional_flags,
@@ -653,6 +653,8 @@ def global_alignment(workflow, method, fasta_file, database_file, id, threads, o
             mem=2 * 1024,  # 2 GB
             cores=threads)  # time/mem based on 8 cores
     else:
+        if top_hit_only:
+            optional_flags = " -top_hit_only"
         workflow.add_task_gridable(
             "export OMP_NUM_THREADS=[args[0]]; "+\
             "usearch -usearch_global [depends[0]] -db [depends[1]] -strand 'both' -id [args[1]] -uc [targets[0]] -otutabout [targets[1]] -threads [args[0]]"+optional_flags,
