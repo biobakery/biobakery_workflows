@@ -28,7 +28,7 @@ THE SOFTWARE.
 from anadama2 import Workflow
 import os, sys, fnmatch
 
-from biobakery_workflows.tasks import sixteen_s, dadatwo, general
+from biobakery_workflows.tasks import sixteen_s, dadatwo, general, vsearch
 from biobakery_workflows import utilities, config, files
 
 
@@ -37,7 +37,7 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()
-workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2"])
+workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2","vsearch"])
 workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("dual-barcode-file", desc="the string to identify the dual barcode file", default="")
@@ -122,23 +122,24 @@ if args.method == "dada2":
     # dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path)
 
 else:
-    # call usearch workflow tasks
+    # call vsearch or usearch workflow tasks
     #  merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
     all_samples_fastq = sixteen_s.merge_samples_and_rename(
-    	       workflow, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)        
+    	       workflow, args.method, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)
 
 	# add quality control tasks: generate qc report, filter by maxee, and truncate
     filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
-            workflow, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
+            workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
 
     # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
     closed_reference_tsv = sixteen_s.taxonomic_profile(
-            workflow, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output, 
+            workflow, args.method, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output,
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
             workflow_config.greengenes_taxonomy, args.min_size)
 
     # functional profiling
     categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+
 
 # start the workflow
 workflow.go()
