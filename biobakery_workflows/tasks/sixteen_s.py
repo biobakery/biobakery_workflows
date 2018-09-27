@@ -239,7 +239,7 @@ def quality_report(workflow, method, fastq_file, output_folder, threads):
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
-        method (string): tools for sequence analysis - usearhc(default) or vsearch
+        method (string): tools for sequence analysis - usearch(default) or vsearch
         fastq_file (string): The path to the fastq file.
         output_folder (string): The path of the output folder.
         threads (int): The number of threads for each task.
@@ -301,7 +301,7 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee):
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; " + \
             "vsearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]]",
-            depends=[fastq_file, TrackedExecutable("usearch")],
+            depends=[fastq_file, TrackedExecutable("vsearch")],
             targets=[fasta_filtered_file, fasta_discarded_file],
             args=[threads, maxee],
             name="vsearch_fastq_filter")
@@ -412,7 +412,7 @@ def dereplicate(workflow, method, fasta_file, output_folder, threads):
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; " + \
             "vsearch --derep_fulllength [depends[0]] --output [targets[0]] --sizein --sizeout --threads [args[0]]",
-            depends=[fasta_file, TrackedExecutable("usearch")],
+            depends=[fasta_file, TrackedExecutable("vsearch")],
             targets=output_file,
             args=threads,
             name="vsearch_derep_fulllength")
