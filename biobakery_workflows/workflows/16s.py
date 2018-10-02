@@ -28,7 +28,7 @@ THE SOFTWARE.
 from anadama2 import Workflow
 import os, sys, fnmatch
 
-from biobakery_workflows.tasks import sixteen_s, dadatwo, general, vsearch
+from biobakery_workflows.tasks import sixteen_s, dadatwo, general
 from biobakery_workflows import utilities, config, files
 
 

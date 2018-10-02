@@ -619,7 +619,7 @@ def global_alignment(workflow, method, fasta_file, database_file, id, threads, o
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
-        method (string): tools for sequence analysis - usearhc(default) or vsearch
+        method (string): tools for sequence analysis - usearch(default) or vsearch
         fasta_file (string): The path to the fasta file (filtered and dereplicated).
         database_file (string): Path to the database file (fasta or usearch format)
         id (float): The percent identity for alignment
