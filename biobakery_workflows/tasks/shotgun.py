@@ -1057,7 +1057,7 @@ def prokka(workflow, contigs, output_folder, threads):
         # run the workflow
         workflow.go()
     """
-    sample_names = utilities.sample_names(contigs, ".fa")
+    sample_names = utilities.sample_names(contigs, ".contigs.fa")
 
     time_equation="2*60 if file_size('[depends[0]]') < 10 else 2*2*60"
     mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 4*12*1024"
@@ -1071,10 +1071,10 @@ def prokka(workflow, contigs, output_folder, threads):
     for (sample_name, input_contig, gff3_file, nuc_cds_file, aa_cds_file, feature_table) in zip(sample_names, contigs, 
                                                                                                 gff3_files, nuc_cds_files, aa_cds_files, 
                                                                                                 feature_tables):
-        workflow.add_task_gridable("prokka --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[0]]",
+        workflow.add_task_gridable("prokka --force --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[1]]",
                                    depends=[input_contig, annotation_dir],
                                    targets=[gff3_file, nuc_cds_file, aa_cds_file, feature_table],
-                                   args=[threads],
+                                   args=[sample_name, threads],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
