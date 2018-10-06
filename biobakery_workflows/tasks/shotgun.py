@@ -1071,7 +1071,7 @@ def prokka(workflow, contigs, output_folder, threads):
     for (sample_name, input_contig, gff3_file, nuc_cds_file, aa_cds_file, feature_table) in zip(sample_names, contigs, 
                                                                                                 gff3_files, nuc_cds_files, aa_cds_files, 
                                                                                                 feature_tables):
-        workflow.add_task_gridable("prokka --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[1]]",
+        workflow.add_task_gridable("prokka --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[0]]",
                                    depends=[input_contig, annotation_dir],
                                    targets=[gff3_file, nuc_cds_file, aa_cds_file, feature_table],
                                    args=[threads],
@@ -1115,7 +1115,6 @@ def annotate(workflow, contigs, output_folder, threads):
         # run the workflow
         workflow.go()
     """
-    #(gff3_files, nuc_cds_seqs, aa_cds_seqs) = prodigal(workflow, contigs, output_folder, threads)
     (gff3_files, nuc_cds_seqs, aa_cds_seqs, feature_tables) = prokka(workflow, contigs, output_folder, threads)
 
     return (gff3_files, nuc_cds_seqs, aa_cds_seqs, feature_tables)
