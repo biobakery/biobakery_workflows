@@ -1024,6 +1024,64 @@ def prodigal(workflow, contigs, output_folder, threads):
     return (gff3_files, nuc_cds_files, aa_cds_files)
 
 
+
+def prokka(workflow, contigs, output_folder, threads):
+    """Whole genome annotation for the supplied contigs.
+
+    Args:
+        workflow (anadama2.workflow): An instance of the workflow class.
+        contigs (list): A list of FASTQ files containing contigs to predict genes from.
+        output_folder (string): The path of the output folder.
+        threads (int) The number of threads/cores to use during sorting.
+
+    Requires:
+        PROKKA v1.13.3+: Rapid prokaryotic genome annotation
+
+    Returns: 
+        list: A list of GFF3 files containing predicted genes and associated annotations.
+        list: A list of predicted gene nucleotide coding sequences.
+        list: A list of predicted gene amino acid coding sequences.
+        list: A list of table files containing all features predicted [locus_tag,ftype,len_bp,gene,EC_number,COG,product]
+
+    Example:
+        from anadama2 import Workflow
+        from biobakery_workflows.tasks import shotgun
+        
+        # create an anadama2 workflow instance
+        workflow=Workflow()
+        
+        # add quality control tasks for the fastq files
+        (assembled_contigs, assembled_contigs_filtered) = shotgun.assemble(["cleaned_seqsA.fastq"])
+        shotgun.annoate(workflow, assembled_contigs, "/home/output_folder", 8)
+
+        # run the workflow
+        workflow.go()
+    """
+    sample_names = utilities.sample_names(contigs, ".fa")
+
+    time_equation="2*60 if file_size('[depends[0]]') < 10 else 2*2*60"
+    mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 4*12*1024"
+
+    annotation_dir = os.path.join(output_folder, "annotation", "main")
+    gff3_files = utilities.name_files(sample_names, annotation_dir, create_folder=True, extension="gff")
+    nuc_cds_files = utilities.name_files(sample_names, annotation_dir, extension="fna")
+    aa_cds_files = utilities.name_files(sample_names, annotation_dir, extension="faa")
+    feature_tables = utilities.name_files(sample_names, annotation_dir, extension="tsv")
+
+    for (sample_name, input_contig, gff3_file, nuc_cds_file, aa_cds_file, feature_table) in zip(sample_names, contigs, 
+                                                                                                gff3_files, nuc_cds_files, aa_cds_files, 
+                                                                                                feature_tables):
+        workflow.add_task_gridable("prokka --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[1]]",
+                                   depends=[input_contig, annotation_dir],
+                                   targets=[gff3_file, nuc_cds_file, aa_cds_file, feature_table],
+                                   args=[threads],
+                                   cores=threads,
+                                   mem=mem_equation,
+                                   time=time_equation)
+
+    return (gff3_files, nuc_cds_files, aa_cds_files, feature_tables)
+
+
 def annotate(workflow, contigs, output_folder, threads):
     """Annotates the provided contig files.
 
@@ -1057,7 +1115,7 @@ def annotate(workflow, contigs, output_folder, threads):
         # run the workflow
         workflow.go()
     """
-    (gff3_files, nuc_cds_seqs, aa_cds_seqs) = prodigal(workflow, contigs, output_folder, threads)
-    # TODO: Add more annotation here besides just gene calls
+    #(gff3_files, nuc_cds_seqs, aa_cds_seqs) = prodigal(workflow, contigs, output_folder, threads)
+    (gff3_files, nuc_cds_seqs, aa_cds_seqs, feature_tables) = prokka(workflow, contigs, output_folder, threads)
 
-    return (gff3_files, nuc_cds_seqs, aa_cds_seqs)
+    return (gff3_files, nuc_cds_seqs, aa_cds_seqs, feature_tables)
