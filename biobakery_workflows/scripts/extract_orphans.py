@@ -36,17 +36,17 @@ def get_ids_from_sequences(sample_name, raw_seq, balanced_seq, out_dir):
 
     for (input_seq, output_ids) in [(raw_seq, raw_ids), (balanced_seq, balanced_ids)]:
         with open(output_ids, 'wb') as out_ids:
-            ps_grep = subprocess.Popen(("grep -e '^@.*/[1|2]$'"), stdout=subprocess.PIPE)
-            ps_sed = subprocess.Popen(("sed -e 's/^@//'"), stdin=ps_grep, stdout=subprocess.PIPE)
+            ps_grep = subprocess.Popen(['/bin/grep', '-e', '^@.*/[1|2]$', input_seq], stdout=subprocess.PIPE)
+            ps_sed = subprocess.Popen(['/bin/sed', '-e', 's/^@//'], stdin=ps_grep.stdout, stdout=subprocess.PIPE)
             ps_grep.stdout.close()
 
-            ps_sort = subprocess.Popen(("sort"), stdin=ps_sed.stdout, stdout=out_ids)
+            ps_sort = subprocess.Popen(['/bin/sort'], stdin=ps_sed.stdout, stdout=out_ids)
             ps_sed.stdout.close()
 
             ps_sort.communicate()
 
     with open(orphan_ids, 'wb') as orphan_ids_out:
-        p = subprocess.Popen(['comm', '-23', raw_ids, blanced_ids], stdout=orphan_ids_out)
+        p = subprocess.Popen(['/usr/bin/comm', '-23', raw_ids, balanced_ids], stdout=orphan_ids_out)
         p.communicate()
 
     return (raw_ids, balanced_ids, orphan_ids)
