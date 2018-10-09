@@ -87,8 +87,7 @@ if not args.bypass_taxonomic_profiling:
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         qc_output_files,args.output,args.threads,args.input_extension)
 
-### STEP #3: Run functional profiling on all of the filtered files ###
-if not args.bypass_functional_profiling:
+elif not args.run_assembly:
     # get the names of the taxonomic profiling files allowing for pairs
     input_pair1, input_pair2 = utilities.paired_files(input_files, original_extension, args.pair_identifier)
     sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
@@ -107,6 +106,8 @@ if not args.bypass_functional_profiling:
             print("Warning: Bypassing taxonomic profiling but not all taxonomy sam files are present in the input folder. Strain profiling will be bypassed. Expecting the following input files:\n"+"\n".join(taxonomy_sam_files))
             args.bypass_strain_profiling = True
 
+### STEP #3: Run functional profiling on all of the filtered files ###
+if not args.bypass_functional_profiling:
     genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,
         qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
 
@@ -122,6 +123,6 @@ if args.run_assembly:
     is_paired = args.interleaved or utilities.is_paired_end(input_files, original_extension, args.pair_identifier)
     assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output, args.assembly_options, is_paired)
     shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
-
+ 
 # start the workflow
 workflow.go()
