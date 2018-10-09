@@ -55,6 +55,7 @@ workflow.add_argument("bypass-functional-profiling", desc="do not run the functi
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonomic profiling tasks (a tsv profile for each sequence file must be included in the input folder using the same sample name)", action="store_true")
 workflow.add_argument("bypass-assembly", desc="do not run the assembly tasks", action="store_true")
+workflow.add_argument("bypass-annotation", desc="do not run the annotation tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
 workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
 workflow.add_argument("assembly-options", desc="additional options when running the assembly step", default="")
@@ -87,27 +88,27 @@ if not args.bypass_taxonomic_profiling:
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         qc_output_files,args.output,args.threads,args.input_extension)
 
+else:
+    # get the names of the taxonomic profiling files allowing for pairs
+    input_pair1, input_pair2 = utilities.paired_files(input_files, original_extension, args.pair_identifier)
+    sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
+    tsv_profiles = utilities.name_files(sample_names, args.input, tag="taxonomic_profile", extension="tsv")
+    # check all of the expected profiles are found
+    if len(tsv_profiles) != len(list(filter(os.path.isfile,tsv_profiles))):
+        sys.exit("ERROR: Bypassing taxonomic profiling but all of the tsv taxonomy profile files are not found in the input folder. Expecting the following input files:\n"+"\n".join(tsv_profiles))
+    # run taxonomic profile steps bypassing metaphlan2
+    merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
+        tsv_profiles,args.output,args.threads,"tsv",already_profiled=True)
+    # look for the sam profiles
+    taxonomy_sam_files = utilities.name_files(sample_names, args.input, tag="bowtie2", extension="sam")
+    # if they do not all exist, then bypass strain profiling if not already set
+    if not args.bypass_strain_profiling:
+        if len(taxonomy_sam_files) != len(list(filter(os.path.isfile,taxonomy_sam_files))):
+            print("Warning: Bypassing taxonomic profiling but not all taxonomy sam files are present in the input folder. Strain profiling will be bypassed. Expecting the following input files:\n"+"\n".join(taxonomy_sam_files))
+            args.bypass_strain_profiling = True
+
 ### STEP #3: Run functional profiling on all of the filtered files ###
 if not args.bypass_functional_profiling:
-    if args.bypass_taxonomic_profiling:
-        # get the names of the taxonomic profiling files allowing for pairs
-        input_pair1, input_pair2 = utilities.paired_files(input_files, original_extension, args.pair_identifier)
-        sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
-        tsv_profiles = utilities.name_files(sample_names, args.input, tag="taxonomic_profile", extension="tsv")
-        # check all of the expected profiles are found
-        if len(tsv_profiles) != len(list(filter(os.path.isfile,tsv_profiles))):
-            sys.exit("ERROR: Bypassing taxonomic profiling but all of the tsv taxonomy profile files are not found in the input folder. Expecting the following input files:\n"+"\n".join(tsv_profiles))
-        # run taxonomic profile steps bypassing metaphlan2
-        merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
-            tsv_profiles,args.output,args.threads,"tsv",already_profiled=True)
-        # look for the sam profiles
-        taxonomy_sam_files = utilities.name_files(sample_names, args.input, tag="bowtie2", extension="sam")
-        # if they do not all exist, then bypass strain profiling if not already set
-        if not args.bypass_strain_profiling:
-            if len(taxonomy_sam_files) != len(list(filter(os.path.isfile,taxonomy_sam_files))):
-                print("Warning: Bypassing taxonomic profiling but not all taxonomy sam files are present in the input folder. Strain profiling will be bypassed. Expecting the following input files:\n"+"\n".join(taxonomy_sam_files))
-                args.bypass_strain_profiling = True
-
     genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,
         qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
 
@@ -118,12 +119,13 @@ if not args.bypass_strain_profiling:
         workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,merged_taxonomic_profile,
         args.strain_profiling_options,args.max_strains)
 
-### STEP 5: Run assembly
+### STEP 5: Run assembly and annotation
 if not args.bypass_assembly:
     is_paired = args.interleaved or utilities.is_paired_end(input_files, original_extension, args.pair_identifier)
-
     assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output, args.assembly_options, is_paired)
-    shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
+
+    if not args.bypass_annotation:
+        shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
 
 # start the workflow
 workflow.go()

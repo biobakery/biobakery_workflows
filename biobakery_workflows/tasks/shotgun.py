@@ -27,7 +27,7 @@ import os
 import subprocess
 import itertools
 
-from anadama2.tracked import TrackedExecutable
+from anadama2.tracked import TrackedExecutable, TrackedDirectory
 
 from biobakery_workflows import utilities
 from biobakery_workflows import files
@@ -880,7 +880,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
 
         workflow.add_task_gridable(megahit_cmd,
                                    depends=depends,
-                                   targets=[megahit_contig_dir, megahit_contig, intermediate_dir, completed_file],
+                                   targets=[TrackedDirectory(megahit_contig_dir), megahit_contig, TrackedDirectory(intermediate_dir), completed_file],
                                    args=[threads, sample_name, additional_options],
                                    cores=threads,
                                    mem=mem_equation,
@@ -1015,14 +1015,13 @@ def prodigal(workflow, contigs, output_folder, threads):
 
     for (input_contig, gff3_file, nuc_cds_file, aa_cds_file) in zip(contigs, gff3_files, nuc_cds_files, aa_cds_files):
         workflow.add_task_gridable("prodigal -q -p meta -i [depends[0]] -f gff -o [targets[0]] -d [targets[1]] -a [targets[2]]",
-                                   depends=[input_contig, annotation_dir],
+                                   depends=[input_contig, TrackedDirectory(annotation_dir)],
                                    targets=[gff3_file, nuc_cds_file, aa_cds_file],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
 
     return (gff3_files, nuc_cds_files, aa_cds_files)
-
 
 
 def prokka(workflow, contigs, output_folder, threads):
@@ -1072,7 +1071,7 @@ def prokka(workflow, contigs, output_folder, threads):
                                                                                                 gff3_files, nuc_cds_files, aa_cds_files, 
                                                                                                 feature_tables):
         workflow.add_task_gridable("prokka --force --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[1]]",
-                                   depends=[input_contig, annotation_dir],
+                                   depends=[input_contig, TrackedDirectory(annotation_dir)],
                                    targets=[gff3_file, nuc_cds_file, aa_cds_file, feature_table],
                                    args=[sample_name, threads],
                                    cores=threads,
