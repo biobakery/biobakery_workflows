@@ -54,8 +54,7 @@ workflow.add_argument("remove-intermediate-output", desc="remove intermediate ou
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonomic profiling tasks (a tsv profile for each sequence file must be included in the input folder using the same sample name)", action="store_true")
-workflow.add_argument("bypass-assembly", desc="do not run the assembly tasks", action="store_true")
-workflow.add_argument("bypass-annotation", desc="do not run the annotation tasks", action="store_true")
+workflow.add_argument("run-assembly", desc="run the assembly and annotation tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
 workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
 workflow.add_argument("assembly-options", desc="additional options when running the assembly step", default="")
@@ -88,7 +87,8 @@ if not args.bypass_taxonomic_profiling:
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         qc_output_files,args.output,args.threads,args.input_extension)
 
-else:
+### STEP #3: Run functional profiling on all of the filtered files ###
+if not args.bypass_functional_profiling:
     # get the names of the taxonomic profiling files allowing for pairs
     input_pair1, input_pair2 = utilities.paired_files(input_files, original_extension, args.pair_identifier)
     sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
@@ -107,8 +107,6 @@ else:
             print("Warning: Bypassing taxonomic profiling but not all taxonomy sam files are present in the input folder. Strain profiling will be bypassed. Expecting the following input files:\n"+"\n".join(taxonomy_sam_files))
             args.bypass_strain_profiling = True
 
-### STEP #3: Run functional profiling on all of the filtered files ###
-if not args.bypass_functional_profiling:
     genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,
         qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
 
@@ -120,12 +118,10 @@ if not args.bypass_strain_profiling:
         args.strain_profiling_options,args.max_strains)
 
 ### STEP 5: Run assembly and annotation
-if not args.bypass_assembly:
+if args.run_assembly:
     is_paired = args.interleaved or utilities.is_paired_end(input_files, original_extension, args.pair_identifier)
     assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output, args.assembly_options, is_paired)
-
-    if not args.bypass_annotation:
-        shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
+    shotgun.annotate(workflow, assembled_contigs, args.output, args.threads)
 
 # start the workflow
 workflow.go()
