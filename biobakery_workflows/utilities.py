@@ -1593,7 +1593,7 @@ def extract_orphan_reads(task):
              depends=task.depends,
              targets=task.targets[0])
 
-    run_task("extract_orphan_reads.sh [depends[0]] [args[0]] [depends[1]] [depends[2]]",
+    run_task("extract_orphan_reads.py [depends[0]] [args[0]] [depends[1]] [depends[2]]",
              depends=[task.depends[0], task.targets[0], orphans_dir],
              targets=[task.targets[1]],
              args=[".fastq"])
