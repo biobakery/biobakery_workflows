@@ -1558,7 +1558,12 @@ def sort_fastq_file(task):
     output_dir = os.path.dirname(task.targets[0].name)
     temp_dir = os.path.join(output_dir, "%s.tmp" % sample_name)
 
-    sort_command = ("cat [depends[0]] | paste - - - - | sort -T [depends[1]] -k1,1 | "
+    if task.depends[0].name.endswith('.gz'):
+        sort_command = "zcat "
+    else:
+        sort_command = "cat "        
+    
+    sort_command += ("[depends[0]] | paste - - - - | sort -T [depends[1]] -k1,1 | "
                     "tr '\t' '\n' > [targets[0]]")
 
     run_task('mkdir -p [targets[0]]',
