@@ -938,10 +938,11 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
     """
     # Start out by sorting our sequences to make sure they are in the proper order (if interleaved)
     sample_names = utilities.sample_names(input_files, extension)
+    product_extension = "fastq"
 
     if interleaved:
         sort_dir = os.path.join(output_folder, "sort", "main")
-        sorted_sequences = utilities.name_files(sample_names, sort_dir, tag="sorted", extension="fastq", create_folder=True)
+        sorted_sequences = utilities.name_files(sample_names, sort_dir, tag="sorted", extension=product_extension, create_folder=True)
 
         workflow.add_task_group_gridable(utilities.sort_fastq_file,
                                         depends = input_files,
@@ -951,8 +952,8 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
                                         cores = threads)
 
         orphans_dir = os.path.join(output_folder, "extract_orphans", "main")
-        orphan_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="orphans", extension="fastq", create_folder=True)
-        balanced_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="final", extension="fastq")
+        orphan_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="orphans", extension=product_extension, create_folder=True)
+        balanced_seqs_files = utilities.name_files(sorted_sequences, orphans_dir, tag="final", extension=product_extension)
 
         for (sorted_seq, balanced_seq, orphan_seq) in zip(sorted_sequences, balanced_seqs_files, orphan_seqs_files):
             workflow.add_task_gridable(utilities.extract_orphan_reads,
@@ -966,7 +967,7 @@ def assemble(workflow, input_files, extension, output_folder, threads, pair_iden
     else:
         input_files = [input_files, [None] * len(input_files)]
 
-    assembled_contig_files = megahit(workflow, input_files, extension, output_folder, threads,
+    assembled_contig_files = megahit(workflow, input_files, product_extension, output_folder, threads,
                                      remove_intermediate_output, additional_options, interleaved)
 
     return assembled_contig_files
