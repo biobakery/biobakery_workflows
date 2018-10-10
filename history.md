@@ -1,6 +1,14 @@
 
 # bioBakery workflows History #
 
+## v0.10.0 08-21-2018 ##
+
+* Add DADA2 16s workflow option.
+* Add option to bypass taxonomic profiling for the wmgx workflow.
+* Strainphlan option now selects top species by average abundance for profiling.
+* Add genera visualizations to both 16s and shotgun workflows.
+* Add average grouped metadata plots for relative abundance.
+
 ## v0.9.0 10-19-2017 ##
 
 * Add metadata input option to wmgx and 16s visualization workflows.

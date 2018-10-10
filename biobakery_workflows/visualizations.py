@@ -32,7 +32,8 @@ import shutil
 
 from . import utilities
 
-def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, max_sets_barplot, feature="species"):
+def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy,
+    max_sets_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
     """ Plot grouped barplots and average barplots for all of the features provided.
 
         Args:
@@ -43,6 +44,10 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             top_taxonomy (list): The list of full taxonomy names
             max_sets_barplot (int): The max number of features (default species) to plot
             feature (string): The data being plotted (default species)
+            sort_by_name (bool): If set, sort data by sample name instead of abundance
+            sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
+                this is useful for samples with sample name plus features
+            ylabel (string): The label for the y-axis for the average plots
 
         Returns: 
             list: A list of metadata strings (one for each categorical feature plotted)
@@ -55,10 +60,11 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             sorted_data)
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
-                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature))
+                samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),ylabel=ylabel,sort_by_name=sort_by_name,
+                sort_by_name_inverse=sort_by_name_inverse)
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
-            plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature)
+            plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature, ylabel=ylabel)
 
     return categorical_metadata
 
@@ -200,7 +206,7 @@ def merge_categorical_metadata(vars, sorted_samples, sorted_data):
     return categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found
 
 
-def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title):
+def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title, ylabel="Relative Abundance"):
     """ Plot the average taxonomy sorted by species abundance for a single feature.
 
         Args:
@@ -211,6 +217,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
             cat_metadata (list): The ordered categorical metadata (for a single feature)
             max_sets_barplot (int): The max number of taxonomic values (to use for the title)
             legend_title (string): The legend title for the plots
+            ylabel (string): The label for the y-axis
 
         Returns: None
     """
@@ -235,13 +242,16 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
 
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
-        title="Top {} {} by average abundance, group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
-        ylabel="Relative abundance", legend_title=legend_title, legend_style="italic")
+        title="Top {} {} group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
+        ylabel=ylabel, legend_title=legend_title, legend_style="italic")
 
-def sort_data(document, top_data, samples, sort_by_name=False):
+def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inverse=False):
     # sort the top data so it is ordered with the top sample/abundance first
     if sort_by_name:
         sorted_sample_indexes=[samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(samples)]
+    elif sort_by_name_inverse:
+        inverse_samples = [sample[::-1] for sample in samples]
+        sorted_sample_indexes=[inverse_samples.index(a) for a in document.sorted_data_numerical_or_alphabetical(inverse_samples)]
     else:
         sorted_sample_indexes=sorted(range(len(samples)),key=lambda i: top_data[0][i],reverse=True)
 
@@ -252,7 +262,8 @@ def sort_data(document, top_data, samples, sort_by_name=False):
     return sorted_data, sorted_samples
 
 def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
-    ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=8):
+    ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=2, sort_by_name=False,
+    sort_by_name_inverse=False):
     """ Plot the grouped taxonomy with samples sorted by species abundance for each feature.
 
         Args:
@@ -266,15 +277,18 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
             legend_title (string): The legend title for the plots
             legend_size (int): The font size for the legend
             max_subsets (int): The max number of subsets to use for each plot
+            sort_by_name (bool): If set, then sort by sample name instead of abundance
+            sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
+                this is useful for samples with sample name plus features
 
         Return: None
     """
 
     # group the samples by metadata
     sorted_data_grouped, sorted_samples_grouped = utilities.group_samples_by_metadata(cat_metadata, sorted_data, samples_found)
-    # sort the data by abundance
+    # sort the data by abundance or sample name
     for metadata_type in sorted_data_grouped:
-        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type])
+        sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type], sort_by_name=sort_by_name, sort_by_name_inverse=sort_by_name_inverse)
 
     # print out a plot for each group of metadata
     sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
@@ -607,6 +621,7 @@ class Workflow(object):
     def format_caption(cls,name,**keywords):
         return cls.captions[name].format(**keywords)
 
+
 class ShotGun(Workflow):
     captions={}
     
@@ -721,5 +736,64 @@ class ShotGun(Workflow):
             print(line)
         
 
-        
-        
+class Sixteen_S(Workflow):
+    captions={}
+
+    captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
+        gene amplicon paired-end sequencing reads,adopting the tutorial from\n\n \
+         https://benjjneb.github.io/dada2/tutorial.html and \n \
+         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
+        \n\nThis report captures all the workflow steps necessary to reproduce the analysis. Notes and descriptions\
+         of the steps are cited from DADA2 tutorial as well.\
+        \n\nMultiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
+        which is required for calculating UniFrac beta-diversity distances between microbiome samples.\n"
+    
+    captions["dada2errorintro"]="The DADA2 algorithm depends on a parametric error model (err) and every amplicon dataset has a different set of error rates. \
+        \n\nThe learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
+        sample composition until they converge on a jointly consistent solution.\n\nAs in many optimization problems, the algorithm must \
+        begin with an initial guess, for which the maximum possible error rates in this data are used \
+        the error rates if only the most abundant sequence is correct and all the rest are errors.\n"
+    
+    captions["dada2errorinfo"]="The error rates for each possible transition (eg. A->T,A->G, etc) are shown. \
+        Points are the observed error rates for each consensus quality score. \
+        \n\nThe black line shows the estimated error rates after convergence. \
+         The red line shows the error rates expected under the nominal definition of the Q-value. \
+        \n\nIf the black line (the estimated rates) fits the observed rates well, \
+        and the error rates drop with increased quality as expected, then everything looks reasonable \
+        and can proceed with confidence.\n"
+
+    captions["dada2stepsinfo"]="\nDereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
+        the number of reads with that unique sequence. DADA2 retains a summary of the quality information associated with each unique sequence.\
+        \n\nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
+        \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2's accuracy. \
+        \n\nThe sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
+        Spurious sequence variants are further reduced by merging overlapping reads. \n\nThe core function here is mergePairs \
+        which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
+        \n\nThe core dada method removes substitution and indel errors, but chimeras remain.\
+        Fortunately, the accuracy of the sequences after denoising makes identifying chimeras simpler than it is when dealing with fuzzy OTUs\
+        all sequences which can be exactly reconstructed as a bimera (two-parent chimera) from more abundant sequence." \
+         + "\n\nIMPORTANT: Most of reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though).\
+        If most of your reads were removed as chimeric, upstream processing may need to be revisited.\
+        In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline.\n"  
+    
+    captions["dada2countsinfo"]="This figure shows the number of reads that made it through each step in the pipeline\
+        \n\nThere should no be a step in which a majority of reads are lost, except filtering when it is stringent.\
+        \n\nIf a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
+        and make sure that the truncated reads span your amplicon.\
+        \n\nIf a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
+        as the ambiguous nucleotides in unremoved primers interfere with chimera identification.\n"   
+
+    captions["dada2taxinfo"]="The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
+        and outputs the taxonomic assignments with at least minBoot bootstrap confidence.\
+        \n\nFormatted training datasets for taxonomic assignments can be downloaded from here\
+        https://benjjneb.github.io/dada2/training.html.\
+        \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007"  \
+        + "In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
+        of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
+        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n"
+ 
+          
+    captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n\n1) classified: reads that align to OTUs with known taxonomy,\
+        \n2) reads that align to OTUs of unknown taxonomy, \n3) reads that do not align to any OTUs.\n\n The sum of these\
+        three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
+     

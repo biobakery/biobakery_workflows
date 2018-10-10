@@ -36,7 +36,42 @@ try:
     from urllib.request import urlretrieve
 except ImportError:
     from urllib import urlretrieve
+
+def get_package_file(basename, type="template"):
+    """ Get the full path to a file included in the installed python package.
+
+        Args:
+            basename (string) : The basename of the file
+            type (string) : The type of file to find (template or Rscript)
+
+        Returns: 
+            string : The full path to the file
+
+    """
+
+    if type == "template":
+        subfolder = "document_templates"
+        extension = ".template.py"
+    else:
+        subfolder = "Rscripts"
+        extension = ".R"
+
+    # get all of the templates in this folder
+    package_install_folder=os.path.join(os.path.dirname(os.path.realpath(__file__)), subfolder)
+    found_files=filter(lambda file: file.endswith(extension),os.listdir(package_install_folder))
+
+    # return the template with the name
+    matching_file=list(filter(lambda file: file.startswith(basename+extension), found_files))
+
+    if matching_file:
+        matching_file=os.path.join(package_install_folder,matching_file[0])
+    else:
+        matching_file=""
+
+    return matching_file
     
+
+
 def change_pweave_figure_size_heatmap(pdf_format):
     """ Change the figure size for heatmaps based on the output format"""
     fig_size = (4,4) if pdf_format else (2.5,2.5)
@@ -1058,14 +1093,18 @@ def read_otu_table(file):
             data.append([float(i) for i in data_points])
             
     return samples, ids, taxonomy, data
+    
 
-def sort_data(data, samples):
-    """ Sort the data with those with the largest values first
+def sort_data(data, samples, sort_by_name=False, sort_by_name_inverse=False):
+    """ Sort the data with those with the largest values first or by sample name
 
         Args:
             data (list): The data points for each sample.
             samples (list): The sample names that correspond to each data point. 
-                
+            sort_by_name (bool): If true, sort by sample name
+            sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
+                this is useful for samples with sample name plus features
+
         Requires:
             None
         
@@ -1074,20 +1113,26 @@ def sort_data(data, samples):
             (list): The sample names that correspond to each data point sorted.
             
     """
+    import numpy
     
-    # if the data is a list of lists, then convert to a list of values
-    if isinstance(data[0], list):
-        max_length=max([len(row) for row in data])
-        if max_length == 1:
-            data_list=[row[0] for row in data]
-            data=data_list
-        else:
-            raise ValueError("Provide data to the sort_data function as a list of floats or ints.")
-        
-    data_by_sample={sample:data_point for sample,data_point in zip(samples,data)}
-    sorted_samples=sorted(data_by_sample,key=data_by_sample.get, reverse=True)
-    sorted_data=[data_by_sample[sample] for sample in sorted_samples]
-    
+    # if the data is a list of lists of single values, then convert to a list of values
+    if isinstance(data[0], list) and max([len(row) for row in data]) == 1:
+        data=[row[0] for row in data]
+       
+    # if set, sort by sample name (samples as columns in the data)
+    if sort_by_name or sort_by_name_inverse:
+        data_by_sample={sample:data_point for sample,data_point in zip(samples,numpy.transpose(data))}
+        sorted_samples=sorted(samples)
+        if sort_by_name_inverse:
+            # use the reverse of the sample names to sort
+            sorted_samples=sorted(samples, key=lambda x: x[::-1])
+        sorted_data_transpose=[data_by_sample[sample] for sample in sorted_samples]
+        sorted_data = numpy.transpose(sorted_data_transpose)
+    else:
+        data_by_sample={sample:data_point for sample,data_point in zip(samples,data)}
+        sorted_samples=sorted(data_by_sample,key=data_by_sample.get, reverse=True)
+        sorted_data=[data_by_sample[sample] for sample in sorted_samples]
+   
     return sorted_samples, sorted_data
 
 def is_paired_table(file):
@@ -1264,8 +1309,11 @@ def taxonomy_trim(taxa):
             
         else:
             most_specific_clade = taxon_reduced.split(delimiter)[-1]
-            data = taxon_full.split(most_specific_clade)
-            trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
+            if not most_specific_clade:
+                trimmed_taxa.append(taxon_reduced.replace(delimiter,".")) 
+            else:
+                data = taxon_full.split(most_specific_clade)
+                trimmed_taxa.append(most_specific_clade+data[-1].replace(delimiter,"."))
             
     return trimmed_taxa
         

@@ -1,12 +1,12 @@
 #' % <% from anadama2 import PweaveDocument; document=PweaveDocument(); vars = document.get_vars(); print(vars["title"]) %>
 #' % Project: <% print(vars["project"]) %>
 #' % Date: <% import time; print(time.strftime("%m/%d/%Y")) %>
-
-#' # Introduction
-
 #+ echo=False
+
 # get the variable settings from the data processing workflow
 from anadama2.reporters import LoggerReporter
+from biobakery_workflows import visualizations
+
 try:
     workflow_settings = LoggerReporter.read_log(vars["log"],"variables")
 except AttributeError:
@@ -22,45 +22,85 @@ trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
 
-# read in the read count table
-# columns expected are total reads, reads that map to OTUs with taxonomy,
-# and reads that map to OTUs without taxonomy
-columns, samples, data = document.read_table(vars["read_count_table"])
+method=vars["method"]
 
-#' The <% print(len(samples)) %> samples from this project were run through the standard 16S workflow. The workflow
-#' follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity 
-#' of <%= percent_identity %> and minimum cluster size of <%= min_cluster_size %>. 
-#' The GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.
-#' Reads were filtered for quality control using a MAXEE score of <%= maxee %>. Filtered reads were
-#' used to generate the OTUs. Reads not passing quality control were kept and used in the step
-#' assigning reads to OTUs. First these reads were truncated to a max length of <%= trunc_len_max %> bases.
+if method == "dada2":
+    columns, samples, data = document.read_table(vars["counts_each_step"])
+    
+else:
+    columns, samples, data = document.read_table(vars["read_count_table"])
+    
+    usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
+        follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
+        + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
+        + "\n\nThe GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
+        \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Filtered reads were \
+        used to generate the OTUs. Reads not passing quality control were kept and used in the step \
+        assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
+        
 
-#+ echo=False
 import os
 import numpy
+
+# determine the document format
+pdf_format=True if vars["format"] == "pdf" else False
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' # Introduction
+#+ echo=False
+#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2intro"]) %>
+#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2stepsinfo"]) %>
+#' <% if vars["method"] != "dada2": print(usearchintro) %>
+
+#+ echo=False
+
 
 min_abundance=0.01
 min_samples=10
 
-from biobakery_workflows import utilities, visualizations
+from biobakery_workflows import utilities
 
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
+# read in the read count table
+# columns expected are total reads, reads that map to OTUs with taxonomy,
+# and reads that map to OTUs without taxonomy
 
 #' <% if pdf_format: print("\clearpage") %>
 
+
 #' # Quality Control
 
+
+#' <% if method == "dada2": print("## Forward Reads") %>   \
+#' <% if method == "dada2": print("![FWD Read](" + vars["readF_qc"] + ")") %> 
+#' <% if method == "dada2": print("\clearpage")  %> 
+
+#' <% if method == "dada2": print("## Reverse Reads") %>   \
+#' <% if method == "dada2": print("![REV Read](" + vars["readR_qc"] + ")") %>
+#' <% if method == "dada2": print("\clearpage") %>
 #+ echo=False
-# read the eestats2 table and add table to document
-eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
 
-document.show_table(eestats_data, eestats_rows, eestats_columns, 
-    "Expected error filter by read length",font="10")
+if method != "dada2":
+    eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
+    document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
+    
+#' <% if method != "dada2": print("The general stats for this data set are:" + str(overall_stats)) %>
+#' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
 
-#' The general stats for this data set are: <%= overall_stats %> .
-#' This table shows the number of reads based on length for different error filters.
+#' <% if method == "dada2": print("# Error rates") %>
+    
+#' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>  
+    
+#' <% if method == "dada2": print("## Forward Reads") %>  \
+#' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
+#' <% if method == "dada2": print("\clearpage") %>
 
+#' <% if method == "dada2": print("## Reverse Reads") %>   \
+#' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
+
+#' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorinfo"]) %> 
+#' <% if pdf_format: print("\clearpage") %>
+      
 #+ echo=False
 # if picard files are provided, then plot those that do not meet a threshold
 picard_text = ""
@@ -98,12 +138,10 @@ if vars["picard"]:
         picard_text+=" The following samples did not have any quality scores below the threshold: " + above_threshold_list + "."
     else:
         picard_text+=" None of the samples had all quality scores above the threshold."
-                    
+
 
 #' <% if picard_text: print(picard_text) %>
-
 #' # Read Count
-
 #+ echo=False
 
 # sort the samples/data by read count with the largest original read count first
@@ -111,38 +149,58 @@ total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
 sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
 
-known_reads = [row[1] for row in sorted_all_read_data]
-unknown_reads = [row[2] for row in sorted_all_read_data]
-unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
+if method == "dada2":
 
-# plot the read counts
-document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
-    title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
+    filtered_reads = [row[1] for row in sorted_all_read_data]
+    merged_reads = [row[3] for row in sorted_all_read_data]
+    tabled_reads = [row[4] for row in sorted_all_read_data]
+    nochim_reads = [row[5] for row in sorted_all_read_data]
+    # plot the read counts
+    document.plot_grouped_barchart([sorted_total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads],
+           ["Original","Filtered","Merged","Tabled","Nochimera"], sorted_samples,
+           title="Read counts by Sample", xlabel="Samples", ylabel="Total Reads")
+    # plot grouped taxonomy for all categorical data provided
+    if visualizations.metadata_provided(vars):
+        categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples,
+            [total_reads,filtered_reads,merged_reads,tabled_reads,nochim_reads])
+        for cat_metadata in categorical_metadata:
+            visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, 
+                ["total","filtered","merged","tabled","nochimera"], samples_found, 
+                title="Read counts by sample", ylabel="Total Reads", legend_title="")
 
-#' This figure shows counts of reads in three categories: 1) classified: reads that align to OTUs with known taxonomy,
-#' 2) reads that align to OTUs of unknown taxonomy, 3) reads that do not align to any OTUs. The sum of these
-#' three read counts for each sample is the total original read count not including filtering prior to OTU clustering.
+else:
+    known_reads = [row[1] for row in sorted_all_read_data]
+    unknown_reads = [row[2] for row in sorted_all_read_data]
+    unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
+    # plot the read counts
+    document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
+        title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
+    # plot grouped taxonomy for all categorical data provided
+    if visualizations.metadata_provided(vars):
+        categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples,
+            [known_reads,unknown_reads,unmapped_reads])
+        for cat_metadata in categorical_metadata:
+            visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"],
+                samples_found, title="Read counts by sample", ylabel="Total Reads", legend_title="")
+
+#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>  
+#' <% if vars["method"] != "dada2": print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %> 
 
 #' <% if pdf_format: print("\clearpage") %>
 
-#+ echo=False
-# plot grouped taxonomy for all categorical data provided
-if visualizations.metadata_provided(vars):
-    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples, 
-        [known_reads,unknown_reads,unmapped_reads])
-    for cat_metadata in categorical_metadata:
-        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"], 
-            samples_found, title="Read counts by Sample", ylabel="Total Reads", legend_title="")
-
 #' # Taxonomy
+    
+#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2taxinfo"]) %>      
 
 #' ## Genera
-
+ 
 #+ echo=False
-import numpy
 
 # read in the otu table data
 samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
+
+# plot the top taxa by genus level, plotting the relative abundance values
+max_taxa=15
 
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data, percent=True)
@@ -154,7 +212,7 @@ sorted_samples, sorted_top_data, top_data, top_taxa_short_names, legend_size = v
 # add other to the taxonomy data, other represents total genera not shown on plot
 top_taxa_short_names_plus_other, sorted_top_data_plus_other = visualizations.fill_taxonomy_other(top_taxa_short_names, sorted_top_data)
 
-document.plot_stacked_barchart(sorted_top_data_plus_other, row_labels=top_taxa_short_names_plus_other, 
+document.plot_stacked_barchart(sorted_top_data_plus_other, row_labels=top_taxa_short_names_plus_other,
     column_labels=sorted_samples, title="Top "+str(max_taxa)+" genera by average abundance",
     ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size)
 
@@ -185,7 +243,7 @@ sorted_top_terminal_data = numpy.transpose([transpose_top_terminal_data[samples.
 # add the remaining terminal taxa as "other" to the data
 shorted_names_plus_other, sorted_top_terminal_data_plus_other = visualizations.fill_taxonomy_other(shorted_names, sorted_top_terminal_data)
 
-document.plot_stacked_barchart(sorted_top_terminal_data_plus_other, row_labels=shorted_names_plus_other, 
+document.plot_stacked_barchart(sorted_top_terminal_data_plus_other, row_labels=shorted_names_plus_other,
     column_labels=sorted_samples_terminal, title="Top "+str(max_taxa)+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa")
 
@@ -215,6 +273,8 @@ visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
     pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
 utilities.reset_pweave_figure_size()
 
+
+
 #' ## Terminal Taxa
 
 #+ echo=False
@@ -231,7 +291,6 @@ visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_dat
     pdf_format,"Top {} terminal taxa by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
 utilities.reset_pweave_figure_size()
 
-#' <% if pdf_format: print("\clearpage") %>
 
 #' # Ordination
 
@@ -249,7 +308,7 @@ top_filtered_data_pcoa=numpy.array(sorted_top_data_genera)/100.0
 document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera using Bray-Curtis similarity".format(max_sets_heatmap))
 
 #' For the PCoA plots, relative abundances are passed through a basic filter requiring each taxon
-#' have at least <% print(min_abundance)%> % abundance in at least 
+#' have at least <% print(min_abundance)%> % abundance in at least
 #' <% print(min_samples) %> % of all samples.
 
 #+ echo=False
@@ -274,3 +333,4 @@ document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title
 visualizations.show_pcoa_metadata(document, vars, samples, top_filtered_taxonomy, top_filtered_data_pcoa,
     title="PCoA Ordination of top {} terminal taxa".format(max_sets_heatmap))
 
+#' <% if pdf_format: print("\clearpage") %>
