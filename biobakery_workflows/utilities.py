@@ -29,6 +29,7 @@ import math
 import functools
 import time
 
+from anadama2.tracked import TrackedDirectory
 
 # try to import urllib.request.urlretrieve for python3
 try:
@@ -1561,15 +1562,15 @@ def sort_fastq_file(task):
                     "tr '\t' '\n' > [targets[0]]")
 
     run_task('mkdir -p [targets[0]]',
-             depends=[output_dir],
-             targets=[temp_dir])
+             depends=[TrackedDirectory(output_dir)],
+             targets=[TrackedDirectory(temp_dir)])
 
     run_task(sort_command,
-             depends=task.depends + [temp_dir, output_dir],
+             depends=task.depends + [TrackedDirectory(temp_dir), TrackedDirectory(output_dir)],
              targets=task.targets)
 
     run_task("rm -rf [depends[0]]",
-             depends=[temp_dir] + task.targets)
+             depends=[TrackedDirectory(temp_dir)] + task.targets)
 
 
 def extract_orphan_reads(task):
@@ -1593,8 +1594,8 @@ def extract_orphan_reads(task):
              depends=task.depends,
              targets=task.targets[0])
 
-    run_task("extract_orphan_reads.py [depends[0]] [args[0]] [depends[1]] [depends[2]]",
-             depends=[task.depends[0], task.targets[0], orphans_dir],
+    run_task("extract_orphan_reads.py -r [depends[0]] -b [depends[1]] -o [depends[2]]",
+             depends=[task.depends[0], task.targets[0], TrackedDirectory(orphans_dir)],
              targets=[task.targets[1]],
              args=[".fastq"])
 
