@@ -28,7 +28,6 @@ THE SOFTWARE.
 from anadama2 import Workflow
 
 # import the document templates and utilities from biobakery_workflows
-from biobakery_workflows import document_templates
 from biobakery_workflows import utilities
 
 # import the files for descriptions and paths
@@ -80,22 +79,22 @@ if args.input_metadata:
     metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
 # select the templates based on the qc data
-templates=[document_templates.get_template("header")]
+templates=[utilities.get_package_file("header")]
 
 # if there is a table of qc counts, then add the template
 if qc_counts:
     if utilities.is_paired_table(qc_counts):
-        templates+=[document_templates.get_template("quality_control_paired_dna")]
+        templates+=[utilities.get_package_file("quality_control_paired_dna")]
     else:
-        templates+=[document_templates.get_template("quality_control_single_dna")]
+        templates+=[utilities.get_package_file("quality_control_single_dna")]
     
-templates+=[document_templates.get_template("taxonomy"),
-    document_templates.get_template("functional_dna")]
+templates+=[utilities.get_package_file("taxonomy"),
+    utilities.get_package_file("functional_dna")]
 
 # add the template for the data processing information
 log_file=None
 if not args.exclude_workflow_info:
-    templates+=[document_templates.get_template("workflow_info")]
+    templates+=[utilities.get_package_file("workflow_info")]
     log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
 
 # add the document to the workflow

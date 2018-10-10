@@ -30,7 +30,7 @@ import os
 from anadama2 import Workflow
 
 # import the document templates from biobakery_workflows
-from biobakery_workflows import document_templates
+from biobakery_workflows import utilities
 
 # import the files for descriptions and paths
 from biobakery_workflows import files
@@ -77,15 +77,15 @@ taxonomic_profile=files.ShotGun.path("taxonomic_profile",wmgx_input_folder, erro
 pathabundance=files.ShotGun.path("pathabundance_relab",wmgx_input_folder, error_if_not_found=True)
 
 # get the templates for the report
-templates=[document_templates.get_template("header"),
-    document_templates.get_template("quality_control_paired_dna_rna"),
-    document_templates.get_template("taxonomy"),
-    document_templates.get_template("functional_dna_rna")]
+templates=[utilities.get_package_file("header"),
+    utilities.get_package_file("quality_control_paired_dna_rna"),
+    utilities.get_package_file("taxonomy"),
+    utilities.get_package_file("functional_dna_rna")]
 
 # add the template for the data processing information
 log_file=None
 if not args.exclude_workflow_info:
-    templates+=[document_templates.get_template("workflow_info")]
+    templates+=[utilities.get_package_file("workflow_info")]
     log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
 
 # add the document to the workflow
