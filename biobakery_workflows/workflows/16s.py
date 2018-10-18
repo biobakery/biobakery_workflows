@@ -37,7 +37,7 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()
-workflow.add_argument("method", desc="method to process 16s workflow", default="usearch", choices=["usearch","dada2","vsearch"])
+workflow.add_argument("method", desc="method to process 16s workflow", default="vsearch", choices=["usearch","dada2","vsearch"])
 workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("dual-barcode-file", desc="the string to identify the dual barcode file", default="")
