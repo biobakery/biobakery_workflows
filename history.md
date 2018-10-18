@@ -1,6 +1,13 @@
 
 # bioBakery workflows History #
 
+## v0.11.0 10-18-2018 ##
+
+* Add vsearch as 16s workflow option (now the default).
+* Add assembly as option to wmgx workflow.
+* Add fasttree task to 16s workflow.
+* Add dual indexing option to 16s and wmgx workflows.
+
 ## v0.10.0 08-21-2018 ##
 
 * Add DADA2 16s workflow option.
