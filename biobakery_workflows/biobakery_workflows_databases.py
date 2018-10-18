@@ -193,18 +193,15 @@ def main():
         # download the green genes fasta and taxonomy files
         print("Downloading green genes database files")
         usearch_fasta_install_path=os.path.join(args.location,config.SixteenS.vars["greengenes_fasta"].default_path)
+        usearch_database_install_path=os.path.join(args.location,config.SixteenS.vars["greengenes_usearch"].default_path)
         utilities.download_file(config.SixteenS.vars["greengenes_fasta"].url,
             usearch_fasta_install_path)
+        # use the fasta file also as the database so install works for both usearch and vsearch
+        try_create_folder(os.path.dirname(usearch_database_install_path))
+        shutil.copy(usearch_fasta_install_path,usearch_database_install_path)
         utilities.download_file(config.SixteenS.vars["greengenes_taxonomy"].url,
             os.path.join(args.location,config.SixteenS.vars["greengenes_taxonomy"].default_path))
         
-        # create the usearch database from the fasta file
-        print("Creating usearch green genes database")
-        usearch_db_folder=os.path.join(args.location,config.SixteenS.vars["greengenes_usearch"].default_folder)
-        try_create_folder(usearch_db_folder)
-        run_command(["usearch","-makeudb_usearch",usearch_fasta_install_path,
-            "-output",os.path.join(args.location,config.SixteenS.vars["greengenes_usearch"].default_path)])
- 
     elif args.install == "16s_dada2":
         # download the green genes fasta and taxonomy files
         print("Downloading dada2 green genes database files")
