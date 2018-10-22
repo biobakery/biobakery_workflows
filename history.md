@@ -1,6 +1,11 @@
 
 # bioBakery workflows History #
 
+## v0.12.0 10-22-2018 ##
+
+* In 16s usearch/vsearch methods combine truncate and filter (needed for data sets that require more filtering).
+* Add option to bypass msa generation in 16s workflows. 
+
 ## v0.11.0 10-18-2018 ##
 
 * Add vsearch as 16s workflow option (now the default).
