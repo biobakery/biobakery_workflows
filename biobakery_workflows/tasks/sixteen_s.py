@@ -54,12 +54,12 @@ def quality_control(workflow, method, fastq_file, output_folder, threads, maxee,
     qc_report = quality_report(workflow, method, fastq_file, output_folder, threads)
         
     # filter the fastq file with the maxee scores
-    fasta_filtered, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee)
+    filtered_truncated_fasta, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len)
     
     # truncate reads based on length
-    filtered_truncated_fasta, truncated_fasta = truncate(workflow, method, [fasta_filtered, fasta], output_folder, threads, trunc_len)
+    truncated_fastas = truncate(workflow, method, [fasta], output_folder, threads, trunc_len)
     
-    return filtered_truncated_fasta, truncated_fasta, fasta
+    return filtered_truncated_fasta, truncated_fastas[0], fasta
 
 def merge_samples_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads):
     """ Merge the files, first if pairs, then rename sequence ids to match sample id
@@ -274,7 +274,7 @@ def quality_report(workflow, method, fastq_file, output_folder, threads):
     return qc_file
   
   
-def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee):
+def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len):
     """ Filter the fastq files using the maxee value
     
     Args:
@@ -284,7 +284,8 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee):
         output_folder (string): The path of the output folder.
         threads (int): The number of threads for each task.
         maxee (int): The maxee value to use for filtering.
-        
+        trunc_len (int): The value to use for max length.
+
     Requires:
         usearch or vsearch
         
@@ -300,18 +301,18 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee):
     if method == "vsearch":
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; " + \
-            "vsearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]]",
+            "vsearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]] -fastq_trunclen [args[2]]",
             depends=[fastq_file, TrackedExecutable("vsearch")],
             targets=[fasta_filtered_file, fasta_discarded_file],
-            args=[threads, maxee],
+            args=[threads, maxee, trunc_len],
             name="vsearch_fastq_filter")
     else:
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; "+\
-            "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]]",
+            "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]] -fastq_trunclen [args[2]]",
             depends=[fastq_file,TrackedExecutable("usearch")],
             targets=[fasta_filtered_file, fasta_discarded_file],
-            args=[threads, maxee],
+            args=[threads, maxee, trunc_len],
             name="usearch_fastq_filter")
     
     # create a fasta file of all reads (included the discarded
@@ -510,7 +511,7 @@ def cluster_otus(workflow, method, fasta_file, reference_fasta, output_folder):
   
   
 def taxonomic_profile(workflow, method, filtered_fasta_file, truncated_fasta_file, original_fasta_file, output_folder, threads, percent_identity,
-    reference_usearch, reference_fasta, reference_taxonomy, min_size):
+    reference_usearch, reference_fasta, reference_taxonomy, min_size, bypass_msa=False):
     """ Pick otus, cluster centroids, otu mapping, reference mapping to create open/closed reference taxonomy files
     
     Args:
@@ -526,7 +527,8 @@ def taxonomic_profile(workflow, method, filtered_fasta_file, truncated_fasta_fil
         reference_fasta (string): The path to the reference fasta file.
         reference_taxonomy (string): The path to the reference taxonomy file.
         min_size (int): Min size of the reads to filter.
-        
+        bypass_msa (bool): Bypass msa clustering and tree generation.        
+
     Requires:
         usearch(as of usearch v9: has built-in de novo chimera filtering) or vsearch
         clustal omega: multiple sequence alignment for proteins 
@@ -541,8 +543,9 @@ def taxonomic_profile(workflow, method, filtered_fasta_file, truncated_fasta_fil
     
     # centroid OTU sequence alignment
     # get the name of the output files
-    centroid_fasta = files.SixteenS.path("msa_nonchimera", output_folder)
-    centroid_alignment(workflow, otu_fasta, centroid_fasta, threads, task_name="clustalo_nonchimera")
+    if not bypass_msa:
+        centroid_fasta = files.SixteenS.path("msa_nonchimera", output_folder)
+        centroid_alignment(workflow, otu_fasta, centroid_fasta, threads, task_name="clustalo_nonchimera")
     
     # align the reads to the otus
     otu_alignment_uc = utilities.name_files("all_samples_otu_mapping_results.uc", output_folder)
@@ -558,10 +561,11 @@ def taxonomic_profile(workflow, method, filtered_fasta_file, truncated_fasta_fil
     closed_reference_tsv, closed_ref_fasta = build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_alignment_uc, otu_alignment_uc, otu_fasta, original_fasta_file, output_folder)
     
     # cluster the closed reference otu fasta sequences and generate a tree
-    centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", output_folder)
-    closed_tree = utilities.name_files("closed_reference.tre", output_folder)
-    centroid_alignment(workflow, closed_ref_fasta, centroid_closed_fasta, threads, task_name="clustalo_closed_reference")
-    create_tree(workflow, centroid_closed_fasta, closed_tree)    
+    if not bypass_msa:
+        centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", output_folder)
+        closed_tree = utilities.name_files("closed_reference.tre", output_folder)
+        centroid_alignment(workflow, closed_ref_fasta, centroid_closed_fasta, threads, task_name="clustalo_closed_reference")
+        create_tree(workflow, centroid_closed_fasta, closed_tree)    
 
     return closed_reference_tsv
 

@@ -130,16 +130,14 @@ else:
 	 	"otu_table_closed_reference",
 		"otu_table_open_reference",
 		"read_count_table",
-		"eestats2",
-		"msa_nonchimera",
-		"msa_closed_reference"]}
+		"eestats2"]}
 
     # get the paths for the required files and check they are found
 	otu_open_table=files.SixteenS.path("otu_table_open_reference",args.input, error_if_not_found=True)
 	read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
 	eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=True)
-	centroid_fasta = files.SixteenS.path("msa_nonchimera",args.input, error_if_not_found=True)
-	centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", args.input, error_if_not_found=True)
+	centroid_fasta = files.SixteenS.path("msa_nonchimera",args.input, none_if_not_found=True)
+	centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", args.input, none_if_not_found=True)
 	       
 	methoddepends=[otu_table, read_count_table, otu_open_table, eestats_table, centroid_fasta, centroid_closed_fasta] 
     
