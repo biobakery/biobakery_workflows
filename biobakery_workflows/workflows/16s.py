@@ -50,6 +50,7 @@ workflow.add_argument("maxee", desc="the maxee value to use for quality control 
 workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
+workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -135,7 +136,7 @@ else:
     closed_reference_tsv = sixteen_s.taxonomic_profile(
             workflow, args.method, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output,
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
-            workflow_config.greengenes_taxonomy, args.min_size)
+            workflow_config.greengenes_taxonomy, args.min_size, args.bypass_msa)
 
     # functional profiling
     categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
