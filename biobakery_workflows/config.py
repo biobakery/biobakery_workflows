@@ -144,7 +144,7 @@ class SixteenS(Workflow):
         url="ftp://greengenes.microbio.me/greengenes_release/gg_13_8_otus/taxonomy/97_otu_taxonomy.txt")
     vars["greengenes_dada2"] = DBInfo("GREEN_GENES_DADA2_DB",
         description="This is the GreenGenes dada2 database",
-        url="https://zenodo.org/record/158955/files/gg_13_8_train_set_97.fa.gz")
+        url="http://huttenhower.sph.harvard.edu/biobakery-shop/workflows/97_otus_dada.fasta")
     vars["rdp_dada2"] = DBInfo("RDP_DADA2_DB",
         description="This is the rdp dada2 database",
         url="https://zenodo.org/record/158955/files/rdp_train_set_14.fa.gz")
