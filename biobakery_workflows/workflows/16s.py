@@ -118,7 +118,11 @@ if args.method == "dada2":
     # assign taxonomy
     closed_reference_tsv = dadatwo.assign_taxonomy(
             workflow, args.output, seqtab_file_path, args.dada_db, args.threads)
-    
+
+    if args.dada_db == "gg":
+        # functional profiling
+        categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+
     # dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path)
 
 else:
