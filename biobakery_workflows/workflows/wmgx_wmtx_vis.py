@@ -58,6 +58,10 @@ input_desc+=files.ShotGun.list_file_path_description("",norm_input_files)
 # add the custom arguments to the workflow                          
 workflow.add_argument("input",desc=input_desc,required=True)
 workflow.add_argument("project-name",desc="the name of the project", required=True)
+workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)")
+workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
+workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
+workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard workflow for whole metagenome and metatranscriptome shotgun sequencing.")
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
@@ -75,6 +79,16 @@ wmgx_qc_counts=files.ShotGun.path("kneaddata_read_counts",wmgx_input_folder, err
 wmtx_qc_counts=files.ShotGun.path("kneaddata_read_counts",wmtx_input_folder, error_if_not_found=True)
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",wmgx_input_folder, error_if_not_found=True)
 pathabundance=files.ShotGun.path("pathabundance_relab",wmgx_input_folder, error_if_not_found=True)
+
+
+# read and label the metadata
+metadata=None
+metadata_labels=None
+if args.input_metadata:
+    metadata=utilities.read_metadata(args.input_metadata, taxonomic_profile,
+        name_addition="_taxonomic_profile", ignore_features=args.metadata_exclude)
+    metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
+
 
 # get the templates for the report
 templates=[utilities.get_package_file("header"),
@@ -109,7 +123,10 @@ doc_task=workflow.add_document(
           "ecs_norm_ratio":files.ShotGun.path("ecs_norm_ratio",args.input,none_if_not_found=True),
           "paths_norm_ratio":files.ShotGun.path("paths_norm_ratio",args.input,none_if_not_found=True),
           "format":args.format,
-          "log":log_file},
+          "log":log_file,
+          "metadata": metadata,
+          "metadata_labels": metadata_labels
+          },
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
