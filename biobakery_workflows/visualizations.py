@@ -793,7 +793,7 @@ class Sixteen_S(Workflow):
         and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n"
  
           
-    captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n\n1) classified: reads that align to OTUs with known taxonomy,\
-        \n2) reads that align to OTUs of unknown taxonomy, \n3) reads that do not align to any OTUs.\n\n The sum of these\
+    captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n \
+        \n1) classified: reads that align to OTUs with known taxonomy,\n2) unclassified: reads that align to OTUs of unknown taxonomy,\n3) unmapped: reads that do not align to any OTUs.\n\n The sum of these\
         three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
      
