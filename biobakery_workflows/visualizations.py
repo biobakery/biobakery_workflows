@@ -118,9 +118,11 @@ def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
         for category in vars["metadata"][1:]:
             name=category[0]
             metadata_mapping=dict((x,y) for x,y in zip(sample_metadata[1:],category[1:]))
-
-            document.show_pcoa(samples, top_taxonomy, pcoa_data, title=title+" - "+name,
-                metadata=metadata_mapping)
+            metadata_dict = vars['metadata_labels']
+            metadata_type = metadata_dict[name]
+            
+            document.show_pcoa(samples, top_taxonomy, pcoa_data,title=title+" - "+name,
+                               metadata=metadata_mapping, metadata_type=metadata_type)
 
 def get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa, taxa_level=5):
     """ Get the top, based on average abundance, set of taxa at the genus level
