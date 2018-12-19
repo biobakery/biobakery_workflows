@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 import os
 
-from anadama2.tracked import TrackedExecutable, TrackedDirectory
+from anadama2.tracked import TrackedExecutable
 
 from biobakery_workflows import utilities
 from biobakery_workflows import files
