@@ -25,13 +25,13 @@ THE SOFTWARE.
 
 import os
 
-from anadama2.tracked import TrackedExecutable
+from anadama2.tracked import TrackedExecutable, TrackedDirectory
 
 from biobakery_workflows import utilities
 from biobakery_workflows import files
 
     
-def quality_control(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len):
+def quality_control(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, min_read_count):
     """ Create a quality report, filter fastq, and then truncate fasta files
     
     Args:
@@ -54,12 +54,14 @@ def quality_control(workflow, method, fastq_file, output_folder, threads, maxee,
     qc_report = quality_report(workflow, method, fastq_file, output_folder, threads)
         
     # filter the fastq file with the maxee scores
-    filtered_truncated_fasta, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len)
-    
+    filtered_truncated_fasta, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, min_read_count)
+
     # truncate reads based on length
     truncated_fastas = truncate(workflow, method, [fasta], output_folder, threads, trunc_len)
-    
+
     return filtered_truncated_fasta, truncated_fastas[0], fasta
+
+
 
 def merge_samples_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads):
     """ Merge the files, first if pairs, then rename sequence ids to match sample id
@@ -274,8 +276,8 @@ def quality_report(workflow, method, fastq_file, output_folder, threads):
     return qc_file
   
   
-def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len):
-    """ Filter the fastq files using the maxee value
+def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, min_read_count):
+    """ Filter the fastq files using the maxee value and remove samples with low read numbers
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
@@ -285,6 +287,7 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
         threads (int): The number of threads for each task.
         maxee (int): The maxee value to use for filtering.
         trunc_len (int): The value to use for max length.
+        min_read_count (int): The value to use for min number of reads.
 
     Requires:
         usearch or vsearch
@@ -298,6 +301,8 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
     # get the name of the final merged fastq file
     fasta_filtered_file = utilities.name_files("all_samples_concatenated_filtered.fasta",output_folder)
     fasta_discarded_file = utilities.name_files("all_samples_concatenated_discarded.fasta",output_folder)
+    fasta_nolowreads_file = utilities.name_files("all_samples_nolowreads.fasta", output_folder)
+    lowreads_discarded_file = utilities.name_files("all_samples_lowreads_discarded.fasta", output_folder)
     if method == "vsearch":
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; " + \
@@ -314,15 +319,24 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
             targets=[fasta_filtered_file, fasta_discarded_file],
             args=[threads, maxee, trunc_len],
             name="usearch_fastq_filter")
-    
-    # create a fasta file of all reads (included the discarded
+
+    # remove samples with low read numbers (less than min_read_count)
+    workflow.add_task(
+        "discard_low_read_samples.py --min-read-count [args[0]]\
+         --input-fasta [depends[0]] --output-fasta [targets[0]] --output-discarded [targets[1]]",
+        depends=fasta_filtered_file,
+        targets=[fasta_nolowreads_file,lowreads_discarded_file],
+        args=min_read_count,
+        name="filt_low_reads")
+
+    # create a fasta file of all reads (included the discarded)
     fasta_file = utilities.name_files("all_samples_concatenated.fasta",output_folder)
     workflow.add_task(
         "cat [depends[0]] [depends[1]] > [targets[0]]",
         depends=[fasta_filtered_file, fasta_discarded_file],
         targets=fasta_file)
     
-    return fasta_filtered_file, fasta_file
+    return fasta_nolowreads_file, fasta_file
 
 
 def truncate(workflow, method, input_files, output_folder, threads, trunc_len):
@@ -346,6 +360,7 @@ def truncate(workflow, method, input_files, output_folder, threads, trunc_len):
 
     # get the name of the output files
     output_files = utilities.name_files(input_files, output_folder, tag="truncated")
+
     if method == "vsearch":
         workflow.add_task_group(
             "vsearch --fastx_filter [depends[0]]  --fastq_trunclen [args[0]]  -fastaout [targets[0]]",
@@ -360,6 +375,7 @@ def truncate(workflow, method, input_files, output_folder, threads, trunc_len):
             targets=output_files,
             args=trunc_len,
             name="usearch_fastx_truncate")
+
 
     return output_files
   
