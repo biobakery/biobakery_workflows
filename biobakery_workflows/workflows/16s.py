@@ -48,6 +48,7 @@ workflow.add_argument("index-identifier", desc="the string to identify the index
 workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
 workflow.add_argument("maxee", desc="the maxee value to use for quality control filtering", default=1)
 workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
+workflow.add_argument("min-read-count", desc="the min read count to filter samples", default=5000)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
@@ -130,7 +131,8 @@ else:
 
 	# add quality control tasks: generate qc report, filter by maxee, and truncate
     filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
-            workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
+            workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max,
+             args.min_read_count)
 
     # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
     closed_reference_tsv = sixteen_s.taxonomic_profile(
