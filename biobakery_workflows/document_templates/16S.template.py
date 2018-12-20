@@ -21,6 +21,7 @@ maxee = workflow_settings.get("maxee","UNK")
 trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
+min_read_count = workflow_settings.get("min_read_count","UNK")
 
 method=vars["method"]
 
@@ -34,7 +35,8 @@ else:
         follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
         + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
         + "\n\nThe GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
-        \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Filtered reads were \
+        \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Samples with\
+        less than " + min_read_count + " reads were discarded. Filtered reads were \
         used to generate the OTUs. Reads not passing quality control were kept and used in the step \
         assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
         
