@@ -304,7 +304,7 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
     fasta_filtered_nolowreads_file = utilities.name_files("all_samples_filtered_nolowreads.fasta", output_folder)
     fasta_nolowreads_file = utilities.name_files("all_samples_concatenated_nolowreads.fasta", output_folder)
     lowreads_discarded_file = utilities.name_files("all_samples_lowreads_discarded.fasta", output_folder)
-    filtered_lowreads_discarded_file = utilities.name_files("all_samples_filtered_lowreads_discarded.fasta", output_folder)
+
     if method == "vsearch":
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; " + \
@@ -330,30 +330,22 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
         depends=[fasta_filtered_file, fasta_discarded_file],
         targets=fasta_file)
 
+    fasta_files = [fasta_filtered_file,fasta_file]
+    fasta_out_files = [fasta_filtered_nolowreads_file,fasta_nolowreads_file]
 
-    # remove samples with low read numbers (less than min_read_count) from all samples concatenated filtered fasta
-    workflow.add_task(
+    # remove samples with low read numbers (less than min_read_count) from both all samples concatenated and filtered fasta
+    workflow.add_task_group(
         "discard_low_read_samples.py --min-read-count [args[0]]\
          --input-fasta [depends[0]]\
          --output-fasta [targets[0]]\
-         --output-discarded [targets[1]]",
-        depends=fasta_filtered_file,
-        targets=[fasta_filtered_nolowreads_file,filtered_lowreads_discarded_file],
+         --output-discarded [vars[0]]",
+        depends=fasta_files,
+        targets=fasta_out_files,
         args=min_read_count,
+        vars=lowreads_discarded_file,
         name="filt_low_reads")
 
-    # remove samples with low read numbers (less than min_read_count) from all samples concatenated fasta
-    workflow.add_task(
-        "discard_low_read_samples.py --min-read-count [args[0]]\
-         --input-fasta [depends[0]]\
-         --output-fasta [targets[0]]\
-         --output-discarded [targets[1]]",
-        depends=fasta_file,
-        targets=[fasta_nolowreads_file, lowreads_discarded_file],
-        args=min_read_count,
-        name="filt_low_reads")
-    
-    return fasta_filtered_nolowreads_file, fasta_nolowreads_file
+    return fasta_filtered_nolowreads_file,fasta_nolowreads_file
 
 
 def truncate(workflow, method, input_files, output_folder, threads, trunc_len):
