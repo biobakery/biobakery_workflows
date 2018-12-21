@@ -1458,16 +1458,18 @@ def read_eestats2(file):
     
     with open(file) as file_handle:
         eestats_lines = file_handle.readlines()
-        
+    if "reads" not in eestats_lines[0]:
+        del eestats_lines[0]
+
     # read in the overall stats line
-    overall_stats = format_data_comma(eestats_lines[1].rstrip())
+    overall_stats = format_data_comma(eestats_lines[0].rstrip())
     # read in the maxee values from the columns
-    columns = list(filter(lambda x: x.strip() and not x in ["Length","MaxEE"],eestats_lines[3].rstrip().split()))
+    columns = list(filter(lambda x: x.strip() and not x in ["Length","MaxEE"],eestats_lines[2].rstrip().split()))
     columns = [column+" maxee" for column in columns]
     rows = []
     data = []
     # read through the data table
-    for line in eestats_lines[5:]:
+    for line in eestats_lines[4:]:
         stats = list(filter(lambda x: x.strip(),line.strip().split("   ")))
         # move spaces in data values and percents
         stats = [stat.replace("(  ","(").replace("( ","(").replace("("," (") for stat in stats]
