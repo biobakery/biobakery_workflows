@@ -1,0 +1,7 @@
+{
+    "final_workflow_outputs_dir" : "gs://xavier-bucket/userXXX/workflow_output",
+    "final_workflow_log_dir": "gs://xavier-bucket/userXXX/workflow_logs",
+    "final_call_logs_dir": "gs://xavier-bucket/userXXX/workflow_calss"
+    "jes_gcs_root": "gs://XXX-rx/Cromwell_Executions",
+    "workflow_failure_mode": "ContinueWhilePossible"
+}
