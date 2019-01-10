@@ -57,7 +57,6 @@ task kneaddata {
   # download the two reference databases and then run kneaddata
   command {    
     kneaddata_database --download human_genome bowtie2 ${humanDatabase}
-
     kneaddata_database --download ribosomal_RNA bowtie2 ${rrnaDatabase}
 
     kneaddata --input ${file1} --input ${file2} -o ${workingdir} --serial \
