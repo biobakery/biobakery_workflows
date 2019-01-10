@@ -59,7 +59,7 @@ task kneaddata {
     kneaddata_database --download human_genome bowtie2 ${humanDatabase}
     kneaddata_database --download ribosomal_RNA bowtie2 ${rrnaDatabase}
 
-    kneaddata --input ${file1} --input ${file2} -o ${workingdir} --serial \
+    kneaddata --input ${file1} --input ${file2} --output ${workingdir} --serial \
     --reference-db ${human_database} --reference-db ${rrna_database} --threads 8 \
     --remove-intermediate-output --output-prefix ${sample} --cat-final-output
   }
