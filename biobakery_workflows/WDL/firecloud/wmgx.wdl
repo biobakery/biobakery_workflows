@@ -51,17 +51,17 @@ task kneaddata {
   String sample
   String workingdir
 
-  String human_database = workingdir + "/databases/kneaddata_human/"
-  String rrna_database = workingdir + "/databases/kneaddata_rrna/"
+  String humanDatabase = workingdir + "/databases/kneaddata_human/"
+  String rrnaDatabase = workingdir + "/databases/kneaddata_rrna/"
 
   # download the two reference databases and then run kneaddata
   command {    
-    kneaddata_database --download human_genome bowtie2 ${human_database}
+    kneaddata_database --download human_genome bowtie2 ${humanDatabase}
 
-    kneaddata_database --download ribosomal_RNA bowtie2 ${rrna_database}
+    kneaddata_database --download ribosomal_RNA bowtie2 ${rrnaDatabase}
 
     kneaddata --input ${file1} --input ${file2} -o ${workingdir} --serial \
-    --reference-db ${human_database} --reference-db ${rrna_database} -t 8 \
+    --reference-db ${human_database} --reference-db ${rrna_database} --threads 8 \
     --remove-intermediate-output --output-prefix ${sample} --cat-final-output
   }
   
