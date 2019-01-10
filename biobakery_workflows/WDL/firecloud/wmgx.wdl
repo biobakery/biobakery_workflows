@@ -27,7 +27,7 @@ workflow workflowWMGX {
       workingdir=WorkingDirectory
     }
 
-    call metaphlan {
+    call metaphlan2 {
       input: 
       sample=SampleName, 
       QCFastqFile=kneaddata.QCFastqFile,
@@ -38,7 +38,7 @@ workflow workflowWMGX {
       input: 
       sample=SampleName, 
       QCFastqFile=kneaddata.QCFastqFile, 
-      TaxonomicProfileFile=metaphlan.TaxonomicProfileFile,
+      TaxonomicProfileFile=metaphlan2.TaxonomicProfileFile,
       workingdir=WorkingDirectory
     }
   }
@@ -78,7 +78,7 @@ task kneaddata {
   }
 }
 
-task metaphlan {
+task metaphlan2 {
   File QCFastqFile
   String sample
   String workingdir
