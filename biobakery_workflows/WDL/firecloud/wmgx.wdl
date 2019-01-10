@@ -1,83 +1,69 @@
 workflow workflowWMGX {
 
-  File Input_File_Sample_List
-  String Fastq_Pair1_Extension
-  String Fastq_Pair2_Extension
-  Map[String, String] SamplesPaths = read_map(Input_File_Sample_List)
-  scatter (pair in SamplesPaths){
+  File InputFileSampleList
+  String FastqPair1Extension
+  String FastqPair2Extension
 
-    String SampleDir = pair.right
-    String sample = pair.left
+  Map[String, String] SamplesPaths = read_map(InputFileSampleList)
 
-    File F1 = SampleDir + sample + Fastq_Pair1_Extension
-    File F2 = SampleDir + sample + Fastq_Pair2_Extension
+  # loop through each sample listed in input file sample list
+  scatter (row in SamplesPaths){
+
+    String SampleDir = row.right
+    String SampleName = row.left
+
+    File RawFastqPair1File = SampleDir + SampleName + FastqPair1Extension
+    File RawFastqPair2File = SampleDir + SampleName + FastqPair2Extension
     
-    call qcQualityHuman {
+    call kneaddata {
       input: 
-      sample=sample, 
-      file1=F1, 
-      file2=F2
+      sample=SampleName, 
+      file1=RawFastqPair1File, 
+      file2=RawFastqPair2File
     }
 
     call metaphlan {
       input: 
-      sample=sample, 
-      r1=qcQualityHuman.fileR1, 
-      r2=qcQualityHuman.fileR2, 
-      s1=qcQualityHuman.fileS1, 
-      s2=qcQualityHuman.fileS2,
-      sample=sample    
+      sample=SampleName, 
+      QCFastqFile=kneaddata.QCFastqFile,
     }
     
     call humann2 {
       input: 
-      sample=sample, 
-      r1=qcQualityHuman.fileR1, 
-      r2=qcQualityHuman.fileR2, 
-      s1=qcQualityHuman.fileS1, 
-      s2=qcQualityHuman.fileS2,
-      taxProfile=metaphlan.fileProfile,
-      sample=sample    
+      sample=SampleName, 
+      QCFastqFile=kneaddata.QCFastqFile, 
+      TaxonomicProfileFile=metaphlan.TaxonomicProfileFile,
     }
-
   }
-
 }
 
 
-task qcQualityHuman {
+task kneaddata {
   File file1
   File file2
   String sample
-  File ref1
-  File ref2
-  File ref3
-  File ref4
-  File ref5
-  File ref6
 
-  command {
-    kneaddata --input ${file1} --input ${file2} -o . \
-    -db tools-rx/DATABASES/HG19 --trimmomatic-options "HEADCROP:15 SLIDINGWINDOW:4:15 MINLEN:50" -t 4
-    rm *trimmed*
-    rm *bowtie2*
-    
-    gzip ${sample}.adapterTrimmed.1_kneaddata_paired_1.fastq
-    gzip ${sample}.adapterTrimmed.1_kneaddata_paired_2.fastq
-    gzip ${sample}.adapterTrimmed.1_kneaddata_unmatched_1.fastq
-    gzip ${sample}.adapterTrimmed.1_kneaddata_unmatched_2.fastq
+  String human_database = "/cromwell_root/databases/kneaddata_human/"
+  String rrna_database = "/cromwell_root/databases/kneaddata_rrna/"
+
+  # download the two reference databases and then run kneaddata
+  command {    
+    kneaddata_database --download human_genome bowtie2 ${human_database}
+
+    kneaddata_database --download ribosomal_RNA bowtie2 ${rrna_database}
+
+    kneaddata --input ${file1} --input ${file2} -o . --serial \
+    --reference-db ${human_database} --reference-db ${rrna_database} -t 8 \
+    --remove-intermediate-output --output-prefix ${sample} --cat-final-output
   }
   
   output {
-    File fileR1 = "${sample}.adapterTrimmed.1_kneaddata_paired_1.fastq.gz"
-    File fileR2 = "${sample}.adapterTrimmed.1_kneaddata_paired_2.fastq.gz"
-    File fileS1 = "${sample}.adapterTrimmed.1_kneaddata_unmatched_1.fastq.gz"
-    File fileS2 = "${sample}.adapterTrimmed.1_kneaddata_unmatched_2.fastq.gz"
+    File QCFastqFile = "${sample}.fastq"
   }
   
   runtime {
-    docker: "gcr.io/microbiome-xavier/metagenomicstools:070318"
-    cpu: 4
+    docker: "biobakery/kneaddata:latest"
+    cpu: 8
       memory: "24GB"
       preemptible: 2
       disks: "local-disk 501 SSD"
@@ -85,39 +71,22 @@ task qcQualityHuman {
 }
 
 task metaphlan {
-  File r1
-  File r2
-  File s1
-  File s2
+  File QCFastqFile
   String sample
-  File ref1
-  File ref2
-  File ref3
-  File ref4
-  File ref5
-  File ref6
-  File ref7
-  File ref8
-  File ref9
+
+  String tmpdir = "/cromwell_root/tmp/"
 
   command {
-      ls -l /cromwell_root/tools-rx/DATABASES/METAPHLAN2/db_v20/
-      
-      zcat ${r1} ${r2} ${s1} ${s2} | metaphlan2.py --bowtie2db /cromwell_root/tools-rx/DATABASES/METAPHLAN2/db_v20 --index v20_m200 --mpa_pkl ${ref1} --input_type multifastq -t rel_ab  --bt2_ps "very-sensitive" --tmp_dir /tmp --ignore_viruses -s ${sample}.sam --bowtie2out ${sample}.bowtie2.out > ${sample}.relative_abundance.txt
-
-        # Copy bam file
-        samtools view -bS ${sample}.sam -o ${sample}.bam
-    }
+    metaphlan2.py ${QCFastqFile} --input_type multifastq --nproc 8 --no_map --tmp_dir ${tmpdir} --output_file ${sample}.relative_abundance.txt
+  }
     
-    output {
-      File fileProfile = "${sample}.relative_abundance.txt"
-      File fileBam = "${sample}.bam"
-      File fileBowtie = "${sample}.bowtie2.out"
-    }
+  output {
+    File TaxonomicProfileFile = "${sample}.relative_abundance.txt"
+  }
   
   runtime {
-    docker: "gcr.io/microbiome-xavier/metagenomicstools:070318"
-    cpu: 1
+    docker: "biobakery/metaphlan2:latest"
+    cpu: 8
       memory: "8GB"
       preemptible: 2
       disks: "local-disk 50 SSD"
@@ -126,40 +95,33 @@ task metaphlan {
 }
 
 task humann2 {
-  File r1
-  File r2
-  File s1
-  File s2
-  File taxProfile
-  File refChocophlan
-  File refUniref90
+  File QCFastqFile
+  File TaxonomicProfileFile
   String sample
   
-  command {      
-      # get the chocophlan database
-      tar -zxvf ${refChocophlan}
+  String databases = "/cromwell_root/databases/"
 
-      #prepare fastqs
-      zcat ${r1} ${r2} ${s1} ${s2} > ${sample}.fq
-      #prepare output folder
-      mkdir humann2_run
-      humann2 -i ${sample}.fq -o humann2_run --taxonomic-profile ${taxProfile} --threads 8 --translated-alignment diamond --search-mode uniref90 --gap-fill on --nucleotide-database chocophlan --protein-database /cromwell_root/tools-rx/DATABASES/HUMANN2/UNIREF --bowtie2 /appdownload/bowtie2-2.3.4.1-linux-x86_64 
+  # download the two reference databases and run humann2
+  command {      
+    humann2_databases --download chocophlan full ${databases}
+    humann2_databases --download uniref uniref90_diamond ${databases}
+
+    humann2 --input ${QCFastqFile} --output . --taxonomic-profile ${TaxonomicProfileFile} --threads 8 --remove-temp-output --o-log ${sample}.log
     }
     
     output {
-      File fileGeneFamilies = "humann2_run/${sample}_genefamilies.tsv"
-      File filePathwayAbundamce = "humann2_run/${sample}_pathabundance.tsv"
-      File filePathwayCoverage = "humann2_run/${sample}_pathcoverage.tsv"
-      File fileLog = "humann2_run/${sample}_humann2_temp/${sample}.log"
+      File GeneFamiliesFile = "${sample}_genefamilies.tsv"
+      File PathwayAbundanceFile = "${sample}_pathabundance.tsv"
+      File PathwayCoverageFile = "${sample}_pathcoverage.tsv"
+      File LogFile = "${sample}.log"
     }
   
   runtime {
-    docker:"gcr.io/microbiome-xavier/metagenomicstools:070318"
+    docker:"biobakery/humann2:latest"
     cpu: 8
       memory: "24GB"
       disks: "local-disk 120 SSD"
       preemptible: 2
   }
-
 }
 
