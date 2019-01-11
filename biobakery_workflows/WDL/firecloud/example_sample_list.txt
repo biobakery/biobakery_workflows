@@ -1,2 +1,0 @@
-sample1	gs://mybucket/
-sample2	gs://mybucket/
