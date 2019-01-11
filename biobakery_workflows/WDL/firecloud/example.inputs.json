@@ -1,6 +1,0 @@
-{
-  "workflowWMGX.InputFileSampleList": "example_sample_list.txt",
-  "workflowWMGX.FastqPair1Extension": ".1.fq.gz",
-  "workflowWMGX.FastqPair2Extension": ".2.fq.gz",
-}
-

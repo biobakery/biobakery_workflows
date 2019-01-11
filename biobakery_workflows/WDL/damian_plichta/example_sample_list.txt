@@ -1,2 +1,0 @@
-sample1	gs://XXX/
-sample2	gs://XXX/
