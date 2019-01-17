@@ -30,13 +30,16 @@ if method == "dada2":
     
 else:
     columns, samples, data = document.read_table(vars["read_count_table"])
-    
+    if not min_read_count == "UNK":
+        read_count_note = " Samples with less than " + min_read_count + " reads were discarded."
+    else:
+        read_count_note = ""
+
     usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
         follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
         + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
         + "\n\nThe GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
-        \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Samples with\
-        less than " + min_read_count + " reads were discarded. Filtered reads were \
+        \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + "." + read_count_note + " Filtered reads were \
         used to generate the OTUs. Reads not passing quality control were kept and used in the step \
         assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
         
@@ -177,6 +180,11 @@ else:
     # plot the read counts
     document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples, 
         title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples")
+
+    #plot min read count threshold
+    if not min_read_count == "UNK":
+        document.add_threshold(float(min_read_count)+ 10, color="red", label="Min Read Count")
+
     # plot grouped taxonomy for all categorical data provided
     if visualizations.metadata_provided(vars):
         categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples,
