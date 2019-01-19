@@ -235,8 +235,13 @@ def label_metadata(data, categorical=[], continuous=[]):
         # apply specific labels if set
         label=None
         if row[0] in continuous:
-            label="con"
-            continuous.remove(row[0])
+            try:
+                row[1:] = map(float, row[1:])
+                label="con"
+                continuous.remove(row[0])
+            except ValueError:
+                label="cat"
+                categorical.remove(row[0])
         if row[0] in categorical:
             label="cat"
             categorical.remove(row[0])
@@ -256,7 +261,7 @@ def label_metadata(data, categorical=[], continuous=[]):
     if continuous:
         sys.exit("ERROR: Unable to find and label continuous feature in metadata: "+
             ",".join(continuous))
-        
+
     return labels, labeled_data
 
 def filter_metadata_categorical(metadata, metadata_labels):
