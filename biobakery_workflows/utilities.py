@@ -241,7 +241,6 @@ def label_metadata(data, categorical=[], continuous=[]):
                 continuous.remove(row[0])
             except ValueError:
                 label="cat"
-                categorical.remove(row[0])
         if row[0] in categorical:
             label="cat"
             categorical.remove(row[0])
