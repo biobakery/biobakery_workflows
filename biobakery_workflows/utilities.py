@@ -238,9 +238,9 @@ def label_metadata(data, categorical=[], continuous=[]):
             try:
                 row[1:] = map(float, row[1:])
                 label="con"
-                continuous.remove(row[0])
             except ValueError:
                 label="cat"
+            continuous.remove(row[0])
         if row[0] in categorical:
             label="cat"
             categorical.remove(row[0])
