@@ -208,7 +208,6 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
         else:
             ignore_features.remove(row[0])
 
-
     # check for any features that were not found
     if ignore_features:
         sys.exit("ERROR: Unable to find features that should be ignored: "+
