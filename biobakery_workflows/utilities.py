@@ -200,14 +200,10 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
             " metadata. Please review the metadata file. The following samples"+
             " were not found: "+",".join(list(samples.difference(possible_samples))))
 
-    missing = ["Unknown", "unknown", "NA", "na", "nan", "NaN", "NAN", " "]
-    # remove any features that should be ignored and set missing data to nan
+    # remove any features that should be ignored
     new_data=[]
     for row in data:
         if not row[0] in ignore_features:
-            for index, item in enumerate(row):
-                if item in missing or item == "":
-                    row[index] = "nan"
             new_data.append(row)
         else:
             ignore_features.remove(row[0])
@@ -233,10 +229,15 @@ def label_metadata(data, categorical=[], continuous=[]):
         (list): A list of lists of the metadata (converted to floats if continuous)
     """
     
-    # add labels to the metadata, ignore sample names
+    # add labels to the metadata, ignore sample names, convert to nan misisng values if continuous
+    missing = ["Unknown", "unknown", "NA", "na", "nan", "NaN", "NAN", " "]
     labeled_data=[data[0]]
     labels={}
     for row in data[1:]:
+        # check if there are missing values in row, convert to nan
+        for index, item in enumerate(row):
+            if item in missing or item == "":
+                row[index] = "nan"
         # apply specific labels if set
         label=None
         if row[0] in continuous:
@@ -255,6 +256,11 @@ def label_metadata(data, categorical=[], continuous=[]):
                 label="con"
             except ValueError:
                 label="cat"
+        if label == "cat":
+            # if label is categorical convert misisng values to Unknown
+            for index, item in enumerate(row):
+                if item == "nan":
+                    row[index] = "Unknown"
         labeled_data.append(row)
         labels[row[0]]=label
         
