@@ -199,15 +199,20 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
         sys.exit("ERROR: Not all of the samples in the data set have"+
             " metadata. Please review the metadata file. The following samples"+
             " were not found: "+",".join(list(samples.difference(possible_samples))))
-        
-    # remove any features that should be ignored
+
+    missing = ["Unknown", "unknown", "NA", "na", "nan", "NaN", "NAN", " "]
+    # remove any features that should be ignored and set missing data to nan
     new_data=[]
     for row in data:
         if not row[0] in ignore_features:
+            for index, item in enumerate(row):
+                if item in missing or item == "":
+                    row[index] = "nan"
             new_data.append(row)
         else:
             ignore_features.remove(row[0])
-            
+
+
     # check for any features that were not found
     if ignore_features:
         sys.exit("ERROR: Unable to find features that should be ignored: "+
