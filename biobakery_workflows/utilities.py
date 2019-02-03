@@ -259,7 +259,7 @@ def label_metadata(data, categorical=[], continuous=[]):
             # if label is categorical convert misisng values to Unknown
             for index, item in enumerate(row):
                 if item == "nan":
-                    row[index] = "Unknown"
+                    row[index] = "NA"
         labeled_data.append(row)
         labels[row[0]]=label
         
