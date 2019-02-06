@@ -37,7 +37,7 @@ task kneaddata {
   String humanDatabase = "/cromwell_root/databases/kneaddata_human/"
   String rrnaDatabase = "/cromwell_root/databases/kneaddata_rrna/"
 
-  # download the two reference databases and then run kneaddata. We should have version control over these. 
+  # download the two reference databases and then run kneaddata.
   command {    
   	#create databases
     mkdir -p ${humanDatabase} ${rrnaDatabase}
