@@ -149,8 +149,8 @@ def main():
     if "wmgx" in args.install:
         dependencies=[("humann2_databases","HUMAnN2"),("kneaddata_database","Kneaddata"),
             ("strainphlan.py","StrainPhlAn"),("bowtie2-inspect","Bowtie2")]
-    else:
-        dependencies=[("usearch","usearch")]    
+    elif "usearch" in args.install:
+        dependencies=[("usearch")]    
     check_dependencies(dependencies)
         
     # install humann2 utility dbs for all shotgun workflows
