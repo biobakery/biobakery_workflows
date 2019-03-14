@@ -1,6 +1,11 @@
 
 # bioBakery workflows History #
 
+## v0.12.1 03-14-2019 ##
+
+* Add colorbars to PCoA plots for continuous data.
+* Highlight references in DADA2 vis document.
+
 ## v0.12.0 10-22-2018 ##
 
 * In 16s usearch/vsearch methods combine truncate and filter (needed for data sets that require more filtering).
