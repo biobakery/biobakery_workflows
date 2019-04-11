@@ -17,7 +17,7 @@ names(args.list) <- args.df$V1
 
 ## Arg1 default
 if(is.null(args.list$input_dir)) {
-  stop("At least one argument must be supplied (input folder).\n", call.=FALSE)
+  #stop("At least one argument must be supplied (input folder).\n", call.=FALSE)
 }
 
 # Print args list to STDOUT
@@ -33,9 +33,8 @@ input.path <- normalizePath( args.list$input_dir )
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 
-pair_id0 <- strsplit(args.list$pair_id,"1_")
-pair_id1 <- paste0(pair_id0[[1]][1], "1")
-pair_id2 <- paste0(pair_id0[[1]][1], "2")
+pair_id1 <- args.list$pair_id
+pair_id2 <- gsub("1","2", pair_id1)
 
 # List of input files
 # Sort ensures forward/reverse reads are in same order
@@ -101,12 +100,16 @@ filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 # 3. _Both_ reads must pass for the read pair to be output.
 # 4. Output files are compressed by default.
 trunc_len_max2 <- strtoi(args.list$trunc_len_max)
-trunc_len_max1 <- trunc_len_max2 + 40
+if(trunc_len_max2 == 0){
+  trunc_len_max1 <- 0
+}else{
+trunc_len_max1 <- trunc_len_max2 + 40}
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
+
 rd.counts <- as.data.frame(
   dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(trunc_len_max1,trunc_len_max2),
-                maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
+                       minLen = 50, maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
                 compress=TRUE, multithread=as.numeric(args.list$threads)) 
 )
 # Table of before/after read counts
