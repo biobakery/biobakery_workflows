@@ -83,29 +83,18 @@ def remove_primers(workflow,input_folder,fwd_primer_file,rev_primer_file, pair_i
            Returns:
                string: path to folder with cleaned from primers files
     """
-    with open(fwd_primer_file) as f:
-        FWD = f.read().splitlines()
-    with open(rev_primer_file) as f:
-        REV = f.read().splitlines()
-    pair_id2 = pair_id.replace("1", "2")
-    fwd_reads=fnmatch.filter(os.listdir(input_folder), "*"+pair_id+"*.fastq*")
-    rev_reads=fnmatch.filter(os.listdir(input_folder),"*"+ pair_id2+"*.fastq*")
-    fwd_reads_inp = sorted([os.path.join(input_folder,f) for f in fwd_reads])
-    rev_reads_inp = sorted([os.path.join(input_folder, f) for f in rev_reads])
-    cutadapt_folder = os.path.join(input_folder, "cutadapt")
-    if not os.path.exists(cutadapt_folder):
-        os.mkdir(cutadapt_folder)
-    fwd_reads_out = sorted([os.path.join(cutadapt_folder,f) for f in fwd_reads])
-    rev_reads_out = sorted([os.path.join(cutadapt_folder, f) for f in rev_reads])
+    cutadapt_folder=input_folder+"/cutadapt"
 
-    for i in range(0,len(rev_reads_inp)):
-        workflow.add_task(
-            "cutadapt -g [vars[0]] -a [vars[3]] -G [vars[2]] -A [vars[1]] -n 2 \
-             -o [targets[0]] -p [targets[1]] [vars[4]] [vars[5]]",
-            depends=[fwd_primer_file,rev_primer_file],
-            targets=[fwd_reads_out[i], rev_reads_out[i]],
-            vars=[FWD[0],FWD[1], REV[0],REV[1],fwd_reads_inp[i], rev_reads_inp[i]],
-            name="remove_primers"
+    workflow.add_task(
+        "remove_primers.py \
+        --input_folder [args[0]] \
+        --fwd_primer_file [depends[0]] \
+        --rev_primer_file [depends[1]] \
+        --pair_id [args[1]]",
+        depends=[fwd_primer_file,rev_primer_file],
+        targets=[TrackedDirectory(cutadapt_folder)],
+        args=[input_folder,pair_id],
+        name="remove_primers"
         )
 
 
