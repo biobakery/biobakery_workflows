@@ -60,7 +60,6 @@ def identify_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,p
           --fwd_primer=[args[0]] \
           --rev_primer=[args[1]] \
           --pair_id=[args[2]]",
-        depends=[TrackedDirectory(input_folder)],
         targets=[fwd_primer_file, rev_primer_file,TrackedDirectory(filtN_folder)],
         args=[fwd_primer, rev_primer, pair_id,input_folder],
         vars=[script_path,filtN_folder,primers_folder],
