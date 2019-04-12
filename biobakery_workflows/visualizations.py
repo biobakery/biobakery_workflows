@@ -745,7 +745,19 @@ class Sixteen_S(Workflow):
          of paired-end sequencing reads, adopting the tutorial from\n\n \
          https://benjjneb.github.io/dada2/ITS_workflow.html \n \
          https://benjjneb.github.io/dada2/tutorial.html and \n \
-         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.'
+         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments. \n \
+         "Unlike the 16S rRNA gene, the ITS region is highly variable in length. The commonly amplified ITS1 and ITS2 regions \
+         range from 200 - 600 bp in length. This length variation is biological, not technical, and arises from the high rates\
+         of insertions and deletions in the evolution of this less conserved gene region. The length variation of the ITS region has \
+         significant consequences for the filtering and trimming steps of the standard DADA2 workflow.First, truncation to a fixed \
+         length is no longer appropriate, as that approach remove real ITS variants with lengths shorter than the truncation length.\
+         Second, primer removal is complicated by the possibility of some, but not all, reads extending into the opposite primer when\
+         the amplified ITS region is shorter than the read length."[ITS Tutorial] \n \
+         "Critical addition to ITS workflows is the removal of primers on the forward and reverse reads, in a way that accounts\
+         for the possibility of read-through into the opposite primer."[DADA2 Tutorial] \n \
+         "cutadapt" tool is used  for removal of primers from the ITS amplicon sequencing data. After initial step of primers \
+         removal, the rest of ITS workflow matches DADA2 workflow.Database UNITE is used for taxonomic assignment.\n'
+
 
     captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
         gene amplicon paired-end sequencing reads, adopting the tutorial from\n\n \
