@@ -24,7 +24,7 @@ min_cluster_size = workflow_settings.get("min_size","UNK")
 
 method=vars["method"]
 
-if method == "dada2":
+if method == "dada2" or method == "its":
     columns, samples, data = document.read_table(vars["counts_each_step"])
     
 else:
@@ -49,9 +49,10 @@ pdf_format=True if vars["format"] == "pdf" else False
 
 #' # Introduction
 #+ echo=False
+#' <% if vars["method"] == "its": print(visualizations.Sixteen_S.captions["itsintro"]) %>
 #' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2intro"]) %>
-#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2stepsinfo"]) %>
-#' <% if vars["method"] != "dada2": print(usearchintro) %>
+#' <% if vars["method"] == "dada2" or vars["method"] == "its": print(visualizations.Sixteen_S.captions["dada2stepsinfo"]) %>
+#' <% if vars["method"] != "dada2" and vars["method"] != "its": print(usearchintro) %>
 
 #+ echo=False
 
@@ -80,25 +81,25 @@ from biobakery_workflows import utilities
 #' <% if method == "dada2": print("\clearpage") %>
 #+ echo=False
 
-if method != "dada2":
+if method != "dada2" and method != "its":
     eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
     document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
     
-#' <% if method != "dada2": print("The general stats for this data set are:" + str(overall_stats)) %>
-#' <% if method != "dada2": print("This table shows the number of reads based on length for different error filters.") %>    
+#' <% if method != "dada2" and method != "its": print("The general stats for this data set are:" + str(overall_stats)) %>
+#' <% if method != "dada2" and method != "its": print("This table shows the number of reads based on length for different error filters.") %>
 
-#' <% if method == "dada2": print("# Error rates") %>
+#' <% if method == "dada2" or method == "its": print("# Error rates") %>
     
-#' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>  
+#' <% if method == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>
     
-#' <% if method == "dada2": print("## Forward Reads") %>  \
-#' <% if method == "dada2": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
-#' <% if method == "dada2": print("\clearpage") %>
+#' <% if method == "dada2" or method == "its": print("## Forward Reads") %>  \
+#' <% if method == "dada2" or method == "its": print("![FWD Error Rates](" + vars["error_ratesF"] +")") %>
+#' <% if method == "dada2" or method == "its": print("\clearpage") %>
 
-#' <% if method == "dada2": print("## Reverse Reads") %>   \
-#' <% if method == "dada2": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
+#' <% if method == "dada2" or method == "its": print("## Reverse Reads") %>   \
+#' <% if method == "dada2 or method == "its"": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
 
-#' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2errorinfo"]) %> 
+#' <% if method == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2errorinfo"]) %>
 #' <% if pdf_format: print("\clearpage") %>
       
 #+ echo=False
@@ -149,7 +150,7 @@ total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
 sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
 
-if method == "dada2":
+if method == "dada2" or method == "its":
 
     filtered_reads = [row[1] for row in sorted_all_read_data]
     merged_reads = [row[3] for row in sorted_all_read_data]
@@ -183,14 +184,14 @@ else:
             visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"],
                 samples_found, title="Read counts by sample", ylabel="Total Reads", legend_title="")
 
-#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>  
-#' <% if vars["method"] != "dada2": print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %> 
+#' <% if vars["method"] == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>
+#' <% if vars["method"] != "dada2" and method != "its": print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
 
 #' <% if pdf_format: print("\clearpage") %>
 
 #' # Taxonomy
     
-#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2taxinfo"]) %>      
+#' <% if vars["method"] == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2taxinfo"]) %>
 
 #' ## Genera
  
