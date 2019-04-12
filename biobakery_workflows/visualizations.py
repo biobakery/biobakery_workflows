@@ -741,6 +741,12 @@ class ShotGun(Workflow):
 class Sixteen_S(Workflow):
     captions={}
 
+    captions["itsintro"]='Implementing ITS pipeline for resolving sequence variants from ITS region\
+         of paired-end sequencing reads, adopting the tutorial from\n\n \
+         https://benjjneb.github.io/dada2/ITS_workflow.html \n \
+         https://benjjneb.github.io/dada2/tutorial.html and \n \
+         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.'
+
     captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
         gene amplicon paired-end sequencing reads, adopting the tutorial from\n\n \
          https://benjjneb.github.io/dada2/tutorial.html and \n \
