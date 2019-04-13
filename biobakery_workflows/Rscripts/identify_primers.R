@@ -70,7 +70,7 @@ FWD.orients
 REV.orients
 
 # Filter all Ns and put N-filtered files in filtN subdirectory
-path.filtN <- args.list$output_dir
+path.filtN <- args.list$filtn_dir
 fnFs.filtN <- file.path(path.filtN, basename(fnFs))
 fnRs.filtN <- file.path(path.filtN, basename(fnRs))
 if(!dir.exists(path.filtN)) dir.create(path.filtN)
@@ -117,3 +117,22 @@ close(fwd_primer_file)
 rev_primer_file<-file(args.list$rev_primer_file)
 writeLines(c(REV,REV.RC), rev_primer_file)
 close(rev_primer_file)
+
+path.cut <- args.list$cutadapt_dir
+if(!dir.exists(path.cut)) dir.create(path.cut)
+fnFs.cut <- file.path(path.cut, basename(fnFs))
+fnRs.cut <- file.path(path.cut, basename(fnRs))
+
+# Trim FWD and the reverse-complement of REV off of R1 (forward reads)
+R1.flags <- paste("-g", FWD, "-a", REV.RC) 
+# Trim REV and the reverse-complement of FWD off of R2 (reverse reads)
+R2.flags <- paste("-G", REV, "-A", FWD.RC) 
+
+# Write Cutadapt arguments to file
+cutadapt_args_file<-file(args.list$cutadapt_args,'a')
+for(i in seq_along(fnFs)) {
+  args = paste(R1.flags,R2.flags,"-n",2,"-o",fnFs.cut[i],"-p",fnRs.cut[i],fnFs.filtN[i],fnRs.filtN[i], sep=" ")
+  cat(args,file=cutadapt_args_file,append=TRUE, sep="\n")
+}
+close(cutadapt_args_file)
+

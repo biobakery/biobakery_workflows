@@ -22,11 +22,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
-from anadama2.tracked import TrackedDirectory, TrackedExecutable
+from anadama2.tracked import TrackedDirectory, TrackedExecutable, TrackedFilePattern
 from biobakery_workflows import files, config, utilities
 import os,fnmatch
 
-def identify_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pair_id):
+def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pair_id):
     """ Identifies primers and N filters samples
        Args:
            workflow (anadama2.workflow): an instance of the workflow class
@@ -37,68 +37,47 @@ def identify_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,p
            pair_id (string): pair identifier
 
        Requires:
-          dada2, ShortRead, Biostrings, tools r packages
+          dada2, Biostrings, tools r packages
 
        Returns:
-           string: path to folder with N filtered files
-           string: path to file with fwd_primer and its reverse
-           string: path to file with rev_primer and its reverse
+           string: path to folder with primers removed files
     """
     script_path = utilities.get_package_file("identify_primers", "Rscript")
     filtN_folder = os.path.join(output_folder,"filtN")
     primers_folder = os.path.join(output_folder,"primers")
     fwd_primer_file = os.path.join(primers_folder,"fwd_primer_file.txt")
     rev_primer_file = os.path.join(primers_folder,"rev_primer_file.txt")
-
+    cutadapt_folder = os.path.join(output_folder, "cutadapt")
+    cutadapt_args = os.path.join(output_folder, "cutadapt_args.txt")
+    # run identify primers task
     workflow.add_task(
         "[vars[0]]  \
           --input_dir=[args[3]] \
-          --output_dir=[vars[1]] \
+          --filtn_dir=[vars[1]] \
           --primers_dir=[vars[2]] \
           --fwd_primer_file=[targets[0]] \
           --rev_primer_file=[targets[1]] \
+          --cutadapt_args=[targets[2]] \
           --fwd_primer=[args[0]] \
           --rev_primer=[args[1]] \
+          --cutadapt_dir=[vars[3]]\
           --pair_id=[args[2]]",
-        targets=[fwd_primer_file, rev_primer_file,TrackedDirectory(filtN_folder)],
+        targets=[fwd_primer_file,rev_primer_file,cutadapt_args,TrackedDirectory(filtN_folder),TrackedDirectory(cutadapt_folder)],
         args=[fwd_primer, rev_primer, pair_id,input_folder],
-        vars=[script_path,filtN_folder,primers_folder],
+        vars=[script_path,filtN_folder,primers_folder,cutadapt_folder],
         name="identify_primers"
     )
 
-    return filtN_folder,fwd_primer_file,rev_primer_file
-
-def remove_primers(workflow,input_folder,fwd_primer_file,rev_primer_file, pair_id):
-    """ Removes primers from samples
-           Args:
-               workflow (anadama2.workflow): an instance of the workflow class
-               input_folder (string):  path to folder with input files
-               fwd_primer_file (string): path to file with fwd primer and its reverse
-               rev_primer_file (string): path to file with rev primer and its reverse
-               pair_id (string): pair identifier
-
-           Requires:
-              cutadapt
-
-           Returns:
-               string: path to folder with cleaned from primers files
-    """
-    cutadapt_folder=input_folder+"/cutadapt"
-
+    #run cutadapt to remove primers
     workflow.add_task(
-        "remove_primers.py \
-        --input_folder [args[0]] \
-        --fwd_primer_file [depends[0]] \
-        --rev_primer_file [depends[1]] \
-        --pair_id [args[1]]",
-        depends=[fwd_primer_file,rev_primer_file],
-        targets=[TrackedDirectory(cutadapt_folder)],
-        args=[input_folder,pair_id],
+        "while read line ; do cutadapt $line ; done < [depends[0]]",
+        depends=[cutadapt_args],
+        targets=[TrackedFilePattern(cutadapt_folder + "*.fastq*")],
         name="remove_primers"
-        )
-
+    )
 
     return cutadapt_folder
+
 
 def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pair_id,threads):
     
