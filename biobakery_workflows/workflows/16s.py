@@ -48,6 +48,7 @@ workflow.add_argument("index-identifier", desc="the string to identify the index
 workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
 workflow.add_argument("maxee", desc="the maxee value to use for quality control filtering", default=1)
 workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
+workflow.add_argument("trunc-len-max2", desc="the max length for truncating dada2 revrese reads", default=200)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
 workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow")
 workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow")
@@ -99,6 +100,7 @@ if args.method == "dada2" or args.method == "its":
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier)
             args.dada_db="unite"
             args.trunc_len_max=0
+            args.trunc_len_max2 = 0
             demultiplex_output_folder=cutadapt_folder
         else:
             print("ITS workflow requires fwd_primer and rev_primer arguments.")
@@ -108,7 +110,7 @@ if args.method == "dada2" or args.method == "its":
     # filter reads and trim
     read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
-            args.output, args.maxee, args.trunc_len_max, args.pair_identifier, args.threads)
+            args.output,args.maxee,args.trunc_len_max,args.trunc_len_max2,args.pair_identifier,args.threads)
     
     # learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
