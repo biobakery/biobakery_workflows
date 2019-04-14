@@ -71,7 +71,7 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
     #run cutadapt to remove primers
     workflow.add_task(
         "while read line ; do cutadapt $line ; done < [depends[0]]",
-        depends=[cutadapt_args],
+        depends=[cutadapt_args,TrackedExecutable("cutadapt",version_command="echo 'cutadapt' `cutadapt --version`")],
         targets=[TrackedFilePattern(cutadapt_folder + "*.fastq*")],
         name="remove_primers"
     )
@@ -79,7 +79,7 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
     return cutadapt_folder
 
 
-def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pair_id,threads):
+def filter_trim(workflow,input_folder,output_folder,maxee, trunc_len_max,trunc_len_max2,pair_id,threads):
     
          """ Filters samples by maxee and trims them, renders quality control plots
          of forward and reverse reads for each sample, creates read counts tsv and rds files.
@@ -89,7 +89,8 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
                 input_folder (string): path to input folder
                 output_folder (string):  path to output folder
                 maxee (string): maxee value to use for filtering
-                trunc_len_max (string): max length for truncating
+                trunc_len_max (string): max length for truncating forward reads
+                trunc_len_max2 (string): max length for truncating reverse reads
                 pair_id (string): pair identifier
                 threads (int): number of threads
                 
@@ -114,15 +115,16 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
                --filtered_dir=[vars[1]]\
                --maxee=[args[2]]\
                --trunc_len_max=[args[3]]\
+               --trunc_len_max2=[args[4]]\
                --readcounts_tsv_path=[targets[0]]\
                --readcounts_rds_path=[targets[1]]\
                --reads_plotF=[targets[2]]\
                --reads_plotR=[targets[3]]\
-               --pair_id=[args[4]]\
-               --threads=[args[5]]",
+               --pair_id=[args[5]]\
+               --threads=[args[6]]",
              depends =[TrackedDirectory(input_folder)],
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png, reads_plotR_png],
-             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads],
+             args = [input_folder, output_folder, maxee, trunc_len_max,trunc_len_max2, pair_id, threads],
              vars = [script_path,filtered_dir],
              name ="filter_and_trim"
              )

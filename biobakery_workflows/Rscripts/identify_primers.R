@@ -75,11 +75,11 @@ fnFs.filtN <- file.path(path.filtN, basename(fnFs))
 fnRs.filtN <- file.path(path.filtN, basename(fnRs))
 if(!dir.exists(path.filtN)) dir.create(path.filtN)
 
-filterAndTrim(file.path(input.path,fnFs), fnFs.filtN, file.path(input.path,fnRs), fnRs.filtN, maxN = 0, multithread = TRUE)
+dada2::filterAndTrim(file.path(input.path,fnFs), fnFs.filtN, file.path(input.path,fnRs), fnRs.filtN, maxN = 0, multithread = TRUE)
 
 primerHits <- function(primer, fn) {
   # Counts number of reads in which the primer is found
-  nhits <- Biostrings::vcountPattern(primer, sread(readFastq(fn)), fixed = FALSE)
+  nhits <- Biostrings::vcountPattern(primer, ShortRead::sread(readFastq(fn)), fixed = FALSE)
   return(sum(nhits > 0))
 }
 
