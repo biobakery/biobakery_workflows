@@ -72,13 +72,13 @@ from biobakery_workflows import utilities
 #' # Quality Control
 
 
-#' <% if method == "dada2": print("## Forward Reads") %>   \
-#' <% if method == "dada2": print("![FWD Read](" + vars["readF_qc"] + ")") %> 
-#' <% if method == "dada2": print("\clearpage")  %> 
+#' <% if method == "dada2" or method == "its": print("## Forward Reads") %>   \
+#' <% if method == "dada2" or method == "its": print("![FWD Read](" + vars["readF_qc"] + ")") %>
+#' <% if method == "dada2" or method == "its": print("\clearpage")  %>
 
-#' <% if method == "dada2": print("## Reverse Reads") %>   \
-#' <% if method == "dada2": print("![REV Read](" + vars["readR_qc"] + ")") %>
-#' <% if method == "dada2": print("\clearpage") %>
+#' <% if method == "dada2" or method == "its": print("## Reverse Reads") %>   \
+#' <% if method == "dada2" or method == "its": print("![REV Read](" + vars["readR_qc"] + ")") %>
+#' <% if method == "dada2" or method == "its": print("\clearpage") %>
 #+ echo=False
 
 if method != "dada2" and method != "its":
@@ -97,7 +97,7 @@ if method != "dada2" and method != "its":
 #' <% if method == "dada2" or method == "its": print("\clearpage") %>
 
 #' <% if method == "dada2" or method == "its": print("## Reverse Reads") %>   \
-#' <% if method == "dada2 or method == "its"": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
+#' <% if method == "dada2" or method == "its": print("![REV Error Rates](" + vars["error_ratesR"] + ")") %>
 
 #' <% if method == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2errorinfo"]) %>
 #' <% if pdf_format: print("\clearpage") %>
