@@ -17,7 +17,7 @@ names(args.list) <- args.df$V1
 
 ## Arg1 default
 if(is.null(args.list$input_dir)) {
-  #stop("At least one argument must be supplied (input folder).\n", call.=FALSE)
+  stop("At least one argument must be supplied (input folder).\n", call.=FALSE)
 }
 
 # Print args list to STDOUT
