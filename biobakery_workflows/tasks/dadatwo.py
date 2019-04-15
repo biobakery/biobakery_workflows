@@ -289,7 +289,8 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
 
          # check what reference db to use for taxonomy assignment
          if ref_path == "unite":
-             refdb_path = config.SixteenS().unite
+             refdb_path = config.SixteenS().unite.replace(
+                "B2079372C79891519EF815160D4467BBF4AF1288A23E135E666BABF2C5779767.zip","sh_general_release_dynamic_01.12.2017.fasta")
              refdb_species_path = "None"
          elif ref_path == "silva":
              refdb_path = config.SixteenS().silva_dada2 
