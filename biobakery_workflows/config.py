@@ -158,6 +158,6 @@ class SixteenS(Workflow):
         description="This is the silva species assignment dada2 database",
         url="https://zenodo.org/record/801832/files/silva_species_assignment_v128.fa.gz")
     vars["unite"] = DBInfo("UNITE", description="This is the UNITE fungi database for ITS workflow",
-                           url="https://files.plutof.ut.ee/public/orig/EB/0C/sh_general_release_dynamic_02.02.2019.fasta")
+        url="https://files.plutof.ut.ee/doi/B2/07/B2079372C79891519EF815160D4467BBF4AF1288A23E135E666BABF2C5779767.zip")
 
 
