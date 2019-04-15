@@ -79,7 +79,7 @@ dada2::filterAndTrim(file.path(input.path,fnFs), fnFs.filtN, file.path(input.pat
 
 primerHits <- function(primer, fn) {
   # Counts number of reads in which the primer is found
-  nhits <- Biostrings::vcountPattern(primer, ShortRead::sread(readFastq(fn)), fixed = FALSE)
+  nhits <- Biostrings::vcountPattern(primer, ShortRead::sread(ShortRead::readFastq(fn)), fixed = FALSE)
   return(sum(nhits > 0))
 }
 
