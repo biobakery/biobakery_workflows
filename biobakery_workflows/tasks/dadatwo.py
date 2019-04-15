@@ -37,7 +37,7 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
            pair_id (string): pair identifier
 
        Requires:
-          dada2, Biostrings, tools r packages
+          dada2, Biostrings, ShortRead, tools r packages
 
        Returns:
            string: path to folder with primers removed files
@@ -289,8 +289,7 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
 
          # check what reference db to use for taxonomy assignment
          if ref_path == "unite":
-             refdb_path = config.SixteenS().unite.replace(
-                "B2079372C79891519EF815160D4467BBF4AF1288A23E135E666BABF2C5779767.zip","sh_general_release_dynamic_01.12.2017.fasta")
+             refdb_path = config.SixteenS().unite
              refdb_species_path = "None"
          elif ref_path == "silva":
              refdb_path = config.SixteenS().silva_dada2 

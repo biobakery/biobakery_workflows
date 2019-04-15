@@ -222,10 +222,10 @@ def main():
     elif args.install == "16s_its":
         # download unite database for its workflow
         print("Downloading UNITE database files")
-        its_install_path = os.path.join(args.location, config.SixteenS.vars["unite"].default_path)
-        utilities.download_file(config.SixteenS.vars["unite"].url,
+        its_install_path = os.path.join(args.location, config.SixteenS.vars["unite_zip"].default_path)
+        utilities.download_file(config.SixteenS.vars["unite_zip"].url,
                                 its_install_path)
-        zip_ref = zipfile.ZipFile(os.path.join(args.location,config.SixteenS.vars["unite"].default_path), 'r')
+        zip_ref = zipfile.ZipFile(os.path.join(args.location,config.SixteenS.vars["unite_zip"].default_path), 'r')
         zip_ref.extractall(os.path.join(args.location,config.SixteenS.vars["unite"].default_folder))
         zip_ref.close()
 
