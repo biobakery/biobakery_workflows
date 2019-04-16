@@ -99,7 +99,6 @@ if args.method == "dada2" or args.method == "its":
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier)
             args.dada_db="unite"
             args.trunc_len_max=0
-            args.trunc_len_max2 = 0
             demultiplex_output_folder=cutadapt_folder
         else:
             print("ITS workflow requires fwd_primer and rev_primer arguments.")
