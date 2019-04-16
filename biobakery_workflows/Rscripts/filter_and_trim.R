@@ -33,9 +33,8 @@ input.path <- normalizePath( args.list$input_dir )
 
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 
-pair_id0 <- strsplit(args.list$pair_id,"1_")
-pair_id1 <- paste0(pair_id0[[1]][1], "1")
-pair_id2 <- paste0(pair_id0[[1]][1], "2")
+pair_id1 <- args.list$pair_id
+pair_id2 <- gsub("1","2", pair_id1)
 
 # List of input files
 # Sort ensures forward/reverse reads are in same order
@@ -97,11 +96,13 @@ filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 # Filter the forward and reverse reads:
 # Note that:
 # 1. Reads are both truncated and then filtered using the maxEE expected errors algorighm from UPARSE.
-# 2. Reverse reads are truncated to shorter lengths than forward since they are much lower quality.
+# 2. Reverse reads can be truncated to shorter lengths than forward since they are much lower quality.
 # 3. _Both_ reads must pass for the read pair to be output.
 # 4. Output files are compressed by default.
-trunc_len_max2 <- strtoi(args.list$trunc_len_max)
-trunc_len_max1 <- trunc_len_max2 + 40
+
+trunc_len_max1 <- strtoi(args.list$trunc_len_max)
+trunc_len_max2 <- strtoi(args.list$trunc_len_max2)
+
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
 rd.counts <- as.data.frame(
