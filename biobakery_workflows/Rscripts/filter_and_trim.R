@@ -92,7 +92,6 @@ rm(rev.qc.plots.list)
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
 filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 
-
 # Filter the forward and reverse reads:
 # Note that:
 # 1. Reads are both truncated and then filtered using the maxEE expected errors algorighm from UPARSE.
@@ -105,7 +104,6 @@ if(trunc_len_max2 == 0){
 }else{
 trunc_len_max1 <- trunc_len_max2 + 40
 }
-
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
 
