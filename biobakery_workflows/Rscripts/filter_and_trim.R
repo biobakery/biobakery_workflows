@@ -100,7 +100,12 @@ filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 # 3. _Both_ reads must pass for the read pair to be output.
 # 4. Output files are compressed by default.
 trunc_len_max2 <- strtoi(args.list$trunc_len_max)
+if(trunc_len_max2 == 0){
+  trunc_len_max1 <- 0
+}else{
 trunc_len_max1 <- trunc_len_max2 + 40
+}
+
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
 
