@@ -48,7 +48,8 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
     fwd_primer_file = os.path.join(primers_folder,"fwd_primer_file.txt")
     rev_primer_file = os.path.join(primers_folder,"rev_primer_file.txt")
     cutadapt_folder = os.path.join(output_folder, "cutadapt")
-    cutadapt_args = os.path.join(output_folder, "cutadapt_args.txt")
+    cutadapt_args = os.path.join(output_folder, "cutadapt_args")
+
     # run identify primers task
     workflow.add_task(
         "[vars[0]]  \
@@ -62,19 +63,29 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
           --rev_primer=[args[1]] \
           --cutadapt_dir=[vars[3]]\
           --pair_id=[args[2]]",
-        targets=[fwd_primer_file,rev_primer_file,cutadapt_args,TrackedDirectory(filtN_folder),TrackedDirectory(cutadapt_folder)],
+        targets=[fwd_primer_file,rev_primer_file,
+                 TrackedDirectory(cutadapt_args),
+                 TrackedDirectory(filtN_folder),
+                 TrackedDirectory(cutadapt_folder)],
         args=[fwd_primer, rev_primer, pair_id,input_folder],
         vars=[script_path,filtN_folder,primers_folder,cutadapt_folder],
         name="identify_primers"
     )
 
+    fwd_files = sorted(fnmatch.filter(os.listdir(input_folder), "*"+pair_id+"*.fastq*"))
+
     #run cutadapt to remove primers
-    workflow.add_task(
-        "while read line ; do cutadapt $line ; done < [depends[0]]",
-        depends=[cutadapt_args,TrackedExecutable("cutadapt",version_command="echo 'cutadapt' `cutadapt --version`")],
-        targets=[TrackedFilePattern(cutadapt_folder + "*.fastq*")],
-        name="remove_primers"
-    )
+    for i in range(0,len(fwd_files)):
+        workflow.add_task(
+            "cutadapt $(< [vars[0]])",
+            depends=[TrackedDirectory(cutadapt_args),
+                     TrackedDirectory(filtN_folder),
+                     TrackedDirectory(cutadapt_folder),
+                     TrackedExecutable("cutadapt",version_command="echo 'cutadapt' `cutadapt --version`")],
+            targets=[cutadapt_folder+"/"+fwd_files[i]],
+            vars=[cutadapt_args+"/args_"+str(i+1)+".txt"],
+            name="remove_primers"
+        )
 
     return cutadapt_folder
 
