@@ -43,7 +43,7 @@ cat( grep( "*\\.fastq", list.files(args.list$input_dir), value=T ), sep = "\n" )
 input.path <- normalizePath( args.list$input_dir )
 
 pair_id1 <- args.list$pair_id
-pair_id2 <- gsub("1","2", pair_id1)
+pair_id2 <- sub("1","2", pair_id1)
 
 # List of input files
 # Sort ensures forward/reverse reads are in same order
@@ -128,11 +128,15 @@ R1.flags <- paste("-g", FWD, "-a", REV.RC)
 # Trim REV and the reverse-complement of FWD off of R2 (reverse reads)
 R2.flags <- paste("-G", REV, "-A", FWD.RC) 
 
-# Write Cutadapt arguments to file
-cutadapt_args_file<-file(args.list$cutadapt_args,'a')
+# Write Cutadapt arguments to files
+cutadapt_args<-args.list$cutadapt_args
+if(!dir.exists(cutadapt_args)) dir.create(cutadapt_args)
+
 for(i in seq_along(fnFs)) {
-  args = paste(R1.flags,R2.flags,"-n",2,"-o",fnFs.cut[i],"-p",fnRs.cut[i],fnFs.filtN[i],fnRs.filtN[i], sep=" ")
-  cat(args,file=cutadapt_args_file,append=TRUE, sep="\n")
+  current_filename <- paste0(cutadapt_args,"/args_",i,".txt")
+  cutadapt_args_file <- file(current_filename,'w')
+  args <- paste(R1.flags,R2.flags,"-n",2,"-o",fnFs.cut[i],"-p",fnRs.cut[i],fnFs.filtN[i],fnRs.filtN[i], sep=" ")
+  cat(args,file=cutadapt_args_file)
+  close(cutadapt_args_file)
 }
-close(cutadapt_args_file)
 
