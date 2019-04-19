@@ -34,7 +34,7 @@ input.path <- normalizePath( args.list$input_dir )
 output.dir <- ifelse( is.null(args.list$output_dir), "output", args.list$output_dir )
 
 pair_id1 <- args.list$pair_id
-pair_id2 <- sub("1","2", pair_id1)
+pair_id2 <- sub("1","2",pair_id1)
 
 # List of input files
 # Sort ensures forward/reverse reads are in same order
