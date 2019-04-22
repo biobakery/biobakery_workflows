@@ -26,7 +26,7 @@ from anadama2.tracked import TrackedDirectory, TrackedExecutable, TrackedFilePat
 from biobakery_workflows import files, config, utilities
 import os,fnmatch
 
-def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pair_id):
+def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pair_id,threads):
     """ Identifies primers and N filters samples
        Args:
            workflow (anadama2.workflow): an instance of the workflow class
@@ -56,6 +56,7 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
           --input_dir=[args[3]] \
           --filtn_dir=[vars[1]] \
           --primers_dir=[vars[2]] \
+          --threads=[args[4]] \
           --fwd_primer_file=[targets[0]] \
           --rev_primer_file=[targets[1]] \
           --cutadapt_args=[targets[2]] \
@@ -67,7 +68,7 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
                  TrackedDirectory(cutadapt_args),
                  TrackedDirectory(filtN_folder),
                  TrackedDirectory(cutadapt_folder)],
-        args=[fwd_primer, rev_primer, pair_id,input_folder],
+        args=[fwd_primer, rev_primer, pair_id,input_folder,threads],
         vars=[script_path,filtN_folder,primers_folder,cutadapt_folder],
         name="identify_primers"
     )
