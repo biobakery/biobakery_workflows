@@ -21,12 +21,16 @@ maxee = workflow_settings.get("maxee","UNK")
 trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
+dada_db = workflow_settings.get("dada_db", "UNK").upper()
 
 method=vars["method"]
 
 if method == "dada2" or method == "its":
+    if method == "its":
+        dada_db = "UNITE"
+    dadadb_info="\nThe " + str(dada_db) + " database was used for taxonomy prediction."
     columns, samples, data = document.read_table(vars["counts_each_step"])
-    
+
 else:
     columns, samples, data = document.read_table(vars["read_count_table"])
     
@@ -49,10 +53,11 @@ pdf_format=True if vars["format"] == "pdf" else False
 
 #' # Introduction
 #+ echo=False
-#' <% if vars["method"] == "its": print(visualizations.Sixteen_S.captions["itsintro"]) %>
-#' <% if vars["method"] == "dada2": print(visualizations.Sixteen_S.captions["dada2intro"]) %>
-#' <% if vars["method"] == "dada2" or vars["method"] == "its": print(visualizations.Sixteen_S.captions["dada2stepsinfo"]) %>
-#' <% if vars["method"] != "dada2" and vars["method"] != "its": print(usearchintro) %>
+#' <% if method== "its": print(visualizations.Sixteen_S.captions["itsintro"]) %>
+#' <% if method == "dada2": print(visualizations.Sixteen_S.captions["dada2intro"]) %>
+#' <% if method == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2stepsinfo"]) %>
+#' <% if method == "dada2" or method == "its": print(dadadb_info) %>
+#' <% if method != "dada2" and method != "its": print(usearchintro) %>
 
 #+ echo=False
 
@@ -184,14 +189,15 @@ else:
             visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"],
                 samples_found, title="Read counts by sample", ylabel="Total Reads", legend_title="")
 
-#' <% if vars["method"] == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>
-#' <% if vars["method"] != "dada2" and method != "its": print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
+#' <% if method == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>
+#' <% if method != "dada2" and method != "its": print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
 
 #' <% if pdf_format: print("\clearpage") %>
 
 #' # Taxonomy
     
-#' <% if vars["method"] == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2taxinfo"]) %>
+#' <% if method == "dada2" or method == "its": print(visualizations.Sixteen_S.captions["dada2taxinfo"]) %>
+#' <% if method == "dada2" or method == "its": print(dadadb_info) %>
 
 #' ## Genera
  

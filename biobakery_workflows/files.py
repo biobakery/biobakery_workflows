@@ -272,7 +272,7 @@ class SixteenS(Workflow):
     file_info["counts_each_step"]=FileInfo("Read_counts_at_each_step.tsv",
         description=("A tab-delimited file with samples as rows and counts as columns. ",
             "The counts included in each step of workflow process"))
-    file_info["cutadapt_args"]=FileInfo("cutadapt_args.txt",
+    file_info["cutadapt_args"]=FileInfo("cutadapt_args",
         description=("Arguments that were passed to cutadapt for primers removal"))
 
         
