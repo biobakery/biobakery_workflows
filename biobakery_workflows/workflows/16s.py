@@ -90,19 +90,20 @@ else:
     demultiplexed_files=input_files
     demultiplex_output_folder=args.input
 
+# if primers are provided, remove primers
+if args.fwd_primer and args.rev_primer:
+    cutadapt_folder = dadatwo.remove_primers(
+        workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
+    args.dada_db = "unite"
+    args.trunc_len_max = 0
+    demultiplex_output_folder = cutadapt_folder
+
 if args.method == "dada2" or args.method == "its":
 
-    # if its workflow remove primers first and set reference db to 'unite'
+    # if its workflow set reference db to 'unite' and do not truncate
     if args.method == "its":
-        if args.fwd_primer and args.rev_primer:
-            cutadapt_folder=dadatwo.remove_primers(
-                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier)
             args.dada_db="unite"
             args.trunc_len_max=0
-            demultiplex_output_folder=cutadapt_folder
-        else:
-            print("ITS workflow requires fwd_primer and rev_primer arguments.")
-            exit()
 
     # call dada2 workflow tasks
     # filter reads and trim
