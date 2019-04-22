@@ -96,7 +96,7 @@ if args.method == "dada2" or args.method == "its":
     if args.method == "its":
         if args.fwd_primer and args.rev_primer:
             cutadapt_folder=dadatwo.remove_primers(
-                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier)
+                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
             args.dada_db="unite"
             args.trunc_len_max=0
             demultiplex_output_folder=cutadapt_folder
