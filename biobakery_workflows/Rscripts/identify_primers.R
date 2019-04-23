@@ -135,7 +135,7 @@ if(!dir.exists(cutadapt_args)) dir.create(cutadapt_args)
 for(i in seq_along(fnFs)) {
   current_filename <- paste0(cutadapt_args,"/args_",i,".txt")
   cutadapt_args_file <- file(current_filename,'w')
-  args <- paste(R1.flags,R2.flags,"-n",2,"-j",args.list$threads,"-o",fnFs.cut[i],"-p",fnRs.cut[i],fnFs.filtN[i],fnRs.filtN[i], sep=" ")
+  args <- paste(R1.flags,R2.flags,"-n",2,"-o",fnFs.cut[i],"-p",fnRs.cut[i],fnFs.filtN[i],fnRs.filtN[i], sep=" ")
   cat(args,file=cutadapt_args_file)
   close(cutadapt_args_file)
 }
