@@ -92,7 +92,6 @@ rm(rev.qc.plots.list)
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
 filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 
-
 # Filter the forward and reverse reads:
 # Note that:
 # 1. Reads are both truncated and then filtered using the maxEE expected errors algorighm from UPARSE.
@@ -105,9 +104,10 @@ trunc_len_max2 <- strtoi(args.list$trunc_len_max2)
 
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
+
 rd.counts <- as.data.frame(
   dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(trunc_len_max1,trunc_len_max2),
-                maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
+                       minLen = 50, maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
                 compress=TRUE, multithread=as.numeric(args.list$threads)) 
 )
 # Table of before/after read counts
