@@ -741,6 +741,25 @@ class ShotGun(Workflow):
 class Sixteen_S(Workflow):
     captions={}
 
+    captions["itsintro"]='Implementing ITS pipeline for resolving sequence variants from ITS region\
+         of paired-end sequencing reads, adopting the tutorial from\n\n \
+         https://benjjneb.github.io/dada2/ITS_workflow.html \n \
+         https://benjjneb.github.io/dada2/tutorial.html and \n \
+         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments. \n \
+         "Unlike the 16S rRNA gene, the ITS region is highly variable in length. The commonly amplified ITS1 and ITS2 regions \
+         range from 200 - 600 bp in length. This length variation is biological, not technical, and arises from the high rates\
+         of insertions and deletions in the evolution of this less conserved gene region. The length variation of the ITS region has \
+         significant consequences for the filtering and trimming steps of the standard DADA2 workflow. First, truncation to a fixed \
+         length is no longer appropriate, as that approach remove real ITS variants with lengths shorter than the truncation length.\
+         Second, primer removal is complicated by the possibility of some, but not all, reads extending into the opposite primer when\
+         the amplified ITS region is shorter than the read length." [ITS Tutorial] \n \
+         "Critical addition to ITS workflows is the removal of primers on the forward and reverse reads, in a way that accounts\
+         for the possibility of read-through into the opposite primer." [ITS Tutorial] \n \
+         "Cutadapt" tool is used  for removal of primers from the ITS amplicon sequencing data. After initial step of primers \
+         removal, the rest of ITS workflow matches DADA2 workflow.\n \
+         Database UNITE is used for taxonomic assignment.\n\n '
+
+
     captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
         gene amplicon paired-end sequencing reads, adopting the tutorial from\n\n \
          https://benjjneb.github.io/dada2/tutorial.html and \n \
@@ -787,12 +806,10 @@ class Sixteen_S(Workflow):
 
     captions["dada2taxinfo"]='"The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
         and outputs the taxonomic assignments with at least minBoot bootstrap confidence." [DADA2 Tutorial]\
-        \n\nFormatted training datasets for taxonomic assignments can be downloaded from here\
-        https://benjjneb.github.io/dada2/training.html.\
         \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007.'  \
         + " In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
         of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
-        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n"
+        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n \n"
  
           
     captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n \
