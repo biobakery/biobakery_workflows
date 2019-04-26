@@ -49,6 +49,7 @@ workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to 
 workflow.add_argument("maxee", desc="the maxee value to use for quality control filtering", default=1)
 workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
+workflow.add_argument("bypass-primers-removal", desc="do not run remove primers tasks", action="store_true")
 workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow")
 workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow")
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
@@ -94,15 +95,17 @@ if args.method == "dada2" or args.method == "its":
 
     # if its workflow remove primers first and set reference db to 'unite'
     if args.method == "its":
-        if args.fwd_primer and args.rev_primer:
-            cutadapt_folder=dadatwo.remove_primers(
-                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
-            args.dada_db="unite"
-            args.trunc_len_max=0
-            demultiplex_output_folder=cutadapt_folder
-        else:
-            print("ITS workflow requires fwd_primer and rev_primer arguments.")
-            exit()
+        args.dada_db = "unite"
+        args.trunc_len_max = 0
+
+        if not args.bypass_primers_removal:
+            if args.fwd_primer and args.rev_primer:
+                cutadapt_folder=dadatwo.remove_primers(
+                    workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
+                demultiplex_output_folder=cutadapt_folder
+            else:
+                print("ITS workflow primers rmoval task requires fwd_primer and rev_primer arguments.")
+                exit()
 
     # call dada2 workflow tasks
     # filter reads and trim
