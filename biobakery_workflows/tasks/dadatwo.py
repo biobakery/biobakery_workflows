@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
-from anadama2.tracked import TrackedDirectory, TrackedExecutable, TrackedFilePattern
+from anadama2.tracked import TrackedDirectory, TrackedExecutable
 from biobakery_workflows import files, config, utilities
 import os,fnmatch
 
@@ -91,7 +91,13 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
 
     return cutadapt_folder
 
+
 def cutadapt_do(task):
+
+    """Reads primers from the files and runs cutadapt task
+           Args:
+               task (anadama2.task): an instance of the task class"""
+
     from anadama2.util import get_name
 
     with open(get_name(task.depends[0])) as f:
@@ -114,9 +120,9 @@ def cutadapt_do(task):
 
     command="cutadapt -g "+FWD[0]+" -a "+REV[1]+" -G "+REV[0]+" -A "+FWD[1]+" -n 2 -o "+fwd_reads_out+\
                        " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in
-
+    
+    #run task
     utilities.run_task(command, depends=task.depends, targets=task.targets)
-
 
 
 def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads):
