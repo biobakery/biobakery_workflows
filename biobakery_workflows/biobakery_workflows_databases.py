@@ -35,6 +35,7 @@ import argparse
 import os
 import subprocess
 import shutil
+import zipfile
 
 def check_dependencies(depends):
     """ Check the required software is installed """
@@ -108,7 +109,7 @@ def parse_arguments(args):
     parser.add_argument(
         "--install",
         metavar="<workflow>",
-        choices=["wmgx","wmgx_demo","wmgx_wmtx","16s_usearch","16s_dada2"],
+        choices=["wmgx","wmgx_demo","wmgx_wmtx","16s_usearch","16s_dada2","16s_its"],
         help="install the databases for the selected workflow\n")
     parser.add_argument(
         "--location", 
@@ -126,13 +127,14 @@ def main():
         args.available = True
         
     if args.available:
-        print("There are four available database sets each corresponding to a data "+
+        print("There are five available database sets each corresponding to a data "+
             "processing workflow.\n"+
             "wmgx: The full databases for the whole metagenome workflow\n"+
             "wmgx_demo: The demo databases for the whole metagenome workflow\n"+
             "wmgx_wmtx: The full databases for the whole metagenome and metatranscriptome workflow\n"+
             "16s_usearch: The full databases for the 16s workflow\n" +
-            "16s_dada2: The full databases for the dada2 workflow")
+            "16s_dada2: The full databases for the dada2 workflow\n"+
+            "16s_its: The unite database for the its workflow")
         sys.exit(0)
     
     # Check the install location
@@ -216,6 +218,16 @@ def main():
             os.path.join(args.location,config.SixteenS.vars["rdp_species_dada2"].default_path))
         utilities.download_file(config.SixteenS.vars["silva_species_dada2"].url,
             os.path.join(args.location,config.SixteenS.vars["silva_species_dada2"].default_path))
+
+    elif args.install == "16s_its":
+        # download unite database for its workflow
+        print("Downloading UNITE database files")
+        its_install_path = os.path.join(args.location, config.SixteenS.vars["unite_zip"].default_path)
+        utilities.download_file(config.SixteenS.vars["unite_zip"].url,
+                                its_install_path)
+        zip_ref = zipfile.ZipFile(os.path.join(args.location,config.SixteenS.vars["unite_zip"].default_path), 'r')
+        zip_ref.extractall(os.path.join(args.location,config.SixteenS.vars["unite"].default_folder))
+        zip_ref.close()
 
        
     # if metatranscriptome workflow, install the additional kneaddata database

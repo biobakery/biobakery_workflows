@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v0.12.1 01-11-2019 ##
+
+* Add colorbar for continuous data to PCoA plots.
+
 ## v0.12.0 10-22-2018 ##
 
 * In 16s usearch/vsearch methods combine truncate and filter (needed for data sets that require more filtering).
