@@ -58,7 +58,7 @@ if not os.path.isfile(counter_file):
     " since the global PyPI download stats are currently turned off.")
     download(COUNTER_URL,counter_file)
 
-VERSION = "0.11.0"
+VERSION = "0.12.1"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
@@ -92,7 +92,7 @@ setuptools.setup(
         "Programming Language :: Python :: 2.7",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
         ],
-    install_requires=['anadama2>=0.5.0'],
+    install_requires=['anadama2>=0.5.2'],
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [

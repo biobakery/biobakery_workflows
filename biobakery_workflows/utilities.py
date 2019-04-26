@@ -199,7 +199,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
         sys.exit("ERROR: Not all of the samples in the data set have"+
             " metadata. Please review the metadata file. The following samples"+
             " were not found: "+",".join(list(samples.difference(possible_samples))))
-        
+
     # remove any features that should be ignored
     new_data=[]
     for row in data:
@@ -207,7 +207,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
             new_data.append(row)
         else:
             ignore_features.remove(row[0])
-            
+
     # check for any features that were not found
     if ignore_features:
         sys.exit("ERROR: Unable to find features that should be ignored: "+
@@ -228,20 +228,24 @@ def label_metadata(data, categorical=[], continuous=[]):
         (list): A list of lists of the metadata (converted to floats if continuous)
     """
     
-    # add labels to the metadata, ignore sample names
+    # add labels to the metadata, ignore sample names, convert to nan misisng values if continuous
+    missing = ["Unknown", "unknown", "NA", "na", "nan", "NaN", "NAN", " "]
     labeled_data=[data[0]]
     labels={}
     for row in data[1:]:
+        # check if there are missing values in row, convert to nan
+        for index, item in enumerate(row):
+            if item in missing or item == "":
+                row[index] = "nan"
         # apply specific labels if set
         label=None
         if row[0] in continuous:
             try:
                 row[1:] = map(float, row[1:])
                 label="con"
-                continuous.remove(row[0])
             except ValueError:
                 label="cat"
-                categorical.remove(row[0])
+            continuous.remove(row[0])
         if row[0] in categorical:
             label="cat"
             categorical.remove(row[0])
@@ -251,6 +255,11 @@ def label_metadata(data, categorical=[], continuous=[]):
                 label="con"
             except ValueError:
                 label="cat"
+        if label == "cat":
+            # if label is categorical convert misisng values to Unknown
+            for index, item in enumerate(row):
+                if item == "nan":
+                    row[index] = "NA"
         labeled_data.append(row)
         labels[row[0]]=label
         

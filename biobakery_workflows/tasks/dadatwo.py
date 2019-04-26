@@ -24,10 +24,108 @@ THE SOFTWARE.
 """
 from anadama2.tracked import TrackedDirectory, TrackedExecutable
 from biobakery_workflows import files, config, utilities
-import os
+import os,fnmatch
+
+def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pair_id,threads):
+    """ Identifies primers and N filters samples
+       Args:
+           workflow (anadama2.workflow): an instance of the workflow class
+           input_folder (string): path to input folder
+           output_folder (string):  path to output folder
+           fwd_primer (string): forward primer
+           rev_primer (string): reverse primer
+           pair_id (string): pair identifier
+           threads (string): number of threads
+
+       Requires:
+          dada2, Biostrings, ShortRead, tools r packages
+
+       Returns:
+           string: path to folder with primers removed files
+    """
+    script_path = utilities.get_package_file("identify_primers", "Rscript")
+    filtN_folder = os.path.join(output_folder,"filtN")
+    primers_folder = os.path.join(output_folder,"primers")
+    fwd_primer_file = os.path.join(primers_folder,"fwd_primer_file.txt")
+    rev_primer_file = os.path.join(primers_folder,"rev_primer_file.txt")
+    cutadapt_folder = os.path.join(output_folder, "cutadapt")
+
+    # run identify primers task
+    workflow.add_task(
+        "[vars[0]]  \
+          --input_dir=[args[3]] \
+          --filtn_dir=[vars[1]] \
+          --primers_dir=[vars[2]] \
+          --threads=[args[4]] \
+          --fwd_primer_file=[targets[0]] \
+          --rev_primer_file=[targets[1]] \
+          --fwd_primer=[args[0]] \
+          --rev_primer=[args[1]] \
+          --pair_id=[args[2]]",
+        targets=[fwd_primer_file,rev_primer_file,
+                 TrackedDirectory(filtN_folder)],
+        args=[fwd_primer, rev_primer, pair_id,input_folder,threads],
+        vars=[script_path,filtN_folder,primers_folder,output_folder],
+        name="identify_primers"
+    )
+
+    pair_id2 = pair_id.replace("1", "2",1)
+    fwd_files = sorted(fnmatch.filter(os.listdir(input_folder), "*"+pair_id+"*.fastq*"))
+    rev_files = sorted(fnmatch.filter(os.listdir(input_folder), "*" + pair_id2 + "*.fastq*"))
+
+    #run cutadapt to remove primers
+    for i in range(0,len(fwd_files)):
+        fwd_file=os.path.join(input_folder,fwd_files[i])
+        rev_file = os.path.join(input_folder, rev_files[i])
+        workflow.add_task(
+            cutadapt_do,
+            depends=[fwd_primer_file,
+                     rev_primer_file,
+                     fwd_file,
+                     rev_file,
+                     TrackedDirectory(filtN_folder),
+                     TrackedExecutable("cutadapt",version_command="echo 'cutadapt' `cutadapt --version`")],
+            targets=[TrackedDirectory(cutadapt_folder)],
+            name="remove_primers"
+        )
+
+    return cutadapt_folder
 
 
-def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pair_id, threads):
+def cutadapt_do(task):
+
+    """Reads primers from the files and runs cutadapt task
+           Args:
+               task (anadama2.task): an instance of the task class"""
+
+    from anadama2.util import get_name
+
+    with open(get_name(task.depends[0])) as f:
+        FWD = f.read().splitlines()
+    with open(get_name(task.depends[1])) as f:
+        REV = f.read().splitlines()
+
+    cutadapt_folder=get_name(task.targets[0])
+    filtN_folder = get_name(task.depends[4])
+    fwd_filename=os.path.basename(get_name(task.depends[2]))
+    rev_filename = os.path.basename(get_name(task.depends[3]))
+
+    fwd_reads_out=os.path.join(cutadapt_folder,fwd_filename)
+    rev_reads_out = os.path.join(cutadapt_folder,rev_filename)
+    fwd_reads_in = os.path.join(filtN_folder,fwd_filename)
+    rev_reads_in = os.path.join(filtN_folder,rev_filename)
+
+    if not os.path.exists(cutadapt_folder):
+        os.mkdir(cutadapt_folder)
+
+    command="cutadapt -g "+FWD[0]+" -a "+REV[1]+" -G "+REV[0]+" -A "+FWD[1]+" -n 2 -o "+fwd_reads_out+\
+                       " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in
+    
+    #run task
+    utilities.run_task(command, depends=task.depends, targets=task.targets)
+
+
+def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads):
     
          """ Filters samples by maxee and trims them, renders quality control plots
          of forward and reverse reads for each sample, creates read counts tsv and rds files.
@@ -37,7 +135,7 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
                 input_folder (string): path to input folder
                 output_folder (string):  path to output folder
                 maxee (string): maxee value to use for filtering
-                trunc_len_max (string): max length for truncating
+                trunc_len_max (string): max length for truncating reads
                 pair_id (string): pair identifier
                 threads (int): number of threads
                 
@@ -55,7 +153,6 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
          readcounts_rds_path = os.path.join(output_folder, "Read_counts_filt.rds")
          filtered_dir = "filtered_input"
          script_path = utilities.get_package_file("filter_and_trim", "Rscript")
-
          workflow.add_task(
              "[vars[0]] \
                --input_dir=[args[0]]\
@@ -69,7 +166,7 @@ def filter_trim(workflow, input_folder, output_folder, maxee, trunc_len_max, pai
                --reads_plotR=[targets[3]]\
                --pair_id=[args[4]]\
                --threads=[args[5]]",
-             depends = TrackedDirectory(input_folder),
+             depends =[TrackedDirectory(input_folder)],
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png, reads_plotR_png],
              args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads],
              vars = [script_path,filtered_dir],
@@ -235,7 +332,10 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
          otu_closed_ref_path  = files.SixteenS.path("otu_table_closed_reference", output_folder)
 
          # check what reference db to use for taxonomy assignment
-         if ref_path == "silva": 
+         if ref_path == "unite":
+             refdb_path = config.SixteenS().unite
+             refdb_species_path = "None"
+         elif ref_path == "silva":
              refdb_path = config.SixteenS().silva_dada2 
              refdb_species_path = config.SixteenS().silva_species_dada2 
          elif ref_path == "rdp":
