@@ -49,7 +49,6 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
     fwd_primer_file = os.path.join(primers_folder,"fwd_primer_file.txt")
     rev_primer_file = os.path.join(primers_folder,"rev_primer_file.txt")
     cutadapt_folder = os.path.join(output_folder, "cutadapt")
-    cutadapt_args = os.path.join(output_folder, "cutadapt_args")
 
     # run identify primers task
     workflow.add_task(
@@ -60,36 +59,64 @@ def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pai
           --threads=[args[4]] \
           --fwd_primer_file=[targets[0]] \
           --rev_primer_file=[targets[1]] \
-          --cutadapt_args=[targets[2]] \
           --fwd_primer=[args[0]] \
           --rev_primer=[args[1]] \
-          --cutadapt_dir=[vars[3]]\
           --pair_id=[args[2]]",
         targets=[fwd_primer_file,rev_primer_file,
-                 TrackedDirectory(cutadapt_args),
-                 TrackedDirectory(filtN_folder),
-                 TrackedDirectory(cutadapt_folder)],
+                 TrackedDirectory(filtN_folder)],
         args=[fwd_primer, rev_primer, pair_id,input_folder,threads],
-        vars=[script_path,filtN_folder,primers_folder,cutadapt_folder],
+        vars=[script_path,filtN_folder,primers_folder,output_folder],
         name="identify_primers"
     )
 
+    pair_id2 = pair_id.replace("1", "2",1)
     fwd_files = sorted(fnmatch.filter(os.listdir(input_folder), "*"+pair_id+"*.fastq*"))
+    rev_files = sorted(fnmatch.filter(os.listdir(input_folder), "*" + pair_id2 + "*.fastq*"))
 
     #run cutadapt to remove primers
     for i in range(0,len(fwd_files)):
+        fwd_file=os.path.join(input_folder,fwd_files[i])
+        rev_file = os.path.join(input_folder, rev_files[i])
         workflow.add_task(
-            "cutadapt $(< [vars[0]])",
-            depends=[TrackedDirectory(cutadapt_args),
+            cutadapt_do,
+            depends=[fwd_primer_file,
+                     rev_primer_file,
+                     fwd_file,
+                     rev_file,
                      TrackedDirectory(filtN_folder),
-                     TrackedDirectory(cutadapt_folder),
                      TrackedExecutable("cutadapt",version_command="echo 'cutadapt' `cutadapt --version`")],
-            targets=[cutadapt_folder+"/"+fwd_files[i]],
-            vars=[cutadapt_args+"/args_"+str(i+1)+".txt"],
+            targets=[TrackedDirectory(cutadapt_folder)],
             name="remove_primers"
         )
 
     return cutadapt_folder
+
+def cutadapt_do(task):
+    from anadama2.util import get_name
+
+    with open(get_name(task.depends[0])) as f:
+        FWD = f.read().splitlines()
+    with open(get_name(task.depends[1])) as f:
+        REV = f.read().splitlines()
+
+    cutadapt_folder=get_name(task.targets[0])
+    filtN_folder = get_name(task.depends[4])
+    fwd_filename=os.path.basename(get_name(task.depends[2]))
+    rev_filename = os.path.basename(get_name(task.depends[3]))
+
+    fwd_reads_out=os.path.join(cutadapt_folder,fwd_filename)
+    rev_reads_out = os.path.join(cutadapt_folder,rev_filename)
+    fwd_reads_in = os.path.join(filtN_folder,fwd_filename)
+    rev_reads_in = os.path.join(filtN_folder,rev_filename)
+
+    if not os.path.exists(cutadapt_folder):
+        os.mkdir(cutadapt_folder)
+
+    command="cutadapt -g "+FWD[0]+" -a "+REV[1]+" -G "+REV[0]+" -A "+FWD[1]+" -n 2 -o "+fwd_reads_out+\
+                       " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in
+
+    utilities.run_task(command, depends=task.depends, targets=task.targets)
+
 
 
 def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads):
@@ -102,8 +129,7 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                 input_folder (string): path to input folder
                 output_folder (string):  path to output folder
                 maxee (string): maxee value to use for filtering
-                trunc_len_max (string): max length for truncating forward reads
-                trunc_len_max2 (string): max length for truncating reverse reads
+                trunc_len_max (string): max length for truncating reads
                 pair_id (string): pair identifier
                 threads (int): number of threads
                 
