@@ -26,11 +26,17 @@ pdf_format=True if vars["format"] == "pdf" else False
 
 
 def get_all_images(path):
-    import os
-    for f in sorted(os.listdir(path)):
-        print("![Data Visualization]("+path+"/"+f+")")
-        if pdf_format:
-            print("\clearpage")
+    import os, fnmatch
+
+    for d in fnmatch.filter(os.listdir(path), '*_images'):
+        cur_path=os.path.join(path,d)
+        for f in sorted(os.listdir(cur_path)):
+            fname=f.split("-")
+            ftitle=fname[0].replace("_"," ").capitalize()
+            print("## "+ftitle+"\n\n")
+            print("![Data Visualization "+ftitle+"]("+os.path.join(cur_path,f)+")\n")
+            if pdf_format:
+                print("\clearpage")
 
 #' <% if pdf_format: print("\clearpage") %>
 
@@ -45,7 +51,15 @@ def get_all_images(path):
 #' <% print(statsvis.Permanova.captions["intro"]) %>
 #' <% if pdf_format: print("\clearpage") %>
 
-#' <% get_all_images(vars["output_dir"]+"/permanova/permanova_heatmaps_images") %>
+#' <% get_all_images(vars["output_dir"]+"/permanova") %>
+
+#' # Maaslin
+
+#' <% print(statsvis.Maaslin.captions["intro"]) %>
+#' <% if pdf_format: print("\clearpage") %>
+
+#' <% get_all_images(vars["output_dir"]+"/maaslin") %>
+
 
 #+ echo=False
 
