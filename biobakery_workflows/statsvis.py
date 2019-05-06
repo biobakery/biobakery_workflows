@@ -42,7 +42,6 @@ def split_pdfs_do(task):
         pdf_name=f.replace(".pdf", "")
         pdf_images=str(pdfs_path)+"/"+pdf_name+"_images"
         command="convert "+ str(pdfs_path)+"/"+str(f)+" "+str(pdf_images)+"/"+str(pdf_name)+"-%04d.png"
-        print(command)
         utilities.run_task("mkdir "+pdf_images,depends=task.depends[1], targets=task.targets)
         utilities.run_task(command, depends=task.depends[1], targets=task.targets)
 
@@ -62,7 +61,7 @@ def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir):
     options_file=input_dir+"/permanova-config.txt"
     options=""
     if os.path.isfile(options_file):
-        with open(input_dir+"/permanova-config.txt") as f:
+        with open(options_file) as f:
             options_string = f.read().splitlines()
         options=" ".join(options_string)
 
@@ -81,7 +80,6 @@ def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir):
 
 def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
 
-    maaslin_script="~/maaslin2/R/Maaslin2.R"
     metadata_path=input_dir+"/metadata.tsv"
     options_file=input_dir+"/maaslin-config.txt"
     options=""
@@ -90,12 +88,14 @@ def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
             options_string = f.read().splitlines()
         options=" ".join(options_string)
 
+    script_path = utilities.get_package_file("maaslin_call", "Rscript")
+
     maaslin_task=workflow.add_task(
-        "[args[0]]  [vars[0]] [depends[0]] [depends[1]] [args[1]]",
+        "[vars[0]]  --input_dir=[args[0]] --abundance=[depends[0]] --metadata=[depends[1]] --maaslin_output=[args[1]]",
         depends=[abundance,metadata_path],
         targets=[TrackedDirectory(maaslin_dir)],
-        vars=[options],
-        args=[maaslin_script,maaslin_dir],
+        vars=[script_path,options],
+        args=[input_dir,maaslin_dir],
         name="maaslin"
     )
 
@@ -111,11 +111,15 @@ class Stats(Workflow):
     captions={}
     
     # add captions for functional data section
-    captions["intro"]="This is statistical analysis workflow introduction"
-        
+    captions["intro"]="This is Statistical Analysis Workflow introduction"
 
 class Permanova(Workflow):
     captions={}
 
-    captions["intro"]="This is permanova introduction"
+    captions["intro"]="This is Permanova introduction"
+
+class Maaslin(Workflow):
+    captions={}
+
+    captions["intro"]="This is Maaslin introduction"
 
