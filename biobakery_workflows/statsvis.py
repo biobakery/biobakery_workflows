@@ -59,10 +59,12 @@ def split_pdfs(workflow,pdfs_path,perv_task):
 
 def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir):
 
-    with open(input_dir+"/permanova-config.txt") as f:
-        options_string = f.read().splitlines()
-
-    options=" ".join(options_string)
+    options_file=input_dir+"/permanova-config.txt"
+    options=""
+    if os.path.isfile(options_file):
+        with open(input_dir+"/permanova-config.txt") as f:
+            options_string = f.read().splitlines()
+        options=" ".join(options_string)
 
     script_path = utilities.get_package_file("permanova", "Rscript")
 
@@ -77,24 +79,27 @@ def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir):
 
     return permanova_task
 
-def run_maaslin(workflow,abundance,input_dir,metadata_path,maaslin_script,maaslin_dir):
+def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
 
-    with open(input_dir+"/maaslin-config.txt") as f:
-        options_string = f.read().splitlines()
+    maaslin_script="~/maaslin2/R/Maaslin2.R"
+    metadata_path=input_dir+"/metadata.tsv"
+    options_file=input_dir+"/maaslin-config.txt"
+    options=""
+    if os.path.isfile(options_file):
+        with open(options_file) as f:
+            options_string = f.read().splitlines()
+        options=" ".join(options_string)
 
-    options=" ".join(options_string)
-
-    pdf_path=maaslin_dir+"/heatmap.pdf"
     maaslin_task=workflow.add_task(
-        "[args[0]]/Maaslin2.R   [vars[0]] [depends[0]] [depends[1]] --output_dir=[args[1]]",
+        "[args[0]]  [vars[0]] [depends[0]] [depends[1]] [args[1]]",
         depends=[abundance,metadata_path],
-        targets=[TrackedDirectory(maaslin_dir),pdf_path],
+        targets=[TrackedDirectory(maaslin_dir)],
         vars=[options],
         args=[maaslin_script,maaslin_dir],
         name="maaslin"
     )
 
-    return maaslin_task,maaslin_dir
+    return maaslin_task
 
 class Workflow(object):
 
