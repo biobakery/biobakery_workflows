@@ -85,7 +85,11 @@ else:
 
 adonis_dir=os.path.join(args.output,"permanova")
 permanova_task=statsvis.run_permanova(workflow,taxonomic_profile,args.input,args.output,adonis_dir)
-split_task=statsvis.split_pdfs(workflow,adonis_dir,permanova_task)
+split_task_permanova=statsvis.split_pdfs(workflow,adonis_dir,permanova_task)
+
+maaslin_dir=os.path.join(args.output,"maaslin")
+maaslin_task=statsvis.run_maaslin(workflow,taxonomic_profile,args.input,maaslin_dir)
+split_task_maaslin=statsvis.split_pdfs(workflow,maaslin_dir,maaslin_task)
 
 # add the template
 templates=[utilities.get_package_file("stats")]
@@ -100,7 +104,7 @@ if not args.exclude_workflow_info:
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=[taxonomic_profile,split_task],
+    depends=[taxonomic_profile,split_task_permanova,split_task_maaslin],
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistical Analysis Report",
           "project":args.project_name,
