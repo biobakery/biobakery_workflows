@@ -46,19 +46,33 @@ def get_all_images(path):
 
 #+ echo=False
 
-#' # Permanova
+#' # Permanova Taxa
 
 #' <% print(statsvis.Permanova.captions["intro"]) %>
 #' <% if pdf_format: print("\clearpage") %>
 
-#' <% get_all_images(vars["output_dir"]+"/permanova") %>
+#' <% get_all_images(vars["output_dir"]+"/permanova_taxa") %>
 
-#' # Maaslin
+#' # Maaslin Taxa
 
 #' <% print(statsvis.Maaslin.captions["intro"]) %>
 #' <% if pdf_format: print("\clearpage") %>
 
-#' <% get_all_images(vars["output_dir"]+"/maaslin") %>
+#' <% get_all_images(vars["output_dir"]+"/maaslin_taxa") %>
+
+#' # Permanova Path
+
+#' <% print(statsvis.Permanova.captions["intro"]) %>
+#' <% if pdf_format: print("\clearpage") %>
+
+#' <% get_all_images(vars["output_dir"]+"/permanova_path") %>
+
+#' # Maaslin Path
+
+#' <% print(statsvis.Maaslin.captions["intro"]) %>
+#' <% if pdf_format: print("\clearpage") %>
+
+#' <% get_all_images(vars["output_dir"]+"/maaslin_path") %>
 
 
 #+ echo=False

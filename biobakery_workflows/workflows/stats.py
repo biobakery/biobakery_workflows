@@ -73,6 +73,7 @@ if files.ShotGun.path("taxonomic_profile",args.input, none_if_not_found=True):
     input_files={"required":["taxonomic_profile"]}
     input_desc+=files.ShotGun.list_file_path_description("",input_files)
     taxonomic_profile = files.ShotGun.path("taxonomic_profile",args.input, none_if_not_found=True)
+    pathabundance_relab = files.ShotGun.path("pathabundance_relab",args.input, none_if_not_found=True)
 elif files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_found=True):
     workflow_data = "16s"
     # list the required and optional files for the workflow
@@ -83,13 +84,32 @@ elif files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_f
 else:
     exit("No taxonomic profile found in input folder", args.input)
 
-adonis_dir=os.path.join(args.output,"permanova")
-permanova_task=statsvis.run_permanova(workflow,taxonomic_profile,args.input,args.output,adonis_dir)
-split_task_permanova=statsvis.split_pdfs(workflow,adonis_dir,permanova_task)
+doc_depends=[taxonomic_profile]
+adonis_taxa_dir=os.path.join(args.output,"permanova_taxa")
+permanova_taxa_task=statsvis.run_permanova(workflow,taxonomic_profile,args.input,args.output,adonis_taxa_dir,workflow_data)
+doc_depends.append(permanova_taxa_task)
+split_task_permanova_taxa=statsvis.split_pdfs(workflow,adonis_taxa_dir,permanova_taxa_task)
+doc_depends.append(split_task_permanova_taxa)
 
-maaslin_dir=os.path.join(args.output,"maaslin")
-maaslin_task=statsvis.run_maaslin(workflow,taxonomic_profile,args.input,maaslin_dir)
-split_task_maaslin=statsvis.split_pdfs(workflow,maaslin_dir,maaslin_task)
+maaslin_taxa_dir=os.path.join(args.output,"maaslin_taxa")
+maaslin_taxa_task=statsvis.run_maaslin(workflow,taxonomic_profile,args.input,maaslin_taxa_dir)
+doc_depends.append(maaslin_taxa_task)
+split_task_maaslin_taxa=statsvis.split_pdfs(workflow,maaslin_taxa_dir,maaslin_taxa_task)
+doc_depends.append(split_task_maaslin_taxa)
+
+if os.path.isfile(pathabundance_relab):
+    adonis_path_dir=os.path.join(args.output,"permanova_path")
+    permanova_path_task=statsvis.run_permanova(workflow,pathabundance_relab,args.input,args.output,adonis_path_dir,workflow_data)
+    doc_depends.append(permanova_path_task)
+    split_task_permanova_path=statsvis.split_pdfs(workflow,adonis_path_dir,permanova_path_task)
+    doc_depends.append(split_task_permanova_path)
+
+    maaslin_path_dir=os.path.join(args.output,"maaslin_path")
+    maaslin_path_task=statsvis.run_maaslin(workflow,pathabundance_relab,args.input,maaslin_path_dir)
+    doc_depends.append(maaslin_path_task)
+    split_task_maaslin_path=statsvis.split_pdfs(workflow,maaslin_path_dir,maaslin_path_task)
+    doc_depends.append(split_task_maaslin_path)
+
 
 # add the template
 templates=[utilities.get_package_file("stats")]
@@ -104,7 +124,7 @@ if not args.exclude_workflow_info:
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=[taxonomic_profile,split_task_permanova,split_task_maaslin],
+    depends=doc_depends,
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistical Analysis Report",
           "project":args.project_name,
