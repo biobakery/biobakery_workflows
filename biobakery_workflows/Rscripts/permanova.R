@@ -37,9 +37,11 @@ names(args.list) <- args.df$V1
 
 #args.list$input_dir <- "/Users/anamailyan/dada_demo_output_vsearch"
 #args.list$output_dir <- "/Users/anamailyan/dada_demo_output_vsearch_stats"
-#args.list$adonis_dir <- "/Users/anamailyan/dada_demo_output_vsearch_stats/permanova"
+#rgs.list$adonis_dir <- "/Users/anamailyan/dada_demo_output_vsearch_stats/permanova_path"
+#args.list$metadata <- "/Users/anamailyan/dada_demo_output_vsearch/metadata.tsv"
+#args.list$abundance <- "/Users/anamailyan/dada_demo_output_vsearch/humann2/merged/pathabundance_relab.tsv"
 args.list$normalize <- "yes"
-args.list$workflow <- "wmgx"
+#args.list$workflow <- "wmgx"
 #args.list$workflow <- "16s"
 #args.list$fields <- "timepoint*bmi"
 
@@ -67,9 +69,7 @@ output.path <- normalizePath( args.list$output_dir )
 adonis.path <- normalizePath( args.list$adonis_dir )
 setwd(args.list$input_dir)
 
-if(!dir.exists(output.path)) dir.create(output.path)
-
-metadata_file = "metadata.tsv"
+metadata_file = args.list$metadata
 if(file.exists(metadata_file)){
     meta.dat <- read.table(metadata_file,header = TRUE)
     meta.dat <- meta.dat[complete.cases(meta.dat),]
@@ -78,7 +78,7 @@ if(file.exists(metadata_file)){
 }
 
 closed_ref_biom = paste0(args.list$input_dir, "/all_samples_taxonomy_closed_reference.biom")
-closed_ref_tsv = paste0(args.list$input_dir, "/all_samples_taxonomy_closed_reference.tsv")
+closed_ref_tsv = args.list$abundance
 if(file.exists(closed_ref_biom)){
       otu.dat <-  phyloseq::import_biom( 
       BIOMfilename = closed_ref_biom,
@@ -86,19 +86,24 @@ if(file.exists(closed_ref_biom)){
       )
       D <- as.data.frame(otu_table(otu.dat))
 }else if(file.exists(closed_ref_tsv)){
-      otu.dat <- read.delim(closed_ref_tsv, sep = '\t', header=TRUE )
+        otu.dat <- read.delim(closed_ref_tsv, sep = '\t', header=TRUE )
      
-       if(args.list$workflow == 'wmgx'){
+       if(grepl("_taxonomic_profile",colnames(otu.dat)[2])){
+         colnames(otu.dat) <- gsub("_taxonomic_profile","",colnames(otu.dat))
          rownames(otu.dat) <- otu.dat[,1]
          subset_ind <- grep( "s__|unclassified", rownames(otu.dat), invert = F )
          unstrat_otu_st.dat <- otu.dat[subset_ind,]
          subset_ind <- grep( "t__", rownames(unstrat_otu_st.dat), invert = T )
-         unstrat_otu.dat <- unstrat_otu_st.dat[subset_ind,]
-         #write.table(unstrat_otu.dat, "unstrat.txt", sep = "\t", eol = "\n", quote = F, row.names=FALSE)
-         otu.dat <- unstrat_otu.dat[,-ncol(unstrat_otu.dat)]
+         otu.dat <- unstrat_otu_st.dat[subset_ind,]
          
+         }else if(grepl("_Abundance",colnames(otu.dat)[2])){
+           colnames(otu.dat) <- gsub("_Abundance","",colnames(otu.dat)) 
+           rownames(otu.dat) <- otu.dat[,1]
+           subset_ind <- grep( "\\|", rownames(otu.dat), invert = T )
+           otu.dat <- otu.dat[subset_ind,]
+           
          }else{
-        colnames(otu.dat) <- gsub( "^X", "", colnames(otu.dat) )
+           colnames(otu.dat) <- gsub( "^X", "", colnames(otu.dat))
          }
       
      otu.dat <- otu.dat[2:length(otu.dat)] 
@@ -116,6 +121,8 @@ if (file.exists(phylotree_file)){
     otu.dat <- phyloseq::merge_phyloseq(otu.dat, meta, phylotree.data)
     D <- as.data.frame(otu_table(otu.dat))
 }
+
+D <- D[, which(colSums(D)>0)]
 
 if(is.null(args.list$normalize)){args.list$normalize <- "yes"}
 if (args.list$normalize == "yes"){

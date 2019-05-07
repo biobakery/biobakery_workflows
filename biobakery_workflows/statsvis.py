@@ -56,8 +56,10 @@ def split_pdfs(workflow,pdfs_path,perv_task):
 
     return split_task
 
-def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir):
+def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir,workflow_data):
 
+    adonis_dirname=os.path.basename(adonis_dir)
+    metadata_path = input_dir + "/metadata.tsv"
     options_file=input_dir+"/permanova-config.txt"
     options=""
     if os.path.isfile(options_file):
@@ -68,18 +70,20 @@ def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir):
     script_path = utilities.get_package_file("permanova", "Rscript")
 
     permanova_task=workflow.add_task(
-        "[vars[0]] --input_dir=[args[0]] --output_dir=[args[1]] --adonis_dir=[args[2]] [vars[1]]",
-        depends=[abundance],
+        "[vars[0]] --input_dir=[args[0]] --abundance=[depends[0]] --metadata=[depends[1]]\
+         --output_dir=[args[1]] --adonis_dir=[args[2]] --workflow=[args[3]] [vars[1]]",
+        depends=[abundance,metadata_path],
         targets=[TrackedDirectory(adonis_dir)],
         vars=[script_path,options],
-        args=[input_dir,output_dir,adonis_dir],
-        name="permanova"
+        args=[input_dir,output_dir,adonis_dir,workflow_data],
+        name=adonis_dirname
     )
 
     return permanova_task
 
 def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
 
+    maaslin_dirname = os.path.basename(maaslin_dir)
     metadata_path=input_dir+"/metadata.tsv"
     options_file=input_dir+"/maaslin-config.txt"
     options=""
@@ -96,7 +100,7 @@ def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
         targets=[TrackedDirectory(maaslin_dir)],
         vars=[script_path,options],
         args=[input_dir,maaslin_dir],
-        name="maaslin"
+        name=maaslin_dirname
     )
 
     return maaslin_task
