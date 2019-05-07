@@ -60,7 +60,7 @@ def run_permanova(workflow,abundance,input_dir,output_dir,adonis_dir,workflow_da
 
     adonis_dirname=os.path.basename(adonis_dir)
     metadata_path = input_dir + "/metadata.tsv"
-    options_file=input_dir+"/permanova-config.txt"
+    options_file=input_dir+"/"+adonis_dirname+"_config.txt"
     options=""
     if os.path.isfile(options_file):
         with open(options_file) as f:
@@ -85,7 +85,7 @@ def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
 
     maaslin_dirname = os.path.basename(maaslin_dir)
     metadata_path=input_dir+"/metadata.tsv"
-    options_file=input_dir+"/maaslin-config.txt"
+    options_file=input_dir+"/"+maaslin_dirname+"_config.txt"
     options=""
     if os.path.isfile(options_file):
         with open(options_file) as f:
