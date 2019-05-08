@@ -5,30 +5,28 @@ library(vegan)
 library(RColorBrewer)
 library(pheatmap)
 library(grDevices)
+library(tools)
 
 
-###########################################################################################################
-#####  Implements permanova analysis
-#####  Requires:
-#####   -metadata.tsv file (sample ids column should be named 'sample')
-#####   -closed reference either biom or tsv file 
-#####   -closed_reference.tre fasttree file (optional, if available)
-#####  Arguments to script are:
-#####   -input_dir  (folder where required files are)
-#####   -normalize  (if 'no' it will skip relative abundance calculation, by default it calculates)
-#####   -fields  (if given, it will create plots with those specific fields in addition to general plot with all fields,
-#####    example: source*time or diet+sex) 
-#####   -workflow (wmgx or 16s-default)
-#####  It outputs:
-#####   -permanova_heatmaps.pdf with p-values and r square plots for all fields, and additional plots, 
-#####    if specific 'fields' argument is given
-#####   -adonis-output.txt file with information about each field
-#############################################################################################################
+##  Implements permanova analysis
+##  Requires:
+##   -metadata.tsv file (sample ids column should be named 'sample')
+##   -closed reference either biom or tsv file 
+##   -closed_reference.tre fasttree file (optional, if available)
+##  Arguments to script are:
+##   -input_dir  (folder where required files are)
+##   -normalize  (if 'no' it will skip relative abundance calculation, by default it calculates)
+##   -fields  (if given, it will create plots with those specific fields in addition to general plot with all fields,
+##    example: source*time or diet+sex) 
+##  It outputs:
+##   -heatmaps.pdf with p-values and r square plots for all fields, and additional plots, 
+##    if specific 'fields' argument is given
+##   -adonis-output.txt file with information about each field
 
-## Collect arguments
+# Collect arguments
 args <- commandArgs(TRUE)
 
-## Parse arguments (we expect the form --arg=value)
+# Parse arguments (we expect the form --arg=value)
 parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
 args.df <- as.data.frame(do.call("rbind", parseArgs(args)))
 
@@ -37,23 +35,11 @@ names(args.list) <- args.df$V1
 
 #args.list$input_dir <- "/Users/anamailyan/dada_demo_output_vsearch"
 #args.list$output_dir <- "/Users/anamailyan/dada_demo_output_vsearch_stats"
-#rgs.list$adonis_dir <- "/Users/anamailyan/dada_demo_output_vsearch_stats/permanova_path"
+#args.list$adonis_dir <- "/Users/anamailyan/dada_demo_output_vsearch_stats/permanova_path"
 #args.list$metadata <- "/Users/anamailyan/dada_demo_output_vsearch/metadata.tsv"
 #args.list$abundance <- "/Users/anamailyan/dada_demo_output_vsearch/humann2/merged/pathabundance_relab.tsv"
-args.list$normalize <- "yes"
-#args.list$workflow <- "wmgx"
-#args.list$workflow <- "16s"
-#args.list$fields <- "timepoint*bmi"
-
-## Arg help
-
-
-## Arg1 default
-if(is.null(args.list$input_dir)) {
-  #stop("At least one argument must be supplied (input directory).\n", call.=FALSE)
-}
-
-if(is.null(args.list$workflow)){args.list$workflow <- "16s"}
+#args.list$normalize <- "yes"
+#args.list$fields <- "metabolicsyndromecriteria*bmi"
 
 # Print args list to STDOUT
 for( i in names(args.list) ) {
@@ -63,12 +49,13 @@ for( i in names(args.list) ) {
 if(!dir.exists(args.list$output_dir)) dir.create(args.list$output_dir)
 if(!dir.exists(args.list$adonis_dir)) dir.create(args.list$adonis_dir)
 
-# These variables are passed to the workflow
+# Normalize path
 input.path <- normalizePath( args.list$input_dir )
 output.path <- normalizePath( args.list$output_dir )
 adonis.path <- normalizePath( args.list$adonis_dir )
 setwd(args.list$input_dir)
 
+# Read metadata
 metadata_file = args.list$metadata
 if(file.exists(metadata_file)){
     meta.dat <- read.table(metadata_file,header = TRUE)
@@ -77,16 +64,16 @@ if(file.exists(metadata_file)){
     stop("Exiting. Metadata file  not found", call.=FALSE)
 }
 
-closed_ref_biom = paste0(args.list$input_dir, "/all_samples_taxonomy_closed_reference.biom")
-closed_ref_tsv = args.list$abundance
-if(file.exists(closed_ref_biom)){
+# Read abundance
+abundance= args.list$abundance
+if(file_ext(abundance) == "biom"){
       otu.dat <-  phyloseq::import_biom( 
-      BIOMfilename = closed_ref_biom,
+      BIOMfilename = abundance,
       parseFunction = parse_taxonomy_greengenes
       )
       D <- as.data.frame(otu_table(otu.dat))
-}else if(file.exists(closed_ref_tsv)){
-        otu.dat <- read.delim(closed_ref_tsv, sep = '\t', header=TRUE )
+}else if(file_ext(abundance) == "tsv"){
+        otu.dat <- read.delim(abundance, sep = '\t', header=TRUE )
      
        if(grepl("_taxonomic_profile",colnames(otu.dat)[2])){
          colnames(otu.dat) <- gsub("_taxonomic_profile","",colnames(otu.dat))
@@ -110,7 +97,7 @@ if(file.exists(closed_ref_biom)){
      otu.dat.filt <- otu.dat[,which(colnames(otu.dat) %in% meta.dat$sample)]
      D <- otu.dat.filt
 }else{
-    stop("Exiting. Closed reference file not found in ", call.=FALSE)
+    stop("Exiting. Abundance file not found in ", call.=FALSE)
 }
 
 phylotree_file = paste0(args.list$input_dir, "/closed_reference.tre")
@@ -136,9 +123,6 @@ D.filt <- D.filt[, which(colSums(D.filt)>0)]
 meta.dat.filt <- meta.dat[meta.dat$sample %in% colnames(D.filt) ,,drop=T]
 meta.dat <- meta.dat.filt
  
-#write.table(D, "D.txt", sep = "\t", eol = "\n", quote = F, row.names=TRUE,col.names = TRUE)
-#write.table(D.filt, "D-filt.txt", sep = "\t", eol = "\n", quote = F, row.names=TRUE, col.names = TRUE)
-
 D.dist <- vegan::vegdist(t(D.filt), "bray")
 
 sink(file = paste0(adonis.path,"/adonis-output.txt"), append = TRUE, type = "output", split = FALSE)
@@ -148,34 +132,29 @@ for (metacol in colnames(meta.dat)[2:length(colnames(meta.dat))]){
 }
 sink()
 
-# hmap.plots <-list()
+
 plots.list <- list()
-# Figure 1. The PERMANOVA
+# The PERMANOVA
 adonis.full <- vegan::adonis(D.dist ~. , data = meta.dat[,-1])
 prflength <- length(adonis.full$aov.tab$`Pr(>F)`)-2
 
-pdf(file=paste0(adonis.path,"/permanova_heatmaps.pdf"))
+pdf(file=paste0(adonis.path,"/heatmaps.pdf"))
 
-# Figure 1(A). P-value Summary with 999 permutations
-# hmap.plots[[1]] <- "hmap-pv.pdf"
+# P-value Summary with 999 permutations
 pheatmap::pheatmap(adonis.full$aov.tab$`Pr(>F)`[1:prflength], display_numbers = TRUE, number_color= "black",cluster_rows = FALSE,
          cluster_cols = FALSE, number_format = "%.3f", 
          color = colorRampPalette(brewer.pal(n = 10, name = "RdYlGn"))(501),fontsize = 12, fontsize_number = 12,
          breaks=pbeta(seq(0, 1, len=501), 1.1, 0.15), main = "P-value Summary", labels_row = row.names(adonis.full$aov.tab)[1:prflength])
 
 plots.list[[1]] <- recordPlot(load="pheatmap,RColorBrewer", attach="pheatmap,RColorBrewer")
-#graphics.off()
 
-# Figure 1(B). R-square Summary 
-# hmap.plots[[2]] <- "hmap-r2.pdf"
-#png(file=paste0(adonis.path,"/all_r2.png"))
+# R-square Summary 
 pheatmap::pheatmap(100*adonis.full$aov.tab$R2[1:prflength], display_numbers = TRUE, number_color= "black",cluster_rows = FALSE,
          cluster_cols = FALSE, number_format = "%.3f%%",
          color = colorRampPalette(brewer.pal(n = 9, name = "Oranges"))(501),fontsize = 12, fontsize_number = 12,
          breaks=100*pbeta(seq(0, 1, len=501), 1.1, 0.1), main = "R-square Summary", labels_row = row.names(adonis.full$aov.tab)[1:prflength])
 
 plots.list[[2]] <- recordPlot(load="pheatmap,RColorBrewer", attach="pheatmap,RColorBrewer")
-#graphics.off()
 
 if (!is.null(args.list$fields)){
    
@@ -198,8 +177,6 @@ if (!is.null(args.list$fields)){
     adonis.full <- adonis(fmla, data = meta.dat[,-1])
 
     prflength <- length(adonis.full$aov.tab$`Pr(>F)`)-2
-    png(file=paste0(adonis.path,"/fields_heatmap.png"))
-   # hmap.plots[[3]] <- "hmap-pv_fields.pdf"
     pheatmap::pheatmap(adonis.full$aov.tab$`Pr(>F)`[1:prflength], display_numbers = TRUE, number_color= "black",cluster_rows = FALSE,
            cluster_cols = FALSE,  number_format = "%.3f",
            color = colorRampPalette(brewer.pal(n = 10, name = "RdYlGn"))(501),fontsize = 12, fontsize_number = 12,
@@ -207,17 +184,13 @@ if (!is.null(args.list$fields)){
            labels_row = row.names(adonis.full$aov.tab)[1:prflength])
   
     plots.list[[3]] <- recordPlot(load="pheatmap,RColorBrewer", attach="pheatmap,RColorBrewer")
-#    graphics.off()
-   
-#    png(file=paste0(adonis.path,"/fields_r2.png")) 
-   #  hmap.plots[[4]] <- "hmap-r2_fields.pdf"
+
      pheatmap::pheatmap(100*adonis.full$aov.tab$R2[1:prflength], display_numbers = TRUE, number_color= "black",cluster_rows = FALSE,
            cluster_cols = FALSE,  number_format = "%.3f%%",
            color = colorRampPalette(brewer.pal(n = 9, name = "Oranges"))(501),fontsize = 12, fontsize_number = 12,
            breaks=100*pbeta(seq(0, 1, len=501), 1.1, 0.1), main = "R-square Summary", 
            labels_row = row.names(adonis.full$aov.tab)[1:prflength])
      plots.list[[4]] <- recordPlot(load="pheatmap,RColorBrewer", attach="pheatmap,RColorBrewer")
-#     graphics.off()
   
 }
 

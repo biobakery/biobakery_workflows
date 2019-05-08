@@ -95,7 +95,7 @@ def run_maaslin(workflow,abundance,input_dir,maaslin_dir):
     script_path = utilities.get_package_file("maaslin_call", "Rscript")
 
     maaslin_task=workflow.add_task(
-        "[vars[0]]  --input_dir=[args[0]] --abundance=[depends[0]] --metadata=[depends[1]] --maaslin_output=[args[1]]",
+        "[vars[0]]  --input_dir=[args[0]] --abundance=[depends[0]] --metadata=[depends[1]] --maaslin_output=[args[1]]  [vars[1]]",
         depends=[abundance,metadata_path],
         targets=[TrackedDirectory(maaslin_dir)],
         vars=[script_path,options],
