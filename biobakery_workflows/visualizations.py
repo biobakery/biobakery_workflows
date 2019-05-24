@@ -806,12 +806,10 @@ class Sixteen_S(Workflow):
 
     captions["dada2taxinfo"]='"The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
         and outputs the taxonomic assignments with at least minBoot bootstrap confidence." [DADA2 Tutorial]\
-        \n\nFormatted training datasets for taxonomic assignments can be downloaded from here\
-        https://benjjneb.github.io/dada2/training.html.\
         \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007.'  \
         + " In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
         of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
-        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n"
+        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n \n"
  
           
     captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n \

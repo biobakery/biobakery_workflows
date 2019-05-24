@@ -81,9 +81,9 @@ if not args.exclude_workflow_info:
 # for dada2/its workflow
 if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
     method = "dada2"
-    if os.path.isfile(files.SixteenS.path("cutadapt_args", args.input, error_if_not_found=False)):
+    if os.path.isdir(files.SixteenS.path("filtN", args.input, error_if_not_found=False)):
         method = "its"
-    doc_title = method.upper() + "16s Report"
+    doc_title = method.upper() + " 16s Report"
     input_files = {
         "required": [
             "otu_table_closed_reference",

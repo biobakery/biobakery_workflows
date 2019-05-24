@@ -27,11 +27,6 @@ args.df <- as.data.frame(do.call("rbind", parseArgs(args)))
 args.list <- as.list(as.character(args.df$V2))
 names(args.list) <- args.df$V1
 
-## Arg1 default
-if(is.null(args.list$input_dir)) {
-  #stop("At least one argument must be supplied (input folder).\n", call.=FALSE)
-}
-
 # Print args list to STDOUT
 for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
@@ -62,7 +57,7 @@ if(identical("gz",sample.ext[1])){
 sample.names <- gsub( paste0(pair_id1,".*\\.",sample.ext), "", fnFs, perl = T)
 sample.namesR <- gsub( paste0(pair_id2,".*\\.",sample.ext), "", fnRs, perl = T)
 
-# Identifay primenrs and orientation
+# Identifay primers and orientation
 FWD.orients <- allOrients(args.list$fwd_primer)
 REV.orients <- allOrients(args.list$rev_primer)
 
@@ -118,25 +113,4 @@ rev_primer_file<-file(args.list$rev_primer_file)
 writeLines(c(REV,REV.RC), rev_primer_file)
 close(rev_primer_file)
 
-path.cut <- args.list$cutadapt_dir
-if(!dir.exists(path.cut)) dir.create(path.cut)
-fnFs.cut <- file.path(path.cut, basename(fnFs))
-fnRs.cut <- file.path(path.cut, basename(fnRs))
-
-# Trim FWD and the reverse-complement of REV off of R1 (forward reads)
-R1.flags <- paste("-g", FWD, "-a", REV.RC) 
-# Trim REV and the reverse-complement of FWD off of R2 (reverse reads)
-R2.flags <- paste("-G", REV, "-A", FWD.RC) 
-
-# Write Cutadapt arguments to files
-cutadapt_args<-args.list$cutadapt_args
-if(!dir.exists(cutadapt_args)) dir.create(cutadapt_args)
-
-for(i in seq_along(fnFs)) {
-  current_filename <- paste0(cutadapt_args,"/args_",i,".txt")
-  cutadapt_args_file <- file(current_filename,'w')
-  args <- paste(R1.flags,R2.flags,"-n",2,"-o",fnFs.cut[i],"-p",fnRs.cut[i],fnFs.filtN[i],fnRs.filtN[i], sep=" ")
-  cat(args,file=cutadapt_args_file)
-  close(cutadapt_args_file)
-}
 
