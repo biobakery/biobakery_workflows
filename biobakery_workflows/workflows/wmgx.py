@@ -56,7 +56,8 @@ workflow.add_argument("contaminate-databases", desc="the path (or comma-delimite
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
-workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
+workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks (StrainPhlAn)", action="store_true")
+workflow.add_argument("run-strain-gene-profiling", desc="run the gene-based strain profiling tasks (PanPhlAn)", action="store_true")
 workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonomic profiling tasks (a tsv profile for each sequence file must be included in the input folder using the same sample name)", action="store_true")
 workflow.add_argument("run-assembly", desc="run the assembly and annotation tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
@@ -149,11 +150,20 @@ if not args.bypass_functional_profiling:
 ### STEP #4: Run strain profiling
 # Provide taxonomic profiling output so top strains by abundance will be selected
 if not args.bypass_strain_profiling:
+    if args.bypass_taxonomic_profiling:
+        sys.exit("ERROR: Taxonomic profiling must be run to also run strain profiling")
     shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
         workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,merged_taxonomic_profile,
         args.strain_profiling_options,args.max_strains)
 
-### STEP 5: Run assembly and annotation
+### STEP #5: Run gene-based strain profiling (optional)
+if args.run_strain_gene_profiling:
+    if args.bypass_taxonomic_profiling:
+        sys.exit("ERROR: Taxonomic profiling must be run to also run gene-based strain profiling")
+    shotgun.strain_gene_profile(workflow,qc_output_files,merged_taxonomic_profile,args.output,args.threads,workflow_config.panphlan_db,
+    args.max_strains)
+
+### STEP #6: Run assembly and annotation
 if args.run_assembly:
     is_paired = args.interleaved or utilities.is_paired_end(input_files, original_extension, args.pair_identifier)
     assembled_contigs = shotgun.assemble(workflow, qc_output_files, args.input_extension, args.output, args.threads, args.pair_identifier, args.remove_intermediate_output, args.assembly_options, is_paired)

@@ -1,6 +1,11 @@
 
 # bioBakery workflows History #
 
+## v0.13.0 05-24-2019 ##
+
+* Add panphlan optional tasks to wmgx workflow.
+* Add ITS option to 16s workflow.
+
 ## v0.12.1 01-11-2019 ##
 
 * Add colorbar for continuous data to PCoA plots.
