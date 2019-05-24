@@ -129,6 +129,8 @@ class ShotGun(Workflow):
             "when running StrainPhlAn.")
     vars["strainphlan_db_markers"] = DBInfo("STRAINPHLAN_DB_MARKERS",
         description="This is the folder containing the StrainPhlAN marker files.")
+    vars["panphlan_db"] = DBInfo("PANPHLAN_DB",
+        description="This is the folder containing the PanPhlAn database files.")
 
 class SixteenS(Workflow):
     vars={}
