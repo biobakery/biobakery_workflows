@@ -229,6 +229,9 @@ def main():
         zip_ref.extractall(os.path.join(args.location,config.SixteenS.vars["unite"].default_folder))
         zip_ref.close()
 
+    if "16s" in args.install:
+        # install the picrust databases
+        run_command(["download_picrust_files.py"])
        
     # if metatranscriptome workflow, install the additional kneaddata database
     if args.install == "wmgx_wmtx":
