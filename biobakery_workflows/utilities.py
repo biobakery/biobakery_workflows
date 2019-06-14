@@ -28,6 +28,7 @@ import sys
 import math
 import functools
 import time
+import collections
 
 from anadama2.tracked import TrackedDirectory
 
@@ -1554,20 +1555,29 @@ def rank_species_average_abundance(file):
             
         return value
     
-    species={}
+    species=collections.OrderedDict()
     with open(file) as file_handle:
-        column_names = file_handle.readline().rstrip().split("\t")[1:]
+        try:
+            column_names = file_handle.readline().rstrip().split("\t")[1:]
+        except IndexError:
+            column_names = []
         for line in file_handle:
             line=line.rstrip().split("\t")
             taxonomy=line.pop(0).split("|")[-1]
             data=[try_format_data(i) for i in line]
-            average=sum(data)/(len(data)*1.0)
+            try:
+                average=sum(data)/(len(data)*1.0)
+            except ZeroDivisionError:
+                average=0
             # only store values for species
             if taxonomy.startswith("s__"):
                 species[taxonomy]=average
                 
     # sort the species from highest to lowest average abundance
     sorted_species = sorted(species, key=species.get, reverse=True)
+    # if abundances are not provided then use original ordering
+    if sum(species.values()) == 0:
+        sorted_species = species.keys()
     
     return sorted_species
 
