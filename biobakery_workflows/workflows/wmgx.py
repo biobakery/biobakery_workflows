@@ -62,6 +62,7 @@ workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonom
 workflow.add_argument("run-assembly", desc="run the assembly and annotation tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
 workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
+workflow.add_argument("strain-list", desc="input file with list of strains to profile", default="")
 workflow.add_argument("assembly-options", desc="additional options when running the assembly step", default="")
 
 # get the arguments from the command line
@@ -154,14 +155,14 @@ if not args.bypass_strain_profiling:
         sys.exit("ERROR: Taxonomic profiling must be run to also run strain profiling")
     shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
         workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,merged_taxonomic_profile,
-        args.strain_profiling_options,args.max_strains)
+        args.strain_profiling_options,args.max_strains,args.strain_list)
 
 ### STEP #5: Run gene-based strain profiling (optional)
 if args.run_strain_gene_profiling:
     if args.bypass_taxonomic_profiling:
         sys.exit("ERROR: Taxonomic profiling must be run to also run gene-based strain profiling")
     shotgun.strain_gene_profile(workflow,qc_output_files,merged_taxonomic_profile,args.output,args.threads,workflow_config.panphlan_db,
-    args.max_strains)
+    args.max_strains,args.strain_list)
 
 ### STEP #6: Run assembly and annotation
 if args.run_assembly:

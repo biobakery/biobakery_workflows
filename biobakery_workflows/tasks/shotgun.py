@@ -749,7 +749,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         args=[os.path.dirname(task.depends[0].name),os.path.dirname(task.targets[0].name),profile_clade,threads])
     
 
-def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,abundance_file,options="",max_species=20,min_depth=10):
+def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,abundance_file,options="",max_species=20,strain_list="",min_depth=10):
     """Strain profile for whole genome shotgun sequences
     
     This set of tasks performs strain profiling on whole genome shotgun
@@ -767,7 +767,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             the top strains by average abundance.
         options (string): Options to apply when running strainphlan.
         max_species (int): The maximum number of species to profile.
-        
+        strain_list (string): The path to a file with the list of strains to profile
     Requires:
         StrainPhlAn: A tool for strain profiling.
         
@@ -803,12 +803,16 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
         args=os.path.dirname(strainphlan_markers[0]),
         name="strainphlan_print_clades")
     
-    # order the clades list by average abundance
-    ordered_clade_list = utilities.name_files("clades_list_order_by_average_abundance.txt", output_folder, subfolder="strainphlan")
-    workflow.add_task(
-        utilities.partial_function(utilities.order_clade_list,clade_list=clade_list,abundance_file=abundance_file,output_file=ordered_clade_list),
-        depends=[clade_list, abundance_file],
-        targets=ordered_clade_list)
+    # order the clades list by average abundance if list not provided
+    if not strain_list:
+        ordered_clade_list = utilities.name_files("clades_list_order_by_average_abundance.txt", output_folder, subfolder="strainphlan")
+        workflow.add_task(
+            utilities.partial_function(utilities.order_clade_list,clade_list=clade_list,abundance_file=abundance_file,output_file=ordered_clade_list),
+            depends=[clade_list, abundance_file],
+            targets=ordered_clade_list)
+    else:
+        # use the list provided for the strains to profile
+        ordered_clade_list = strain_list
     
     ### STEP #3: Run strainphlan on the top set of clades identified
     clade_logs = utilities.name_files(map(str,range(max_species)), output_folder, tag="clade", subfolder="strainphlan", extension="log")
@@ -893,7 +897,7 @@ def panphlan_profile(task,species_number,panphlan_db):
         utilities.run_task("touch [targets[0]]", targets=task.targets)
 
 
-def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan_db,max_species):
+def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan_db,max_species,strain_list):
     """Strain profile, gene-based for whole genome shotgun sequences
    
     This set of tasks performs strain profiling on whole genome shotgun
@@ -909,13 +913,18 @@ def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan
         threads (int): The number of threads/cores to use.
         panphlan_db (string): The folder containing the database files.
         max_species (int): The maximum number of species to profile.
-    
+        strain_list (string): The path to a file with the list of strains to profile
     Requires:
         PanPhlAn: A tool for strain profiling.
 
     Returns:
         None
     """
+
+    # if a specific list of strains are provided use this instead of the strains selected by
+    # average abundance
+    if strain_list:
+        abundance_file=strain_list
 
     ### STEP #1: Run panphlan map on all of the samples for each of the top species
     out_files = workflow.name_output_files(name=qc_files, tag="panphlan_map", extension="csv.bz2")
