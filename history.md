@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v0.13.1 06-17-2019 ##
+
+* Add option to provide a list of strains to run (instead of default of top 25 by average abundance).
+
 ## v0.13.0 05-24-2019 ##
 
 * Add panphlan optional tasks to wmgx workflow.
