@@ -419,7 +419,8 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
     return merged_files, output_extension
           
 
-def functional_profile(workflow,input_files,extension,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None):
+def functional_profile(workflow,input_files,extension,output_folder,threads,taxonomic_profiles=None, remove_intermediate_output=None,
+    options=None):
     """Functional profile for whole genome shotgun sequences
     
     This set of tasks performs functional profiling on whole genome shotgun
@@ -492,7 +493,10 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     # remove intermediate temp files, if set
     if remove_intermediate_output:
         optional_profile_args+=" --remove-temp-output "
-    
+   
+    if not options is None:
+        optional_profile_args+=" "+options+" "
+ 
     # create a task to run humann2 on each of the kneaddata output files
     for sample, depend_fastq, target_gene, target_path, target_coverage, target_log in zip(sample_names, depends, genefamiles, pathabundance, pathcoverage, log_files):
         workflow.add_task_gridable(
