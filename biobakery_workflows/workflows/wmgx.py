@@ -54,6 +54,7 @@ workflow.add_argument("bypass-quality-control", desc="do not run the quality con
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
     default=",".join([workflow_config.kneaddata_db_human_genome]))
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
+workflow.add_argument("functional-profiling-options", desc="additional options when running the functional profiling step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks (StrainPhlAn)", action="store_true")
@@ -146,7 +147,8 @@ elif not args.bypass_functional_profiling or not args.bypass_strain_profiling:
 ### STEP #3: Run functional profiling on all of the filtered files ###
 if not args.bypass_functional_profiling:
     genes_relab, ecs_relab, path_relab, genes, ecs, path = shotgun.functional_profile(workflow,
-        qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output)
+        qc_output_files,args.input_extension,args.output,args.threads,taxonomy_tsv_files,args.remove_intermediate_output,
+        args.functional_profiling_options)
 
 ### STEP #4: Run strain profiling
 # Provide taxonomic profiling output so top strains by abundance will be selected
