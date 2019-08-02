@@ -65,7 +65,7 @@ wms_output_folder = os.path.join(args.output,files.ShotGun.wmgx_folder_name)
 wts_output_folder = os.path.join(args.output,files.ShotGun.wmtx_folder_name)
 wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, 
     input_files_metagenome, args.input_extension, wms_output_folder, args.threads, 
-    [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna], 
+    [workflow_config.kneaddata_db_human_genome], 
     args.pair_identifier, args.qc_options, args.remove_intermediate_output)
 wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, 
     input_files_metatranscriptome, args.input_extension, wts_output_folder, args.threads, 

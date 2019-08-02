@@ -52,7 +52,7 @@ workflow.add_argument("pair-identifier", desc="the string to identify the first 
 workflow.add_argument("interleaved", desc="indicates whether or not sequence files are interleaved", default=False, action="store_true")
 workflow.add_argument("bypass-quality-control", desc="do not run the quality control tasks", action="store_true")
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
-    default=",".join([workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_rrna]))
+    default=",".join([workflow_config.kneaddata_db_human_genome]))
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
