@@ -122,7 +122,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     additional_options+=" --serial --run-trf "
 
     # create the database command option string to provide zero or more databases to kneaddata
-    if databases is None:
+    if databases is None or databases=="":
         optional_arguments=""
     elif isinstance(databases,list):
         # start the string with the kneaddata option and add an option for each database
