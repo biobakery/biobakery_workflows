@@ -172,11 +172,9 @@ def main():
         run_command(["humann2_databases","--download","uniref","uniref90_diamond",humann2_install_folder])
         
         # install the two kneaddata databases
-        print("Installing hg and rRNA kneaddata databases")
+        print("Installing hg kneaddata database")
         run_command(["kneaddata_database","--download","human_genome","bowtie2",
             os.path.join(args.location,config.ShotGun.vars["kneaddata_db_human_genome"].default_folder)])
-        run_command(["kneaddata_database","--download","ribosomal_RNA","bowtie2",
-            os.path.join(args.location,config.ShotGun.vars["kneaddata_db_rrna"].default_folder)])
         
     elif args.install == "wmgx_demo":
         # install the demo chocophlan and demo uniref90
@@ -185,11 +183,9 @@ def main():
         run_command(["humann2_databases","--download","uniref","DEMO_diamond",humann2_install_folder])
         
         # Install demo kneaddata databases from examples folder to install folder
-        print("Installing DEMO hg and rRNA kneaddata databases")
+        print("Installing DEMO hg kneaddata database")
         shutil.copytree(data.get_kneaddata_hg_demo_folder(),
             os.path.join(args.location,config.ShotGun.vars["kneaddata_db_human_genome"].default_folder))
-        shutil.copytree(data.get_kneaddata_silva_demo_folder(),
-            os.path.join(args.location,config.ShotGun.vars["kneaddata_db_rrna"].default_folder))
         
     elif args.install == "16s_usearch":
         # download the green genes fasta and taxonomy files
@@ -235,7 +231,9 @@ def main():
        
     # if metatranscriptome workflow, install the additional kneaddata database
     if args.install == "wmgx_wmtx":
-        print("Installing mRNA kneaddata database")
+        print("Installing rRNA and mRNA kneaddata database")
+        run_command(["kneaddata_database","--download","ribosomal_RNA","bowtie2",
+            os.path.join(args.location,config.ShotGun.vars["kneaddata_db_rrna"].default_folder)])
         run_command(["kneaddata_database","--download","human_transcriptome","bowtie2",
             os.path.join(args.location,config.ShotGun.vars["kneaddata_db_human_metatranscriptome"].default_folder)])
         

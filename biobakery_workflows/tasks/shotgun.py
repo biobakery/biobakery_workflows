@@ -118,7 +118,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
 
     # always run with the serial option, which presents read counts in log in the manner expected
     # by the visualization workflows (in serial filtering in the order of the databases provided)
-    additional_options+=" --serial "
+    # also run tandem repeat filtering
+    additional_options+=" --serial --run-trf "
 
     # create the database command option string to provide zero or more databases to kneaddata
     if databases is None:
