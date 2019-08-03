@@ -89,6 +89,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         
     # get the kneaddata final output files
     main_folder=os.path.join("kneaddata","main")
+    kneaddata_output_repeats_removed_fastq = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="repeats.removed.fastq", create_folder=True)
     kneaddata_output_fastq = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="fastq", create_folder=True)
     kneaddata_output_logs = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="log")
     kneaddata_output_files = zip(kneaddata_output_fastq, kneaddata_output_logs)
@@ -140,12 +141,13 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         additional_options+=" --remove-intermediate-output "
     
     # create a task for each set of input and output files to run kneaddata
-    for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
+    # rename file with repeats in name to only sample name
+    for sample, depends, targets, intermediate_file in zip(sample_names, input_files, kneaddata_output_files, kneaddata_output_repeats_removed_fastq):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options,
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && mv [args[3]] [targets[0]]",
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets,
-            args=[kneaddata_output_folder, threads, sample],
+            args=[kneaddata_output_folder, threads, sample, intermediate_file],
             time=time_equation, # 6 hours or more depending on file size
             mem=mem_equation, # 12 GB or more depending on file size
             cores=threads, # time/mem based on 8 cores
