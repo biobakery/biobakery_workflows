@@ -234,7 +234,8 @@ def merge_fastq(workflow, input_files, output_folder):
     return all_samples_fastq
 
 
-def quality_report(workflow, method, fastq_file, output_folder, threads):
+def quality_report(workflow, method, fastq_file, output_folder, threads, qmax=45):
+
     """ Generate a qc report from the fastq file of all samples
     
     Args:
@@ -243,7 +244,7 @@ def quality_report(workflow, method, fastq_file, output_folder, threads):
         fastq_file (string): The path to the fastq file.
         output_folder (string): The path of the output folder.
         threads (int): The number of threads for each task.
-        
+        qmax (int): Max qvalue increased from the default of 43 to allow for Ion Torrent data
     Requires:
         usearch or vsearch
         
@@ -265,16 +266,16 @@ def quality_report(workflow, method, fastq_file, output_folder, threads):
     else:
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; "+\
-            "usearch -fastq_eestats2 [depends[0]] -output [targets[0]] -threads [args[0]]",
+            "usearch -fastq_eestats2 [depends[0]] -output [targets[0]] -threads [args[0]] -fastq_qmax [args[1]]",
             depends=[fastq_file,TrackedExecutable("usearch")],
             targets=qc_file,
-            args=threads,
+            args=[threads,qmax],
             name="usearch_fastq_eestats2")
     
     return qc_file
   
   
-def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len):
+def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, qmax=45):
     """ Filter the fastq files using the maxee value
     
     Args:
@@ -285,7 +286,7 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
         threads (int): The number of threads for each task.
         maxee (int): The maxee value to use for filtering.
         trunc_len (int): The value to use for max length.
-
+        qmax (int): Max qvalue increased from the default of 43 to allow for Ion Torrent data
     Requires:
         usearch or vsearch
         
@@ -309,10 +310,10 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
     else:
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; "+\
-            "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]] -fastq_trunclen [args[2]]",
+            "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]] -fastq_trunclen [args[2]] -fastq_qmax [args[3]]",
             depends=[fastq_file,TrackedExecutable("usearch")],
             targets=[fasta_filtered_file, fasta_discarded_file],
-            args=[threads, maxee, trunc_len],
+            args=[threads, maxee, trunc_len, qmax],
             name="usearch_fastq_filter")
     
     # create a fasta file of all reads (included the discarded
