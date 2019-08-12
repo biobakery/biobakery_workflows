@@ -1,6 +1,14 @@
 
 # bioBakery workflows History #
 
+## v0.13.2 08-12-2019 ##
+
+* Default kneaddata (QC tasks) no longer use the rRNA database for filtering
+* Default kneaddata runs with trf to filter repeats
+* For database install, the metaphlan2 folder name has been updated to work with the latest metaphlan2 version
+* Users can now run without any filtering databases for kneaddata tasks
+* Users can now pass custom arguments to humann2 tasks
+
 ## v0.13.1 06-17-2019 ##
 
 * Add option to provide a list of strains to run (instead of default of top 25 by average abundance).
