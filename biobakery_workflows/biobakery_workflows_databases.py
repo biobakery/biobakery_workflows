@@ -87,7 +87,7 @@ def create_strainphlan_db(location):
     
     # find the strainphlan db folder and index files
     try:
-        strainphlan_db=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"db_v20","mpa_v20_m200")
+        strainphlan_db=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"metaphlan_databases","mpa_v20_m200")
     except subprocess.CalledProcessError:
         sys.exit("Unable to find strainphlan install.")
         
