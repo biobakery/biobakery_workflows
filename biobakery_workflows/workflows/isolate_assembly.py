@@ -91,7 +91,7 @@ else:
         args=[os.path.dirname(assembly_targets),args.threads])
 
 ### STEP #3: Annotate assembly ###
-annotation_targets = utilities.name_files(args.species_name +".ffn", args.output, subfolder="prokka")
+annotation_targets = utilities.name_files(args.species_name +".faa", args.output, subfolder="prokka")
 workflow.add_task(
     "prokka --outdir [args[0]] --prefix [args[1]] [depends[0]] --cpus [args[2]]",
     depends=assembly_targets,
