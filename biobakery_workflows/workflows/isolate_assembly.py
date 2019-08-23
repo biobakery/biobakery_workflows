@@ -47,6 +47,7 @@ workflow.add_argument("input-extension", desc="the input file extension", defaul
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default="_R1_001")
 workflow.add_argument("reference-database", desc="the path to the reference database for quality assessment", default="")
+workflow.add_argument("run_dbcan-path", desc="the path to the run_dbcan.py script", default="/app/")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -117,13 +118,21 @@ workflow.add_task(
     targets=checkm_targets,
     args=[os.path.dirname(annotation_targets), os.path.dirname(checkm_targets)])
 
-### STEP #6: Functional annotations ###
+### STEP #6: Functional annotations with emapper ###
 functional_targets = utilities.name_files(["eggnog_mapper.log", "eggnog_mapper.emapper.annotations"], args.output, subfolder="eggnog_mapper", create_folder=True)
 workflow.add_task(
     "emapper.py -o [args[0]] --output_dir [args[1]] -i [depends[0]] -m diamond --cpu [args[2]] > [targets[0]]",
     depends=annotation_targets,
     targets=functional_targets,
     args=[os.path.basename(functional_targets[0]).split(".")[0],os.path.dirname(functional_targets[0]),args.threads])
+
+### STEP #7: Functional annotations with dbcan ###
+dbcan_targets = utilities.name_files("overview.txt", args.output, subfolder="run_dbcan")
+workflow.add_task(
+    "python3 [args[0]]/run_dbcan.py protein [depends[0]] --out_dir [args[1]]",
+    depends=annotation_targets,
+    targets=dbcan_targets,
+    args=[args.run_dbcan_path,os.path.basename(dbcan_targets)])
 
 # start the workflow
 workflow.go()
