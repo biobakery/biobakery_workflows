@@ -47,7 +47,7 @@ workflow.add_argument("input-extension", desc="the input file extension", defaul
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default="_R1_001")
 workflow.add_argument("reference-database", desc="the path to the reference database for quality assessment", default="")
-workflow.add_argument("run_dbcan-path", desc="the path to the run_dbcan.py script", default="/app/")
+workflow.add_argument("dbcan-path", desc="the path to the run_dbcan.py script", default="/app/")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -129,10 +129,11 @@ workflow.add_task(
 ### STEP #7: Functional annotations with dbcan ###
 dbcan_targets = utilities.name_files("overview.txt", args.output, subfolder="run_dbcan")
 workflow.add_task(
-    "python3 [args[0]]/run_dbcan.py protein [depends[0]] --out_dir [args[1]]",
+    "cd [args[0]] && python run_dbcan.py [depends[0]] protein --out_dir [args[1]]",
     depends=annotation_targets,
     targets=dbcan_targets,
-    args=[args.run_dbcan_path,os.path.basename(dbcan_targets)])
+    args=[args.dbcan_path,os.path.dirname(dbcan_targets)],
+    name="run_dbcan")
 
 # start the workflow
 workflow.go()
