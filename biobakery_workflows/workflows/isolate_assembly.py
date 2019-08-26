@@ -61,33 +61,43 @@ sample_names=utilities.sample_names(input_files,args.input_extension)
 input_pair1, input_pair2 = utilities.paired_files(input_files, args.input_extension, args.pair_identifier)
 paired = False
 if input_pair1:
-    qc_targets=utilities.name_files([sample_names[0]+".trimmed.1.fastq",sample_names[0]+".trimmed.2.fastq",sample_names[0]+".trimmed.single.1.fastq",sample_names[0]+".trimmed.single.2.fastq",sample_names[0]+".trimmed.single.12.fastq"], args.output, subfolder="kneaddata", create_folder=True)
+    sample_names=utilities.sample_names(input_pair1,args.input_extension,args.pair_identifier)
+    qc_targets=[utilities.name_files([name+".trimmed.1.fastq",name+".trimmed.2.fastq",name+".trimmed.single.1.fastq",name+".trimmed.single.2.fastq",name+".trimmed.single.12.fastq"], args.output, subfolder="kneaddata", create_folder=True) for name in sample_names]
     paired = True
-    workflow.add_task(
-        "kneaddata --run-fastqc-start --input [depends[0]] --input [depends[1]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] && cat [args[3]] [args[4]] > [targets[2]]",
-        depends=[input_pair1[0], input_pair2[0]],
-        targets=[qc_targets[0],qc_targets[1],qc_targets[4]],
-        args=[os.path.dirname(qc_targets[0]),args.threads,sample_names[0],qc_targets[2],qc_targets[3]])
+    for target_set,input_R1,input_R2,name in zip(qc_targets,input_pair1,input_pair2,sample_names):
+        workflow.add_task(
+            "kneaddata --run-fastqc-start --input [depends[0]] --input [depends[1]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] && cat [args[3]] [args[4]] > [targets[2]]",
+            depends=[input_R1, input_R2],
+            targets=[target_set[0],target_set[1],target_set[4]],
+            args=[os.path.dirname(target_set[0]),args.threads,name,target_set[2],target_set[3]])
 else:
-    qc_targets=[os.path.join(qc_folder, sample_names[0]+".fastq")]
-    workflow.add_task(
-        "kneaddata --run-fastqc-start --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]]",
-        depends=[input_pair1[0]],
-        targets=[qc_targets[0]],
-        args=[os.path.dirname(qc_targets[0]),args.threads,sample_names[0]])
+    qc_targets=utilities.name_files(sample_names, args.output, subfolder="kneaddata", create_folder=True, extension="trimmed.fastq")
+    for target_file,input_file,name in zip(qc_targets,input_files,sample_names):
+        workflow.add_task(
+            "kneaddata --run-fastqc-start --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]]",
+            depends=[input_file],
+            targets=[target_file],
+            args=[os.path.dirname(target_file),args.threads,name])
 
 ### STEP #2: Run assembly ###
+assembly_inputs = ""
+assembly_depends=[]
 assembly_targets = utilities.name_files("contigs.fasta", args.output, subfolder="spades", create_folder=True)
 if paired:
+    for i, inputs in enumerate(qc_targets):
+        assembly_inputs += "--pe{0}-1 {1} --pe{0}-2  {2} --pe{0}-s {3} ".format(i+1, inputs[0], inputs[1], inputs[4])
+        assembly_depends+=[inputs[0],inputs[1],inputs[4]]
     workflow.add_task(
-        "spades.py --pe1-1 [depends[0]] --pe1-2  [depends[1]] --pe1-s [depends[2]] --careful --cov-cutoff auto -o [args[0]] --threads [args[1]]",
-        depends=[qc_targets[0],qc_targets[1],qc_targets[4]],
+        "spades.py "+assembly_inputs+" --careful --cov-cutoff auto -o [args[0]] --threads [args[1]]",
+        depends=assembly_depends,
         targets=assembly_targets,
         args=[os.path.dirname(assembly_targets),args.threads])
 else:
+    for input_file in qc_targets:
+        assembly_inputs += "-s {0} ".format(input_file)
     workflow.add_task(
-        "spades.py -s [depends[0]] --careful --cov-cutoff auto -o [args[0]] --threads [args[1]]",
-        depends=qc_targets[0],
+        "spades.py "+assembly_inputs+" --careful --cov-cutoff auto -o [args[0]] --threads [args[1]]",
+        depends=qc_targets,
         targets=assembly_targets,
         args=[os.path.dirname(assembly_targets),args.threads])
 
