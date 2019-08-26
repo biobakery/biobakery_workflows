@@ -109,7 +109,7 @@ def parse_arguments(args):
     parser.add_argument(
         "--install",
         metavar="<workflow>",
-        choices=["wmgx","wmgx_demo","wmgx_wmtx","16s_usearch","16s_dada2","16s_its"],
+        choices=["wmgx","wmgx_demo","wmgx_wmtx","16s_usearch","16s_dada2","16s_its","isolate_assembly"],
         help="install the databases for the selected workflow\n")
     parser.add_argument(
         "--location", 
@@ -134,7 +134,8 @@ def main():
             "wmgx_wmtx: The full databases for the whole metagenome and metatranscriptome workflow\n"+
             "16s_usearch: The full databases for the 16s workflow\n" +
             "16s_dada2: The full databases for the dada2 workflow\n"+
-            "16s_its: The unite database for the its workflow")
+            "16s_its: The unite database for the its workflow\n"+
+            "isolate_assembly: The eggnog-mapper databases for the assembly workflow")
         sys.exit(0)
     
     # Check the install location
@@ -148,12 +149,14 @@ def main():
     try_create_folder(args.location)
     
     # check required dependencies are installed for wmgx installs
+    dependencies=[]
     if "wmgx" in args.install:
         dependencies=[("humann2_databases","HUMAnN2"),("kneaddata_database","Kneaddata"),
             ("strainphlan.py","StrainPhlAn"),("bowtie2-inspect","Bowtie2")]
-    else:
+    elif "usearch" in args.install:
         dependencies=[("usearch","usearch")]    
-    check_dependencies(dependencies)
+    if dependencies:
+        check_dependencies(dependencies)
         
     # install humann2 utility dbs for all shotgun workflows
     humann2_install_folder=os.path.join(args.location,"humann2")
@@ -224,6 +227,14 @@ def main():
         zip_ref = zipfile.ZipFile(os.path.join(args.location,config.SixteenS.vars["unite_zip"].default_path), 'r')
         zip_ref.extractall(os.path.join(args.location,config.SixteenS.vars["unite"].default_folder))
         zip_ref.close()
+
+    elif args.install == "isolate_assembly":
+        print("Downloading eggnog mapper databases")
+        eggnog_install_path = os.path.join(args.location, "eggnog_mapper/")
+        try_create_folder(eggnog_install_path)
+        run_command(["download_eggnog_data.py","--data_dir",eggnog_install_path,"-y"])
+        run_command(["ln","-s",eggnog_install_path+"/eggnog.db","/opt/conda/bin/data/"])
+        run_command(["ln","-s",eggnog_install_path+"/eggnog_proteins.dmnd","/opt/conda/bin/data/"])
 
     if "16s" in args.install:
         # install the picrust databases
