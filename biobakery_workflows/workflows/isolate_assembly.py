@@ -28,6 +28,7 @@ import os, fnmatch
 
 # import the workflow class from anadama2
 from anadama2 import Workflow
+from anadama2.tracked import TrackedExecutable
 
 # import the library of biobakery_workflow tasks for shotgun sequences
 from biobakery_workflows.tasks import shotgun, general
@@ -67,7 +68,7 @@ if input_pair1:
     for target_set,input_R1,input_R2,name in zip(qc_targets,input_pair1,input_pair2,sample_names):
         workflow.add_task(
             "kneaddata --run-fastqc-start --input [depends[0]] --input [depends[1]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] && cat [args[3]] [args[4]] > [targets[2]]",
-            depends=[input_R1, input_R2],
+            depends=[input_R1, input_R2, TrackedExecutable("kneaddata")],
             targets=[target_set[0],target_set[1],target_set[4]],
             args=[os.path.dirname(target_set[0]),args.threads,name,target_set[2],target_set[3]])
 else:
@@ -75,7 +76,7 @@ else:
     for target_file,input_file,name in zip(qc_targets,input_files,sample_names):
         workflow.add_task(
             "kneaddata --run-fastqc-start --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]]",
-            depends=[input_file],
+            depends=[input_file, TrackedExecutable("kneaddata")],
             targets=[target_file],
             args=[os.path.dirname(target_file),args.threads,name])
 
@@ -89,7 +90,7 @@ if paired:
         assembly_depends+=[inputs[0],inputs[1],inputs[4]]
     workflow.add_task(
         "spades.py "+assembly_inputs+" --careful --cov-cutoff auto -o [args[0]] --threads [args[1]]",
-        depends=assembly_depends,
+        depends=assembly_depends+[TrackedExecutable("spades.py")],
         targets=assembly_targets,
         args=[os.path.dirname(assembly_targets),args.threads])
 else:
@@ -97,7 +98,7 @@ else:
         assembly_inputs += "-s {0} ".format(input_file)
     workflow.add_task(
         "spades.py "+assembly_inputs+" --careful --cov-cutoff auto -o [args[0]] --threads [args[1]]",
-        depends=qc_targets,
+        depends=qc_targets+[TrackedExecutable("spades.py")],
         targets=assembly_targets,
         args=[os.path.dirname(assembly_targets),args.threads])
 
@@ -105,7 +106,7 @@ else:
 annotation_targets = utilities.name_files(args.species_name +".faa", args.output, subfolder="prokka")
 workflow.add_task(
     "prokka --outdir [args[0]] --prefix [args[1]] [depends[0]] --cpus [args[2]]",
-    depends=assembly_targets,
+    depends=[assembly_targets,TrackedExecutable("prokka")],
     targets=annotation_targets,
     args=[os.path.dirname(annotation_targets),args.species_name,args.threads])
 
@@ -116,7 +117,7 @@ if args.reference_database:
     optional_database = " -r " + args.reference_database
 workflow.add_task(
     "quast [depends[0]] --output-dir [args[0]] --threads [args[1]] "+optional_database+" > [targets[0]]",
-    depends=assembly_targets,
+    depends=[assembly_targets,TrackedExecutable("quast")],
     targets=quast_targets,
     args=[os.path.dirname(quast_targets), args.threads])
 
@@ -124,7 +125,7 @@ workflow.add_task(
 checkm_targets = utilities.name_files("checkm_stdout.log", args.output, subfolder="checkm", create_folder=True)
 workflow.add_task(
     "checkm lineage_wf [args[0]] [args[1]] > [targets[0]]",
-    depends=annotation_targets,
+    depends=[annotation_targets,TrackedExecutable("checkm",version_command="{}")],
     targets=checkm_targets,
     args=[os.path.dirname(annotation_targets), os.path.dirname(checkm_targets)])
 
@@ -132,7 +133,7 @@ workflow.add_task(
 functional_targets = utilities.name_files(["eggnog_mapper.log", "eggnog_mapper.emapper.annotations"], args.output, subfolder="eggnog_mapper", create_folder=True)
 workflow.add_task(
     "emapper.py -o [args[0]] --output_dir [args[1]] -i [depends[0]] -m diamond --cpu [args[2]] > [targets[0]]",
-    depends=annotation_targets,
+    depends=[annotation_targets,TrackedExecutable("emapper.py")],
     targets=functional_targets,
     args=[os.path.basename(functional_targets[0]).split(".")[0],os.path.dirname(functional_targets[0]),args.threads])
 
