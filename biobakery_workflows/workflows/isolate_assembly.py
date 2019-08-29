@@ -103,12 +103,12 @@ else:
         args=[os.path.dirname(assembly_targets),args.threads])
 
 ### STEP #3: Annotate assembly ###
-annotation_targets = utilities.name_files(args.species_name +".faa", args.output, subfolder="prokka")
+annotation_targets = utilities.name_files([args.species_name +".faa", args.species_name +".ffn"], args.output, subfolder="prokka")
 workflow.add_task(
     "prokka --outdir [args[0]] --prefix [args[1]] [depends[0]] --cpus [args[2]]",
     depends=[assembly_targets,TrackedExecutable("prokka")],
     targets=annotation_targets,
-    args=[os.path.dirname(annotation_targets),args.species_name,args.threads])
+    args=[os.path.dirname(annotation_targets[0]),args.species_name,args.threads])
 
 ### STEP #4: Run quality assessment with quast ###
 quast_targets = utilities.name_files("quast_stdout.txt", args.output, subfolder="quast", create_folder=True)
@@ -125,15 +125,15 @@ workflow.add_task(
 checkm_targets = utilities.name_files("checkm_stdout.log", args.output, subfolder="checkm", create_folder=True)
 workflow.add_task(
     "checkm lineage_wf [args[0]] [args[1]] > [targets[0]]",
-    depends=[annotation_targets,TrackedExecutable("checkm",version_command="{}")],
+    depends=[annotation_targets[0],TrackedExecutable("checkm",version_command="{}")],
     targets=checkm_targets,
-    args=[os.path.dirname(annotation_targets), os.path.dirname(checkm_targets)])
+    args=[os.path.dirname(annotation_targets[0]), os.path.dirname(checkm_targets)])
 
 ### STEP #6: Functional annotations with emapper ###
 functional_targets = utilities.name_files(["eggnog_mapper.log", "eggnog_mapper.emapper.annotations"], args.output, subfolder="eggnog_mapper", create_folder=True)
 workflow.add_task(
     "emapper.py -o [args[0]] --output_dir [args[1]] -i [depends[0]] -m diamond --cpu [args[2]] > [targets[0]]",
-    depends=[annotation_targets,TrackedExecutable("emapper.py")],
+    depends=[annotation_targets[0],TrackedExecutable("emapper.py")],
     targets=functional_targets,
     args=[os.path.basename(functional_targets[0]).split(".")[0],os.path.dirname(functional_targets[0]),args.threads])
 
@@ -141,10 +141,18 @@ workflow.add_task(
 dbcan_targets = utilities.name_files("overview.txt", args.output, subfolder="run_dbcan")
 workflow.add_task(
     "cd [args[0]] && python run_dbcan.py [depends[0]] protein --out_dir [args[1]]",
-    depends=annotation_targets,
+    depends=annotation_targets[0],
     targets=dbcan_targets,
     args=[args.dbcan_path,os.path.dirname(dbcan_targets)],
     name="run_dbcan")
+
+### STEP #8: Add functional annotations to genome files ###
+final_genomes = utilities.name_files([args.species_name +".faa", args.species_name +".ffn"], args.output, subfolder="annotated_genomes", create_folder=True)
+for annotation_file, genome_file in zip(annotation_targets, final_genomes):
+    workflow.add_task(
+        "annotate_genome.py --input-genome [depends[0]] --input-dbcan [depends[1]] --input-eggnog [depends[2]] --output [targets[0]]",
+        depends=[annotation_file,dbcan_targets,functional_targets[1]],
+        targets=genome_file)
 
 # start the workflow
 workflow.go()
