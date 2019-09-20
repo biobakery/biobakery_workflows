@@ -7,6 +7,8 @@ import argparse
 # This script will take any type of tab-delimited table and reformat it as a feature table
 # to be used as input for Maaslin2 and other downstream stats processing.
 
+STRATIFIED_DELIMITER = "|"
+
 def parse_arguments(args):
     """ 
     Parse the arguments from the user
@@ -27,6 +29,10 @@ def parse_arguments(args):
     parser.add_argument(
         "--sample-tag-columns",
         help="remove this string from the sample names in columns")
+    parser.add_argument(
+        "--remove-stratified",
+        help="remove stratified rows",
+        action="store_true")
 
     return parser.parse_args()
 
@@ -47,7 +53,12 @@ def main():
             for line in file_handle_read:
                 # ignore and do not write out commented lines
                 if not line.startswith("#"):
-                    file_handle_write.write(line)
+                    filter=False
+                    if args.remove_stratified and STRATIFIED_DELIMITER in line:
+                        filter=True
+
+                    if not filter:
+                        file_handle_write.write(line)
         
 if __name__ == "__main__":
     main()
