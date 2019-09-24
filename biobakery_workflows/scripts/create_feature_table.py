@@ -33,6 +33,10 @@ def parse_arguments(args):
         "--remove-stratified",
         help="remove stratified rows",
         action="store_true")
+    parser.add_argument(
+        "--reduce-stratified-species-only",
+        help="reduce stratified rows to just species",
+        action="store_true")
 
     return parser.parse_args()
 
@@ -56,6 +60,15 @@ def main():
                     filter=False
                     if args.remove_stratified and STRATIFIED_DELIMITER in line:
                         filter=True
+
+                    # only print out species, reducing taxonomy information to just genus and species
+                    if args.reduce_stratified_species_only:
+                        filter=True
+                        if "s__" in line and not "t__" in line:
+                            filter=False
+                            info = line.split("\t")
+                            taxon = info[0].split(STRATIFIED_DELIMITER)
+                            line = "\t".join([STRATIFIED_DELIMITER.join([taxon[-2],taxon[-1]])]+info[1:])
 
                     if not filter:
                         file_handle_write.write(line)
