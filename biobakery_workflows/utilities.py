@@ -41,6 +41,16 @@ except ImportError:
 MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 
+def find_data_file(data_files, type):
+    """ Return an error if the file of that type has not been found """
+
+    try:
+        file_name = data_files[type][0]
+    except KeyError:
+        sys.exit("ERROR: A required file of type "+type+" can not be found in the input folder")
+
+    return file_name
+
 def identify_data_files(folder):
     """ For all files in the folder and subfolders, return all tab delimited files with their data type 
 
