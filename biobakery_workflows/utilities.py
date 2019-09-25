@@ -38,6 +38,72 @@ try:
 except ImportError:
     from urllib import urlretrieve
 
+MIN_SAMPLES_DATA_FILE = 3
+TAXONOMY_DELIMITER = "|"
+
+def identify_data_files(folder):
+    """ For all files in the folder and subfolders, return all tab delimited files with their data type 
+
+        Args:
+            folder (string): The path to the main folder
+
+        Returns:
+            dict : A dictionary of data files organised by type 
+    """
+
+    # get all of the files of the tab delimited type
+    data_files = []
+    for root, dir, files in os.walk(folder):
+        for file_name in files:
+            if file_name.endswith(".tsv") or file_name.endswith(".txt"):
+                data_files.append(os.path.join(root,file_name))
+
+    # determine the type of each file
+    data_files_types = {}
+    for file in data_files:
+        with open(file) as file_handle:
+            file_type = None
+
+            # ignore all comment lines and header
+            header = file_handle.readline()
+            next_line = file_handle.readline()
+            while next_line.startswith("#"):
+                next_line = file_handle.readline()
+            header = next_line
+
+            # check this is a data file for at least a few samples
+            first_data_line = file_handle.readline()
+            data_info = first_data_line.split("\t")
+            if len(data_info) > MIN_SAMPLES_DATA_FILE + 1:
+                # remove stratification if present
+                if TAXONOMY_DELIMITER in data_info[0]:
+                    data_info[0]=data_info[0].split(TAXONOMY_DELIMITER)[0]                    
+
+                # check the first column for the data type
+                if "." in data_info[0] and data_info[0].replace(".","").isdigit():
+                    file_type = "wmgx_function_ec"
+                elif "pwy" in data_info[0].lower():         
+                    file_type = "wmgx_function_pathway"
+                elif "k__" in data_info[0] or "s__" in data_info[0]:         
+                    file_type = "wmgx_taxonomy"
+                elif data_info[0].startswith("K0"):
+                    file_type = "16s_function_gene"
+                elif data_info[0].startswith("ko"):
+                    file_type = "16s_function_pathway"
+                elif data_info[0].startswith("M0"):
+                    file_type = "16s_function_module"
+                elif data_info[0].isdigit() and data_info[-1].lower().startswith("k__"):
+                    file_type = "16s_taxonomy_otu"
+                elif data_info[0].isalpha() and data_info[-1].lower().startswith("k__"):
+                    file_type = "16s_taxonomy_asv"
+
+                if file_type:
+                    if not file_type in data_files_types:
+                        data_files_types[file_type]=[]
+                    data_files_types[file_type].append(file)
+
+    return data_files_types
+
 def get_package_file(basename, type="template"):
     """ Get the full path to a file included in the installed python package.
 
