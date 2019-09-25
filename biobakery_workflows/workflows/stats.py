@@ -49,9 +49,10 @@ workflow.add_argument("format",desc="the format for the report", default="pdf", 
 # get the arguments from the command line
 args = workflow.parse_args()
 
-# get the paths for the required files and check they are found
-taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input)
-pathabundance=files.ShotGun.path("pathabundance_relab",args.input)
+# get the paths for the required files from the set of all input files
+data_files=utilities.identify_data_files(args.input)
+taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
+pathabundance=utilities.find_data_file(data_files,"wmgx_function_pathway")
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
