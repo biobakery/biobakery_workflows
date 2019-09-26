@@ -904,7 +904,7 @@ def panphlan_profile(task,species_number,panphlan_db):
         utilities.run_task("touch [targets[0]]", targets=task.targets)
 
 
-def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan_db,max_species,strain_list):
+def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan_db,max_species):
     """Strain profile, gene-based for whole genome shotgun sequences
    
     This set of tasks performs strain profiling on whole genome shotgun
@@ -920,18 +920,12 @@ def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan
         threads (int): The number of threads/cores to use.
         panphlan_db (string): The folder containing the database files.
         max_species (int): The maximum number of species to profile.
-        strain_list (string): The path to a file with the list of strains to profile
     Requires:
         PanPhlAn: A tool for strain profiling.
 
     Returns:
         None
     """
-
-    # if a specific list of strains are provided use this instead of the strains selected by
-    # average abundance
-    if strain_list:
-        abundance_file=strain_list
 
     ### STEP #1: Run panphlan map on all of the samples for each of the top species
     out_files = workflow.name_output_files(name=qc_files, tag="panphlan_map", extension="csv.bz2")

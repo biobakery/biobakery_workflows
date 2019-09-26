@@ -161,10 +161,12 @@ if not args.bypass_strain_profiling:
 
 ### STEP #5: Run gene-based strain profiling (optional)
 if args.run_strain_gene_profiling:
-    if args.bypass_taxonomic_profiling:
+    if args.bypass_taxonomic_profiling and not args.strain_list:
         sys.exit("ERROR: Taxonomic profiling must be run to also run gene-based strain profiling")
+    if args.strain_list:
+        merged_taxonomic_profile=args.strain_list
     shotgun.strain_gene_profile(workflow,qc_output_files,merged_taxonomic_profile,args.output,args.threads,workflow_config.panphlan_db,
-    args.max_strains,args.strain_list)
+    args.max_strains)
 
 ### STEP #6: Run assembly and annotation
 if args.run_assembly:
