@@ -220,7 +220,7 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
          return error_ratesF_path, error_ratesR_path
      
 
-def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads):
+def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads, minoverlap):
     
         """ Dereplicates and merges paired reads
             
@@ -230,7 +230,8 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
                 filtered_dir (string): path to directory with filtered files
                 error_ratesF_path (string): path to rds file that contains error rates of forward reads
                 error_ratesR_path (string): path to rds file that contains error rates of reverse reads
-                threads (int): number fo threads
+                threads (int): number of threads
+                minoverlap (int): the min number of pairs for overlap for the merge step
 
             Requires:
                 dada2, tools r packages
@@ -249,10 +250,11 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
               --error_ratesF_path=[depends[0]]\
               --error_ratesR_path=[depends[1]]\
               --mergers_file_path=[targets[0]]\
-              --threads=[vars[1]]",
+              --threads=[vars[1]]\
+              --minoverlap=[args[2]]",
             depends = [error_ratesF_path, error_ratesR_path],
             targets = [mergers_file_path],                       
-            args = [output_dir, filtered_dir],
+            args = [output_dir, filtered_dir, minoverlap],
             vars = [script_path, threads],
             name = "dereplicate_and_merge"
             )
