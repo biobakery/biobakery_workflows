@@ -45,6 +45,8 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
+workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
+    default="The data was run through the standard stats workflow.")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -52,12 +54,21 @@ args = workflow.parse_args()
 # get the paths for the required files from the set of all input files
 data_files=utilities.identify_data_files(args.input)
 taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
-pathabundance=utilities.find_data_file(data_files,"wmgx_function_pathway")
+
+# get the paths for the optional files from the set of input files
+pathabundance=data_files.get("wmgx_function_pathway",[""])[0]
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
-pathabundance_feature=utilities.name_files("pathabundance_features.txt",args.output,subfolder="features",create_folder=True)
-for input_file, output_file, tag, options in [(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only"),(pathabundance,pathabundance_feature,"_Abundance","--remove-stratified")]:
+create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
+maaslin_tasks_info=[(taxon_feature,"maaslin2_taxa")]
+
+if pathabundance:
+    pathabundance_feature=utilities.name_files("pathabundance_features.txt",args.output,subfolder="features",create_folder=True)
+    create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
+    maaslin_tasks_info.append((pathabundance_feature,"maaslin2_pathways"))
+
+for input_file, output_file, tag, options in create_feature_table_tasks_info:
     workflow.add_task(
         "create_feature_table.py --input [depends[0]] --output [targets[0]] --sample-tag-column [args[0]] [args[1]]",
         depends=input_file,
@@ -65,29 +76,29 @@ for input_file, output_file, tag, options in [(taxonomic_profile,taxon_feature,"
         args=[tag,options])
 
 # run MaAsLiN2 on all input files
-maaslin_significant_outputs=[]
 maaslin_heatmaps=[]
-for maaslin_input_file, maaslin_output_folder in [(taxon_feature,"maaslin2_taxa"),(pathabundance_feature,"maaslin2_pathways")]:
+maaslin_tasks=[]
+for maaslin_input_file, maaslin_output_folder in maaslin_tasks_info:
     maaslin_output = utilities.name_files("significant_results.tsv", args.output, subfolder=maaslin_output_folder)
     maaslin_heatmaps.append(utilities.name_files("heatmap.pdf", args.output, subfolder=maaslin_output_folder))
-    maaslin_significant_outputs.append(maaslin_output)
-    workflow.add_task(
-        "R -e \"library('Maaslin2'); Maaslin2('[depends[0]]','[depends[1]]','[args[0]]')\"",
-        depends=[maaslin_input_file, args.input_metadata],
-        targets=maaslin_output,
-        args=os.path.dirname(maaslin_output))
+    maaslin_tasks.append(
+        workflow.add_task(
+            "R -e \"library('Maaslin2'); Maaslin2('[depends[0]]','[depends[1]]','[args[0]]')\"",
+            depends=[maaslin_input_file, args.input_metadata],
+            targets=maaslin_output,
+            args=os.path.dirname(maaslin_output)))
 
-templates=[utilities.get_package_file("taxonomy")]
+templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=maaslin_significant_outputs+[taxonomic_profile, pathabundance], 
+    depends=maaslin_tasks+[taxonomic_profile], 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Stats Report",
           "project":args.project_name,
+          "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
-          "dna_pathabundance":pathabundance,
           "format":args.format},
     table_of_contents=True)
 
