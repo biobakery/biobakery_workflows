@@ -44,6 +44,9 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
+workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
+workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
+workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard stats workflow.")
@@ -78,12 +81,21 @@ for input_file, output_file, tag, options in create_feature_table_tasks_info:
 # run MaAsLiN2 on all input files
 maaslin_heatmaps=[]
 maaslin_tasks=[]
+
+maaslin_optional_args=""
+if args.transform:
+    maaslin_optional_args+=",transform='"+args.transform+"'"
+if args.fixed_effects:
+    maaslin_optional_args+=",fixed_effects='"+args.fixed_effects+"'"
+if args.random_effects:
+    maaslin_optional_args+=",random_effects='"+args.random_effects+"'"
+
 for maaslin_input_file, maaslin_output_folder in maaslin_tasks_info:
     maaslin_output = utilities.name_files("significant_results.tsv", args.output, subfolder=maaslin_output_folder)
     maaslin_heatmaps.append(utilities.name_files("heatmap.pdf", args.output, subfolder=maaslin_output_folder))
     maaslin_tasks.append(
         workflow.add_task(
-            "R -e \"library('Maaslin2'); Maaslin2('[depends[0]]','[depends[1]]','[args[0]]')\"",
+            "R -e \"library('Maaslin2'); Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
             depends=[maaslin_input_file, args.input_metadata],
             targets=maaslin_output,
             args=os.path.dirname(maaslin_output)))
