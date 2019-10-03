@@ -67,8 +67,9 @@ def main():
                         if "s__" in line and not "t__" in line:
                             filter=False
                             info = line.split("\t")
-                            taxon = info[0].split(STRATIFIED_DELIMITER)
-                            line = "\t".join([STRATIFIED_DELIMITER.join([taxon[-2],taxon[-1]])]+info[1:])
+                            if STRATIFIED_DELIMITER in info[0]:
+                                taxon = info[0].split(STRATIFIED_DELIMITER)
+                                line = "\t".join([STRATIFIED_DELIMITER.join([taxon[-2],taxon[-1]])]+info[1:])
 
                     if not filter:
                         file_handle_write.write(line)
