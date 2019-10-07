@@ -111,6 +111,8 @@ doc_task=workflow.add_document(
           "project":args.project_name,
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
+          "output_folder":args.output,
+          "maaslin_tasks_info":maaslin_tasks_info,
           "format":args.format},
     table_of_contents=True)
 
