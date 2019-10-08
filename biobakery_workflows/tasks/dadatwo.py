@@ -119,7 +119,7 @@ def cutadapt_do(task):
         os.mkdir(cutadapt_folder)
 
     command="cutadapt -g "+FWD[0]+" -a "+REV[1]+" -G "+REV[0]+" -A "+FWD[1]+" -n 2 -o "+fwd_reads_out+\
-                       " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in
+                       " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in+" --minimum-length 10"
     
     #run task
     utilities.run_task(command, depends=task.depends, targets=task.targets)
