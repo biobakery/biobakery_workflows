@@ -95,7 +95,7 @@ for maaslin_input_file, maaslin_output_folder in maaslin_tasks_info:
     maaslin_heatmaps.append(utilities.name_files("heatmap.pdf", args.output, subfolder=maaslin_output_folder))
     maaslin_tasks.append(
         workflow.add_task(
-            "R -e \"library('Maaslin2'); Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
+            "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
             depends=[maaslin_input_file, args.input_metadata],
             targets=maaslin_output,
             args=os.path.dirname(maaslin_output)))
