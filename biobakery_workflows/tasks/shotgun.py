@@ -96,7 +96,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
 
     # get the output folder
     kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
-        
+
+    rename_final_output = ""        
     if paired:
         # reorder the input files so they are a set of paired files
         input_files=zip(input_files[0],input_files[1])
@@ -112,6 +113,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         # determine time/memory equations based on the single input file
         time_equation="2*6*60 if file_size('[depends[0]]') < 10 else 4*6*60"
         mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 5*12*1024"
+        # need to rename the final output file here to the sample name
+        rename_final_output = " && mv [args[3]] [targets[0]]"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -144,7 +147,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # rename file with repeats in name to only sample name
     for sample, depends, targets, intermediate_file in zip(sample_names, input_files, kneaddata_output_files, kneaddata_output_repeats_removed_fastq):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && mv [args[3]] [targets[0]]",
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output,
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets,
             args=[kneaddata_output_folder, threads, sample, intermediate_file],
