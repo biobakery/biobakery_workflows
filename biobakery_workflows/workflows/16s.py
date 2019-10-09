@@ -53,6 +53,7 @@ workflow.add_argument("bypass-primers-removal", desc="do not run remove primers 
 workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow")
 workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow")
 workflow.add_argument("minoverlap", desc="the min overlap required to merge pairs for the dada2 workflow", default=20)
+workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pairs for the dada2 workflow", default=0)
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
 
@@ -120,7 +121,7 @@ if args.method == "dada2" or args.method == "its":
     
     # merge pairs
     mergers_file_path = dadatwo.merge_paired_ends(
-            workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads, args.minoverlap)
+            workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads, args.minoverlap, args.maxmismatch)
 
     # construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
