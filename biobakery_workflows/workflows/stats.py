@@ -64,12 +64,12 @@ pathabundance=data_files.get("wmgx_function_pathway",[""])[0]
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
 create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
-maaslin_tasks_info=[(taxon_feature,"maaslin2_taxa")]
+maaslin_tasks_info=[(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")))]
 
 if pathabundance:
     pathabundance_feature=utilities.name_files("pathabundance_features.txt",args.output,subfolder="features",create_folder=True)
     create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
-    maaslin_tasks_info.append((pathabundance_feature,"maaslin2_pathways"))
+    maaslin_tasks_info.append((pathabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_pathways","figures"))))
 
 for input_file, output_file, tag, options in create_feature_table_tasks_info:
     workflow.add_task(
@@ -79,7 +79,6 @@ for input_file, output_file, tag, options in create_feature_table_tasks_info:
         args=[tag,options])
 
 # run MaAsLiN2 on all input files
-maaslin_heatmaps=[]
 maaslin_tasks=[]
 
 maaslin_optional_args=""
@@ -90,9 +89,8 @@ if args.fixed_effects:
 if args.random_effects:
     maaslin_optional_args+=",random_effects='"+args.random_effects+"'"
 
-for maaslin_input_file, maaslin_output_folder in maaslin_tasks_info:
-    maaslin_output = utilities.name_files("significant_results.tsv", args.output, subfolder=maaslin_output_folder)
-    maaslin_heatmaps.append(utilities.name_files("heatmap.pdf", args.output, subfolder=maaslin_output_folder))
+for maaslin_input_file, maaslin_heatmap in maaslin_tasks_info:
+    maaslin_output = utilities.name_files("significant_results.tsv", os.path.abspath(os.path.join(os.path.dirname(maaslin_heatmap),os.pardir)))
     maaslin_tasks.append(
         workflow.add_task(
             "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
@@ -111,7 +109,6 @@ doc_task=workflow.add_document(
           "project":args.project_name,
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
-          "output_folder":args.output,
           "maaslin_tasks_info":maaslin_tasks_info,
           "format":args.format},
     table_of_contents=True)
