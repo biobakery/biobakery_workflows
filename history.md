@@ -1,6 +1,13 @@
 
 # bioBakery workflows History #
 
+## v0.13.3 10-16-2019 ##
+
+* Change kneaddata tasks to work with latest version as to not overwrite final pairs output file.
+* Data2 workflow new options added: minoverlap and maxmismatch.
+* Require min length for cutadapt to prevent reads of zero length passed to dada2 tasks which will cause an error.
+* New option to allow wmgx workflow to just run panphlan.
+
 ## v0.13.2 08-12-2019 ##
 
 * Default kneaddata (QC tasks) no longer use the rRNA database for filtering
