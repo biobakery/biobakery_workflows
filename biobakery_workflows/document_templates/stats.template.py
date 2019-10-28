@@ -14,26 +14,21 @@ vars = document.get_vars()
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
-#' # Taxonomic Profiling of Metagenomic Reads
-
-#' This report section contains information about the taxonomy
-#' for all DNA samples. These samples were
-#' run through [MetaPhlAn2](http://huttenhower.sph.harvard.edu/metaphlan2).
-
 #+ echo=False
 
-# read in the taxonomy data
-samples, taxonomy, data = document.read_table(vars["taxonomic_profile"])
-
 # display the heatmap
-maaslin_taxonomy_output_folder = os.path.join(vars["output_folder"],vars["maaslin_tasks_info"][0][1],"figures")
-maaslin_taxonomy_heatmap = os.path.join(maaslin_taxonomy_output_folder,"heatmap.jpg")
+maaslin_taxonomy_heatmap = vars["maaslin_tasks_info"][0][1]
+maaslin_taxonomy_output_folder = os.path.dirname(maaslin_taxonomy_heatmap)
 
-#' ## MaAsLin2 Results
+#' # MaAsLin2 Results
 
 #' MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).
 
 #' See the log file for the exact MaAsLiN2 commands run to generate these outputs. Also please note these are just a subset of the outputs, check out the MaAsLin2 results folders for the complete set of output files.
+
+#' ## Taxonomic Profile
+
+#' This report section contains the results from running the taxonomic profile through MaAsLin2. 
 
 #' ### MaAsLin2 Heatmap
 #' <% if os.path.isfile(maaslin_taxonomy_heatmap): print("![Taxonomy heatmap]("+maaslin_taxonomy_heatmap+")\n") %>
@@ -47,12 +42,47 @@ maaslin_taxonomy_heatmap = os.path.join(maaslin_taxonomy_output_folder,"heatmap.
 
 #+ echo=False
 
-def show_maaslin_metadata_plots(figures_folder):
+def show_maaslin_metadata_plots(figures_folder, type):
     # show the top plot for each metadata
+    images_found = False
     for file_name in os.listdir(figures_folder):
         if file_name.endswith("_1.jpg"):
+            images_found = True
             metadata_name=file_name.replace("_1.jpg","")
-            print("![Most significant "+metadata_name+" association for taxonomy]("+os.path.join(figures_folder,file_name)+")\n")
+            print("![Most significant "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n")
+    if not images_found:
+        print("No significant associations.")
 
-#' <% show_maaslin_metadata_plots(maaslin_taxonomy_output_folder) %>
+#' <% show_maaslin_metadata_plots(maaslin_taxonomy_output_folder,"taxonomy") %>
+
+#+ echo=False
+
+# check for the pathways results
+if len(vars["maaslin_tasks_info"]) > 1:
+    maaslin_pathways_heatmap = vars["maaslin_tasks_info"][1][1]
+    maaslin_pathways_output_folder = os.path.dirname(vars["maaslin_tasks_info"][1][1])
+else:
+    maaslin_pathways_heatmap = ""
+    maaslin_pathways_output_folder = ""
+
+def display_pathways_heatmap(maaslin_pathways_heatmap):
+        if os.path.isfile(maaslin_pathways_heatmap):
+            print("![Pathways heatmap]("+maaslin_pathways_heatmap+")\n")
+        else:
+            print("No significant associations.")
+
+#' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
+
+#' <% if maaslin_pathways_output_folder: print("## Pathways\n") %>
+#' <% if maaslin_pathways_output_folder: print("This report section contains the results from running the pathways through MaAsLin2.\n") %>
+
+#' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Heatmap\n") %>
+#' <% if maaslin_pathways_output_folder: display_pathways_heatmap(maaslin_pathways_output_folder) %>
+
+#' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
+
+#' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Plots") %>
+#' <% if maaslin_pathways_output_folder: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
+
+#' <% show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
 
