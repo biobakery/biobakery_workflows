@@ -77,7 +77,7 @@ def display_pathways_heatmap(maaslin_pathways_heatmap):
 #' <% if maaslin_pathways_output_folder: print("This report section contains the results from running the pathways through MaAsLin2.\n") %>
 
 #' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Heatmap\n") %>
-#' <% if maaslin_pathways_output_folder: display_pathways_heatmap(maaslin_pathways_output_folder) %>
+#' <% if maaslin_pathways_output_folder: display_pathways_heatmap(maaslin_pathways_heatmap) %>
 
 #' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
 
