@@ -100,32 +100,12 @@ for maaslin_input_file, maaslin_heatmap, maaslin_results_table in maaslin_tasks_
             targets=maaslin_results_table,
             args=os.path.dirname(maaslin_results_table)))
 
-# gather the top N pathways to plot relative abundance (only run if pathways files are present)
-def run_humann2_barplot(task, number):
-    # determine the pathway name
-    with open(task.depends[0].name) as file_handle:
-        try:
-            selected_pathway = file_handle.readlines()[number].split("\t")[1]
-        except IndexError:
-            selected_pathway = None
-
-    if selected_pathway:
-        # only use pathway name and replace periods if present with dash
-        if not "-" in selected_pathway:
-            selected_pathway = "-".join(selected_pathway.split(".")[0:2])
-
-        utilities.run_task(
-            "humann2_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]]",
-            depends=task.depends,
-            targets=task.targets,
-            args=[selected_pathway])
-
 stratified_pathways_plots = []
 if pathabundance:
     for i in range(1,args.top_pathways+1):
         new_pathways_plot=utilities.name_files("stratified_pathways_{}.jpg".format(i), args.output, subfolder="stratified_pathways", create_folder=True)
         workflow.add_task(
-            utilities.partial_function(run_humann2_barplot, number=i),
+            utilities.partial_function(utilities.run_humann2_barplot, number=i),
             depends=[maaslin_tasks_info[1][2],pathabundance],
             targets=new_pathways_plot)
         stratified_pathways_plots.append(new_pathways_plot)
