@@ -48,6 +48,7 @@ workflow.add_argument("transform",desc="the transform to apply to the data with 
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
+workflow.add_argument("top-pathways",desc="the top N significant pathways to plot stratified abundance", default=3)
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard stats workflow.")
 
@@ -64,12 +65,14 @@ pathabundance=data_files.get("wmgx_function_pathway",[""])[0]
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
 create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
-maaslin_tasks_info=[(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")))]
+maaslin_tasks_info=[(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")),
+    utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_taxa"))]
 
 if pathabundance:
     pathabundance_feature=utilities.name_files("pathabundance_features.txt",args.output,subfolder="features",create_folder=True)
     create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
-    maaslin_tasks_info.append((pathabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_pathways","figures"))))
+    maaslin_tasks_info.append((pathabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_pathways","figures")),
+        utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_pathways")))
 
 for input_file, output_file, tag, options in create_feature_table_tasks_info:
     workflow.add_task(
@@ -89,14 +92,43 @@ if args.fixed_effects:
 if args.random_effects:
     maaslin_optional_args+=",random_effects='"+args.random_effects+"'"
 
-for maaslin_input_file, maaslin_heatmap in maaslin_tasks_info:
-    maaslin_output = utilities.name_files("significant_results.tsv", os.path.abspath(os.path.join(os.path.dirname(maaslin_heatmap),os.pardir)))
+for maaslin_input_file, maaslin_heatmap, maaslin_results_table in maaslin_tasks_info:
     maaslin_tasks.append(
         workflow.add_task(
             "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
             depends=[maaslin_input_file, args.input_metadata],
-            targets=maaslin_output,
-            args=os.path.dirname(maaslin_output)))
+            targets=maaslin_results_table,
+            args=os.path.dirname(maaslin_results_table)))
+
+# gather the top N pathways to plot relative abundance (only run if pathways files are present)
+def run_humann2_barplot(task, number):
+    # determine the pathway name
+    with open(task.depends[0].name) as file_handle:
+        try:
+            selected_pathway = file_handle.readlines()[number].split("\t")[1]
+        except IndexError:
+            selected_pathway = None
+
+    if selected_pathway:
+        # only use pathway name and replace periods if present with dash
+        if not "-" in selected_pathway:
+            selected_pathway = "-".join(selected_pathway.split(".")[0:2])
+
+        utilities.run_task(
+            "humann2_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]]",
+            depends=task.depends,
+            targets=task.targets,
+            args=[selected_pathway])
+
+stratified_pathways_plots = []
+if pathabundance:
+    for i in range(1,args.top_pathways+1):
+        new_pathways_plot=utilities.name_files("stratified_pathways_{}.jpg".format(i), args.output, subfolder="stratified_pathways", create_folder=True)
+        workflow.add_task(
+            utilities.partial_function(run_humann2_barplot, number=i),
+            depends=[maaslin_tasks_info[1][2],pathabundance],
+            targets=new_pathways_plot)
+        stratified_pathways_plots.append(new_pathways_plot)
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 
@@ -110,6 +142,7 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
           "maaslin_tasks_info":maaslin_tasks_info,
+          "stratified_pathways_plots":stratified_pathways_plots,
           "format":args.format},
     table_of_contents=True)
 
