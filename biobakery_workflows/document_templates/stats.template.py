@@ -86,3 +86,24 @@ def display_pathways_heatmap(maaslin_pathways_heatmap):
 
 #' <% show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
 
+#+ echo=False
+
+# check for stratified pathways results
+filtered_stratified_pathways_plots=[]
+for plot_file in vars["stratified_pathways_plots"]:
+    if os.path.isfile(plot_file):
+        filtered_stratified_pathways_plots.append(plot_file)
+
+def show_stratified_plots(plots):
+    # Display each of the plots in the report
+    for i, jpg_file in enumerate(plots):
+        print("![Pathway #{0} sorted by significance from most to least]({1})\n".format(i+1, jpg_file))
+
+#' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
+
+#' <% if filtered_stratified_pathways_plots: print("# Stratified Pathways Plots") %>
+
+#' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN2 named humann2_barplot.") %>
+
+#' <% show_stratified_plots(filtered_stratified_pathways_plots) %>
+
