@@ -37,6 +37,10 @@ def parse_arguments(args):
         "--reduce-stratified-species-only",
         help="reduce stratified rows to just species",
         action="store_true")
+    parser.add_argument(
+        "--max-length-feature-name",
+        help="the max length for each feature name",
+        default=65)
 
     return parser.parse_args()
 
@@ -70,6 +74,12 @@ def main():
                             if STRATIFIED_DELIMITER in info[0]:
                                 taxon = info[0].split(STRATIFIED_DELIMITER)
                                 line = "\t".join([STRATIFIED_DELIMITER.join([taxon[-2],taxon[-1]])]+info[1:])
+
+                    # if max length for feature name set then reduce if needed
+                    info = line.split("\t")
+                    if args.max_length_feature_name and len(info[0]) > args.max_length_feature_name:
+                        info[0]=info[0][0:args.max_length_feature_name+1]+"..."
+                        line="\t".join(info)
 
                     if not filter:
                         file_handle_write.write(line)
