@@ -96,8 +96,12 @@ for plot_file in vars["stratified_pathways_plots"]:
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
-    for i, jpg_file in enumerate(plots):
-        print("![Pathway #{0} sorted by significance from most to least]({1})\n".format(i+1, jpg_file))
+    for jpg_file in sorted(plots):
+        # get the pathway number and metadata name
+        info = jpg_file.replace(".jpg","").split("_")
+        pathway_number = info[-1]
+        metadata_focus = info[-2]
+        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n".format(pathway_number, metadata_focus, jpg_file))
 
 #' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
 
