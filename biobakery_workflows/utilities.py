@@ -40,26 +40,50 @@ except ImportError:
 
 MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
+MAX_METADATA_CATEGORIES = 10
+
+# create a merged metadata table to be used as input for humann2_barplot
+def create_merged_data_file(task, metadata):
+    # read in the pathabundance file
+    data = []
+    with open(task.depends[0].name) as file_handle:
+        samples = file_handle.readline().rstrip().split("\t")[1:]
+        for line in file_handle:
+            line=line.rstrip().split("\t")
+            data.append(line)    
+
+    merged_data, metadata_samples=merge_metadata(metadata, samples, data)
+
+    with open(task.targets[0].name, "w") as file_handle:
+        header = "\t".join(["Feature"]+metadata_samples)+"\n"
+        file_handle.write(header)
+        for line in merged_data:
+            file_handle.write("\t".join(line)+"\n")
+
 
 # gather the top N pathways to plot relative abundance (only run if pathways files are present)
-def run_humann2_barplot(task, number):
+def run_humann2_barplot(task, number, metadata_end, metadata_focus):
     # determine the pathway name
     with open(task.depends[0].name) as file_handle:
         try:
-            selected_pathway = file_handle.readlines()[number].split("\t")[1]
+            original_selected_pathway = file_handle.readlines()[number].split("\t")[1]
         except IndexError:
-            selected_pathway = None
+            original_selected_pathway = None
 
-    if selected_pathway:
+    if original_selected_pathway:
         # only use pathway name and replace periods if present with dash
+        selected_pathway = original_selected_pathway
         if not "-" in selected_pathway:
-            selected_pathway = "-".join(selected_pathway.split(".")[0:2])
+            selected_pathway = "-".join(original_selected_pathway.split(".")[0:2])
+
+        if not "pwy" in selected_pathway.lower():
+            selected_pathway = "-".join(original_selected_pathway.split(".")[0:3])
 
         run_task(
-            "humann2_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]]",
+            "humann2_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]]",
             depends=task.depends,
             targets=task.targets,
-            args=[selected_pathway])
+            args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
 
 def find_data_file(data_files, type):
     """ Return an error if the file of that type has not been found """
