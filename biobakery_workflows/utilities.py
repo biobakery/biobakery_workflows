@@ -134,7 +134,7 @@ def identify_data_files(folder):
                     data_info[0]=data_info[0].split(TAXONOMY_DELIMITER)[0]                    
 
                 # check the first column for the data type
-                if "." in data_info[0] and data_info[0].replace(".","").isdigit():
+                if "." in data_info[0] and data_info[0].split(":")[0].replace(".","").isdigit():
                     file_type = "wmgx_function_ec"
                 elif "pwy" in data_info[0].lower():         
                     file_type = "wmgx_function_pathway"
