@@ -66,18 +66,25 @@ taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
 
 # get the paths for the optional files from the set of input files
 pathabundance=data_files.get("wmgx_function_pathway",[""])[0]
+ecabundance=data_files.get("wmgx_function_ec",[""])[0]
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
 create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
-maaslin_tasks_info=[(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")),
-    utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_taxa"))]
+maaslin_tasks_info={"taxonomy":(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")),
+    utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_taxa"))}
 
 if pathabundance:
     pathabundance_feature=utilities.name_files("pathabundance_features.txt",args.output,subfolder="features",create_folder=True)
     create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
-    maaslin_tasks_info.append((pathabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_pathways","figures")),
-        utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_pathways")))
+    maaslin_tasks_info["pathways"]=(pathabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_pathways","figures")),
+        utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_pathways"))
+
+if ecabundance:
+    ecabundance_feature=utilities.name_files("ecabundance_features.txt",args.output,subfolder="features",create_folder=True)
+    create_feature_table_tasks_info.append((ecabundance,ecabundance_feature,"_Abundance-RPKs","--remove-stratified"))
+    maaslin_tasks_info["ecs"]=(ecabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_ecs","figures")),
+        utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_ecs"))
 
 for input_file, output_file, tag, options in create_feature_table_tasks_info:
     workflow.add_task(
@@ -97,13 +104,14 @@ if args.fixed_effects:
 if args.random_effects:
     maaslin_optional_args+=",random_effects='"+args.random_effects+"'"
 
-for maaslin_input_file, maaslin_heatmap, maaslin_results_table in maaslin_tasks_info:
+for run_type, (maaslin_input_file, maaslin_heatmap, maaslin_results_table) in maaslin_tasks_info.items():
     maaslin_tasks.append(
         workflow.add_task(
             "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
             depends=[maaslin_input_file, args.input_metadata],
             targets=maaslin_results_table,
-            args=os.path.dirname(maaslin_results_table)))
+            args=os.path.dirname(maaslin_results_table),
+            name="R_Maaslin2_{}".format(run_type)))
 
 stratified_pathways_plots = []
 stratified_plots_tasks = []
@@ -137,7 +145,7 @@ if pathabundance:
             new_pathways_plot=utilities.name_files("stratified_pathways_{0}_{1}.jpg".format(metadata_focus,i), args.output, subfolder="stratified_pathways")
             stratified_plots_tasks.append(workflow.add_task(
                 utilities.partial_function(utilities.run_humann2_barplot, number=i, metadata_end=metadata_end, metadata_focus=metadata_focus),
-                depends=[maaslin_tasks_info[1][2],humann2_barplot_input],
+                depends=[maaslin_tasks_info["pathways"][2],humann2_barplot_input],
                 targets=new_pathways_plot,
                 name="run_humann2_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
             stratified_pathways_plots.append(new_pathways_plot)
