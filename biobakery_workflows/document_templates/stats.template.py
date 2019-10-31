@@ -17,7 +17,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 #+ echo=False
 
 # display the heatmap
-maaslin_taxonomy_heatmap = vars["maaslin_tasks_info"][0][1]
+maaslin_taxonomy_heatmap = vars["maaslin_tasks_info"]["taxonomy"][1]
 maaslin_taxonomy_output_folder = os.path.dirname(maaslin_taxonomy_heatmap)
 
 #' # MaAsLin2 Results
@@ -57,19 +57,24 @@ def show_maaslin_metadata_plots(figures_folder, type):
 
 #+ echo=False
 
-# check for the pathways results
-if len(vars["maaslin_tasks_info"]) > 1:
-    maaslin_pathways_heatmap = vars["maaslin_tasks_info"][1][1]
-    maaslin_pathways_output_folder = os.path.dirname(vars["maaslin_tasks_info"][1][1])
-else:
-    maaslin_pathways_heatmap = ""
-    maaslin_pathways_output_folder = ""
+# check for the pathways/ecs results
+def check_for_masslin_runs(run_type):
+    if run_type in vars["maaslin_tasks_info"]:
+        heatmap_file = vars["maaslin_tasks_info"][run_type][1]
+        output_folder = os.path.dirname(vars["maaslin_tasks_info"][run_type][1])
+    else:
+        heatmap_file = ""
+        output_folder = ""
 
-def display_pathways_heatmap(maaslin_pathways_heatmap):
-        if os.path.isfile(maaslin_pathways_heatmap):
-            print("![Pathways heatmap]("+maaslin_pathways_heatmap+")\n")
+    return heatmap_file, output_folder
+
+def display_maaslin_heatmap(maaslin_heatmap, run_type):
+        if os.path.isfile(maaslin_heatmap):
+            print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
         else:
             print("No significant associations.")
+
+maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_masslin_runs("pathways")
 
 #' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
 
@@ -77,14 +82,31 @@ def display_pathways_heatmap(maaslin_pathways_heatmap):
 #' <% if maaslin_pathways_output_folder: print("This report section contains the results from running the pathways through MaAsLin2.\n") %>
 
 #' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Heatmap\n") %>
-#' <% if maaslin_pathways_output_folder: display_pathways_heatmap(maaslin_pathways_heatmap) %>
+#' <% if maaslin_pathways_output_folder: display_maaslin_heatmap(maaslin_pathways_heatmap, "Pathways") %>
 
 #' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
 
 #' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Plots") %>
 #' <% if maaslin_pathways_output_folder: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
 
-#' <% show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
+#' <% if maaslin_pathways_output_folder: show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
+
+maaslin_ecs_heatmap, maaslin_ecs_output_folder = check_for_masslin_runs("ecs")
+
+#' <% if maaslin_ecs_output_folder and pdf_format: print("\clearpage") %>
+
+#' <% if maaslin_ecs_output_folder: print("## ECs\n") %>
+#' <% if maaslin_ecs_output_folder: print("This report section contains the results from running the ECs through MaAsLin2.\n") %>
+
+#' <% if maaslin_ecs_output_folder: print("### MaAsLin2 Heatmap\n") %>
+#' <% if maaslin_ecs_output_folder: display_maaslin_heatmap(maaslin_ecs_heatmap, "ECs") %>
+
+#' <% if maaslin_ecs_output_folder and pdf_format: print("\clearpage") %>
+
+#' <% if maaslin_ecs_output_folder: print("### MaAsLin2 Plots") %>
+#' <% if maaslin_ecs_output_folder: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
+
+#' <% if maaslin_ecs_output_folder: show_maaslin_metadata_plots(maaslin_ecs_output_folder,"ecs") %>
 
 #+ echo=False
 
