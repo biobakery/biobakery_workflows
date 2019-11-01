@@ -114,7 +114,7 @@ def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, o
                 otu_table[full_id] = hits
             else:
                 # add the current hits to those already recorded
-                otu_table[full_id] = map(add, otu_table[full_id], hits)
+                otu_table[full_id] = list(map(add, otu_table[full_id], hits))
 
     # write the two output files
     with catch_open(out_tsv, write=True) as file_handle:
@@ -123,7 +123,7 @@ def create_otu_table(taxonomy_file, samples, denovo_otu_table, green_genes_uc, o
             file_handle.write(header)
             filtered_file_handle.write(header)
             for (taxonomy_id, taxonomy_name), hits in otu_table.items():
-                output_line="\t".join([taxonomy_id]+map(str, hits)+[taxonomy_name])+"\n"
+                output_line="\t".join([taxonomy_id]+list(map(str, hits))+[taxonomy_name])+"\n"
                 file_handle.write(output_line)
                 # do not write unclassified output to filtered file
                 if not taxonomy_name == UNNAMED_TAXONOMY:
@@ -194,10 +194,10 @@ def write_denovo_otu_table(nonchimera_uc_mapping, output_file):
     denovo_otu_table={}
     with catch_open(output_file, write=True) as file_handle:
         # write the header
-        file_handle.write("\t".join(["# OTU"]+map(str,sample_list))+"\n")
+        file_handle.write("\t".join(["# OTU"]+list(map(str,sample_list)))+"\n")
         for otu, hits_to_otu in table.items():
             hits_by_sample = [hits_to_otu.get(sample, 0) for sample in sample_list]
-            file_handle.write("\t".join([otu]+map(str,hits_by_sample))+"\n")
+            file_handle.write("\t".join([otu]+list(map(str,hits_by_sample)))+"\n")
             denovo_otu_table[otu]=hits_by_sample
             
     return sample_list, denovo_otu_table, queries_to_otus
