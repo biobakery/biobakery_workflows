@@ -131,7 +131,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     elif isinstance(databases,list):
         # start the string with the kneaddata option and add an option for each database
         optional_arguments=" --reference-db "+" --reference-db ".join(databases)
-    elif isinstance(databases,basestring) and "," in databases:
+    elif isinstance(databases,str) and "," in databases:
         # split the paths by comma
         database_list=list(filter(lambda x: x, databases.split(",")))
         # start the string with the kneaddata option and add an option for each database
