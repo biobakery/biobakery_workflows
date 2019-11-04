@@ -707,7 +707,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         if not os.path.isfile(marker_file):
             # get the pkl file relative to the strainphlan install
             try:
-                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"db_v20","mpa_v20_m200.pkl")
+                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"metaphlan_databases","mpa_v20_m200.pkl")
             except subprocess.CalledProcessError:
                 raise EnvironmentError("Unable to find strainphlan install.")
             
