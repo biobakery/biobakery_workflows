@@ -131,7 +131,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     elif isinstance(databases,list):
         # start the string with the kneaddata option and add an option for each database
         optional_arguments=" --reference-db "+" --reference-db ".join(databases)
-    elif isinstance(databases,basestring) and "," in databases:
+    elif isinstance(databases,str) and "," in databases:
         # split the paths by comma
         database_list=list(filter(lambda x: x, databases.split(",")))
         # start the string with the kneaddata option and add an option for each database
@@ -707,7 +707,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         if not os.path.isfile(marker_file):
             # get the pkl file relative to the strainphlan install
             try:
-                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"db_v20","mpa_v20_m200.pkl")
+                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"metaphlan_databases","mpa_v20_m200.pkl")
             except subprocess.CalledProcessError:
                 raise EnvironmentError("Unable to find strainphlan install.")
             

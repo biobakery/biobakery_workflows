@@ -75,7 +75,7 @@ def run_workflow(args, workflow):
     """ Run the workflow with the arguments provided """
     
     try:
-	command = [workflow]+args[2:]
+        command = [workflow]+args[2:]
         subprocess.call(command)
     except ( subprocess.CalledProcessError, EnvironmentError):
         sys.exit("Error: Unable to run workflow: " +" ".join(command))

@@ -568,7 +568,7 @@ def taxonomic_profile(workflow, method, filtered_fasta_file, truncated_fasta_fil
         centroid_alignment(workflow, closed_ref_fasta, centroid_closed_fasta, threads, task_name="clustalo_closed_reference")
         create_tree(workflow, centroid_closed_fasta, closed_tree)    
 
-    return closed_reference_tsv
+    return closed_reference_tsv, closed_ref_fasta
 
 def centroid_alignment(workflow, fasta_file, output_fasta, threads, task_name=None):
     """ Run clustalo for centroid alignment
@@ -710,17 +710,53 @@ def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_ma
     
     return closed_ref_tsv, closed_ref_fasta
 
+def run_picrust2(task, threads, otus=False):
+    """ Run picrust2, first changing sequence ids to avoid all numeric (as per picrust2 tutorial) """
 
-def functional_profile(workflow, closed_reference_tsv, output_folder):
+    picrust2_input_dir = os.path.dirname(task.depends[0].name)
+    picrust2_output_dir = os.path.dirname(task.targets[0].name)
+
+    if otus:
+        reformat_input_fasta = utilities.name_files(task.depends[0].name, picrust2_input_dir, tag="picrust_reformatted_input", create_folder=True)
+        reformat_input_tsv = utilities.name_files(task.depends[1].name, picrust2_input_dir, tag="picrust_reformatted_input")
+
+        with open(task.depends[0].name) as file_handle:
+            with open(reformat_input_fasta, "w") as file_handle_write:
+                for line in file_handle:
+                    if line.startswith(">"):
+                        line=line.replace(">",">seq")
+                    file_handle_write.write(line)
+
+        with open(task.depends[1].name) as file_handle:
+            with open(reformat_input_tsv, "w") as file_handle_write:
+                header = file_handle.readline()
+                file_handle_write.write(header)
+                for line in file_handle:
+                    file_handle_write.write("seq"+line)
+    else:
+        reformat_input_fasta = task.depends[0].name
+        reformat_input_tsv = task.depends[1].name
+
+    utilities.run_task("remove_if_exists.py [args[0]] --is-folder ; picrust2_pipeline.py -s [args[1]] -i [args[2]] -o [args[0]] -p [args[3]]",
+        depends=task.depends,
+        targets=task.depends,
+        args=[picrust2_output_dir, reformat_input_fasta, reformat_input_tsv, threads])
+
+
+def functional_profile(workflow, closed_reference_tsv, closed_reference_fasta, picrust_version, threads, output_folder, otus):
     """ Run picrust for functional profiling
     
     Args:
         workflow (anadama2.workflow): An instance of the workflow class.
         closed_reference_tsv (string): The path to the closed reference tsv file.
+        closed_reference_fasta (string): The path to the closed reference fasta file.
+        picrust_version (str): The version of picrust to use.
+        threads (int): The number of threads/cores for each task.
         output_folder (string): The path of the output folder.
+        otus (bool): Are the inputs from OTUs (so all numerical ids).
         
     Requires:
-        Picrust v1.1: Software to predict metagenome function.
+        Picrust v1.1 or v2: Software to predict metagenome function.
         Biom v2: A tool for general use formatting of biological data.
         
     Returns:
@@ -728,24 +764,34 @@ def functional_profile(workflow, closed_reference_tsv, output_folder):
 
     """
     
-    # convert the tsv file to biom format
-    closed_reference_biom_file = utilities.name_files(closed_reference_tsv,output_folder,extension="biom")
-    convert_to_biom_from_tsv(workflow,closed_reference_tsv,closed_reference_biom_file,options="--process-obs-metadata=taxonomy --output-metadata-id=taxonomy")
+    if picrust_version == "1":
+        # convert the tsv file to biom format
+        closed_reference_biom_file = utilities.name_files(closed_reference_tsv,output_folder,extension="biom")
+        convert_to_biom_from_tsv(workflow,closed_reference_tsv,closed_reference_biom_file,options="--process-obs-metadata=taxonomy --output-metadata-id=taxonomy")
 
-    # run picrust to get functional data
-    functional_data_categorized_biom, functional_data_predicted_biom = picrust(workflow, closed_reference_biom_file,
-                                                                               output_folder)
+        # run picrust to get functional data
+        functional_data_categorized_biom, functional_data_predicted_biom = picrust(workflow, closed_reference_biom_file,
+                                                                                   output_folder)
 
-    # convert the predited biom file to tsv
-    functional_data_predicted_tsv = utilities.name_files(functional_data_predicted_biom, output_folder, extension="tsv")
-    convert_from_biom_to_tsv(workflow, functional_data_predicted_biom, functional_data_predicted_tsv)
+        # convert the predited biom file to tsv
+        functional_data_predicted_tsv = utilities.name_files(functional_data_predicted_biom, output_folder, extension="tsv")
+        convert_from_biom_to_tsv(workflow, functional_data_predicted_biom, functional_data_predicted_tsv)
 
-    # convert the categorized biom file to tsv
-    functional_data_categorized_tsv = utilities.name_files(functional_data_categorized_biom, output_folder,
+        # convert the categorized biom file to tsv
+        functional_data_categorized_tsv = utilities.name_files(functional_data_categorized_biom, output_folder,
                                                            extension="tsv")
-    convert_from_biom_to_tsv(workflow, functional_data_categorized_biom, functional_data_categorized_tsv)
+        convert_from_biom_to_tsv(workflow, functional_data_categorized_biom, functional_data_categorized_tsv)
 
-    return functional_data_categorized_tsv
+        return functional_data_categorized_tsv
+
+    else:
+        # run the v2 pipeline
+        functional_data_predicted_tre = utilities.name_files("out.tre", output_folder, subfolder="picrust2")
+        workflow.add_task(
+            utilities.partial_function(run_picrust2,threads=threads,otus=otus),
+            depends=[closed_reference_fasta, closed_reference_tsv],
+            targets=functional_data_predicted_tre)
+        return functional_data_predicted_tre
 
 def picrust(workflow,otu_table_biom,output_folder):
     """ Runs picrust normalize, then predict

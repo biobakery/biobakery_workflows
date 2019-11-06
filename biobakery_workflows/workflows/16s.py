@@ -56,6 +56,7 @@ workflow.add_argument("minoverlap", desc="the min overlap required to merge pair
 workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pairs for the dada2 workflow", default=0)
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
+workflow.add_argument("picrust-version", desc="the picrust version to use", default="1")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -140,7 +141,13 @@ if args.method == "dada2" or args.method == "its":
     closed_reference_tsv = dadatwo.assign_taxonomy(
             workflow, args.output, seqtab_file_path, args.dada_db, args.threads)
     
-    # dadatwo.remove_tmp_files(workflow, args.output, closed_reference_tsv, msa_fasta_path, fasttree_path)
+    # functional profiling
+    # check for picrust1 as not an option with this workflow
+    if args.picrust_version == "1":
+        print("WARNING: PICRUSt v1 is not compatible with ASV tables so will not be run for this workflow.")
+    else:
+        categorized_function = sixteen_s.functional_profile(workflow, closed_reference_tsv, seqs_fasta_path, 
+                args.picrust_version, args.threads, args.output, otus=False)
 
 else:
     # call vsearch or usearch workflow tasks
@@ -153,13 +160,14 @@ else:
             workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
 
     # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
-    closed_reference_tsv = sixteen_s.taxonomic_profile(
+    closed_reference_tsv, closed_ref_fasta = sixteen_s.taxonomic_profile(
             workflow, args.method, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output,
             args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
             workflow_config.greengenes_taxonomy, args.min_size, args.bypass_msa)
 
     # functional profiling
-    categorized_function_tsv = sixteen_s.functional_profile(workflow, closed_reference_tsv, args.output)
+    categorized_function = sixteen_s.functional_profile(workflow, closed_reference_tsv, closed_ref_fasta, 
+            args.picrust_version, args.threads, args.output, otus=True)
 
 
 # start the workflow
