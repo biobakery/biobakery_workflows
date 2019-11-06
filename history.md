@@ -1,6 +1,12 @@
 
 # bioBakery workflows History #
 
+## v0.13.4 11-07-2019 ##
+
+* Add PICRUSt v2 option (now also included as a task for the dada2 method).
+* Update 16s workflow for python3 compatibility.
+* Modify extract_markers.py strainphlan task to use new folder naming convention (to work with latest metaphlan2/strainphlan packages).
+
 ## v0.13.3 10-16-2019 ##
 
 * Change kneaddata tasks to work with latest version as to not overwrite final pairs output file.
