@@ -554,7 +554,7 @@ def sample_names(files,extension,pair_identifier=None):
     
     # if files is a string, convert to a list
     convert=False
-    if isinstance(files,basestring):
+    if isinstance(files,str):
         files=[files]
         convert=True
         
@@ -628,7 +628,7 @@ def name_files(names, folder, subfolder=None, tag=None, extension=None, create_f
     
     # if names is a list, convert to string
     was_string=False
-    if isinstance(names, basestring):
+    if isinstance(names, str):
         was_string=True
         names=[names]
     
