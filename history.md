@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v0.13.5 11-08-2019 ##
+
+* Remove the taxonomy from the picrust2 input file to resolve the int/str error.
+
 ## v0.13.4 11-07-2019 ##
 
 * Add PICRUSt v2 option (now also included as a task for the dada2 method).
