@@ -718,24 +718,25 @@ def run_picrust2(task, threads, otus=False):
 
     if otus:
         reformat_input_fasta = utilities.name_files(task.depends[0].name, picrust2_input_dir, tag="picrust_reformatted_input", create_folder=True)
-        reformat_input_tsv = utilities.name_files(task.depends[1].name, picrust2_input_dir, tag="picrust_reformatted_input")
-
         with open(task.depends[0].name) as file_handle:
             with open(reformat_input_fasta, "w") as file_handle_write:
                 for line in file_handle:
                     if line.startswith(">"):
                         line=line.replace(">",">seq")
                     file_handle_write.write(line)
-
-        with open(task.depends[1].name) as file_handle:
-            with open(reformat_input_tsv, "w") as file_handle_write:
-                header = file_handle.readline()
-                file_handle_write.write(header)
-                for line in file_handle:
-                    file_handle_write.write("seq"+line)
     else:
         reformat_input_fasta = task.depends[0].name
-        reformat_input_tsv = task.depends[1].name
+
+    reformat_input_tsv = utilities.name_files(task.depends[1].name, picrust2_input_dir, tag="picrust_reformatted_input")
+    with open(task.depends[1].name) as file_handle:
+        with open(reformat_input_tsv, "w") as file_handle_write:
+            header = file_handle.readline()
+            file_handle_write.write(header)
+            for line in file_handle:
+                if otus:
+                    line="seq"+line
+                line="\t".join(line.split("\t")[:-1])+"\n"
+                file_handle_write.write(line)
 
     utilities.run_task("remove_if_exists.py [args[0]] --is-folder ; picrust2_pipeline.py -s [args[1]] -i [args[2]] -o [args[0]] -p [args[3]]",
         depends=task.depends,
