@@ -42,7 +42,7 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 
 # add the custom arguments to the workflow
 workflow_config = config.ShotGun()
-workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz"])
+workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz","fastq.bz2","fq.bz2"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("dual-barcode-file", desc="the string to identify the dual barcode file", default="")
 workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
@@ -81,6 +81,8 @@ input_files = list(filter(lambda file: not file in index_files, input_files))
 
 # if a dual index file is provided, then demultiplex dual indexing
 if args.dual_barcode_file:
+    if ".bz2" in args.input_extension:
+        sys.exit("ERROR: Bz2 formatted files are not supported with demultiplexing")
     barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*.fastq*')
     barcode_files = [os.path.join(args.input,file) for file in barcode_files]
     input_files = list(filter(lambda file: not file in barcode_files, input_files))
@@ -93,6 +95,8 @@ if args.dual_barcode_file:
 
 # if a barcode file is provided, then demultiplex
 elif args.barcode_file:
+    if ".bz2" in args.input_extension:
+        sys.exit("ERROR: Bz2 formatted files are not supported with demultiplexing")
     demultiplexed_files, demultiplex_output_folder=general.demultiplex(
             workflow, input_files, args.input_extension, args.output, args.barcode_file, index_files,
             args.min_pred_qc_score, args.pair_identifier)
@@ -116,6 +120,7 @@ elif not "fasta" in args.input_extension:
         args.pair_identifier, args.qc_options, args.remove_intermediate_output)
     # get the new extension, if the original files were gzipped they will not be after quality control
     args.input_extension = args.input_extension.replace(".gz","")
+    args.input_extension = args.input_extension.replace(".bz2","")
 else:
     # if the input files are fasta, bypass quality control
     qc_output_files = demultiplexed_files
