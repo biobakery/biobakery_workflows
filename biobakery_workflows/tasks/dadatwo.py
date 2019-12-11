@@ -119,7 +119,7 @@ def cutadapt_do(task):
         os.mkdir(cutadapt_folder)
 
     command="cutadapt -g "+FWD[0]+" -a "+REV[1]+" -G "+REV[0]+" -A "+FWD[1]+" -n 2 -o "+fwd_reads_out+\
-                       " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in
+                       " -p "+rev_reads_out+" "+fwd_reads_in+" "+ rev_reads_in+" --minimum-length 10"
     
     #run task
     utilities.run_task(command, depends=task.depends, targets=task.targets)
@@ -220,7 +220,7 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
          return error_ratesF_path, error_ratesR_path
      
 
-def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads):
+def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads, minoverlap, maxmismatch):
     
         """ Dereplicates and merges paired reads
             
@@ -230,8 +230,9 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
                 filtered_dir (string): path to directory with filtered files
                 error_ratesF_path (string): path to rds file that contains error rates of forward reads
                 error_ratesR_path (string): path to rds file that contains error rates of reverse reads
-                threads (int): number fo threads
-
+                threads (int): number of threads
+                minoverlap (int): the min number of pairs for overlap for the merge step
+                maxmismatch (int): the max number of mismatch for pairs to merge
             Requires:
                 dada2, tools r packages
                 
@@ -249,10 +250,12 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
               --error_ratesF_path=[depends[0]]\
               --error_ratesR_path=[depends[1]]\
               --mergers_file_path=[targets[0]]\
-              --threads=[vars[1]]",
+              --threads=[vars[1]]\
+              --minoverlap=[args[2]]\
+              --maxmismatch=[args[3]]",
             depends = [error_ratesF_path, error_ratesR_path],
             targets = [mergers_file_path],                       
-            args = [output_dir, filtered_dir],
+            args = [output_dir, filtered_dir, minoverlap, maxmismatch],
             vars = [script_path, threads],
             name = "dereplicate_and_merge"
             )

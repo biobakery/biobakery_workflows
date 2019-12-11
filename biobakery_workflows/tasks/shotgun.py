@@ -96,7 +96,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
 
     # get the output folder
     kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
-        
+
+    rename_final_output = ""        
     if paired:
         # reorder the input files so they are a set of paired files
         input_files=zip(input_files[0],input_files[1])
@@ -112,6 +113,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         # determine time/memory equations based on the single input file
         time_equation="2*6*60 if file_size('[depends[0]]') < 10 else 4*6*60"
         mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 5*12*1024"
+        # need to rename the final output file here to the sample name
+        rename_final_output = " && mv [args[3]] [targets[0]]"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -128,7 +131,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     elif isinstance(databases,list):
         # start the string with the kneaddata option and add an option for each database
         optional_arguments=" --reference-db "+" --reference-db ".join(databases)
-    elif isinstance(databases,basestring) and "," in databases:
+    elif isinstance(databases,str) and "," in databases:
         # split the paths by comma
         database_list=list(filter(lambda x: x, databases.split(",")))
         # start the string with the kneaddata option and add an option for each database
@@ -144,7 +147,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # rename file with repeats in name to only sample name
     for sample, depends, targets, intermediate_file in zip(sample_names, input_files, kneaddata_output_files, kneaddata_output_repeats_removed_fastq):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && mv [args[3]] [targets[0]]",
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output,
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets,
             args=[kneaddata_output_folder, threads, sample, intermediate_file],
@@ -704,7 +707,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         if not os.path.isfile(marker_file):
             # get the pkl file relative to the strainphlan install
             try:
-                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"db_v20","mpa_v20_m200.pkl")
+                strainphlan_pkl=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"metaphlan_databases","mpa_v20_m200.pkl")
             except subprocess.CalledProcessError:
                 raise EnvironmentError("Unable to find strainphlan install.")
             
@@ -904,7 +907,7 @@ def panphlan_profile(task,species_number,panphlan_db):
         utilities.run_task("touch [targets[0]]", targets=task.targets)
 
 
-def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan_db,max_species,strain_list):
+def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan_db,max_species):
     """Strain profile, gene-based for whole genome shotgun sequences
    
     This set of tasks performs strain profiling on whole genome shotgun
@@ -920,18 +923,12 @@ def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan
         threads (int): The number of threads/cores to use.
         panphlan_db (string): The folder containing the database files.
         max_species (int): The maximum number of species to profile.
-        strain_list (string): The path to a file with the list of strains to profile
     Requires:
         PanPhlAn: A tool for strain profiling.
 
     Returns:
         None
     """
-
-    # if a specific list of strains are provided use this instead of the strains selected by
-    # average abundance
-    if strain_list:
-        abundance_file=strain_list
 
     ### STEP #1: Run panphlan map on all of the samples for each of the top species
     out_files = workflow.name_output_files(name=qc_files, tag="panphlan_map", extension="csv.bz2")

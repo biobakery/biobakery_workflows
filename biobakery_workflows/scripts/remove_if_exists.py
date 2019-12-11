@@ -4,6 +4,7 @@
     It will report error messages from trying to remove the file. """
     
 import sys
+import shutil
 
 try:
     import argparse
@@ -16,7 +17,8 @@ def parse_arguments(args):
     """ Parse the arguments from the user"""
     
     parser=argparse.ArgumentParser(description="Remove file if it exists.")
-    parser.add_argument('file',help="File to remove")
+    parser.add_argument('file',help="File (or folder) to remove")
+    parser.add_argument('--is-folder',help="Indicate if input is a folder", action="store_true")
 
     return parser.parse_args()    
 
@@ -33,7 +35,12 @@ def main():
             os.unlink(args.file)
         except EnvironmentError:
             sys.exit("ERROR: Unable to remove file: " + args.file)
-    
+    if args.is_folder:
+        try:
+            shutil.rmtree(args.file)    
+        except EnvironmentError:
+            sys.exit("ERROR: Unable to remove folder: " + args.file)
+
     
 if __name__ == "__main__":
     main()
