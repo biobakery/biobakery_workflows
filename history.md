@@ -1,6 +1,23 @@
 
 # bioBakery workflows History #
 
+## v0.13.5 11-08-2019 ##
+
+* Remove the taxonomy from the picrust2 input file to resolve the int/str error.
+
+## v0.13.4 11-07-2019 ##
+
+* Add PICRUSt v2 option (now also included as a task for the dada2 method).
+* Update 16s workflow for python3 compatibility.
+* Modify extract_markers.py strainphlan task to use new folder naming convention (to work with latest metaphlan2/strainphlan packages).
+
+## v0.13.3 10-16-2019 ##
+
+* Change kneaddata tasks to work with latest version as to not overwrite final pairs output file.
+* Data2 workflow new options added: minoverlap and maxmismatch.
+* Require min length for cutadapt to prevent reads of zero length passed to dada2 tasks which will cause an error.
+* New option to allow wmgx workflow to just run panphlan.
+
 ## v0.13.2 08-12-2019 ##
 
 * Default kneaddata (QC tasks) no longer use the rRNA database for filtering
