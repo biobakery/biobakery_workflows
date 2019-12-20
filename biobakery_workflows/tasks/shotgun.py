@@ -105,14 +105,14 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         # also add the option to cat the final output files into a single file
         second_input_option=" --input [depends[1]] --cat-final-output "
         # determine time/memory equations based on the two input files
-        time_equation="2*6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 4*6*60"
-        mem_equation="2*12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 5*12*1024"
+        time_equation="3*6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 5*6*60"
+        mem_equation="3*12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 6*12*1024"
     else:
         # the second input option is not used since these are single-end input files
         second_input_option=" "
         # determine time/memory equations based on the single input file
-        time_equation="2*6*60 if file_size('[depends[0]]') < 10 else 4*6*60"
-        mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 5*12*1024"
+        time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
+        mem_equation="3*12*1024 if file_size('[depends[0]]') < 10 else 6*12*1024"
         # need to rename the final output file here to the sample name
         rename_final_output = " && mv [args[3]] [targets[0]]"
         
