@@ -61,6 +61,7 @@ refdb.path <- normalizePath( args.list$refdb_path )
 
 # Read ASV table from saved file
 seqtab.nochim <- readRDS(args.list$seqtab_file_path)
+seqtab.nochim.seqnames <- colnames(seqtab.nochim)
 
 ## Asign GreenGenes, SILVA or  RDP taxonomies and merge with OTU table
 taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = as.numeric(args.list$threads))
@@ -123,7 +124,9 @@ write.table(otu.refdb.tax.table, paste0(gsub(".tsv", "", args.list$otu_closed_re
 # Create version with ASV1, ASV2 ... ids instead of sequences as ids
 seqids <- c(1:length(otu.refdb.tax.table_taxcombined[,1]))
 seqids <- paste0("ASV",seqids)
-row.names(otu.refdb.tax.table_taxcombined) <- seqids 
+row.names(otu.refdb.tax.table_taxcombined) <- rownames(otu.refdb.tax.table)
+otu.refdb.tax.table_taxcombined <- otu.refdb.tax.table_taxcombined[seqtab.nochim.seqnames,]
+row.names(otu.refdb.tax.table_taxcombined) <- seqids
 
 # Save closed reference with ids to tsv file
 write.table(otu.refdb.tax.table_taxcombined, args.list$otu_closed_ref_path , sep = "\t", eol = "\n", quote = F, col.names = NA)
