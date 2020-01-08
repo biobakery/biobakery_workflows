@@ -371,7 +371,7 @@ control and generate taxonomic tables.
 
 **Workflow diagrams**
 
-![](https://github.com/biobakery/biobakery_workflows/blob/master/images/images/1618113365-16s_workflow_with_fasttree_merge_truncate_filter.jpg)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/1618113365-16s_workflow_with_fasttree_merge_truncate_filter.jpg)
  
 ![](https://github.com/biobakery/biobakery_workflows/blob/master/images/4005903235-DADA2Workflow_75percent.jpg)
  
@@ -460,7 +460,7 @@ assessment, and then creates a final annotated contig file.
 
 **Workflow diagram**
 
-![](https://github.com/biobakery/biobakery/blob/master/images/2782656604-isolate_workflow.jpg)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/2782656604-isolate_workflow.jpg)
 
 **Super Tasks**
 
