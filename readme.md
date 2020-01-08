@@ -15,6 +15,25 @@ For additional information, see the
 [bioBakery workflows tutorial](https://bitbucket.org/biobakery/biobakery/wiki/biobakery_workflows).
 
 Table of contents
+  * [Getting Started](#getting-started)
+    + [Requirements](#requirements)
+    + [Installation](#installation)
+      - [Install software](#install-software)
+      - [Install databases](#install-databases)
+    + [How to Run](#how-to-run)
+      - [Basic Usage](#basic-usage)
+      - [Data Processing Workflows](#data-processing-workflows)
+      - [Visualization Workflows](#visualization-workflows)
+    + [Parallelization Options](#parallelization-options)
+  * [Data Processing Workflows](#data-processing-workflows)
+    + [Whole Metagenome Shotgun (wmgx)](#whole-metagenome-shotgun-wmgx)
+    + [Whole Metagenome and Metatranscriptome Shotgun (wmgx\_wmtx)](#whole-metagenome-and-metatranscriptome-shotgun-wmgx_wmtx)
+    + [16S rRNA (16s)](#16s-rrna-16s)
+    + [Isolate Assembly (isolate_assembly)](#isolate-assembly-isolate_assembly)
+  * [Visualization Workflows](#visualization-workflows)
+    + [Visualization for Whole Metagenome Shotgun (wmgx_vis)](#visualization-for-whole-metagenome-shotgun-wmgx_vis)
+    + [Visualization for Whole Metagenome and Metatranscriptome Shotgun (wmgx_wmtx_vis)](#visualization-for-whole-metagenome-and-metatranscriptome-shotgun-wmgx_wmtx_vis)
+    + [Visualization for 16S (16s_vis)](#visualization-for-16s-16s_vis)
 
 ------------------------------------------------------------------------
 
