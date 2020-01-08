@@ -211,7 +211,7 @@ to optimize the workflow run based on your computing resources.
 
 ### Whole Metagenome Shotgun (wmgx)
 
-![](https://bitbucket.org/repo/5pd5AR/images/135637619-111018-wms_workflow.png)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/135637619-111018-wms_workflow.png)
 
 **Super Tasks**
 
@@ -291,7 +291,7 @@ The workflow by default expects input files with the extension
 
 ### Whole Metagenome and Metatranscriptome Shotgun (wmgx\_wmtx)
 
-![](https://bitbucket.org/repo/5pd5AR/images/4071512812-wms_wtx_workflow.jpg)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/4071512812-wms_wtx_workflow.jpg)
 
 **Super Tasks**
 
@@ -371,9 +371,9 @@ control and generate taxonomic tables.
 
 **Workflow diagrams**
 
-![16s\_workflow\_with\_fasttree\_merge\_truncate\_filter.jpg](https://bitbucket.org/repo/5pd5AR/images/1618113365-16s_workflow_with_fasttree_merge_truncate_filter.jpg)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/images/1618113365-16s_workflow_with_fasttree_merge_truncate_filter.jpg)
  
-![DADA2Workflow\_75percent.jpg](https://bitbucket.org/repo/5pd5AR/images/4005903235-DADA2Workflow_75percent.jpg)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/4005903235-DADA2Workflow_75percent.jpg)
  
 **Super Tasks**
 
@@ -460,7 +460,7 @@ assessment, and then creates a final annotated contig file.
 
 **Workflow diagram**
 
-![isolate\_workflow.jpg](https://bitbucket.org/repo/5pd5AR/images/2782656604-isolate_workflow.jpg)
+![](https://github.com/biobakery/biobakery/blob/master/images/2782656604-isolate_workflow.jpg)
 
 **Super Tasks**
 
