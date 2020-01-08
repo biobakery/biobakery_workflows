@@ -1,6 +1,13 @@
 
 # bioBakery workflows History #
 
+## v0.14.0 01-08-2020 ##
+
+* Added isolate workflow.
+* Increase kneaddata tasks time/memory to allow for new kneaddata feature which reorders sequences.
+* Add option to use bz2 input files for wmgx workflows.
+* Update dada2 ASV taxonomy table to sync ASV ids.
+
 ## v0.13.5 11-08-2019 ##
 
 * Remove the taxonomy from the picrust2 input file to resolve the int/str error.
