@@ -18,8 +18,7 @@ def parse_arguments(args):
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--input-index", 
-        help="input index file \n[REQUIRED]", 
-        required=True)
+        help="input index file \n[REQUIRED if barcodes are not in read ids]")
     parser.add_argument(
         "--input-read1", 
         help="input read1 file \n[REQUIRED]", 
@@ -97,11 +96,18 @@ def main():
     total_barcodes=0
     read_counts_by_sample={}
     new_files=set()
-    for index_lines in read_fastq_file(args.input_index):
-        sequence_id=index_lines[0].split(" ")[0]
+    if args.input_index:
+        all_index_lines = read_fastq_file(args.input_index)
+    else:
+        all_index_lines = read_fastq_file(args.input_read1)
+
+    for index_lines in all_index_lines:
         total_barcodes+=1
-        
-        sequence=index_lines[1].rstrip()
+       
+        if args.input_index: 
+            sequence=index_lines[1].rstrip()
+        else:
+            sequence=index_lines[0].rstrip().split(":")[-1]
         
         # reverse complement
         if args.reverse_complement:
@@ -118,6 +124,12 @@ def main():
         read1_id = read1[0].split(" ")[0]
         read2=next(read2_lines)
         read2_id = read2[0].split(" ")[0]
+
+        # get sequence id depending on if index is provided
+        if args.input_index:
+            sequence_id=index_lines[0].split(" ")[0]
+        else:
+            sequence_id=read1_id
         
         if not ( (read1_id == read2_id) and (read2_id == sequence_id) ):
             sys.exit("Reads are not ordered: " + read1_id)
