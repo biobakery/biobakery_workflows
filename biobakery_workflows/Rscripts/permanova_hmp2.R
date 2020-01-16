@@ -425,6 +425,37 @@ options <- optparse::add_option(options,
     )
 )
 
+options <- optparse::add_option(options,
+    c("-s", "--scale"),
+    type = "integer",
+    dest = "scale",
+    default = 1,
+    help = paste0("The scale to apply to the data",
+    " [ Default: %default ]"
+    )
+)
+
+options <- optparse::add_option(options,
+    c("-a", "--min_abundance"),
+    type = "double",
+    dest = "min_abundance",
+    default = 0.0,
+    help = paste0("The minimum abundance for each feature",
+    " [ Default: %default ]"
+    )
+)
+
+options <- optparse::add_option(options,
+    c("-m", "--min_prevalence"),
+    type = "double",
+    dest = "min_prevalence",
+    default = 0.0,
+    help = paste0("The minimum percent of samples for which",
+    "a feature is detected at minimum abundance",
+    " [ Default: %default ]"
+    )
+)
+
 option_not_valid_error <- function(message, valid_options) {
     print(paste(message, ": %s"), toString(valid_options))
     stop("Option not valid", call. = FALSE)
@@ -469,7 +500,18 @@ if (!"subject" %in% colnames(metadata)) {
     metadata$subject <- rownames(metadata)
 }
 
-ad <- bc_omnibus_tests(data,metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
+# apply scale
+data <- data/current_args$scale
+
+# Filter by abundance using zero as value for NAs
+total_samples <- nrow(metadata)
+min_samples <- total_samples * current_args$min_prevalence
+
+data_zeros <- data
+data_zeros[is.na(data_zeros)] <- 0
+filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
+
+ad <- bc_omnibus_tests(filtered_data,metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
 
 R2 <- as.matrix(ad$aov.tab$R2)
 row.names(R2) <- rownames(ad$aov.tab)
