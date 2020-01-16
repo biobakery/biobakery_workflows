@@ -474,8 +474,9 @@ if (length(positional_args) != 3) {
 
 # Input variables
 ## assume data file has samples as columns
-data <- t(read.table(positional_args[1], header = TRUE, row.names = 1, sep="\t"))
-metadata <- data.frame(read.table(positional_args[2], header = TRUE, row.names = 1, sep="\t"))
+## allow for pounds in header lines
+data <- t(read.table(positional_args[1], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+metadata <- data.frame(read.table(positional_args[2], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
 
 # check for samples as columns or rows
 samples_rows <- intersect(rownames(metadata),rownames(data))
