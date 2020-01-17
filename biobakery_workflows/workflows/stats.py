@@ -49,6 +49,7 @@ workflow.add_argument("input-metadata",desc="the metadata file (samples as colum
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
+workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("top-pathways",desc="the top N significant pathways to plot stratified abundance", default=3)
 workflow.add_argument("metadata-categorical",desc="the categorical features (for the plot stratified pathways)", action="append", default=[])
@@ -150,12 +151,22 @@ if pathabundance:
                 name="run_humann2_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
             stratified_pathways_plots.append(new_pathways_plot)
 
+# run permanova on taxon data
+taxon_permanova=utilities.name_files("taxon_permanova.png",args.output,subfolder="permanova",create_folder=True)
+permanova_script_path = utilities.get_package_file("permanova_hmp2", "Rscript")
+permanova_task = workflow.add_task(
+    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]]",
+    depends=[taxon_feature,args.input_metadata],
+    targets=taxon_permanova,
+    args=[permanova_script_path,"100","0.0001","0.1",args.permutations],
+    name="hmp2_permanova")
+
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=maaslin_tasks+stratified_plots_tasks+[taxonomic_profile], 
+    depends=maaslin_tasks+stratified_plots_tasks+[taxonomic_profile, permanova_task], 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Stats Report",
           "project":args.project_name,
@@ -163,6 +174,7 @@ doc_task=workflow.add_document(
           "taxonomic_profile":taxonomic_profile,
           "maaslin_tasks_info":maaslin_tasks_info,
           "stratified_pathways_plots":stratified_pathways_plots,
+          "taxon_permanova":taxon_permanova,
           "format":args.format},
     table_of_contents=True)
 

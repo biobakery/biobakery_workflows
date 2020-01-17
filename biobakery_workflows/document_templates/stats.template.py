@@ -91,6 +91,8 @@ maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_masslin_run
 
 #' <% if maaslin_pathways_output_folder: show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
 
+#+ echo=False
+
 maaslin_ecs_heatmap, maaslin_ecs_output_folder = check_for_masslin_runs("ecs")
 
 #' <% if maaslin_ecs_output_folder and pdf_format: print("\clearpage") %>
@@ -132,4 +134,13 @@ def show_stratified_plots(plots):
 #' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN2 named humann2_barplot.") %>
 
 #' <% show_stratified_plots(filtered_stratified_pathways_plots) %>
+
+#' <% if pdf_format: print("\clearpage") %>
+
+#' # Permanova
+
+#+ echo=False
+
+#' <% if os.path.isfile(vars["taxon_permanova"]): print("![Taxonomy permanova]({0})".format(vars["taxon_permanova"])) %>
+#' <% if not os.path.isfile(vars["taxon_permanova"]): print("Error generating permanova.") %>
 
