@@ -512,7 +512,12 @@ data_zeros <- data
 data_zeros[is.na(data_zeros)] <- 0
 filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
 
-ad <- bc_omnibus_tests(filtered_data,metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
+# Filter the metadata to remove any samples without data
+metadata_zeros <- metadata
+metadata_zeros[metadata_zeros == "UNK"] <- NA
+filtered_metadata <- metadata[rowSums(metadata_zeros != 0, na.rm=TRUE) > 0, , drop = FALSE]
+
+ad <- bc_omnibus_tests(filtered_data,filtered_metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
 
 R2 <- as.matrix(ad$aov.tab$R2)
 row.names(R2) <- rownames(ad$aov.tab)
