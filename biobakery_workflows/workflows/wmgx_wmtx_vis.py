@@ -33,11 +33,11 @@ from anadama2 import Workflow
 from biobakery_workflows import utilities
 
 # import the files for descriptions and paths
-from biobakery_workflows import files
+from biobakery_workflows import files, config
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with multiple input files
-workflow = Workflow(version="0.1", remove_options=["input"],
+workflow = Workflow(version=config.VERSION, remove_options=["input"],
                     description="A workflow for whole metagenome and metatranscriptome shotgun sequence visualization")
 
 # list the required and optional files for the workflow

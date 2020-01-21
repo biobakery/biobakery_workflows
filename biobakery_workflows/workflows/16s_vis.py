@@ -31,12 +31,12 @@ from anadama2 import Workflow
 from biobakery_workflows import document_templates, utilities
 
 # import the files for descriptions and paths
-from biobakery_workflows import files
+from biobakery_workflows import files, config
 import os
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with multiple input files
-workflow = Workflow(version="0.1", remove_options=["input"],
+workflow = Workflow(version=config.VERSION, remove_options=["input"],
                     description="A workflow for 16S visualization")
                     
 # add the custom arguments to the workflow 

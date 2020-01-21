@@ -26,6 +26,8 @@ THE SOFTWARE.
 import os
 import sys
 
+VERSION = "0.14.0"
+
 def get_home_directory():
     """ Try to get the users home directory """
     

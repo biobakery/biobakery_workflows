@@ -33,7 +33,7 @@ from biobakery_workflows import utilities, config, files
 
 
 # create a workflow instance, providing the version number and description
-workflow = Workflow(version="0.1", description="A workflow for 16S sequencing data")
+workflow = Workflow(version=config.VERSION, description="A workflow for 16S sequencing data")
 
 # add the custom arguments to the workflow
 workflow_config = config.SixteenS()

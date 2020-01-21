@@ -35,7 +35,8 @@ except ImportError:
 import os
 import subprocess
 
-VERSION = "0.14.0"
+from . import config
+
 WORKFLOW_FOLDER="workflows"
 WORKFLOW_EXTENSION=".py"
 
@@ -63,7 +64,7 @@ def parse_arguments(args,workflows):
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s v"+VERSION)
+        version="%(prog)s v"+config.VERSION)
     parser.add_argument(
         "workflow",
         choices=workflows,
