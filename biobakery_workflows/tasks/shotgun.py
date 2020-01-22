@@ -154,7 +154,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
             time=time_equation, # 6 hours or more depending on file size
             mem=mem_equation, # 12 GB or more depending on file size
             cores=threads, # time/mem based on 8 cores
-            name=utilities.name_task(sample,"kneaddata")) # name task based on sample name
+            name=utilities.name_task(sample,"kneaddata"),
+            docker_image="biobakery/kneaddata:0.7.2_with_dbs") # name task based on sample name
     
     return kneaddata_output_fastq, kneaddata_output_logs
 
@@ -349,7 +350,8 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
                 time="3*60 if file_size('[depends[0]]') < 25 else 4*3*60", # 3 hours or more depending on input file size
                 mem="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024", # 12 GB or more depending on input file size
                 cores=threads, # time/mem based on 8 cores
-                name=utilities.name_task(sample,"metaphlan2"))
+                name=utilities.name_task(sample,"metaphlan2"),
+                docker_image="biobakery/metaplan2:2.7.7_with_dbs")
     else:
         # set the names of the already profiled outputs
         metaphlan2_output_files_profile = input_files
@@ -512,7 +514,8 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             time="24*60 if file_size('[depends[0]]') < 25 else 6*24*60", # 24 hours or more depending on file size
             mem="32*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
             cores=threads,
-            name=utilities.name_task(sample,"humann2"))
+            name=utilities.name_task(sample,"humann2"),
+            docker_image="biobakery/humann2:2.8.0_with_dbs")
 
     # create a task to get the read and species counts for each humann2 run from the log files
     workflow.add_task(
