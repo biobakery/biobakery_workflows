@@ -57,8 +57,8 @@ workflow.add_argument("bypass-strain-profiling", desc="do not run the strain pro
 args = workflow.parse_args()
 
 # get all input files with the input extension provided on the command line
-input_files_metagenome = utilities.find_files(args.input_metagenome, extension=args.input_extension, exit_if_not_found=True)
-input_files_metatranscriptome = utilities.find_files(args.input_metatranscriptome, extension=args.input_extension, exit_if_not_found=True)
+input_files_metagenome = utilities.find_files(workflow, args.input_metagenome, extension=args.input_extension, exit_if_not_found=True)
+input_files_metatranscriptome = utilities.find_files(workflow, args.input_metatranscriptome, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
 wms_output_folder = os.path.join(args.output,files.ShotGun.wmgx_folder_name)

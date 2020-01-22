@@ -570,10 +570,11 @@ def sample_names(files,extension,pair_identifier=None):
     
     return samples
 
-def find_files(folder, extension=None, exit_if_not_found=None):
+def find_files(workflow, folder, extension=None, exit_if_not_found=None):
     """ Return the files in the given folder with the extension if provided
     
     Args:
+        workflow (anadama2.Workflow): The workflow instance
         folder (string): A path to a folder
         extension (string): The file extension to search for (optional)
         exit_if_not_found (bool): Indicator to check if files exist (optional) 
@@ -585,16 +586,11 @@ def find_files(folder, extension=None, exit_if_not_found=None):
         list: A list of files in the folder
 
     Example:
-        files = find_files("examples","fastq")
+        files = find_files(workflow, "examples","fastq")
     """
     
-    # get all of the files in the folder
-    files=[os.path.join(folder,file) for file in os.listdir(folder)]
-    files=list(filter(lambda file: os.path.isfile(file),files))
-    
-    # filter to only files with extension
-    if extension:
-        files=list(filter(lambda file: file.endswith(extension), files))
+    # get all of the files in the folder (also allows for inputs from s3)
+    files=workflow.get_input_files(extension=extension, input_folder=folder)
     
     if exit_if_not_found:
         if not files:

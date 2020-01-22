@@ -55,7 +55,7 @@ args = workflow.parse_args()
 
 # get all input files with the input extension provided on the command line
 # return an error if no files are found
-input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
+input_files = utilities.find_files(workflow, args.input, extension=args.input_extension, exit_if_not_found=True)
 
 ### STEP #1: Run quality control on all input files ###
 sample_names=utilities.sample_names(input_files,args.input_extension)

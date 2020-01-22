@@ -71,10 +71,10 @@ args = workflow.parse_args()
 
 # get all input files with the input extension provided on the command line
 # return an error if no files are found
-input_files = utilities.find_files(args.input, extension=args.input_extension, exit_if_not_found=True)
+input_files = utilities.find_files(workflow, args.input, extension=args.input_extension, exit_if_not_found=True)
 
 # check for index files, do not error if they are not found
-index_files = utilities.find_files(args.input, extension=args.index_identifier+"."+args.input_extension)
+index_files = utilities.find_files(workflow, args.input, extension=args.index_identifier+"."+args.input_extension)
 
 # remove the index files, if found, from the set of input files
 input_files = list(filter(lambda file: not file in index_files, input_files))
