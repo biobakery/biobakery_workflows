@@ -30,7 +30,7 @@ import functools
 import time
 import collections
 
-from anadama2.tracked import TrackedDirectory
+from anadama2.tracked import TrackedDirectory, s3_folder
 
 # try to import urllib.request.urlretrieve for python3
 try:
@@ -632,7 +632,8 @@ def name_files(names, folder, subfolder=None, tag=None, extension=None, create_f
     names=[os.path.basename(name) for name in names]
     
     # use the full path to the folder
-    folder=os.path.abspath(folder)
+    if not s3_folder(folder):
+        folder=os.path.abspath(folder)
     
     # get the name of the full folder plus subfolder if provided
     if subfolder:
@@ -648,7 +649,7 @@ def name_files(names, folder, subfolder=None, tag=None, extension=None, create_f
         
     files=[os.path.join(folder,name) for name in names]
     
-    if create_folder:
+    if create_folder and not s3_folder:
         create_folders(os.path.dirname(files[0]))
         
     # if the input was originally a string, convert from list
