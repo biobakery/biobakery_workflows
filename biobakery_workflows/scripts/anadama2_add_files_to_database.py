@@ -23,15 +23,12 @@ def get_files_to_add(input_folder):
                     input_files.append(os.path.join(folder,filename))
     return input_files
 
-def add_file_to_db(task):
-    workflow._backend.save([task.depends[0].name],[task.depends[0].compare()])
-
 # get the files to add from the input and output folder
 input_files = get_files_to_add(args.input)
 output_files = get_files_to_add(args.output)
 
 for filename in input_files+output_files:
-    workflow.add_task(add_file_to_db, depends=filename, targets=filename)
+    workflow.add_task("echo 'Adding file [depends[0]]'", depends=filename, targets=filename)
 
 workflow.go()
 
