@@ -531,7 +531,8 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         time=10, # 10 minutes
         mem=5*1024, # 5 GB
         cores=1,
-        name=map(lambda sample: utilities.name_task(sample,"humann2_regroup_UniRef2EC"), sample_names))
+        name=map(lambda sample: utilities.name_task(sample,"humann2_regroup_UniRef2EC"), sample_names),
+        docker_image="biobakery/humann2:2.8.0_cloud_v3")
 
     
     ### STEP #3: Merge gene families, ecs, and pathway abundance files
@@ -572,7 +573,8 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         time=15, # 15 minutes
         mem=5*1024, # 5 GB
         cores=1,
-        name=renorm_task_names)
+        name=renorm_task_names,
+        docker_image="biobakery/humann2:2.8.0_cloud_v3")
 
     
     # get a list of merged files for ec, gene families, and pathway abundance
