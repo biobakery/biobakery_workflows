@@ -95,7 +95,6 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     kneaddata_output_files = zip(kneaddata_output_fastq, kneaddata_output_logs)
 
     # get the output folder
-    kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
 
     rename_final_output = ""        
     if paired:
@@ -114,7 +113,8 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
         mem_equation="3*12*1024 if file_size('[depends[0]]') < 10 else 6*12*1024"
         # need to rename the final output file here to the sample name
-        rename_final_output = " && mv [args[3]] [targets[0]]"
+        rename_final_output = " && cp [targets[2]] [targets[0]]"
+        kneaddata_output_files = zip(kneaddata_output_fastq, kneaddata_output_logs, kneaddata_output_repeats_removed_fastq)
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -145,17 +145,17 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     
     # create a task for each set of input and output files to run kneaddata
     # rename file with repeats in name to only sample name
-    for sample, depends, targets, intermediate_file in zip(sample_names, input_files, kneaddata_output_files, kneaddata_output_repeats_removed_fastq):
+    for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output,
+            "kneaddata --input [depends[0]] --output $(dirname [targets[0]]) --threads [args[0]] --output-prefix [args[1]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output,
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets,
-            args=[kneaddata_output_folder, threads, sample, intermediate_file],
+            args=[threads, sample],
             time=time_equation, # 6 hours or more depending on file size
             mem=mem_equation, # 12 GB or more depending on file size
             cores=threads, # time/mem based on 8 cores
             name=utilities.name_task(sample,"kneaddata"),
-            docker_image="biobakery/kneaddata:0.7.2_with_dbs_v2") # name task based on sample name
+            docker_image="biobakery/kneaddata:0.7.2_cloud_v4") # name task based on sample name
     
     return kneaddata_output_fastq, kneaddata_output_logs
 
@@ -193,17 +193,13 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
         workflow.go()
     """
     
-    # get the folder of the log files
-    input_folder=os.path.dirname(input_files[0])
-    
     # get the name for the output file
     kneaddata_read_count_file = files.ShotGun.path("kneaddata_read_counts",output_folder,create_folder=True)
     
     # add the task (which is not gridable as this task should take under 5 minutes)
-    workflow.add_task("kneaddata_read_count_table --input [args[0]] --output [targets[0]]",
+    workflow.add_task("kneaddata_read_count_table --input $(dirname [depends[0]]) --output [targets[0]]",
         depends=input_files,
         targets=kneaddata_read_count_file,
-        args=[input_folder],
         name="kneaddata_read_count_table")
     
     return kneaddata_read_count_file
@@ -331,7 +327,6 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     main_folder=os.path.join("metaphlan2","main")
     metaphlan2_output_files_profile = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag=metaphlan2_profile_tag, extension="tsv", create_folder=True)
     metaphlan2_output_files_sam = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="bowtie2", extension="sam")
-    metaphlan2_output_folder = os.path.dirname(metaphlan2_output_files_profile[0])
     
     # determine the input file type based on the extension
     if input_extension in ["fasta","fasta.gz","fa","fa.gz"]:
@@ -343,29 +338,28 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     if not already_profiled:
         for sample, depend_fastq, target_profile, target_sam in zip(sample_names, input_files, metaphlan2_output_files_profile, metaphlan2_output_files_sam):
             workflow.add_task_gridable(
-                "metaphlan2.py [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
+                "metaphlan2.py [depends[0]] --input_type [args[1]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir $(dirname [targets[1]])",
                 depends=[depend_fastq,TrackedExecutable("metaphlan2.py")],
                 targets=[target_profile,target_sam],
-                args=[threads,metaphlan2_output_folder,input_type],
+                args=[threads,input_type],
                 time="3*60 if file_size('[depends[0]]') < 25 else 4*3*60", # 3 hours or more depending on input file size
                 mem="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024", # 12 GB or more depending on input file size
                 cores=threads, # time/mem based on 8 cores
                 name=utilities.name_task(sample,"metaphlan2"),
-                docker_image="biobakery/metaplan2:2.7.7_with_dbs_v2")
+                docker_image="biobakery/metaphlan2:2.7.7_cloud_v2")
     else:
         # set the names of the already profiled outputs
         metaphlan2_output_files_profile = input_files
-        metaphlan2_output_folder = os.path.dirname(input_files[0])
     
     # merge all of the metaphlan taxonomy tables
     metaphlan2_merged_output = files.ShotGun.path("taxonomic_profile", output_folder)
     
     # run the humann2 join script to merge all of the metaphlan2 profiles
     workflow.add_task(
-        "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name [args[1]]",
+        "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]] --file_name [args[0]]",
         depends=metaphlan2_output_files_profile,
         targets=metaphlan2_merged_output,
-        args=[metaphlan2_output_folder, metaphlan2_profile_tag],
+        args=[metaphlan2_profile_tag],
         name="metaphlan2_join_taxonomic_profiles")
    
     # get the name for the file to write the species counts
@@ -487,8 +481,6 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     # get the name for the file of read and species counts created from the humann2 log outputs
     log_counts = files.ShotGun.path("humann2_read_counts",output_folder,create_folder=True)
 
-    humann2_output_folder = os.path.dirname(genefamiles[0])
-    
     # if taxonomic profiles are provided, add these to the targets and the command option
     if taxonomic_profiles:
         optional_profile_args=" --taxonomic-profile [depends[1]] "
@@ -507,22 +499,21 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     # create a task to run humann2 on each of the kneaddata output files
     for sample, depend_fastq, target_gene, target_path, target_coverage, target_log in zip(sample_names, depends, genefamiles, pathabundance, pathcoverage, log_files):
         workflow.add_task_gridable(
-            "humann2 --input [depends[0]] --output [args[0]] --o-log [targets[3]] --threads [args[1]]"+optional_profile_args,
+            "humann2 --input [depends[0]] --output $(dirname [targets[0]]) --o-log [targets[3]] --threads [args[0]]"+optional_profile_args,
             depends=utilities.add_to_list(depend_fastq,TrackedExecutable("humann2")),
             targets=[target_gene, target_path, target_coverage, target_log],
-            args=[humann2_output_folder, threads],
+            args=[threads],
             time="24*60 if file_size('[depends[0]]') < 25 else 6*24*60", # 24 hours or more depending on file size
             mem="32*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
             cores=threads,
             name=utilities.name_task(sample,"humann2"),
-            docker_image="biobakery/humann2:2.8.0_with_dbs_v2")
+            docker_image="biobakery/humann2:2.8.0_cloud_v3")
 
     # create a task to get the read and species counts for each humann2 run from the log files
     workflow.add_task(
-        "get_counts_from_humann2_logs.py --input [args[0]] --output [targets[0]]",
+        "get_counts_from_humann2_logs.py --input $(dirname [depends[0]]) --output [targets[0]]",
         depends=log_files,
         targets=log_counts,
-        args=humann2_output_folder,
         name="humann2_count_alignments_species")
     
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
@@ -556,10 +547,10 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     file_basenames=["genefamilies","ecs","pathabundance"]
     for depends, targets, basename in zip(all_depends, all_targets, file_basenames):
         workflow.add_task(
-            "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name [args[1]]",
+            "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]] --file_name [args[0]]",
             depends=depends,
             targets=targets,
-            args=[os.path.dirname(depends[0]),basename],
+            args=[basename],
             name="humann2_join_tables_"+basename)
     
     ### STEP #4: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
@@ -595,10 +586,9 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     all_types=["genes_relab","ecs_relab","pathways_relab"]
     for depends, targets, input_type in zip(all_depends, all_targets, all_types):
         workflow.add_task(
-            "humann2_join_tables --input [args[0]] --output [targets[0]]",
+            "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]]",
             depends=depends,
             targets=targets,
-            args=[os.path.dirname(depends[0])],
             name="humann2_join_tables_"+input_type)
 
     # get feature counts for the ec, gene families, and pathways
@@ -614,10 +604,9 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     # merge the feature counts into a single file
     all_feature_counts = files.ShotGun.path("feature_counts", output_folder)
     workflow.add_task(
-        "humann2_join_tables --input [args[0]] --output [targets[0]] --file_name _relab_counts.tsv",
+        "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]] --file_name _relab_counts.tsv",
         depends=[genefamilies_counts, ecs_counts, pathabundance_counts],
         targets=all_feature_counts,
-        args=[os.path.dirname(genefamilies_counts)],
         name="humann2_merge_feature_counts")
 
         
