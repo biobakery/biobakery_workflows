@@ -355,22 +355,30 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     metaphlan2_merged_output = files.ShotGun.path("taxonomic_profile", output_folder)
     
     # run the humann2 join script to merge all of the metaphlan2 profiles
-    workflow.add_task(
+    workflow.add_task_gridable(
         "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]] --file_name [args[0]]",
         depends=metaphlan2_output_files_profile,
         targets=metaphlan2_merged_output,
         args=[metaphlan2_profile_tag],
-        name="metaphlan2_join_taxonomic_profiles")
+        time=10,
+        mem=5*1024,
+        cores=1,
+        name="metaphlan2_join_taxonomic_profiles",
+        docker_image="biobakery/humann2:2.8.0_cloud_v3")
    
     # get the name for the file to write the species counts
     metaphlan2_species_counts_file = files.ShotGun.path("species_counts",output_folder,create_folder=True)
 
     # create a file of species counts
-    workflow.add_task(
+    workflow.add_task_gridable(
     "count_features.py --input [depends[0]] --output [targets[0]] --include s__ --filter t__ --reduce-sample-name",
     depends=metaphlan2_merged_output,
     targets=metaphlan2_species_counts_file,
-    name="metaphlan2_count_species") 
+    time=10,
+    mem=5*1024,
+    cores=1,
+    name="metaphlan2_count_species",
+    docker_image="biobakery/workflows:0.13.5_cloud") 
 
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
@@ -510,11 +518,15 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             docker_image="biobakery/humann2:2.8.0_cloud_v3")
 
     # create a task to get the read and species counts for each humann2 run from the log files
-    workflow.add_task(
+    workflow.add_task_gridable(
         "get_counts_from_humann2_logs.py --input $(dirname [depends[0]]) --output [targets[0]]",
         depends=log_files,
         targets=log_counts,
-        name="humann2_count_alignments_species")
+        time=10, # 10 minutes
+        mem=5*1024, # 5 GB
+        cores=1,
+        name="humann2_count_alignments_species",
+        docker_image="biobakery/workflows:0.13.5_cloud")
     
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
@@ -547,12 +559,16 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     all_targets=[merged_genefamilies, merged_ecs, merged_pathabundance]
     file_basenames=["genefamilies","ecs","pathabundance"]
     for depends, targets, basename in zip(all_depends, all_targets, file_basenames):
-        workflow.add_task(
+        workflow.add_task_gridable(
             "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]] --file_name [args[0]]",
             depends=depends,
             targets=targets,
             args=[basename],
-            name="humann2_join_tables_"+basename)
+            time=10, # 10 minutes
+            mem=5*1024, # 5 GB
+            cores=1,
+            name="humann2_join_tables_"+basename,
+            docker_image="biobakery/humann2:2.8.0_cloud_v3")
     
     ### STEP #4: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
@@ -587,29 +603,41 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     all_targets=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab]
     all_types=["genes_relab","ecs_relab","pathways_relab"]
     for depends, targets, input_type in zip(all_depends, all_targets, all_types):
-        workflow.add_task(
+        workflow.add_task_gridable(
             "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]]",
             depends=depends,
             targets=targets,
-            name="humann2_join_tables_"+input_type)
+            time=10,
+            mem=5*1024,
+            cores=1,
+            name="humann2_join_tables_"+input_type,
+            docker_image="biobakery/humann2:2.8.0_cloud_v3")
 
     # get feature counts for the ec, gene families, and pathways
     genefamilies_counts = files.ShotGun.path("genefamilies_relab_counts", output_folder)
     ecs_counts = files.ShotGun.path("ecs_relab_counts", output_folder)
     pathabundance_counts = files.ShotGun.path("pathabundance_relab_counts", output_folder)
-    workflow.add_task_group(
+    workflow.add_task_group_gridable(
         "count_features.py --input [depends[0]] --output [targets[0]] --reduce-sample-name --ignore-un-features --ignore-stratification",
         depends=[merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab],
         targets=[genefamilies_counts, ecs_counts, pathabundance_counts],
-        name=["humann2_count_features_genes","humann2_count_features_ecs","humann2_count_features_pathways"])
+        time=10,
+        mem=5*1024,
+        cores=1,
+        name=["humann2_count_features_genes","humann2_count_features_ecs","humann2_count_features_pathways"],
+        docker_image="biobakery/workflows:0.13.5_cloud")
     
     # merge the feature counts into a single file
     all_feature_counts = files.ShotGun.path("feature_counts", output_folder)
-    workflow.add_task(
+    workflow.add_task_gridable(
         "humann2_join_tables --input $(dirname [depends[0]]) --output [targets[0]] --file_name _relab_counts.tsv",
         depends=[genefamilies_counts, ecs_counts, pathabundance_counts],
         targets=all_feature_counts,
-        name="humann2_merge_feature_counts")
+        time=10,
+        mem=5*1024,
+        cores=1,
+        name="humann2_merge_feature_counts",
+        docker_image="biobakery/humann2:2.8.0_cloud_v3")
 
         
     return merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab, merged_genefamilies, merged_ecs, merged_pathabundance
