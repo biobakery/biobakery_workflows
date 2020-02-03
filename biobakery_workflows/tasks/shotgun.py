@@ -197,10 +197,14 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
     kneaddata_read_count_file = files.ShotGun.path("kneaddata_read_counts",output_folder,create_folder=True)
     
     # add the task (which is not gridable as this task should take under 5 minutes)
-    workflow.add_task("kneaddata_read_count_table --input $(dirname [depends[0]]) --output [targets[0]]",
+    workflow.add_task_gridable("kneaddata_read_count_table --input $(dirname [depends[0]]) --output [targets[0]]",
         depends=input_files,
         targets=kneaddata_read_count_file,
-        name="kneaddata_read_count_table")
+        time=10,
+        mem=5*1024,
+        cores=1,
+        name="kneaddata_read_count_table",
+        docker_image="biobakery/workflows:0.13.5_cloud")
     
     return kneaddata_read_count_file
 
