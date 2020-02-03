@@ -204,7 +204,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
         mem=5*1024,
         cores=1,
         name="kneaddata_read_count_table",
-        docker_image="biobakery/workflows:0.13.5_cloud")
+        docker_image="biobakery/kneaddata:0.7.2_cloud_v4")
     
     return kneaddata_read_count_file
 
