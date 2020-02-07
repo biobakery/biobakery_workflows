@@ -63,11 +63,22 @@ args = workflow.parse_args()
 
 # get the paths for the required files from the set of all input files
 data_files=utilities.identify_data_files(args.input)
-taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
 
-# get the paths for the optional files from the set of input files
-pathabundance=data_files.get("wmgx_function_pathway",[""])[0]
-ecabundance=data_files.get("wmgx_function_ec",[""])[0]
+study_type=utilities.get_study_type(data_files)
+
+# get inputs based on study type
+if study_type=="wmgx":
+    taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
+
+    # get the paths for the optional files from the set of input files
+    pathabundance=utilities.find_data_file(data_files, "function_pathway", required=False)
+    ecabundance=utilities.find_data_file(data_files, "wmgx_function_ec", required=False)
+else:
+    taxonomic_profile=utilities.find_data_file(data_files,"16s_taxonomy")
+
+    # get the paths for the optional files from the set of input files
+    pathabundance=utilities.find_data_file(data_files,"function_pathway", required=False)
+    ecabundance=utilities.find_data_file(data_files,"16s_function_ec", required=False)
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)

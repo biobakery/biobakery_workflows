@@ -85,15 +85,44 @@ def run_humann2_barplot(task, number, metadata_end, metadata_focus):
             targets=task.targets,
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
 
-def find_data_file(data_files, type):
+def find_data_file(data_files, type, required=False):
     """ Return an error if the file of that type has not been found """
 
+    not_found = False
     try:
         file_name = data_files[type][0]
     except KeyError:
-        sys.exit("ERROR: A required file of type "+type+" can not be found in the input folder")
+        not_found = True
+
+    if not_found:
+        # look for a partial key
+        for data_type in data_files.keys():
+            if data_type.startswith(type) or data_type.endswith(type):
+                file_name = data_files[data_type][0]
+                not_found = False
+
+    if not_found:
+        if required:
+            sys.exit("ERROR: A required file of type "+type+" can not be found in the input folder")
+        else:
+            file_name=""
 
     return file_name
+
+def get_study_type(data_files):
+    """ Determine the type of study based on the data files """
+
+    types = [file_type.split("_")[0] for file_type in data_files.keys()]
+    
+    type = set(types)
+    type.discard("both")
+
+    if len(list(type)) > 1:
+        files = [key+"\t"+value[0] for key,value in data_files.items()]
+        sys.exit("ERROR: Input files found of multiple study types:" + ",".join(types)+"\n"+"\n".join(files))
+
+    return types[0]
+    
 
 def identify_data_files(folder):
     """ For all files in the folder and subfolders, return all tab delimited files with their data type 
@@ -137,25 +166,26 @@ def identify_data_files(folder):
                 if "." in data_info[0] and data_info[0].split(":")[0].replace(".","").isdigit():
                     file_type = "wmgx_function_ec"
                 elif "pwy" in data_info[0].lower():         
-                    file_type = "wmgx_function_pathway"
+                    file_type = "both_function_pathway"
                 elif "k__" in data_info[0] or "s__" in data_info[0]:         
                     file_type = "wmgx_taxonomy"
                 elif data_info[0].startswith("K0"):
                     file_type = "16s_function_gene"
+                elif data_info[0].startswith("EC"):
+                    file_type = "16s_function_ec"
                 elif data_info[0].startswith("ko"):
                     file_type = "16s_function_pathway"
                 elif data_info[0].startswith("M0"):
                     file_type = "16s_function_module"
                 elif data_info[0].isdigit() and data_info[-1].lower().startswith("k__"):
                     file_type = "16s_taxonomy_otu"
-                elif data_info[0].isalpha() and data_info[-1].lower().startswith("k__"):
+                elif data_info[0].startswith("ASV") and data_info[-1].lower().startswith("k__"):
                     file_type = "16s_taxonomy_asv"
 
                 if file_type:
                     if not file_type in data_files_types:
                         data_files_types[file_type]=[]
                     data_files_types[file_type].append(file)
-
     return data_files_types
 
 def get_package_file(basename, type="template"):
