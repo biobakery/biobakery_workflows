@@ -82,7 +82,16 @@ else:
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
-create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
+create_feature_table_tasks_info=[]
+if study_type == "wmgx":
+    create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
+else:
+    # reformat this table to move the taxonomic column and sum for species
+    workflow.add_task(
+        "trim_taxonomy.py --input [depends[0]] --output [targets[0]] --end-taxonomy-column 0",
+         depends=taxonomic_profile,
+         targets=taxon_feature)
+
 maaslin_tasks_info={"taxonomy":(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")),
     utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_taxa"))}
 
@@ -127,7 +136,7 @@ for run_type, (maaslin_input_file, maaslin_heatmap, maaslin_results_table) in ma
 
 stratified_pathways_plots = []
 stratified_plots_tasks = []
-if pathabundance:
+if pathabundance and study_type=="wmgx":
     # read in the metadata to merge with the data for the barplot script
     metadata=utilities.read_metadata(args.input_metadata, pathabundance,
         name_addition="_Abundance", ignore_features=args.metadata_exclude)
