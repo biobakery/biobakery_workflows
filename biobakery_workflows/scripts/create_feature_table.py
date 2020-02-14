@@ -9,6 +9,8 @@ import argparse
 
 STRATIFIED_DELIMITER = "|"
 
+BIOM_COMMENT = "# Constructed from biom file"
+
 def parse_arguments(args):
     """ 
     Parse the arguments from the user
@@ -54,6 +56,9 @@ def main():
         with open(args.output,"w") as file_handle_write:
             # remove sample tags from column headers if present
             header = file_handle_read.readline()
+            # remove biom comment
+            if header.startswith(BIOM_COMMENT):
+                header = file_handle_read.readline()
             if args.sample_tag_columns:
                 header = header.replace(args.sample_tag_columns,"")
             file_handle_write.write(header)

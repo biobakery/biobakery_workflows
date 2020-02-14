@@ -33,6 +33,9 @@ from anadama2 import Workflow
 # import the document templates and utilities from biobakery_workflows
 from biobakery_workflows import utilities
 
+# import the task to convert from biom to tsv
+from biobakery_workflows.tasks.sixteen_s import convert_from_biom_to_tsv
+
 # import the files for descriptions and paths
 from biobakery_workflows import files
 
@@ -79,6 +82,18 @@ else:
     # get the paths for the optional files from the set of input files
     pathabundance=utilities.find_data_file(data_files,"function_pathway", required=False)
     ecabundance=utilities.find_data_file(data_files,"16s_function_ec", required=False)
+
+# check for any biom files that need to be converted to txt
+converted_files = []
+for filename in [taxonomic_profile, pathabundance, ecabundance]:
+    if filename.endswith(".biom"):
+        new_tsv = utilities.name_files(filename.replace(".biom",".tsv"),args.output,subfolder="biom_to_tsv",create_folder=True)
+        convert_from_biom_to_tsv(workflow, filename, new_tsv)
+        converted_files.append(new_tsv)
+    else:
+        converted_files.append(filename)
+taxonomic_profile, pathabundance, ecabundance = converted_files
+
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)

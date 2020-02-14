@@ -12,6 +12,8 @@ except ImportError:
 # This script will trim a taxonomy file to only include the most specific clade
 # followed by any unknown taxonomy if included in the full name.
 
+BIOM_COMMENT = "# Constructed from biom file"
+
 def parse_arguments(args):
     """ 
     Parse the arguments from the user
@@ -60,6 +62,10 @@ def main():
     # write the header to the new file
     header = file_handle_read.readline().rstrip().split("\t")
     
+    # ignore comment if present
+    if header.startswith(BIOM_COMMENT):
+        header = file_handle_read.readline().rstrip().split("\t")
+
     # trim the taxonomy and sum species
     taxonomy_data = {}
     for line in file_handle_read:
