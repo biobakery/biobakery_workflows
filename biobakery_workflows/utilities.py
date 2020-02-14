@@ -134,7 +134,7 @@ def identify_data_files(folder):
             dict : A dictionary of data files organised by type 
     """
 
-    class openfile_txt_and_biom():
+    class openfile_txt_and_biom_gz():
         def __init__(self, filename):
             self.filename = filename
 
@@ -145,6 +145,9 @@ def identify_data_files(folder):
             if self.filename.endswith(".biom"):
                 import biom
                 self.lines = biom.load_table(self.filename).to_tsv().split("\n")[:100]
+            elif self.filename.endswith(".gz"):
+                import gzip
+                self.lines = gzip.open(self.filename,"rt").readlines()[:100]
             else:
                 self.lines = open(self.filename).readlines()[:100]
             return self
@@ -156,13 +159,13 @@ def identify_data_files(folder):
     data_files = []
     for root, dir, files in os.walk(folder):
         for file_name in files:
-            if file_name.endswith(".tsv") or file_name.endswith(".txt") or file_name.endswith(".biom"):
+            if file_name.endswith(".tsv") or file_name.endswith(".txt") or file_name.endswith(".biom") or file_name.endswith(".gz"):
                 data_files.append(os.path.join(root,file_name))
 
     # determine the type of each file
     data_files_types = {}
     for file in data_files:
-        with openfile_txt_and_biom(file) as file_handle:
+        with openfile_txt_and_biom_gz(file) as file_handle:
             file_type = None
 
             # ignore all comment lines and header

@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import gzip
 
 # This script will take any type of tab-delimited table and reformat it as a feature table
 # to be used as input for Maaslin2 and other downstream stats processing.
@@ -51,8 +52,14 @@ def main():
 
     args=parse_arguments(sys)
 
+    # determine the open function based on file type
+    if args.input.endswith(".gz"):
+        open_read = gzip.open
+    else:
+        open_read = open
+
     # read in the file and process depending on the arguments provided
-    with open(args.input) as file_handle_read:
+    with open_read(args.input) as file_handle_read:
         with open(args.output,"w") as file_handle_write:
             # remove sample tags from column headers if present
             header = file_handle_read.readline()

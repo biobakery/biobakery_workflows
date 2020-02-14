@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import gzip
 
 try:
     from biobakery_workflows import utilities
@@ -55,7 +56,10 @@ def main():
         sys.exit("Error: Unable to open output file: " + args.output)
 
     try:
-        file_handle_read=open(args.input,"rt")
+        if args.input.endswith(".gz"):
+            file_handle_read=gzip.open(args.input,"rt")
+        else:
+            file_handle_read=open(args.input,"rt")
     except EnvironmentError:
         sys.exit("Error: Unable to read input file: " + args.input)
 
@@ -63,7 +67,7 @@ def main():
     header = file_handle_read.readline().rstrip().split("\t")
     
     # ignore comment if present
-    if header.startswith(BIOM_COMMENT):
+    if header[0].startswith(BIOM_COMMENT):
         header = file_handle_read.readline().rstrip().split("\t")
 
     # trim the taxonomy and sum species
