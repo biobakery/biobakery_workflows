@@ -569,7 +569,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             targets=targets,
             args=[basename],
             time=10, # 10 minutes
-            mem=5*1024, # 5 GB
+            mem=50*1024 if "gene" in basename else 5*1024, # 50 GB
             cores=1,
             name="humann2_join_tables_"+basename,
             docker_image="biobakery/humann2:2.8.0_cloud_v3")
@@ -612,7 +612,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             depends=depends,
             targets=targets,
             time=10,
-            mem=5*1024,
+            mem=50*1024 if "gene" in input_type else 5*1024,
             cores=1,
             name="humann2_join_tables_"+input_type,
             docker_image="biobakery/humann2:2.8.0_cloud_v3")
