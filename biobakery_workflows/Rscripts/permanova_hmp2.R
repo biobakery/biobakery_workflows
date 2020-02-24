@@ -352,7 +352,7 @@ bc_omnibus_tests <- function(pcl, meta, covariates, perindividual_covariates, bl
     pcl$meta$subject <- factor(pcl$meta$subject)
     subj_meta <- pcl$meta[order(pcl$meta$subject),,drop=F]
     subj_meta <- subj_meta[!duplicated(subj_meta$subject), covars[covars %in% perindividual_covariates], drop=F]
-    rownames(subj_meta) <- subj_meta$subject
+    rownames(subj_meta) <- levels(pcl$meta$subject)
 
     # Do the overall PERMANOVA
     overall.ad <- PERMANOVA_repeat_measures(
@@ -363,15 +363,16 @@ bc_omnibus_tests <- function(pcl, meta, covariates, perindividual_covariates, bl
     ad <- overall.ad
     ad$aov.tab <- ad$aov.tab[seq_len(length(covariates)+1),]
     ad$aov.tab[,] <- NA
-    rownames(ad$aov.tab) <- c(covariates, "Overall")
+    rownames(ad$aov.tab) <- c(names(covariates), "Overall")
     ad$aov.tab["Overall",] <- colSums(overall.ad$aov.tab[seq_len(nrow(overall.ad$aov.tab)-2),])
     ad$aov.tab["Overall","Pr(>F)"] <- overall.ad$aov.tab$`Pr(>F)`[nrow(overall.ad$aov.tab)-1]
 
     ad$N <- pcl$ns
 
     # Do per-covariate tests
+    blocks <- factor(pcl$meta$subject)
     for (var in covariates) {
-        varsub <- var
+        varsub <- covariates[[var]]
         if (any(ok_covars[varsub])) {
             if (any(!ok_covars[varsub])) {
                 varsub <- varsub[ok_covars[varsub]]
@@ -386,8 +387,8 @@ bc_omnibus_tests <- function(pcl, meta, covariates, perindividual_covariates, bl
                 # Per-covariate test with subject-aware permutations
                 sep.ad <- PERMANOVA_repeat_measures(
                     D, permutations=Nperms, na.rm=T,
-                    permute_within=pcl$meta[,perindividual_covariates[!grepl(varsub,perindividual_covariates)], drop=F],
-                    blocks=pcl$meta$subject,
+                    permute_within=pcl$meta[,varsub[!(varsub %in% perindividual_covariates)], drop=F],
+                    blocks=blocks,
                     block_data=subj_meta[,varsub[varsub %in% perindividual_covariates], drop=F])
             }
 
@@ -485,7 +486,8 @@ if (length(samples_rows) < 1) {
     meta <- as.data.frame(t(metadata))
 }
 
-covariates <- colnames(metadata)
+covariates <- as.list(colnames(metadata))
+names(covariates) <- covariates
 
 # Set the individual covariates
 if (is.null(current_args$individual_covariates)) {

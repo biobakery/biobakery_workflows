@@ -113,7 +113,7 @@ def get_study_type(data_files):
     """ Determine the type of study based on the data files """
 
     types = [file_type.split("_")[0] for file_type in data_files.keys()]
-    
+
     type = set(types)
     type.discard("both")
 
@@ -182,13 +182,13 @@ def identify_data_files(folder):
                 # remove stratification if present
                 if TAXONOMY_DELIMITER in data_info[0]:
                     data_info[0]=data_info[0].split(TAXONOMY_DELIMITER)[0]                    
-
+                
                 # check the first column for the data type
                 if "." in data_info[0] and data_info[0].split(":")[0].replace(".","").isdigit():
                     file_type = "wmgx_function_ec"
                 elif "pwy" in data_info[0].lower():         
                     file_type = "both_function_pathway"
-                elif "k__" in data_info[0] or "s__" in data_info[0]:         
+                elif "k__" in data_info[0] or "s__" in data_info[0] or "g__" in data_info[0]:         
                     file_type = "wmgx_taxonomy"
                 elif data_info[0].startswith("K0"):
                     file_type = "16s_function_gene"
@@ -207,6 +207,7 @@ def identify_data_files(folder):
                     if not file_type in data_files_types:
                         data_files_types[file_type]=[]
                     data_files_types[file_type].append(file)
+    
     return data_files_types
 
 def get_package_file(basename, type="template"):

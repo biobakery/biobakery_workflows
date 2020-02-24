@@ -53,6 +53,7 @@ workflow.add_argument("transform",desc="the transform to apply to the data with 
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
+workflow.add_argument("individual-covariates",desc="the covariates, comma-delimited, that do not change per individual (to permutate within in permanova)", default="")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("top-pathways",desc="the top N significant pathways to plot stratified abundance", default=3)
 workflow.add_argument("metadata-categorical",desc="the categorical features (for the plot stratified pathways)", action="append", default=[])
@@ -189,11 +190,15 @@ if pathabundance and study_type=="wmgx":
 # run permanova on taxon data
 taxon_permanova=utilities.name_files("taxon_permanova.png",args.output,subfolder="permanova",create_folder=True)
 permanova_script_path = utilities.get_package_file("permanova_hmp2", "Rscript")
+optional_args=""
+if args.individual_covariates:
+    optional_args=" --individual_covariates "+args.individual_covariates
+
 permanova_task = workflow.add_task(
-    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]]",
+    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
     depends=[taxon_feature,args.input_metadata],
     targets=taxon_permanova,
-    args=[permanova_script_path,"100","0.0001","0.1",args.permutations],
+    args=[permanova_script_path,"100","0.0001","0.1",args.permutations,optional_args],
     name="hmp2_permanova")
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
