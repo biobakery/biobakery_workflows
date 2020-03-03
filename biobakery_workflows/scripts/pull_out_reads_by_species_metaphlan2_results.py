@@ -49,7 +49,7 @@ def find_reads(task):
                     if reference in marker_to_species.keys():
                         seq_id = ";".join([data[SAM_READ_NAME_INDEX],marker_to_species[reference]])
                         seq = data[SAM_SEQ_INDEX]
-                        file_handle_write.write("\n".join([">"+seq_id,seq]))
+                        file_handle_write.write("\n".join([">"+seq_id,seq])+"\n")
 
 # for each of the input files write the fasta file of reads
 for infile in workflow.get_input_files(extension=args.input_tag_extension):
