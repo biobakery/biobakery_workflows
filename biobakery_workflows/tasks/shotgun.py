@@ -155,7 +155,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
             mem=mem_equation, # 12 GB or more depending on file size
             cores=threads, # time/mem based on 8 cores
             name=utilities.name_task(sample,"kneaddata"),
-            docker_image="biobakery/kneaddata:0.7.2_cloud_v4") # name task based on sample name
+            docker_image="biobakery/kneaddata:0.7.3_cloud_r1") # name task based on sample name
     
     return kneaddata_output_fastq, kneaddata_output_logs
 
@@ -204,7 +204,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
         mem=5*1024,
         cores=1,
         name="kneaddata_read_count_table",
-        docker_image="biobakery/kneaddata:0.7.2_cloud_v4")
+        docker_image="biobakery/kneaddata:0.7.3_cloud_r1")
     
     return kneaddata_read_count_file
 
@@ -350,7 +350,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
                 mem="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024", # 12 GB or more depending on input file size
                 cores=threads, # time/mem based on 8 cores
                 name=utilities.name_task(sample,"metaphlan2"),
-                docker_image="biobakery/metaphlan2:2.7.7_cloud_v2")
+                docker_image="biobakery/metaphlan2:2.7.7_cloud_r1")
     else:
         # set the names of the already profiled outputs
         metaphlan2_output_files_profile = input_files
@@ -368,7 +368,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
         mem=5*1024,
         cores=1,
         name="metaphlan2_join_taxonomic_profiles",
-        docker_image="biobakery/humann2:2.8.0_cloud_v3")
+        docker_image="biobakery/humann2:2.8.1_cloud_r1")
    
     # get the name for the file to write the species counts
     metaphlan2_species_counts_file = files.ShotGun.path("species_counts",output_folder,create_folder=True)
@@ -382,7 +382,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     mem=5*1024,
     cores=1,
     name="metaphlan2_count_species",
-    docker_image="biobakery/workflows:0.13.5_cloud") 
+    docker_image="biobakery/workflows:0.13.5_cloud_r1") 
 
     return metaphlan2_merged_output, metaphlan2_output_files_profile, metaphlan2_output_files_sam
 
@@ -519,7 +519,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             mem="32*1024 if file_size('[depends[0]]') < 25 else 3*32*1024", # 32 GB or more depending on file size
             cores=threads,
             name=utilities.name_task(sample,"humann2"),
-            docker_image="biobakery/humann2:2.8.0_cloud_v3")
+            docker_image="biobakery/humann2:2.8.1_cloud_r1")
 
     # create a task to get the read and species counts for each humann2 run from the log files
     workflow.add_task_gridable(
@@ -530,7 +530,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         mem=5*1024, # 5 GB
         cores=1,
         name="humann2_count_alignments_species",
-        docker_image="biobakery/workflows:0.13.5_cloud")
+        docker_image="biobakery/workflows:0.13.5_cloud_r1")
     
     ### STEP #2: Regroup UniRef90 gene families to ecs ###
     
@@ -548,7 +548,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         mem=5*1024, # 5 GB
         cores=1,
         name=map(lambda sample: utilities.name_task(sample,"humann2_regroup_UniRef2EC"), sample_names),
-        docker_image="biobakery/humann2:2.8.0_cloud_v3")
+        docker_image="biobakery/humann2:2.8.1_cloud_r1")
 
     
     ### STEP #3: Merge gene families, ecs, and pathway abundance files
@@ -572,7 +572,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             mem=50*1024 if "gene" in basename else 5*1024, # 50 GB
             cores=1,
             name="humann2_join_tables_"+basename,
-            docker_image="biobakery/humann2:2.8.0_cloud_v3")
+            docker_image="biobakery/humann2:2.8.1_cloud_r1")
     
     ### STEP #4: Normalize gene families, ecs, and pathway abundance to relative abundance (then merge files) ###
     
@@ -594,7 +594,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         mem=5*1024, # 5 GB
         cores=1,
         name=renorm_task_names,
-        docker_image="biobakery/humann2:2.8.0_cloud_v3")
+        docker_image="biobakery/humann2:2.8.1_cloud_r1")
 
     
     # get a list of merged files for ec, gene families, and pathway abundance
@@ -615,7 +615,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
             mem=50*1024 if "gene" in input_type else 5*1024,
             cores=1,
             name="humann2_join_tables_"+input_type,
-            docker_image="biobakery/humann2:2.8.0_cloud_v3")
+            docker_image="biobakery/humann2:2.8.1_cloud_r1")
 
     # get feature counts for the ec, gene families, and pathways
     genefamilies_counts = files.ShotGun.path("genefamilies_relab_counts", output_folder)
@@ -629,7 +629,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         mem=5*1024,
         cores=1,
         name=["humann2_count_features_genes","humann2_count_features_ecs","humann2_count_features_pathways"],
-        docker_image="biobakery/workflows:0.13.5_cloud")
+        docker_image="biobakery/workflows:0.13.5_cloud_r1")
     
     # merge the feature counts into a single file
     all_feature_counts = files.ShotGun.path("feature_counts", output_folder)
@@ -641,7 +641,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         mem=5*1024,
         cores=1,
         name="humann2_merge_feature_counts",
-        docker_image="biobakery/humann2:2.8.0_cloud_v3")
+        docker_image="biobakery/humann2:2.8.1_cloud_r1")
 
         
     return merged_genefamilies_relab, merged_ecs_relab, merged_pathabundance_relab, merged_genefamilies, merged_ecs, merged_pathabundance
