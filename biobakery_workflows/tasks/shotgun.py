@@ -896,7 +896,7 @@ def panphlan_profile(task,species_number,panphlan_db):
 
         # get the name of the species gene file target
         output_folder = os.path.dirname(task.depends[1].name)
-        gene_target=os.path.join(output_folder,selected_species+"_gene_presence_absence.csv")
+        gene_target=os.path.join(output_folder,selected_species+"_gene_presence_absence.tsv")
         # run the task
         return_code = utilities.run_task(
             "panphlan_profile.py -c [args[0]] -i [args[1]] --o_dna [targets[0]] --add_strains --i_bowtie2_indexes [args[2]] --verbose > [targets[1]]",
