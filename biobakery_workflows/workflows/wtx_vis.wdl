@@ -69,11 +69,8 @@ task VisualizationReport {
     (cd ~{FunctionalCountsFolder} && ln -s ~{FunctionalReadSpeciesCountFile} && ln -s ~{FunctionalFeatureCountsFile})
 
     if [ ~{metadataSet} == 'yes' ]; then
-      echo "Running with metadata"
       biobakery_workflows wmgx_vis --input input --output ~{OutFileName} --project-name ~{ProjectName} --exclude-workflow-info --input-metadata ~{MetadataFile}
     else
-      echo "Running without metadata"
-      echo ~{metadataSet}
       biobakery_workflows wmgx_vis --input input --output ~{OutFileName} --project-name ~{ProjectName} --exclude-workflow-info 
     fi
     
