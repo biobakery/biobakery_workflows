@@ -6,7 +6,7 @@ For more information about the bioBakery wmgx workflows, including a detailed di
 
 ### Inputs
 
-The workflow has five required inputs and six optional inputs. 
+The workflow has five required inputs and seven optional inputs. 
 
 #### Required inputs
 The workflow requires five inputs for each run.
@@ -20,7 +20,8 @@ To generate a file to use as input for InputRead1Files, follow the Terra instruc
 `gsutil ls gs:/your_data_Google_bucket_id/ | grep ".fastq.gz" | grep ".R1" > ubams.list` . Also since for this workflow we are looking for fastq or fastq.gz input files you might change the name of the file list in this command from "ubams.list" to "fastq_list.txt" . 
 
 #### Optional inputs
-There are an additional five optional inputs for each workflow run. These are not required. If not set, the default values will be used.
+There are an additional seven optional inputs for each workflow run. These are not required. If not set, the default values will be used.
+* bypassFunctionalProfiling (Default = false): This set to true will bypass running functional profiling and all of the downstream tasks including normalization and merging of the functional data products including gene families, ecs, and pathways.
 * dataType (Default = "mtx"): This is the sequencing data type (mtx or mgx).
 * inputMetadataFile (Default = None) : This file is used with the visualization task to annotate the figures with metadata.
 * MaxMemGB_FunctionalProfileTasks (Default = 24 Gb): This is the max memory to request for each HUMAnN v2.0 task. This might need to be increased for larger input files.

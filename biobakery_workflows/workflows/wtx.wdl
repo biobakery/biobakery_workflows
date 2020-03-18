@@ -11,6 +11,7 @@ workflow workflowMTX {
     String ProjectName
     
     # Optional input variables
+    Boolean? bypassFunctionalProfiling
     String? dataType
     File? inputMetadataFile
     Int? preemptibleAttemptsOverride
@@ -24,6 +25,9 @@ workflow workflowMTX {
   
   # Set if metadata is provided
   String metadataSet = if defined(inputMetadataFile) then "yes" else "no"
+  
+  # Set bypass mode
+  Boolean setbypassFunctionalProfiling = select_first([bypassFunctionalProfiling,false])
 
   # Output file names to match AnADAMA2 workflow output names
   String QCReadCountFileName = "kneaddata_read_count_table.tsv"  
@@ -86,40 +90,42 @@ workflow workflowMTX {
     }
     
     # Part 3: For each sample, run functional profiling with HUMAnN v2
-    call FunctionalProfile {
-      input: 
-      sample=ReadPair[2], 
-      QCFastqFile=QualityControl.QCFastqFile, 
-      TaxonomicProfileFile=TaxonomicProfile.TaxonomicProfileFile,
-      preemptibleAttemptsOverride=preemptibleAttemptsOverride,
-      MaxMemGB=MaxMemGB_FunctionalProfileTasks
-    }
+    if (! setbypassFunctionalProfiling ) {
+      call FunctionalProfile {
+        input: 
+        sample=ReadPair[2], 
+        QCFastqFile=QualityControl.QCFastqFile, 
+        TaxonomicProfileFile=TaxonomicProfile.TaxonomicProfileFile,
+        preemptibleAttemptsOverride=preemptibleAttemptsOverride,
+        MaxMemGB=MaxMemGB_FunctionalProfileTasks
+      }
 
-    # regroup gene families to ECs
-    call RegroupECs {
-      input:
-      GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
-      OutFileName=ReadPair[2]+"_ecs.tsv"
-    }
+      # regroup gene families to ECs
+      call RegroupECs {
+        input:
+        GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
+        OutFileName=ReadPair[2]+"_ecs.tsv"
+      }
    
-    # compute relative abundance for gene families, ecs, and pathways
-    call RenormTable as RenormTableGenes {
-      input:
-      InFile=FunctionalProfile.GeneFamiliesFile,
-      OutFileName=ReadPair[2]+"_genefamilies_relab.tsv",
-      MaxMemGB=JoinNormMemDefaultGenes
-    }
-    call RenormTable as RenormTableECs {
-      input:
-      InFile=RegroupECs.OutFile,
-      OutFileName=ReadPair[2]+"_ecs_relab.tsv",
-      MaxMemGB=JoinNormMemDefault
-    }
-    call RenormTable as RenormTablePathways {
-      input:
-      InFile=FunctionalProfile.PathwayAbundanceFile,
-      OutFileName=ReadPair[2]+"_pathabundance_relab.tsv",
-      MaxMemGB=JoinNormMemDefault
+      # compute relative abundance for gene families, ecs, and pathways
+      call RenormTable as RenormTableGenes {
+        input:
+        InFile=FunctionalProfile.GeneFamiliesFile,
+        OutFileName=ReadPair[2]+"_genefamilies_relab.tsv",
+        MaxMemGB=JoinNormMemDefaultGenes
+      }
+      call RenormTable as RenormTableECs {
+        input:
+        InFile=RegroupECs.OutFile,
+        OutFileName=ReadPair[2]+"_ecs_relab.tsv",
+        MaxMemGB=JoinNormMemDefault
+      }
+      call RenormTable as RenormTablePathways {
+        input:
+        InFile=FunctionalProfile.PathwayAbundanceFile,
+        OutFileName=ReadPair[2]+"_pathabundance_relab.tsv",
+        MaxMemGB=JoinNormMemDefault
+      }
     }
   }
 
@@ -130,13 +136,6 @@ workflow workflowMTX {
     OutFileName=QCReadCountFileName
   }
 
-  # count the features during each alignment step
-  call FunctionalCount {
-    input:
-    FunctionalLogFiles=FunctionalProfile.LogFile,
-    OutFileName=FunctionalCountFileName
-  }
-
   # count the species from the taxonomic profiles
   call CountFeatures as TaxonomicCount {
     input:
@@ -144,7 +143,6 @@ workflow workflowMTX {
     OutFileName=TaxonomicProfilesCountsFileName,
     Options="--include s__ --filter t__ --reduce-sample-name"
   } 
-
   # join all taxonomic profiles, gene families, ecs, and pathways (including relative abundance files) from all samples
   call JoinTables as JoinTaxonomicProfiles {
     input:
@@ -152,74 +150,85 @@ workflow workflowMTX {
     OutFileName=JoinedTaxonomicProfilesFileName,
     MaxMemGB=JoinNormMemDefault
   }
-  call JoinTables as JoinGeneFamilies {
-    input:
-    InFiles=FunctionalProfile.GeneFamiliesFile,
-    OutFileName=JoinGeneFamilesOutFileName,
-    MaxMemGB=JoinNormMemDefaultGenes
-  }
-  call JoinTables as JoinECs {
-    input:
-    InFiles=RegroupECs.OutFile,
-    OutFileName=JoinECsOutFileName,
-    MaxMemGB=JoinNormMemDefault
-  }
-  call JoinTables as JoinPathways {
-    input:
-    InFiles=FunctionalProfile.PathwayAbundanceFile,
-    OutFileName=JoinPathwaysOutFileName,
-    MaxMemGB=JoinNormMemDefault
-  }
-  call JoinTables as JoinGeneFamiliesRelab {
-    input:
-    InFiles=RenormTableGenes.OutFile,
-    OutFileName=JoinGeneFamilesRelabOutFileName,
-    MaxMemGB=JoinNormMemDefault
-  }
-  call JoinTables as JoinECsRelab {
-    input:
-    InFiles=RenormTableECs.OutFile,
-    OutFileName=JoinECsRelabOutFileName,
-    MaxMemGB=JoinNormMemDefault
-  }
-  call JoinTables as JoinPathwaysRelab {
-    input:
-    InFiles=RenormTablePathways.OutFile,
-    OutFileName=JoinPathwaysRelabOutFileName,
-    MaxMemGB=JoinNormMemDefault
+
+  if (! setbypassFunctionalProfiling ) {
+  
+    # count the features during each alignment step
+    call FunctionalCount {
+      input:
+      FunctionalLogFiles=FunctionalProfile.LogFile,
+      OutFileName=FunctionalCountFileName
+    }
+  
+    call JoinTables as JoinGeneFamilies {
+      input:
+      InFiles=FunctionalProfile.GeneFamiliesFile,
+      OutFileName=JoinGeneFamilesOutFileName,
+      MaxMemGB=JoinNormMemDefaultGenes
+    }
+    call JoinTables as JoinECs {
+      input:
+      InFiles=RegroupECs.OutFile,
+      OutFileName=JoinECsOutFileName,
+      MaxMemGB=JoinNormMemDefault
+    }
+    call JoinTables as JoinPathways {
+      input:
+      InFiles=FunctionalProfile.PathwayAbundanceFile,
+      OutFileName=JoinPathwaysOutFileName,
+      MaxMemGB=JoinNormMemDefault
+    }
+    call JoinTables as JoinGeneFamiliesRelab {
+      input:
+      InFiles=RenormTableGenes.OutFile,
+      OutFileName=JoinGeneFamilesRelabOutFileName,
+      MaxMemGB=JoinNormMemDefault
+    }
+    call JoinTables as JoinECsRelab {
+      input:
+      InFiles=RenormTableECs.OutFile,
+      OutFileName=JoinECsRelabOutFileName,
+      MaxMemGB=JoinNormMemDefault
+    }
+    call JoinTables as JoinPathwaysRelab {
+      input:
+      InFiles=RenormTablePathways.OutFile,
+      OutFileName=JoinPathwaysRelabOutFileName,
+      MaxMemGB=JoinNormMemDefault
+    }
+
+    # create a file of feature counts from functional profiling data
+    call CountFeatures as CountRelabGenes {
+      input:
+      InFile=JoinGeneFamiliesRelab.OutFile,
+      OutFileName=CountRelabGenesFileName,
+      Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
+    }
+    call CountFeatures as CountRelabECs {
+      input:
+      InFile=JoinECsRelab.OutFile,
+      OutFileName=CountRelabECsFileName,
+      Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
+    }
+    call CountFeatures as CountRelabPathways {
+      input:
+      InFile=JoinPathwaysRelab.OutFile,
+      OutFileName=CountRelabPathwaysFileName,
+      Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
+    }
+    call JoinTables as JoinFeatureCounts {
+      input:
+      InFiles=[CountRelabGenes.OutFile, CountRelabECs.OutFile, CountRelabPathways.OutFile],
+      OutFileName=JoinedFeatureCountsFileName,
+      MaxMemGB=JoinNormMemDefault
+    }
   }
 
-  # create a file of feature counts from functional profiling data
-  call CountFeatures as CountRelabGenes {
-    input:
-    InFile=JoinGeneFamiliesRelab.OutFile,
-    OutFileName=CountRelabGenesFileName,
-    Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
-  }
-  call CountFeatures as CountRelabECs {
-    input:
-    InFile=JoinECsRelab.OutFile,
-    OutFileName=CountRelabECsFileName,
-    Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
-  }
-  call CountFeatures as CountRelabPathways {
-    input:
-    InFile=JoinPathwaysRelab.OutFile,
-    OutFileName=CountRelabPathwaysFileName,
-    Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
-  }
-  call JoinTables as JoinFeatureCounts {
-    input:
-    InFiles=[CountRelabGenes.OutFile, CountRelabECs.OutFile, CountRelabPathways.OutFile],
-    OutFileName=JoinedFeatureCountsFileName,
-    MaxMemGB=JoinNormMemDefault
-  }
-  
-  # generate a visualization report from the joined output files
   call VisualizationReport {
     input:
     QCCountsFile=QCReadCount.OutFile,
     TaxonomicProfileFile=JoinTaxonomicProfiles.OutFile,
+    setbypassFunctionalProfiling=setbypassFunctionalProfiling,
     PathwaysFile=JoinPathwaysRelab.OutFile,
     FunctionalReadSpeciesCountFile=FunctionalCount.OutFile,
     FunctionalFeatureCountsFile=JoinFeatureCounts.OutFile,
@@ -228,6 +237,7 @@ workflow workflowMTX {
     metadataSet=metadataSet,
     MetadataFile=inputMetadataFile
   }
+
 }
 
 task QualityControl {
@@ -448,7 +458,7 @@ task QCReadCount {
 
 task JoinTables {
   input {
-    Array[File] InFiles
+    Array[File?] InFiles
     String OutFileName
     Int? MaxMemGB
   }
@@ -477,7 +487,7 @@ task JoinTables {
 
 task FunctionalCount {
   input {
-    Array[File] FunctionalLogFiles
+    Array[File?] FunctionalLogFiles
     String OutFileName
   }
 
@@ -529,9 +539,10 @@ task VisualizationReport {
   input {
     File QCCountsFile
     File TaxonomicProfileFile
-    File PathwaysFile
-    File FunctionalReadSpeciesCountFile
-    File FunctionalFeatureCountsFile
+    Boolean setbypassFunctionalProfiling
+    File? PathwaysFile
+    File? FunctionalReadSpeciesCountFile
+    File? FunctionalFeatureCountsFile
     String ProjectName
     String OutFileName
     String metadataSet
@@ -552,11 +563,12 @@ task VisualizationReport {
     mkdir -p ~{TaxonomyFolder}
     (cd ~{TaxonomyFolder} && ln -s ~{TaxonomicProfileFile})
     
-    mkdir -p ~{FunctionalMergedFolder}
-    (cd ~{FunctionalMergedFolder} && ln -s ~{PathwaysFile})
-    
-    mkdir -p ~{FunctionalCountsFolder}
-    (cd ~{FunctionalCountsFolder} && ln -s ~{FunctionalReadSpeciesCountFile} && ln -s ~{FunctionalFeatureCountsFile})
+    if [ ~{setbypassFunctionalProfiling} == false ]; then
+      mkdir -p ~{FunctionalMergedFolder}
+      (cd ~{FunctionalMergedFolder} && ln -s ~{PathwaysFile})
+      mkdir -p ~{FunctionalCountsFolder}
+      (cd ~{FunctionalCountsFolder} && ln -s ~{FunctionalReadSpeciesCountFile} && ln -s ~{FunctionalFeatureCountsFile})
+    fi
 
     if [ ~{metadataSet} == 'yes' ]; then
       biobakery_workflows wmgx_vis --input input --output ~{OutFileName} --project-name ~{ProjectName} --exclude-workflow-info --input-metadata ~{MetadataFile}
