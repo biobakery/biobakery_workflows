@@ -1204,7 +1204,7 @@ def prokka(workflow, contigs, output_folder, threads):
     """
     sample_names = utilities.sample_names(contigs, ".contigs.fa")
 
-    time_equation="2*60 if file_size('[depends[0]]') < 10 else 2*2*60"
+    time_equation="10*60 if file_size('[depends[0]]') < 10 else 20*60"
     mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 4*12*1024"
 
     annotation_dir = os.path.join(output_folder, "annotation", "main")
