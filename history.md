@@ -1,6 +1,16 @@
 
 # bioBakery workflows History #
 
+## v0.14.1 03-20-2020 ##
+
+* Added heatmaps for ecs to wmgx vis.
+* Changed functional profiling outputs to optional in wmgx vis.
+* In demultiplex script make the index file optional.
+* Add script to pull out reads mapping to metaphlan2 species by marker.
+* Add two utility scripts for renaming tables and fastq files to sample ids.
+* Add script to update anadama2 database with new files.
+* Add workflow burst script. 
+
 ## v0.14.0 01-08-2020 ##
 
 * Added isolate workflow.
