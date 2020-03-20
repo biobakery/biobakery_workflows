@@ -553,7 +553,7 @@ def top_average_pathways(document, file, max_sets):
         data, remove_description=True)
     
     # remove extra identifier from sample name if included in workflow
-    samples = [sample.replace("_Abundance","") for sample in samples]
+    samples = [sample.replace("_Abundance","").replace("-RPKs","") for sample in samples]
     
     # get the average abundance for the pathways
     top_pathways, top_data = utilities.top_rows(pathways,

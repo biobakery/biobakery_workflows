@@ -67,6 +67,7 @@ args = workflow.parse_args()
 qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, none_if_not_found=True)
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_not_found=True)
 pathabundance=files.ShotGun.path("pathabundance_relab",args.input, none_if_not_found=True)
+ecsabundance=files.ShotGun.path("ecs_relab",args.input, none_if_not_found=True)
 read_counts=files.ShotGun.path("humann2_read_counts",args.input, none_if_not_found=True)
 feature_counts=files.ShotGun.path("feature_counts",args.input, none_if_not_found=True)
 
@@ -91,7 +92,7 @@ if qc_counts:
 templates+=[utilities.get_package_file("taxonomy")]
 
 # add the functional template if files are included
-if pathabundance and read_counts and feature_counts:
+if pathabundance and read_counts and feature_counts and ecsabundance:
     templates+=[utilities.get_package_file("functional_dna")]
 
 # add the template for the data processing information
@@ -112,6 +113,7 @@ doc_task=workflow.add_document(
           "dna_read_counts":qc_counts,
           "taxonomic_profile":taxonomic_profile,
           "dna_pathabundance":pathabundance,
+          "dna_ecabundance": ecsabundance,
           "read_counts":read_counts,
           "feature_counts":feature_counts,
           "format":args.format,
