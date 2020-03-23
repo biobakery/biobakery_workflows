@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v0.14.2 03-23-2020 ##
+
+* Fix error when running wmgx_vis with metadata for ec heatmaps.
+
 ## v0.14.1 03-20-2020 ##
 
 * Added heatmaps for ecs to wmgx vis.
