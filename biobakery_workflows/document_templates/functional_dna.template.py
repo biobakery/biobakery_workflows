@@ -38,6 +38,9 @@ utilities.change_pweave_figure_size_heatmap(pdf_format)
 #+ echo=False
 # if there is metadata, add it to the heatmap
 def log10_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, data_type="pathways"):
+    merged_data=[]
+    metadata_pathways=[]
+    metadata_samples=[]
     if 'metadata' in vars and vars['metadata']:
         merged_data, metadata_samples=utilities.merge_metadata(vars['metadata'], dna_samples, 
             [[dna_top_average_pathways[i]]+dna_top_average_data[i] for i in range(len(dna_top_average_pathways))])
@@ -51,17 +54,19 @@ def log10_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, d
         document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
             title="Top "+str(max_sets)+" "+data_type+" by average abundance")  
 
-log10_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data)
+    return merged_data, metadata_pathways, metadata_samples
+
+merged_data, metadata_pathways, metadata_samples=log10_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data)
 
 #' <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="log10") %> 
 
 #+ echo=False
-log10_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
+ec_merged_data, ec_pathways, ec_samples=log10_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
 
 #' <% if pdf_format: print("\clearpage") %>
 
 #+ echo=False
-def zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, data_type="pathways"):
+def zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples, data_type="pathways"):
     # if there is metadata, add it to the heatmap
     if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
         # get the total number of features
@@ -92,12 +97,12 @@ def zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, 
             title="Top "+str(max_sets)+" "+data_type+" by average abundance",
             log_scale=False,zscore=True)
 
-zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data)
+zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples)
 
 #' <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
 
 #+ echo=False
-zscore_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
+zscore_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, ec_merged_data, ec_pathways, ec_samples, "ecs")
 
 #' <% if pdf_format: print("\clearpage") %>
 
