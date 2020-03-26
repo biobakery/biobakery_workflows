@@ -9,7 +9,7 @@ from anadama2 import Workflow
 workflow = Workflow()
 
 # add the list of possible file extensions
-workflow.add_argument("input-extensions", desc="the comma-delimited list of extensions of the input files", default="txt,tsv,fastq,fastq.gz,log")
+workflow.add_argument("input-extensions", desc="the comma-delimited list of extensions of the input files", default="txt,tsv,fastq,fastq.gz,log,sam")
 args = workflow.parse_args()
 
 # get all of the files in the input folder with the extensions provided
