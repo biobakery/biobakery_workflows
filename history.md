@@ -1,6 +1,11 @@
 
 # bioBakery workflows History #
 
+## v0.14.3 03-31-2020 ##
+
+* Allow for single QC database (fix ratio table in wmgx vis).
+* Add target for strainphlan best tree if created with generic clade name.
+
 ## v0.14.2 03-23-2020 ##
 
 * Fix error when running wmgx_vis with metadata for ec heatmaps.

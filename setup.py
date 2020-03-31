@@ -39,7 +39,7 @@ if not os.path.isfile(counter_file):
     " since the global PyPI download stats are currently turned off.")
     download(COUNTER_URL,counter_file)
 
-VERSION = "0.14.2"
+VERSION = "0.14.3"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
