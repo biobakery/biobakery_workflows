@@ -1200,11 +1200,13 @@ def microbial_read_proportion_multiple_databases(data, columns, orphan_data=None
     for index, qc_database in enumerate(columns[2:]):
         # get a subset of the data for this ratio
         data_subset=[row[:2]+[row[index+2]] for row in data]
-        
+
         # create subset of orphan data if provided
         orphan_subset=None
-        if orphan_data:
+        if orphan_data and len(orphan_data[0]) > 2:
             orphan_subset=[row[:2]+[row[index+2]] for row in orphan_data]
+        else:
+            orphan_subset=orphan_data
         
         reads_ratio, ratio_labels = microbial_read_proportion(data_subset, 
             orphan_data=orphan_subset, database_name=qc_database, rna=rna)
