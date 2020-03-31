@@ -686,7 +686,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         StrainPhlAn: A tool for strain profiling.    
         
     """        
-    
+   
     # find the name of the clade in the list
     with open(clade_list) as file_handle:
         clades=[line.strip().split(" ")[0] for line in filter(lambda line: line.startswith("s__") or line.startswith("g__"), file_handle.readlines())]
@@ -748,11 +748,11 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             command += " --ifn_ref_genomes " + " --ifn_ref_genomes ".join(genomes)
         
         # write the output to the log
-        command += " > [targets[0]]"
+        command += " > [targets[0]] && touch [targets[1]] && if [ -f [args[1]]/RAxML_bestTree.[args[2]].tree ]; then cp [args[1]]/RAxML_bestTree.[args[2]].tree [targets[1]]; fi"
         
     else:
         # there is not a clade of this number, create an empty output file
-        command = "touch [targets[0]]"
+        command = "touch [targets[0]] && touch [targets[1]]"
         
     # run the task
     return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, 
@@ -826,13 +826,14 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
     
     ### STEP #3: Run strainphlan on the top set of clades identified
     clade_logs = utilities.name_files(map(str,range(max_species)), output_folder, tag="clade", subfolder="strainphlan", extension="log")
+    clade_tree = utilities.name_files(map(str,range(max_species)), output_folder, tag="clade", subfolder="strainphlan", extension="tree")
     for clade_number in range(max_species):
         workflow.add_task_gridable(
             utilities.partial_function(strainphlan,threads=threads,clade_number=clade_number,
                 clade_list=ordered_clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder),
                 options=options),
             depends=strainphlan_markers+[ordered_clade_list],
-            targets=clade_logs[clade_number-1],                           
+            targets=[clade_logs[clade_number-1],clade_tree[clade_number-1]],                           
             time=6*60, # 6 hours
             mem=10*1024, # 10 GB
             cores=threads,
