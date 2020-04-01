@@ -1,4 +1,4 @@
-version 1.0
+on 1.0
 
 workflow workflowMTXVis {
 
@@ -6,9 +6,10 @@ workflow workflowMTXVis {
   input {
     File QCCountsFile
     File TaxonomicProfileFile
-    File PathwaysFile
-    File FunctionalReadSpeciesCountFile
-    File FunctionalFeatureCountsFile
+    File ?PathwaysFile
+    File ?ECsFile
+    File ?FunctionalReadSpeciesCountFile
+    File ?FunctionalFeatureCountsFile
     String ProjectName
     
     # Optional input variables
@@ -20,12 +21,16 @@ workflow workflowMTXVis {
   
   String VisualizationsFileName = ProjectName+"_visualizations"
   
+  Boolean setbypassFunctionalProfiling = if defined(PathwaysFile) then false else true
+  
   # generate a visualization report from the joined output files
   call VisualizationReport {
     input:
     QCCountsFile=QCCountsFile,
     TaxonomicProfileFile=TaxonomicProfileFile,
+    setbypassFunctionalProfiling=setbypassFunctionalProfiling,
     PathwaysFile=PathwaysFile,
+    ECsFile=ECsFile,
     FunctionalReadSpeciesCountFile=FunctionalReadSpeciesCountFile,
     FunctionalFeatureCountsFile=FunctionalFeatureCountsFile,
     ProjectName=ProjectName,
@@ -39,9 +44,11 @@ task VisualizationReport {
   input {
     File QCCountsFile
     File TaxonomicProfileFile
-    File PathwaysFile
-    File FunctionalReadSpeciesCountFile
-    File FunctionalFeatureCountsFile
+    Boolean setbypassFunctionalProfiling
+    File? PathwaysFile
+    File? FunctionalReadSpeciesCountFile
+    File? FunctionalFeatureCountsFile
+    File? ECsFile
     String ProjectName
     String OutFileName
     String metadataSet
@@ -62,11 +69,12 @@ task VisualizationReport {
     mkdir -p ~{TaxonomyFolder}
     (cd ~{TaxonomyFolder} && ln -s ~{TaxonomicProfileFile})
     
-    mkdir -p ~{FunctionalMergedFolder}
-    (cd ~{FunctionalMergedFolder} && ln -s ~{PathwaysFile})
-    
-    mkdir -p ~{FunctionalCountsFolder}
-    (cd ~{FunctionalCountsFolder} && ln -s ~{FunctionalReadSpeciesCountFile} && ln -s ~{FunctionalFeatureCountsFile})
+    if [ ~{setbypassFunctionalProfiling} == false ]; then
+      mkdir -p ~{FunctionalMergedFolder}
+      (cd ~{FunctionalMergedFolder} && ln -s ~{PathwaysFile} && ln -s ~{ECsFile})
+      mkdir -p ~{FunctionalCountsFolder}
+      (cd ~{FunctionalCountsFolder} && ln -s ~{FunctionalReadSpeciesCountFile} && ln -s ~{FunctionalFeatureCountsFile})
+    fi
 
     if [ ~{metadataSet} == 'yes' ]; then
       biobakery_workflows wmgx_vis --input input --output ~{OutFileName} --project-name ~{ProjectName} --exclude-workflow-info --input-metadata ~{MetadataFile}
@@ -81,7 +89,7 @@ task VisualizationReport {
   }
   
   runtime {
-    docker:"biobakery/workflows:0.13.5_cloud_r2"
+    docker:"biobakery/workflows:0.14.2_cloud"
     cpu: 1
       memory: "5 GB"
       disks: "local-disk 10 SSD"
