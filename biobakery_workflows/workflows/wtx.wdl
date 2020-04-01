@@ -10,6 +10,10 @@ workflow workflowMTX {
     String inputExtension
     String ProjectName
     
+    # Database locations
+    File versionSpecifichumanDB
+    File versionSpecificrrnaDB
+    
     # Optional input variables
     Boolean? bypassFunctionalProfiling
     String? dataType
@@ -75,6 +79,8 @@ workflow workflowMTX {
       rawfile1=ReadPair[0],
       rawfile2=ReadPair[1],
       sample=ReadPair[2],
+      humanDB=versionSpecifichumanDB,
+      rrnaDB=versionSpecificrrnaDB,
       dataType=dataTypeSetting,
       preemptibleAttemptsOverride=preemptibleAttemptsOverride,
       MaxMemGB=MaxMemGB_QualityControlTasks
@@ -88,14 +94,16 @@ workflow workflowMTX {
       preemptibleAttemptsOverride=preemptibleAttemptsOverride,
       MaxMemGB=MaxMemGB_TaxonomicProfileTasks
     }
-    
+   }
+   
+   if (! setbypassFunctionalProfiling ) {
     # Part 3: For each sample, run functional profiling with HUMAnN v2
-    if (! setbypassFunctionalProfiling ) {
+    scatter (sample_index in range(length(PairPaths))) {
       call FunctionalProfile {
         input: 
-        sample=ReadPair[2], 
-        QCFastqFile=QualityControl.QCFastqFile, 
-        TaxonomicProfileFile=TaxonomicProfile.TaxonomicProfileFile,
+        sample=PairPaths[sample_index][2], 
+        QCFastqFile=QualityControl.QCFastqFile[sample_index], 
+        TaxonomicProfileFile=TaxonomicProfile.TaxonomicProfileFile[sample_index],
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
         MaxMemGB=MaxMemGB_FunctionalProfileTasks
       }
@@ -104,54 +112,29 @@ workflow workflowMTX {
       call RegroupECs {
         input:
         GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
-        OutFileName=ReadPair[2]+"_ecs.tsv"
+        OutFileName=PairPaths[sample_index][2]+"_ecs.tsv"
       }
    
       # compute relative abundance for gene families, ecs, and pathways
       call RenormTable as RenormTableGenes {
         input:
         InFile=FunctionalProfile.GeneFamiliesFile,
-        OutFileName=ReadPair[2]+"_genefamilies_relab.tsv",
+        OutFileName=PairPaths[sample_index][2]+"_genefamilies_relab.tsv",
         MaxMemGB=JoinNormMemDefaultGenes
       }
       call RenormTable as RenormTableECs {
         input:
         InFile=RegroupECs.OutFile,
-        OutFileName=ReadPair[2]+"_ecs_relab.tsv",
+        OutFileName=PairPaths[sample_index][2]+"_ecs_relab.tsv",
         MaxMemGB=JoinNormMemDefault
       }
       call RenormTable as RenormTablePathways {
         input:
         InFile=FunctionalProfile.PathwayAbundanceFile,
-        OutFileName=ReadPair[2]+"_pathabundance_relab.tsv",
+        OutFileName=PairPaths[sample_index][2]+"_pathabundance_relab.tsv",
         MaxMemGB=JoinNormMemDefault
       }
     }
-  }
-
-  # count the reads during each step of QC
-  call QCReadCount {
-    input:
-    LogFiles=QualityControl.LogFile,
-    OutFileName=QCReadCountFileName
-  }
-
-  # count the species from the taxonomic profiles
-  call CountFeatures as TaxonomicCount {
-    input:
-    InFile=JoinTaxonomicProfiles.OutFile,
-    OutFileName=TaxonomicProfilesCountsFileName,
-    Options="--include s__ --filter t__ --reduce-sample-name"
-  } 
-  # join all taxonomic profiles, gene families, ecs, and pathways (including relative abundance files) from all samples
-  call JoinTables as JoinTaxonomicProfiles {
-    input:
-    InFiles=TaxonomicProfile.TaxonomicProfileFile,
-    OutFileName=JoinedTaxonomicProfilesFileName,
-    MaxMemGB=JoinNormMemDefault
-  }
-
-  if (! setbypassFunctionalProfiling ) {
   
     # count the features during each alignment step
     call FunctionalCount {
@@ -221,7 +204,29 @@ workflow workflowMTX {
       InFiles=[CountRelabGenes.OutFile, CountRelabECs.OutFile, CountRelabPathways.OutFile],
       OutFileName=JoinedFeatureCountsFileName,
       MaxMemGB=JoinNormMemDefault
-    }
+    }   
+  }
+
+  # count the reads during each step of QC
+  call QCReadCount {
+    input:
+    LogFiles=QualityControl.LogFile,
+    OutFileName=QCReadCountFileName
+  }
+
+  # count the species from the taxonomic profiles
+  call CountFeatures as TaxonomicCount {
+    input:
+    InFile=JoinTaxonomicProfiles.OutFile,
+    OutFileName=TaxonomicProfilesCountsFileName,
+    Options="--include s__ --filter t__ --reduce-sample-name"
+  } 
+  # join all taxonomic profiles, gene families, ecs, and pathways (including relative abundance files) from all samples
+  call JoinTables as JoinTaxonomicProfiles {
+    input:
+    InFiles=TaxonomicProfile.TaxonomicProfileFile,
+    OutFileName=JoinedTaxonomicProfilesFileName,
+    MaxMemGB=JoinNormMemDefault
   }
 
   call VisualizationReport {
@@ -230,6 +235,7 @@ workflow workflowMTX {
     TaxonomicProfileFile=JoinTaxonomicProfiles.OutFile,
     setbypassFunctionalProfiling=setbypassFunctionalProfiling,
     PathwaysFile=JoinPathwaysRelab.OutFile,
+    ECsFile=JoinECsRelab.OutFile,
     FunctionalReadSpeciesCountFile=FunctionalCount.OutFile,
     FunctionalFeatureCountsFile=JoinFeatureCounts.OutFile,
     ProjectName=ProjectName,
@@ -245,6 +251,8 @@ task QualityControl {
     File rawfile1
     File rawfile2
     String sample
+    File humanDB
+    File rrnaDB
     String dataType
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
@@ -264,13 +272,13 @@ task QualityControl {
     
     # download the human reference
     mkdir -p ~{humanDatabase}
-    kneaddata_database --download human_genome bowtie2 ~{humanDatabase}
+    kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
     
     # if data is of type mtx, then download additional database
     if [ "${dataType}" != 'mtx' ]; then
         #create databases
         mkdir -p ~{transcriptDatabase}
-        kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase}
+        kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{rrnaDB}
     fi
     
     #run kneaddata with two reference databases
@@ -289,7 +297,7 @@ task QualityControl {
   }
   
   runtime {
-    docker: "biobakery/kneaddata:0.7.3_cloud_r2" 
+    docker: "biobakery/kneaddata:0.7.5_cloud" 
     cpu: 8
       memory: mem + " GB"
       preemptible: preemptible_attempts
@@ -458,7 +466,7 @@ task QCReadCount {
 
 task JoinTables {
   input {
-    Array[File?] InFiles
+    Array[File] InFiles
     String OutFileName
     Int? MaxMemGB
   }
@@ -487,7 +495,7 @@ task JoinTables {
 
 task FunctionalCount {
   input {
-    Array[File?] FunctionalLogFiles
+    Array[File] FunctionalLogFiles
     String OutFileName
   }
 
@@ -543,6 +551,7 @@ task VisualizationReport {
     File? PathwaysFile
     File? FunctionalReadSpeciesCountFile
     File? FunctionalFeatureCountsFile
+    File? ECsFile
     String ProjectName
     String OutFileName
     String metadataSet
@@ -565,7 +574,7 @@ task VisualizationReport {
     
     if [ ~{setbypassFunctionalProfiling} == false ]; then
       mkdir -p ~{FunctionalMergedFolder}
-      (cd ~{FunctionalMergedFolder} && ln -s ~{PathwaysFile})
+      (cd ~{FunctionalMergedFolder} && ln -s ~{PathwaysFile} && ln -s ~{ECsFile})
       mkdir -p ~{FunctionalCountsFolder}
       (cd ~{FunctionalCountsFolder} && ln -s ~{FunctionalReadSpeciesCountFile} && ln -s ~{FunctionalFeatureCountsFile})
     fi
@@ -583,7 +592,7 @@ task VisualizationReport {
   }
   
   runtime {
-    docker:"biobakery/workflows:0.13.5_cloud_r2"
+    docker:"biobakery/workflows:0.14.3_cloud"
     cpu: 1
       memory: "5 GB"
       disks: "local-disk 10 SSD"
