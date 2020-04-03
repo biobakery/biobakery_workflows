@@ -13,6 +13,9 @@ workflow workflowMTX {
     # Database locations
     File versionSpecifichumanDB
     File versionSpecificrrnaDB
+    File versionSpecificChocophlan
+    File versionSpecificUniRef90
+    File versionSpecificUtilityMapping
     
     # Optional input variables
     Boolean? bypassFunctionalProfiling
@@ -104,6 +107,8 @@ workflow workflowMTX {
         sample=PairPaths[sample_index][2], 
         QCFastqFile=QualityControl.QCFastqFile[sample_index], 
         TaxonomicProfileFile=TaxonomicProfile.TaxonomicProfileFile[sample_index],
+        versionSpecificChocophlan=versionSpecificChocophlan,
+        versionSpecificUniRef90=versionSpecificUniRef90,
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
         MaxMemGB=MaxMemGB_FunctionalProfileTasks
       }
@@ -112,6 +117,7 @@ workflow workflowMTX {
       call RegroupECs {
         input:
         GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
+        versionSpecificUtilityMapping=versionSpecificUtilityMapping,
         OutFileName=PairPaths[sample_index][2]+"_ecs.tsv"
       }
    
@@ -344,6 +350,8 @@ task FunctionalProfile {
     File QCFastqFile
     File TaxonomicProfileFile
     String sample
+    File versionSpecificChocophlan
+    File versionSpecificUniRef90
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -356,8 +364,8 @@ task FunctionalProfile {
   # download the two reference databases and run humann2
   command {
     mkdir -p ${databases}
-    humann2_databases --download chocophlan full ${databases}
-    humann2_databases --download uniref uniref90_diamond ${databases}
+    humann2_databases --download chocophlan full ${databases} --database-location ${versionSpecificChocophlan}
+    humann2_databases --download uniref uniref90_diamond ${databases} --database-location ${versionSpecificUniRef90}
 
     humann2 --input ${QCFastqFile} --output ./ --taxonomic-profile ${TaxonomicProfileFile} --threads 8 --o-log ${sample}.log
     }
@@ -371,7 +379,7 @@ task FunctionalProfile {
     }
 
   runtime {
-    docker:"biobakery/humann2:2.8.1_cloud_r1"
+    docker:"biobakery/humann2:2.8.2_cloud"
     cpu: 8
       memory: mem + " GB"
       disks: "local-disk 120 SSD"
@@ -382,6 +390,7 @@ task FunctionalProfile {
 task RegroupECs {
   input {
     File GeneFamiliesFile
+    File versionSpecificUtilityMapping
     String OutFileName
   }
   
@@ -390,7 +399,7 @@ task RegroupECs {
   # download the utility databases and regroup to ECs
   command {
     mkdir -p ${databases}
-    humann2_databases --download utility_mapping full ${databases}
+    humann2_databases --download utility_mapping full ${databases} --database-location ${versionSpecificUtilityMapping}
 
     humann2_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups uniref90_level4ec
   }
@@ -400,7 +409,7 @@ task RegroupECs {
   }
 
   runtime {
-    docker:"biobakery/humann2:2.8.1_cloud_r1"
+    docker:"biobakery/humann2:2.8.2_cloud"
     cpu: 1
       memory: "10 GB"
       disks: "local-disk 20 SSD"
@@ -420,9 +429,6 @@ task RenormTable {
 
   # download the utility databases and renorm tables to relative abundance
   command {
-    mkdir -p ${databases}
-    humann2_databases --download utility_mapping full ${databases}
-
     humann2_renorm_table --input ${InFile} --output ${OutFileName} --units relab --special n
   }
 
@@ -431,7 +437,7 @@ task RenormTable {
   }
 
   runtime {
-    docker:"biobakery/humann2:2.8.1_cloud_r1"
+    docker:"biobakery/humann2:2.8.2_cloud"
     cpu: 1
       memory: mem+" GB"
       disks: "local-disk 20 SSD"
@@ -486,7 +492,7 @@ task JoinTables {
   }
 
   runtime {
-    docker:"biobakery/humann2:2.8.1_cloud_r1"
+    docker:"biobakery/humann2:2.8.2_cloud"
     cpu: 1
       memory: mem+" GB"
       disks: "local-disk 10 SSD"
