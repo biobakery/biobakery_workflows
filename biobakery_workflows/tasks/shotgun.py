@@ -964,7 +964,7 @@ def strain_gene_profile(workflow,qc_files,abundance_file,output,threads,panphlan
             targets=profile_output_log,
             mem=5*1024, # 5 GB
             time=60, # 1 hour
-            threads=1,
+            cores=1,
             name="panphlan_profile_clade_"+str(clade_number))
 
 def megahit(workflow, input_files, extension, output_folder, threads, remove_intermediate_output=True,
