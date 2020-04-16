@@ -835,7 +835,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             depends=strainphlan_markers+[ordered_clade_list],
             targets=[clade_logs[clade_number-1],clade_tree[clade_number-1]],                           
             time=6*60, # 6 hours
-            mem=10*1024, # 10 GB
+            mem=50*1024, # 50 GB
             cores=threads,
             name="strainphlan_clade_"+str(clade_number))
 
