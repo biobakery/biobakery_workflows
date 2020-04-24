@@ -745,6 +745,8 @@ A mtx workflow based on the bioBakery ANADAMA2 wmgx workflows.
 
 This workflow is currently installed in the Terra workspace: https://app.terra.bio/#workspaces/rjxmicrobiome/mtx_workflow .
 
+The WDL is located in this repository at: `biobakery_workflows/workflows/wtx.wdl` . 
+
 **Inputs**
 
 The workflow has ten required inputs and seven optional inputs. 
