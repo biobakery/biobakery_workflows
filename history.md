@@ -1,6 +1,12 @@
 
 # bioBakery workflows History #
 
+## v0.15.0 04-24-2020 ##
+
+* Added WDL workflow.
+* Increased default strainphlan slurm memory request to allow for larger runs.
+* Change formatting of panphlan task command to allow for grid runs.
+
 ## v0.14.3 03-31-2020 ##
 
 * Allow for single QC database (fix ratio table in wmgx vis).
