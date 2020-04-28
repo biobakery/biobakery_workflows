@@ -686,7 +686,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         StrainPhlAn: A tool for strain profiling.    
         
     """        
-   
+    
     # find the name of the clade in the list
     with open(clade_list) as file_handle:
         clades=[line.strip().split(" ")[0] for line in filter(lambda line: line.startswith("s__") or line.startswith("g__"), file_handle.readlines())]
@@ -833,7 +833,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
                 clade_list=ordered_clade_list,reference_folder=os.path.abspath(reference_folder),marker_folder=os.path.abspath(marker_folder),
                 options=options),
             depends=strainphlan_markers+[ordered_clade_list],
-            targets=[clade_logs[clade_number-1],clade_tree[clade_number-1]],                           
+            targets=[clade_logs[clade_number-1],clade_tree[clade_number-1]], 
             time=6*60, # 6 hours
             mem=50*1024, # 50 GB
             cores=threads,
@@ -1003,7 +1003,7 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
         
     assembly_dir = os.path.join(output_folder, "assembly", "main")
     depends = []
-    megahit_template = "megahit %s -t [args[0]] -m 0.99 -f -o [targets[0]] --out-prefix [args[1]] [args[2]]"
+    megahit_template = "megahit %s -t [args[0]] -m 0.99 -f -o [args[3]] --out-prefix [args[1]] [args[2]]"
 
     workflow.add_task('mkdir -p [targets[0]]',
                       depends=[output_folder],
@@ -1026,8 +1026,8 @@ def megahit(workflow, input_files, extension, output_folder, threads, remove_int
 
         workflow.add_task_gridable(megahit_cmd,
                                    depends=depends,
-                                   targets=[TrackedDirectory(megahit_contig_dir), megahit_contig, TrackedDirectory(intermediate_dir), completed_file],
-                                   args=[threads, sample_name, additional_options],
+                                   targets=[megahit_contig, completed_file],
+                                   args=[threads, sample_name, additional_options, megahit_contig_dir],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
@@ -1205,7 +1205,7 @@ def prokka(workflow, contigs, output_folder, threads):
     """
     sample_names = utilities.sample_names(contigs, ".contigs.fa")
 
-    time_equation="10*60 if file_size('[depends[0]]') < 10 else 20*60"
+    time_equation="20*60 if file_size('[depends[0]]') < 10 else 30*60"
     mem_equation="2*12*1024 if file_size('[depends[0]]') < 10 else 4*12*1024"
 
     annotation_dir = os.path.join(output_folder, "annotation", "main")
@@ -1217,10 +1217,10 @@ def prokka(workflow, contigs, output_folder, threads):
     for (sample_name, input_contig, gff3_file, nuc_cds_file, aa_cds_file, feature_table) in zip(sample_names, contigs, 
                                                                                                 gff3_files, nuc_cds_files, aa_cds_files, 
                                                                                                 feature_tables):
-        workflow.add_task_gridable("prokka --force --outdir [depends[1]] --prefix [args[0]] [depends[0]] --cpus [args[1]]",
-                                   depends=[input_contig, TrackedDirectory(annotation_dir)],
+        workflow.add_task_gridable("prokka --force --outdir [args[2]] --prefix [args[0]] [depends[0]] --cpus [args[1]]",
+                                   depends=[input_contig],
                                    targets=[gff3_file, nuc_cds_file, aa_cds_file, feature_table],
-                                   args=[sample_name, threads],
+                                   args=[sample_name, threads, annotation_dir],
                                    cores=threads,
                                    mem=mem_equation,
                                    time=time_equation)
