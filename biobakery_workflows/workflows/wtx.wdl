@@ -27,6 +27,12 @@ workflow workflowMTX {
     Int? MaxMemGB_FunctionalProfileTasks
   }
   
+  # Set the docker tags
+  String kneaddataDockerImage = "biobakery/kneaddata:0.7.5_cloud"
+  String metaphlanDockerImage = "biobakery/metaphlan2:2.7.7_cloud_r1"
+  String humannDockerImage = "biobakery/humann2:2.8.2_cloud"
+  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud"
+  
   # Set the default data type
   String dataTypeSetting = select_first([dataType, "mtx"])
   
@@ -85,6 +91,7 @@ workflow workflowMTX {
       humanDB=versionSpecifichumanDB,
       rrnaDB=versionSpecificrrnaDB,
       dataType=dataTypeSetting,
+      kneaddataDockerImage=kneaddataDockerImage,
       preemptibleAttemptsOverride=preemptibleAttemptsOverride,
       MaxMemGB=MaxMemGB_QualityControlTasks
     }
@@ -94,6 +101,7 @@ workflow workflowMTX {
       input:
       sample=ReadPair[2], 
       QCFastqFile=QualityControl.QCFastqFile,
+      metaphlanDockerImage=metaphlanDockerImage,
       preemptibleAttemptsOverride=preemptibleAttemptsOverride,
       MaxMemGB=MaxMemGB_TaxonomicProfileTasks
     }
@@ -109,6 +117,7 @@ workflow workflowMTX {
         TaxonomicProfileFile=TaxonomicProfile.TaxonomicProfileFile[sample_index],
         versionSpecificChocophlan=versionSpecificChocophlan,
         versionSpecificUniRef90=versionSpecificUniRef90,
+        humannDockerImage=humannDockerImage,
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
         MaxMemGB=MaxMemGB_FunctionalProfileTasks
       }
@@ -118,7 +127,8 @@ workflow workflowMTX {
         input:
         GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
         versionSpecificUtilityMapping=versionSpecificUtilityMapping,
-        OutFileName=PairPaths[sample_index][2]+"_ecs.tsv"
+        OutFileName=PairPaths[sample_index][2]+"_ecs.tsv",
+        humannDockerImage=humannDockerImage
       }
    
       # compute relative abundance for gene families, ecs, and pathways
@@ -126,18 +136,21 @@ workflow workflowMTX {
         input:
         InFile=FunctionalProfile.GeneFamiliesFile,
         OutFileName=PairPaths[sample_index][2]+"_genefamilies_relab.tsv",
+        humannDockerImage=humannDockerImage,
         MaxMemGB=JoinNormMemDefaultGenes
       }
       call RenormTable as RenormTableECs {
         input:
         InFile=RegroupECs.OutFile,
         OutFileName=PairPaths[sample_index][2]+"_ecs_relab.tsv",
+        humannDockerImage=humannDockerImage,
         MaxMemGB=JoinNormMemDefault
       }
       call RenormTable as RenormTablePathways {
         input:
         InFile=FunctionalProfile.PathwayAbundanceFile,
         OutFileName=PairPaths[sample_index][2]+"_pathabundance_relab.tsv",
+        humannDockerImage=humannDockerImage,
         MaxMemGB=JoinNormMemDefault
       }
     }
@@ -146,43 +159,50 @@ workflow workflowMTX {
     call FunctionalCount {
       input:
       FunctionalLogFiles=FunctionalProfile.LogFile,
-      OutFileName=FunctionalCountFileName
+      OutFileName=FunctionalCountFileName,
+      workflowsDockerImage=workflowsDockerImage
     }
   
     call JoinTables as JoinGeneFamilies {
       input:
       InFiles=FunctionalProfile.GeneFamiliesFile,
       OutFileName=JoinGeneFamilesOutFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefaultGenes
     }
     call JoinTables as JoinECs {
       input:
       InFiles=RegroupECs.OutFile,
       OutFileName=JoinECsOutFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
     call JoinTables as JoinPathways {
       input:
       InFiles=FunctionalProfile.PathwayAbundanceFile,
       OutFileName=JoinPathwaysOutFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
     call JoinTables as JoinGeneFamiliesRelab {
       input:
       InFiles=RenormTableGenes.OutFile,
       OutFileName=JoinGeneFamilesRelabOutFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
     call JoinTables as JoinECsRelab {
       input:
       InFiles=RenormTableECs.OutFile,
       OutFileName=JoinECsRelabOutFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
     call JoinTables as JoinPathwaysRelab {
       input:
       InFiles=RenormTablePathways.OutFile,
       OutFileName=JoinPathwaysRelabOutFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
 
@@ -191,24 +211,28 @@ workflow workflowMTX {
       input:
       InFile=JoinGeneFamiliesRelab.OutFile,
       OutFileName=CountRelabGenesFileName,
-      Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
+      Options="--reduce-sample-name --ignore-un-features --ignore-stratification",
+      workflowsDockerImage=workflowsDockerImage
     }
     call CountFeatures as CountRelabECs {
       input:
       InFile=JoinECsRelab.OutFile,
       OutFileName=CountRelabECsFileName,
-      Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
+      Options="--reduce-sample-name --ignore-un-features --ignore-stratification",
+      workflowsDockerImage=workflowsDockerImage
     }
     call CountFeatures as CountRelabPathways {
       input:
       InFile=JoinPathwaysRelab.OutFile,
       OutFileName=CountRelabPathwaysFileName,
-      Options="--reduce-sample-name --ignore-un-features --ignore-stratification"
+      Options="--reduce-sample-name --ignore-un-features --ignore-stratification",
+      workflowsDockerImage=workflowsDockerImage
     }
     call JoinTables as JoinFeatureCounts {
       input:
       InFiles=[CountRelabGenes.OutFile, CountRelabECs.OutFile, CountRelabPathways.OutFile],
       OutFileName=JoinedFeatureCountsFileName,
+      humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }   
   }
@@ -217,7 +241,8 @@ workflow workflowMTX {
   call QCReadCount {
     input:
     LogFiles=QualityControl.LogFile,
-    OutFileName=QCReadCountFileName
+    OutFileName=QCReadCountFileName,
+    kneaddataDockerImage=kneaddataDockerImage
   }
 
   # count the species from the taxonomic profiles
@@ -225,13 +250,15 @@ workflow workflowMTX {
     input:
     InFile=JoinTaxonomicProfiles.OutFile,
     OutFileName=TaxonomicProfilesCountsFileName,
-    Options="--include s__ --filter t__ --reduce-sample-name"
+    Options="--include s__ --filter t__ --reduce-sample-name",
+    workflowsDockerImage=workflowsDockerImage
   } 
   # join all taxonomic profiles, gene families, ecs, and pathways (including relative abundance files) from all samples
   call JoinTables as JoinTaxonomicProfiles {
     input:
     InFiles=TaxonomicProfile.TaxonomicProfileFile,
     OutFileName=JoinedTaxonomicProfilesFileName,
+    humannDockerImage=humannDockerImage,
     MaxMemGB=JoinNormMemDefault
   }
 
@@ -247,7 +274,8 @@ workflow workflowMTX {
     ProjectName=ProjectName,
     OutFileName=VisualizationsFileName,
     metadataSet=metadataSet,
-    MetadataFile=inputMetadataFile
+    MetadataFile=inputMetadataFile,
+    workflowsDockerImage=workflowsDockerImage
   }
 
 }
@@ -260,6 +288,7 @@ task QualityControl {
     File humanDB
     File rrnaDB
     String dataType
+    String kneaddataDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -303,7 +332,7 @@ task QualityControl {
   }
   
   runtime {
-    docker: "biobakery/kneaddata:0.7.5_cloud" 
+    docker: kneaddataDockerImage
     cpu: 8
       memory: mem + " GB"
       preemptible: preemptible_attempts
@@ -315,6 +344,7 @@ task TaxonomicProfile {
   input {
     File QCFastqFile
     String sample
+    String metaphlanDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -336,7 +366,7 @@ task TaxonomicProfile {
   }
   
   runtime {
-    docker: "biobakery/metaphlan2:2.7.7_cloud_r1"
+    docker: metaphlanDockerImage
     cpu: 8
       memory: mem + " GB"
       preemptible: preemptible_attempts
@@ -352,6 +382,7 @@ task FunctionalProfile {
     String sample
     File versionSpecificChocophlan
     File versionSpecificUniRef90
+    String humannDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -379,7 +410,7 @@ task FunctionalProfile {
     }
 
   runtime {
-    docker:"biobakery/humann2:2.8.2_cloud"
+    docker: humannDockerImage
     cpu: 8
       memory: mem + " GB"
       disks: "local-disk 120 SSD"
@@ -392,6 +423,7 @@ task RegroupECs {
     File GeneFamiliesFile
     File versionSpecificUtilityMapping
     String OutFileName
+    String humannDockerImage
   }
   
   String databases = "databases/"
@@ -409,7 +441,7 @@ task RegroupECs {
   }
 
   runtime {
-    docker:"biobakery/humann2:2.8.2_cloud"
+    docker: humannDockerImage
     cpu: 1
       memory: "10 GB"
       disks: "local-disk 20 SSD"
@@ -420,6 +452,7 @@ task RenormTable {
   input {
     File InFile
     String OutFileName
+    String humannDockerImage
     Int? MaxMemGB
   }
   
@@ -437,7 +470,7 @@ task RenormTable {
   }
 
   runtime {
-    docker:"biobakery/humann2:2.8.2_cloud"
+    docker: humannDockerImage
     cpu: 1
       memory: mem+" GB"
       disks: "local-disk 20 SSD"
@@ -448,6 +481,7 @@ task QCReadCount {
   input {
     Array[File] LogFiles
     String OutFileName
+    String kneaddataDockerImage
   }
   
   # symlink input files to working directory
@@ -463,7 +497,7 @@ task QCReadCount {
   }
 
   runtime {
-    docker:"biobakery/kneaddata:0.7.3_cloud_r1"
+    docker: kneaddataDockerImage
     cpu: 1
       memory: "5 GB"
       disks: "local-disk 10 SSD"
@@ -474,6 +508,7 @@ task JoinTables {
   input {
     Array[File] InFiles
     String OutFileName
+    String humannDockerImage
     Int? MaxMemGB
   }
   
@@ -492,7 +527,7 @@ task JoinTables {
   }
 
   runtime {
-    docker:"biobakery/humann2:2.8.2_cloud"
+    docker: humannDockerImage
     cpu: 1
       memory: mem+" GB"
       disks: "local-disk 10 SSD"
@@ -503,6 +538,7 @@ task FunctionalCount {
   input {
     Array[File] FunctionalLogFiles
     String OutFileName
+    String workflowsDockerImage
   }
 
   # symlink logs to working directory
@@ -518,7 +554,7 @@ task FunctionalCount {
   }
 
   runtime {
-    docker:"biobakery/workflows:0.13.5_cloud_r2"
+    docker: workflowsDockerImage
     cpu: 1
       memory: "5 GB"
       disks: "local-disk 10 SSD"
@@ -530,6 +566,7 @@ task CountFeatures {
     File InFile
     String OutFileName
     String Options
+    String workflowsDockerImage
   }
 
   # count features in a table
@@ -542,7 +579,7 @@ task CountFeatures {
   }
 
   runtime {
-    docker:"biobakery/workflows:0.13.5_cloud_r2"
+    docker: workflowsDockerImage
     cpu: 1
       memory: "5 GB"
       disks: "local-disk 10 SSD"
@@ -562,6 +599,7 @@ task VisualizationReport {
     String OutFileName
     String metadataSet
     File? MetadataFile
+    String workflowsDockerImage
   }
   
   String QCCountsFolder = "input/kneaddata/merged/"
@@ -598,7 +636,7 @@ task VisualizationReport {
   }
   
   runtime {
-    docker:"biobakery/workflows:0.14.3_cloud"
+    docker: workflowsDockerImage
     cpu: 1
       memory: "5 GB"
       disks: "local-disk 10 SSD"
