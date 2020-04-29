@@ -315,15 +315,17 @@ task QualityControl {
 
   # download the two reference databases and then run kneaddata.
   command <<< 
-  
+
     # download second custom database if set
     if [ -z "${customDB2}" ]; then
+        mkdir -p ~{customDatabase2}
         tar xzvf ~{customDB2} -C ~{customDatabase2}
     fi
   
     # use custom databases if provided instead of reference
     if [ -z "${customDB1}" ]; then
-        tar xzvf ~{customDB1} -C ~{customDatabase1}
+        mkdir -p ~{customDatabase1}
+        tar xzvf ~{customDB1} -C ~{customDatabase1}  
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
