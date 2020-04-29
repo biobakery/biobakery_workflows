@@ -317,22 +317,22 @@ task QualityControl {
   command <<< 
 
     # download second custom database if set
-    if [ -z "${customDB2}" ]; then
+    if [ ${default="None" customDB2} != "None" ]; then
         mkdir -p ~{customDatabase2}
         tar xzvf ~{customDB2} -C ~{customDatabase2}
     fi
   
     # use custom databases if provided instead of reference
-    if [ -z "${customDB1}" ]; then
+    if [ ${default="None" customDB1} != "None" ]; then
         mkdir -p ~{customDatabase1}
-        tar xzvf ~{customDB1} -C ~{customDatabase1}  
+        tar xzvf ~{customDB1} -C ~{customDatabase1}
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
         --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{custom_options}
     fi
     
-    if [ ! -z "${customDB1}" ]; then
+    if [ ${default="None" customDB1} == "None" ]; then
         # download the human reference
         mkdir -p ~{humanDatabase}
         kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
