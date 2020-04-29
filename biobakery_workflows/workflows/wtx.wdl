@@ -25,6 +25,9 @@ workflow workflowMTX {
     Int? MaxMemGB_QualityControlTasks
     Int? MaxMemGB_TaxonomicProfileTasks
     Int? MaxMemGB_FunctionalProfileTasks
+    
+    File? customQCDB1
+    File? customQCDB2
   }
   
   # Set the docker tags
@@ -90,6 +93,8 @@ workflow workflowMTX {
       sample=ReadPair[2],
       humanDB=versionSpecifichumanDB,
       rrnaDB=versionSpecificrrnaDB,
+      customDB1=customQCDB1,
+      customDB2=customQCDB2,
       dataType=dataTypeSetting,
       kneaddataDockerImage=kneaddataDockerImage,
       preemptibleAttemptsOverride=preemptibleAttemptsOverride,
@@ -287,6 +292,8 @@ task QualityControl {
     String sample
     File humanDB
     File rrnaDB
+    File? customDB1
+    File? customDB2
     String dataType
     String kneaddataDockerImage
     Int? MaxMemGB
@@ -301,24 +308,44 @@ task QualityControl {
   
   # Add additional database to run options depending on data type
   String options = if dataType == "mtx" then "--reference-db ${transcriptDatabase}" else ""
+  
+  String customDatabase1 = "databases/db1/"
+  String customDatabase2 = "databases/db2/"
+  String custom_options = if defined(customDB2) then "--reference-db ${customDatabase1} --reference-db ${customDatabase2}" else "--reference-db ${customDatabase1}"
 
   # download the two reference databases and then run kneaddata.
   command <<< 
-    
-    # download the human reference
-    mkdir -p ~{humanDatabase}
-    kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
-    
-    # if data is of type mtx, then download additional database
-    if [ "${dataType}" != 'mtx' ]; then
-        #create databases
-        mkdir -p ~{transcriptDatabase}
-        kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{rrnaDB}
+  
+    # download second custom database if set
+    if [ -z "${customDB2}" ]; then
+        tar xzvf ~{customDB2} -C ~{customDatabase2}
+    fi
+  
+    # use custom databases if provided instead of reference
+    if [ -z "${customDB1}" ]; then
+        tar xzvf ~{customDB1} -C ~{customDatabase1}
+        
+        #run kneaddata with custom databases
+        kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{custom_options}
     fi
     
-    #run kneaddata with two reference databases
-    kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
-    --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{options}
+    if [ ! -z "${customDB1}" ]; then
+        # download the human reference
+        mkdir -p ~{humanDatabase}
+        kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
+    
+        # if data is of type mtx, then download additional database
+        if [ "${dataType}" != 'mtx' ]; then
+            #create databases
+            mkdir -p ~{transcriptDatabase}
+            kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{rrnaDB}
+        fi
+    
+        #run kneaddata with two reference databases
+        kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{options}
+    fi
     
     # gzip outputs to save space
     gzip *.fastq
