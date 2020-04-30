@@ -303,6 +303,9 @@ task QualityControl {
   Int mem = select_first([MaxMemGB, 24])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
+  File customDB1File = select_first([customDB1, "None"])
+  File customDB2File = select_first([customDB2, "None"])
+  
   String humanDatabase = "databases/kneaddata_human/"
   String transcriptDatabase = "databases/kneaddata_rrna/"
   
@@ -315,15 +318,15 @@ task QualityControl {
 
   # download the two reference databases and then run kneaddata.
   command <<< 
-
+  
     # download second custom database if set
-    if [ ${default="None" customDB2} != "None" ]; then
+    if [ "${customDB2File}" != "None" ]; then
         mkdir -p ~{customDatabase2}
         tar xzvf ~{customDB2} -C ~{customDatabase2}
     fi
   
     # use custom databases if provided instead of reference
-    if [ ${default="None" customDB1} != "None" ]; then
+    if [ "${customDB1File}" != "None" ]; then
         mkdir -p ~{customDatabase1}
         tar xzvf ~{customDB1} -C ~{customDatabase1}
         
@@ -332,7 +335,7 @@ task QualityControl {
         --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{custom_options}
     fi
     
-    if [ ${default="None" customDB1} == "None" ]; then
+    if [ "${customDB1File}" == "None" ]; then
         # download the human reference
         mkdir -p ~{humanDatabase}
         kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
