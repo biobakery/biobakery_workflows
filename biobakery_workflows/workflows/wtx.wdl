@@ -302,9 +302,9 @@ task QualityControl {
   
   Int mem = select_first([MaxMemGB, 24])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
-  
-  File customDB1File = select_first([customDB1, "None"])
-  File customDB2File = select_first([customDB2, "None"])
+ 
+  File useCustomDB1 = if defined(customDB1) then "yes" else "no"
+  File useCustomDB2 = if defined(customDB2) then "yes" else "no"
   
   String humanDatabase = "databases/kneaddata_human/"
   String transcriptDatabase = "databases/kneaddata_rrna/"
@@ -320,13 +320,13 @@ task QualityControl {
   command <<< 
   
     # download second custom database if set
-    if [ "${customDB2File}" != "None" ]; then
+    if [ "${useCustomDB2}" == "yes" ]; then
         mkdir -p ~{customDatabase2}
         tar xzvf ~{customDB2} -C ~{customDatabase2}
     fi
   
     # use custom databases if provided instead of reference
-    if [ "${customDB1File}" != "None" ]; then
+    if [ "${useCustomDB1}" == "yes" ]; then
         mkdir -p ~{customDatabase1}
         tar xzvf ~{customDB1} -C ~{customDatabase1}
         
@@ -335,7 +335,7 @@ task QualityControl {
         --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{custom_options}
     fi
     
-    if [ "${customDB1File}" == "None" ]; then
+    if [ "${useCustomDB1}" == "no" ]; then
         # download the human reference
         mkdir -p ~{humanDatabase}
         kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
@@ -354,7 +354,7 @@ task QualityControl {
     
     # gzip outputs to save space
     gzip *.fastq
-  >>>
+  >>> 
   
   output {
     File QCFastqFile = "${sample}.fastq.gz"
