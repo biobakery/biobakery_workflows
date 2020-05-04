@@ -8,7 +8,7 @@ import sys
 import os
 import argparse
 
-TOTAL_COUNT_TAG="reads; of these:\n"
+TOTAL_COUNT_TAG="reads; of these:"
 NUCLEOTIDE_COUNT_TAG="Unaligned reads after nucleotide alignment:"
 TRANSLATED_COUNT_TAG="Unaligned reads after translated alignment:"
 SPECIES_COUNT_TAG="Total species selected from prescreen:"
@@ -55,8 +55,8 @@ def main():
         sample=os.path.basename(file).split(".log")[0]
         data=[sample,"NA","NA","NA","NA"]
         for line in open(file):
-            if line.endswith(TOTAL_COUNT_TAG):
-                data[1]=int(line.split()[7])
+            if TOTAL_COUNT_TAG in line:
+                data[1]=int(line.split()[7][2:])
             elif NUCLEOTIDE_COUNT_TAG in line:
                 try:
                     data[2]=int(data[1]*((100-float(line.split()[-2]))/100.0))
