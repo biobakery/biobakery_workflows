@@ -1,6 +1,11 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha 05-04-2020 ##
+
+* Updated to run with HUMAnN v3 and MetaPhlAn v3.
+* Modified to run with python 3.
+
 ## v0.15.0 04-24-2020 ##
 
 * Added WDL workflow.
