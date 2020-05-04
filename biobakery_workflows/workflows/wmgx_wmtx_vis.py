@@ -42,8 +42,8 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 
 # list the required and optional files for the workflow
 # these are expected to be included in the input folder
-wmgx_input_files={"required":["kneaddata_read_counts","taxonomic_profile","pathabundance_relab"],"optional":["humann2_read_counts","feature_counts"]}
-wmtx_input_files={"required":["kneaddata_read_counts"],"optional":["humann2_read_counts","feature_counts"]}
+wmgx_input_files={"required":["kneaddata_read_counts","taxonomic_profile","pathabundance_relab"],"optional":["humann_read_counts","feature_counts"]}
+wmtx_input_files={"required":["kneaddata_read_counts"],"optional":["humann_read_counts","feature_counts"]}
 norm_input_files={"optional":["genefamilies_norm_ratio","ecs_norm_ratio","paths_norm_ratio"]}
 
 # create a custom description for the input argument listing all expected input files
@@ -99,8 +99,8 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "dna_read_counts":wmgx_qc_counts,
           "rna_read_counts":wmtx_qc_counts,
-          "dna_aligned_read_counts":files.ShotGun.path("humann2_read_counts",wmgx_input_folder, none_if_not_found=True),
-          "rna_aligned_read_counts":files.ShotGun.path("humann2_read_counts",wmtx_input_folder, none_if_not_found=True),
+          "dna_aligned_read_counts":files.ShotGun.path("humann_read_counts",wmgx_input_folder, none_if_not_found=True),
+          "rna_aligned_read_counts":files.ShotGun.path("humann_read_counts",wmtx_input_folder, none_if_not_found=True),
           "dna_feature_counts":files.ShotGun.path("feature_counts",wmgx_input_folder, none_if_not_found=True),
           "rna_feature_counts":files.ShotGun.path("feature_counts",wmtx_input_folder, none_if_not_found=True),
           "taxonomic_profile":taxonomic_profile,

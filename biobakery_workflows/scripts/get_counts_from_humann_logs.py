@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# This script will create a table of reads from humann2 log files. The table will have 
+# This script will create a table of reads from humann log files. The table will have 
 # total reads, unaligned after nucleotide search, and unaligned after translated search.
 # The table will also include the total species number.
 

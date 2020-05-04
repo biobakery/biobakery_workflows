@@ -47,7 +47,7 @@ def parse_arguments(args):
     
 def read_table(file, min_abundance, reduce_sample_name, delimiter="\t"):
     """ Read the table from a text file with the first line the column
-    names and the first column the row names. Filter humann2 un-identifiers and split
+    names and the first column the row names. Filter humann un-identifiers and split
     data into stratified categories. """
 
     def format_data(x):

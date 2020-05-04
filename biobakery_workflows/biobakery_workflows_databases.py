@@ -72,7 +72,9 @@ def run_command(command,shell=False):
     try:
         id=subprocess.check_call(command, shell=shell)
     except subprocess.CalledProcessError:
-        sys.exit("Unable to install database. Error running command: "+" ".join(command))
+        if isinstance(command, list):
+            command = " ".join(command)
+        sys.exit("Unable to install database. Error running command: "+command)
         
 def create_strainphlan_db(location):
     """ Create the strainphlan fasta file from the bowtie2 indexes """
@@ -87,7 +89,8 @@ def create_strainphlan_db(location):
     
     # find the strainphlan db folder and index files
     try:
-        strainphlan_db=os.path.join(os.path.dirname(subprocess.check_output(["which","strainphlan.py"])),"metaphlan_databases","mpa_v20_m200")
+        import metaphlan
+        strainphlan_db=os.path.join(os.path.dirname(metaphlan.__file__),"metaphlan_databases","mpa_v30_CHOCOPhlAn_201901")
     except subprocess.CalledProcessError:
         sys.exit("Unable to find strainphlan install.")
         
@@ -151,18 +154,18 @@ def main():
     # check required dependencies are installed for wmgx installs
     dependencies=[]
     if "wmgx" in args.install:
-        dependencies=[("humann2_databases","HUMAnN2"),("kneaddata_database","Kneaddata"),
-            ("strainphlan.py","StrainPhlAn"),("bowtie2-inspect","Bowtie2")]
+        dependencies=[("humann_databases","HUMAnN2"),("kneaddata_database","Kneaddata"),
+            ("strainphlan","StrainPhlAn"),("bowtie2-inspect","Bowtie2")]
     elif "usearch" in args.install:
         dependencies=[("usearch","usearch")]    
     if dependencies:
         check_dependencies(dependencies)
         
-    # install humann2 utility dbs for all shotgun workflows
-    humann2_install_folder=os.path.join(args.location,"humann2")
+    # install humann utility dbs for all shotgun workflows
+    humann_install_folder=os.path.join(args.location,"humann")
     if "wmgx" in args.install:
-        print("Installing humann2 utility mapping database")
-        run_command(["humann2_databases","--download","utility_mapping","full",humann2_install_folder])
+        print("Installing humann utility mapping database")
+        run_command(["humann_databases","--download","utility_mapping","full",humann_install_folder])
         
         # create the strainphlan fasta database of markers
         create_strainphlan_db(args.location)
@@ -170,9 +173,9 @@ def main():
     # install the databases based on the workflow selected
     if args.install in ["wmgx","wmgx_wmtx"]:
         # install the full chocophlan and uniref90
-        print("Installing humann2 nucleotide and protein databases")
-        run_command(["humann2_databases","--download","chocophlan","full",humann2_install_folder])
-        run_command(["humann2_databases","--download","uniref","uniref90_diamond",humann2_install_folder])
+        print("Installing humann nucleotide and protein databases")
+        run_command(["humann_databases","--download","chocophlan","full",humann_install_folder])
+        run_command(["humann_databases","--download","uniref","uniref90_diamond",humann_install_folder])
         
         # install the two kneaddata databases
         print("Installing hg kneaddata database")
@@ -181,9 +184,9 @@ def main():
         
     elif args.install == "wmgx_demo":
         # install the demo chocophlan and demo uniref90
-        print("Installing humann2 DEMO nucleotide and protein databases")
-        run_command(["humann2_databases","--download","chocophlan","DEMO",humann2_install_folder])
-        run_command(["humann2_databases","--download","uniref","DEMO_diamond",humann2_install_folder])
+        print("Installing humann DEMO nucleotide and protein databases")
+        run_command(["humann_databases","--download","chocophlan","DEMO",humann_install_folder])
+        run_command(["humann_databases","--download","uniref","DEMO_diamond",humann_install_folder])
         
         # Install demo kneaddata databases from examples folder to install folder
         print("Installing DEMO hg kneaddata database")

@@ -138,7 +138,7 @@ elif not args.bypass_functional_profiling or not args.bypass_strain_profiling:
     # check all of the expected profiles are found
     if len(tsv_profiles) != len(list(filter(os.path.isfile,tsv_profiles))):
         sys.exit("ERROR: Bypassing taxonomic profiling but all of the tsv taxonomy profile files are not found in the input folder. Expecting the following input files:\n"+"\n".join(tsv_profiles))
-    # run taxonomic profile steps bypassing metaphlan2
+    # run taxonomic profile steps bypassing metaphlan
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         tsv_profiles,args.output,args.threads,"tsv",already_profiled=True)
     # look for the sam profiles

@@ -1030,7 +1030,7 @@ def filter_taxa_abundance(taxonomy, data, min_abundance, min_samples):
     
     return filtered_taxonomy, filtered_data
 
-def filter_taxa_level_metaphlan2_format(taxonomy, data, min_abundance=None, min_samples=None, level=6):
+def filter_taxa_level_metaphlan_format(taxonomy, data, min_abundance=None, min_samples=None, level=6):
     """ Remove the taxons that are not a species level (or set a different level with keyword) from the data set.
         Also filter the species if filters are provided. Metaphlan2 format with "|" delimiters and tiered
         abundances (so genus level is split and repeated stratified by species).
@@ -1051,7 +1051,7 @@ def filter_taxa_level_metaphlan2_format(taxonomy, data, min_abundance=None, min_
             (list): A list of lists of the data.
             
         Example:
-            filter_taxa_level_metaphlan2_format(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]])
+            filter_taxa_level_metaphlan_format(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]])
     """
 
     taxonomic_levels=["|k__","|p__","|c__","|o__","|f__","|g__","|s__","|t__"]
@@ -1589,7 +1589,7 @@ def order_clade_list(task,clade_list,abundance_file,output_file):
     Args:
         task (anadama2.task): An instance of the task class.
         clade_list (string): The path to the file containing the strainphlan list of clades.
-        abundance_file (string): The path to the merged abundance file from metaphlan2.
+        abundance_file (string): The path to the merged abundance file from metaphlan.
         output_file (string): The file to write the ordered clade list.
         
     Requires:

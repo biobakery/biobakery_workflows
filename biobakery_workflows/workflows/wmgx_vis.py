@@ -68,7 +68,7 @@ qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, none_if_not_fou
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_not_found=True)
 pathabundance=files.ShotGun.path("pathabundance_relab",args.input, none_if_not_found=True)
 ecsabundance=files.ShotGun.path("ecs_relab",args.input, none_if_not_found=True)
-read_counts=files.ShotGun.path("humann2_read_counts",args.input, none_if_not_found=True)
+read_counts=files.ShotGun.path("humann_read_counts",args.input, none_if_not_found=True)
 feature_counts=files.ShotGun.path("feature_counts",args.input, none_if_not_found=True)
 
 # read and label the metadata

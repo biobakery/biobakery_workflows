@@ -498,7 +498,7 @@ def qc_read_counts(document, file):
     
 
 def feature_counts(document, read_counts_file, feature_counts_file):
-    """ Compute feature counts from the humann2 log read counts file and the feature counts file """
+    """ Compute feature counts from the humann log read counts file and the feature counts file """
     
     # read in the read count and feature count files
     read_type, read_samples, read_count_data = document.read_table(read_counts_file)
@@ -521,9 +521,9 @@ def feature_counts(document, read_counts_file, feature_counts_file):
     
     # get the counts by each feature type
     # convert values to log10
-    genefamilies_counts=[utilities.try_log10(row[feature_type.index("humann2_genefamilies_relab_counts")]) for row in sorted_feature_count_data]
-    ecs_counts=[utilities.try_log10(row[feature_type.index("humann2_ecs_relab_counts")]) for row in sorted_feature_count_data]
-    pathabundance_counts=[utilities.try_log10(row[feature_type.index("humann2_pathabundance_relab_counts")]) for row in sorted_feature_count_data]
+    genefamilies_counts=[utilities.try_log10(row[feature_type.index("humann_genefamilies_relab_counts")]) for row in sorted_feature_count_data]
+    ecs_counts=[utilities.try_log10(row[feature_type.index("humann_ecs_relab_counts")]) for row in sorted_feature_count_data]
+    pathabundance_counts=[utilities.try_log10(row[feature_type.index("humann_pathabundance_relab_counts")]) for row in sorted_feature_count_data]
     
     return total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts
 
@@ -634,7 +634,7 @@ class ShotGun(Workflow):
         " quantification of gene families, EC enzyme modules, and pathways, "+\
         "using the UniRef and MetaCyc databases. For more information on "+\
         "functional profiling and the databases used, see websites for "+\
-        "[HUMAnN2](http://huttenhower.sph.harvard.edu/humann2), "+\
+        "[HUMAnN2](http://huttenhower.sph.harvard.edu/humann), "+\
         "[UniRef](http://www.uniprot.org/help/uniref), "+\
         "and [MetaCyc](https://metacyc.org/)."
         
