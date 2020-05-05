@@ -696,7 +696,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             profile_clade=None
             
     if profile_clade:
-        command = "strainphlan --ifn_samples [args[0]]/*.markers --output_dir [args[1]] "+\
+        command = "strainphlan --samples [args[0]]/*.pkl --output_dir [args[1]] "+\
             "--clades [args[2]] --nprocs_main [args[3]] --keep_alignment_files "+options
             
         # add the marker files to the command
@@ -760,7 +760,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         args=[os.path.dirname(task.depends[0].name),os.path.dirname(task.targets[0].name),profile_clade,threads])
     
 
-def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,abundance_file,options="",max_species=20,strain_list="",min_depth=10):
+def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,marker_folder,abundance_file,options="",max_species=20,strain_list=""):
     """Strain profile for whole genome shotgun sequences
     
     This set of tasks performs strain profiling on whole genome shotgun
@@ -789,16 +789,16 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
 
     ### STEP #1: Identify markers for each of the samples
     # name the marker files based on the sam files
-    strainphlan_markers = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="markers", create_folder=True)
+    strainphlan_markers = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="pkl", create_folder=True)
      
     # create a marker file from each sam file, require min depth
     for sam, markers in zip(sam_files, strainphlan_markers):
         sample_name=os.path.basename(sam).replace("_bowtie2.sam","")
         workflow.add_task_gridable(
-            "sample2markers.py --ifn_samples [depends[0]] --input_type sam --output_dir [args[0]] --nprocs [args[1]] --min_read_depth [args[2]]",
+            "sample2markers.py --input [depends[0]] --input_format sam --output_dir [args[0]] --nprocs [args[1]]",
             depends=sam,
             targets=markers,
-            args=[os.path.dirname(markers),threads,min_depth],
+            args=[os.path.dirname(markers),threads],
             time=30, # 30 minutes
             mem=5*1024, # 5 GB
             cores=threads,
@@ -808,7 +808,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
     clade_list = utilities.name_files("clades_list.txt", output_folder, subfolder="strainphlan")
     
     workflow.add_task(
-        "strainphlan --ifn_samples [args[0]]/*.markers --output_dir [args[0]] --print_clades_only > [targets[0]]",
+        "strainphlan --samples [args[0]]/*.pkl --output_dir [args[0]] --print_clades_only > [targets[0]]",
         depends=strainphlan_markers,
         targets=clade_list,
         args=os.path.dirname(strainphlan_markers[0]),
