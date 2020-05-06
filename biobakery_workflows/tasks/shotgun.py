@@ -726,7 +726,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             raise EnvironmentError("Unable to find StrainPhlAn markers for clade "+ profile_clade)
 
         # add the marker file location (default or per workflow) to the command
-        command += " --ifn_markers "+marker_file       
+        command += " --clade_markers "+marker_file       
  
         # get the list of reference genomes
         genomes=set()
@@ -745,7 +745,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
         
         # add the reference genome files to the command, if any are found
         if len(genomes):
-            command += " --ifn_ref_genomes " + " --ifn_ref_genomes ".join(genomes)
+            command += " --references " + " --references ".join(genomes)
         
         # write the output to the log
         command += " > [targets[0]] && touch [targets[1]] && if [ -f [args[1]]/RAxML_bestTree.[args[2]].tree ]; then cp [args[1]]/RAxML_bestTree.[args[2]].tree [targets[1]]; fi"
