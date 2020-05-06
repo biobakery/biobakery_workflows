@@ -701,7 +701,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             
         # add the marker files to the command
         all_marker_file=os.path.join(marker_folder,"all_markers.fasta")
-        marker_file=os.path.join(marker_folder,profile_clade+".markers.fasta")
+        marker_file=os.path.join(marker_folder,profile_clade+".fna")
         
         # generate the marker file if it does not already exist
         if not os.path.isfile(marker_file):
@@ -716,7 +716,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
                 "--clade [args[0]] --output_dir [args[1]]"
                 
             # create the marker file in the output folder
-            marker_file=os.path.join(os.path.dirname(task.targets[0].name),profile_clade+".markers.fasta")
+            marker_file=os.path.join(os.path.dirname(task.targets[0].name),profile_clade+".fna")
                 
             return_code = utilities.run_task(marker_command,depends=[strainphlan_pkl], 
                 targets=[marker_file],args=[profile_clade,os.path.dirname(marker_file)])
