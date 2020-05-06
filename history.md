@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.1 05-06-2020 ##
+
+* Updated to work with StrainPhlAn v3.
+
 ## v3.0.0-alpha 05-04-2020 ##
 
 * Updated to run with HUMAnN v3 and MetaPhlAn v3.
