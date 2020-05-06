@@ -3,11 +3,11 @@
 
 ## v3.0.0-alpha.1 05-06-2020 ##
 
-* Updated to work with StrainPhlAn v3.
+* Modifications to work with StrainPhlAn v3.
 
-## v3.0.0-alpha 05-04-2020 ##
+## v3.0.0-alpha 05-05-2020 ##
 
-* Updated to run with HUMAnN v3 and MetaPhlAn v3.
+* Updated to run with HUMAnN v3 and MetaPhlAn v3 (including StrainPhlAn).
 * Modified to run with python 3.
 
 ## v0.15.0 04-24-2020 ##
