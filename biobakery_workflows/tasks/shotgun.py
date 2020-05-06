@@ -697,7 +697,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             
     if profile_clade:
         command = "strainphlan --samples [args[0]]/*/*.pkl --output_dir [args[1]] "+\
-            "--clades [args[2]] --nprocs_main [args[3]] --keep_alignment_files "+options
+            "--clade [args[2]] --nprocs [args[3]] "+options
             
         # add the marker files to the command
         all_marker_file=os.path.join(marker_folder,"all_markers.fasta")
@@ -712,15 +712,14 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             except subprocess.CalledProcessError:
                 raise EnvironmentError("Unable to find strainphlan install.")
             
-            marker_command="extract_markers.py --mpa_pkl [depends[0]] "+\
-                "--ifn_markers [depends[1]] --clade [args[0]] "+\
-                "--ofn_markers [targets[0]]"
+            marker_command="extract_markers.py --database [depends[0]] "+\
+                "--clade [args[0]] --output_dir [args[1]]"
                 
             # create the marker file in the output folder
             marker_file=os.path.join(os.path.dirname(task.targets[0].name),profile_clade+".markers.fasta")
                 
-            return_code = utilities.run_task(marker_command,depends=[strainphlan_pkl,all_marker_file], 
-                targets=[marker_file],args=[profile_clade])
+            return_code = utilities.run_task(marker_command,depends=[strainphlan_pkl], 
+                targets=[marker_file],args=[profile_clade,os.path.dirname(marker_file)])
         
         # check that the marker file exists
         if not os.path.isfile(marker_file):
@@ -813,7 +812,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
     clade_list = utilities.name_files("clades_list.txt", output_folder, subfolder="strainphlan")
     
     workflow.add_task(
-        "strainphlan --samples [args[0]]/*/*.pkl --output_dir [args[0]] --print_clades_only > [targets[0]]",
+        "strainphlan --samples [args[0]]/*/*.pkl --output_dir [args[0]] --print_clades_only > [targets[0]] "+options,
         depends=strainphlan_markers,
         targets=clade_list,
         args=os.path.abspath(os.path.join(os.path.dirname(strainphlan_markers[0]),"..")),
