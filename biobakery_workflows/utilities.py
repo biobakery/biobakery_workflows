@@ -1606,8 +1606,8 @@ def order_clade_list(task,clade_list,abundance_file,output_file):
     clades=set()
     with open(clade_list) as file_handle:
         for line in file_handle:
-            if line.startswith("s__"):
-                clades.add(line.rstrip().split(" ")[0])
+            if "s__" in line:
+                clades.add(line.strip().split("\t")[1].split(": in ")[0])
         
     # write out ordered species also included in clade list
     with open(output_file,"w") as file_handle:
