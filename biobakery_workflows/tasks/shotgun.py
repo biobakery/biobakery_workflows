@@ -414,9 +414,12 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
         
         # add a task to merge each pair set
         for pair1, pair2, target in zip(input_pair1, input_pair2, merged_files):
-            workflow.add_task(
+            workflow.add_task_gridable(
                 command+" [depends[0]] [depends[1]] > [targets[0]]",
                 depends=[pair1,pair2],
+                time=10,
+                mem=1*1024,
+                cores=1,
                 targets=target)
     else:
         merged_files=input_files
