@@ -121,6 +121,12 @@ def get_study_type(data_files):
         files = [key+"\t"+value[0] for key,value in data_files.items()]
         sys.exit("ERROR: Input files found of multiple study types:" + ",".join(types)+"\n"+"\n".join(files))
 
+    if len(list(types)) == 2:
+        try:
+            types.remove("both")
+        except ValueError:
+            pass
+
     return types[0]
     
 
@@ -367,7 +373,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
     overlap=samples.intersection(possible_samples)
     if len(list(overlap)) == 0:
         # the samples must be the rows so invert the data
-        data=map(list,zip(*data))
+        data=list(map(list,zip(*data)))
         possible_samples=data[0][1:]
         overlap=samples.intersection(possible_samples)
     
