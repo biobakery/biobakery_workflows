@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# A utility script to compute beta diversity (and alpha).
+# A utility script to compute beta diversity.
 # Based on stats visualizations and notes from Kelsey Thompson.
 
 library(vegan)
