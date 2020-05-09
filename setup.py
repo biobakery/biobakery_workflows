@@ -7,25 +7,6 @@ To run: python setup.py install
 import os
 import sys
 
-# required python version
-required_python_version_major = 2
-required_python_version_minor = 7
-
-# Check the python version
-try:
-    if (sys.version_info[0] != required_python_version_major or
-        sys.version_info[1] < required_python_version_minor):
-        sys.exit("CRITICAL ERROR: The python version found (version "+
-            str(sys.version_info[0])+"."+str(sys.version_info[1])+") "+
-            "does not match the version required (version "+
-            str(required_python_version_major)+"."+
-            str(required_python_version_minor)+"+)")
-except (AttributeError,IndexError):
-    sys.exit("CRITICAL ERROR: The python version found (version 1) " +
-        "does not match the version required (version "+
-        str(required_python_version_major)+"."+
-        str(required_python_version_minor)+"+)")
-
 try:
     import setuptools
 except ImportError:
@@ -39,8 +20,6 @@ except ImportError:
     
 from glob import glob    
 
-COUNTER_URL="http://bitbucket.org/biobakery/biobakery_workflows/downloads/counter.txt"
-
 def download(url, download_file):
     """ Download a file from a url """
 
@@ -51,12 +30,6 @@ def download(url, download_file):
         print("\n")
     except EnvironmentError:
         print("WARNING: Unable to download "+url)
-
-counter_file=os.path.basename(COUNTER_URL)
-if not os.path.isfile(counter_file):
-    print("Downloading counter file to track biobakery_workflows downloads"+
-    " since the global PyPI download stats are currently turned off.")
-    download(COUNTER_URL,counter_file)
 
 VERSION = "0.13.2"
 
