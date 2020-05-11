@@ -42,6 +42,44 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def create_masslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,ecabundance):
+    # For all input files based on type create feature tables for input to maaslin
+
+    taxon_feature=name_files("taxon_features.txt",output,subfolder="features",create_folder=True)
+    create_feature_table_tasks_info=[]
+    if study_type == "wmgx":
+        create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
+    else:
+        # reformat this table to move the taxonomic column and sum for species if 16s data
+        workflow.add_task(
+            "trim_taxonomy.py --input [depends[0]] --output [targets[0]] --end-taxonomy-column 0",
+             depends=taxonomic_profile,
+             targets=taxon_feature)
+
+    maaslin_tasks_info={"taxonomy":(taxon_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_taxa","figures")),
+        name_files("significant_results.tsv", output, subfolder="maaslin2_taxa"))}
+
+    if pathabundance:
+        pathabundance_feature=name_files("pathabundance_features.txt",output,subfolder="features",create_folder=True)
+        create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
+        maaslin_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_pathways","figures")),
+            name_files("significant_results.tsv", output, subfolder="maaslin2_pathways"))
+
+    if ecabundance:
+        ecabundance_feature=name_files("ecabundance_features.txt",output,subfolder="features",create_folder=True)
+        create_feature_table_tasks_info.append((ecabundance,ecabundance_feature,"_Abundance-RPKs","--remove-stratified"))
+        maaslin_tasks_info["ecs"]=(ecabundance_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_ecs","figures")),
+            name_files("significant_results.tsv", output, subfolder="maaslin2_ecs"))
+
+    for input_file, output_file, tag, options in create_feature_table_tasks_info:
+        workflow.add_task(
+            "create_feature_table.py --input [depends[0]] --output [targets[0]] --sample-tag-column [args[0]] [args[1]]",
+            depends=input_file,
+            targets=output_file,
+            args=[tag,options])
+
+    return maaslin_tasks_info
+
 def get_input_files_for_study_type(data_files, study_type):
     # based on the type of study, find the input files in the input folder
 

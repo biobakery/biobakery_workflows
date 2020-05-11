@@ -85,38 +85,7 @@ taxonomic_profile,pathabundance,ecabundance=utilities.get_input_files_for_study_
 taxonomic_profile,pathabundance,ecabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance,ecabundance],args.output)
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
-taxon_feature=utilities.name_files("taxon_features.txt",args.output,subfolder="features",create_folder=True)
-create_feature_table_tasks_info=[]
-if study_type == "wmgx":
-    create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
-else:
-    # reformat this table to move the taxonomic column and sum for species
-    workflow.add_task(
-        "trim_taxonomy.py --input [depends[0]] --output [targets[0]] --end-taxonomy-column 0",
-         depends=taxonomic_profile,
-         targets=taxon_feature)
-
-maaslin_tasks_info={"taxonomy":(taxon_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_taxa","figures")),
-    utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_taxa"))}
-
-if pathabundance:
-    pathabundance_feature=utilities.name_files("pathabundance_features.txt",args.output,subfolder="features",create_folder=True)
-    create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
-    maaslin_tasks_info["pathways"]=(pathabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_pathways","figures")),
-        utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_pathways"))
-
-if ecabundance:
-    ecabundance_feature=utilities.name_files("ecabundance_features.txt",args.output,subfolder="features",create_folder=True)
-    create_feature_table_tasks_info.append((ecabundance,ecabundance_feature,"_Abundance-RPKs","--remove-stratified"))
-    maaslin_tasks_info["ecs"]=(ecabundance_feature,utilities.name_files("heatmap.jpg", args.output, subfolder=os.path.join("maaslin2_ecs","figures")),
-        utilities.name_files("significant_results.tsv", args.output, subfolder="maaslin2_ecs"))
-
-for input_file, output_file, tag, options in create_feature_table_tasks_info:
-    workflow.add_task(
-        "create_feature_table.py --input [depends[0]] --output [targets[0]] --sample-tag-column [args[0]] [args[1]]",
-        depends=input_file,
-        targets=output_file,
-        args=[tag,options])
+maaslin_tasks_info=utilities.create_masslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,ecabundance)
 
 # run MaAsLiN2 on all input files
 maaslin_tasks=[]
@@ -191,7 +160,7 @@ if args.metadata_type == "longitudinal":
 
     permanova_task = workflow.add_task(
         "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
-        depends=[taxon_feature,args.input_metadata],
+        depends=[maaslin_tasks_info["taxonomy"][0],args.input_metadata],
         targets=taxon_permanova,
         args=[permanova_script_path,args.scale,args.min_abundance,args.min_prevalence,args.permutations,optional_args],
         name="hmp2_permanova")
@@ -202,7 +171,7 @@ else:
 
     univariate_task = workflow.add_task(
         "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
-        depends=[taxon_feature,args.input_metadata],
+        depends=[maaslin_tasks_info["taxonomy"][0],args.input_metadata],
         targets=univariate,
         args=[univariate_script_path,args.min_abundance,args.min_prevalence,args.max_missing],
         name="beta_diversity")
