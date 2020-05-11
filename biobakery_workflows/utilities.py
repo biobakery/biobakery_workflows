@@ -42,6 +42,48 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def run_permanova(workflow,metadata_type,individual_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
+    # if longitudinal run the permanova
+
+    taxon_permanova = None
+    if metadata_type == "longitudinal":
+        taxon_permanova=name_files("taxon_permanova.png",output,subfolder="permanova",create_folder=True)
+        permanova_script_path = get_package_file("permanova_hmp2", "Rscript")
+        if individual_covariates:
+            optional_args=" --individual_covariates "+individual_covariates
+        else:
+            sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
+
+        additional_stats_tasks.append(
+            workflow.add_task(
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
+                depends=[maaslin_tasks_info["taxonomy"][0],input_metadata],
+                targets=taxon_permanova,
+                args=[permanova_script_path,scale,min_abundance,min_prevalence,permutations,optional_args],
+                name="hmp2_permanova"))
+
+    return additional_stats_tasks,taxon_permanova
+
+
+def run_univariate(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,output,additional_stats_tasks):
+    # if not longitudinal then run univariate
+
+    univariate = None
+    if metadata_type != "longitudinal":
+        univariate=name_files("taxon_univariate.png",output,subfolder="univariate",create_folder=True)
+        univariate_script_path = get_package_file("beta_diversity", "Rscript")
+
+        additional_stats_tasks.append(
+            workflow.add_task(
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
+                depends=[maaslin_tasks_info["taxonomy"][0],input_metadata],
+                targets=univariate,
+                args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
+                name="beta_diversity"))
+
+    return additional_stats_tasks,univariate
+
+
 def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_metadata,metadata_exclude,metadata_categorical,metadata_continuous,output):
     # if pathways are provided then generate stratified plots
 
