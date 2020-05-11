@@ -20,25 +20,25 @@ pdf_format = True if vars["format"] == "pdf" else False
 maaslin_taxonomy_heatmap = vars["maaslin_tasks_info"]["taxonomy"][1]
 maaslin_taxonomy_output_folder = os.path.dirname(maaslin_taxonomy_heatmap)
 
-#' # MaAsLin2 Results
+#' <% if not vars["bypass_maaslin"]: print("# MaAsLin2 Results") %>
 
-#' MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).
+#' <% if not vars["bypass_maaslin"]: print("MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).") %>
 
-#' See the log file for the exact MaAsLiN2 commands run to generate these outputs. Also please note these are just a subset of the outputs, check out the MaAsLin2 results folders for the complete set of output files.
+#' <% if not vars["bypass_maaslin"]: print("See the log file for the exact MaAsLiN2 commands run to generate these outputs. Also please note these are just a subset of the outputs, check out the MaAsLin2 results folders for the complete set of output files.") %>
 
-#' ## Taxonomic Profile
+#' <% if not vars["bypass_maaslin"]: print("## Taxonomic Profile") %>
 
-#' This report section contains the results from running the taxonomic profile through MaAsLin2. 
+#' <% if not vars["bypass_maaslin"]: print("This report section contains the results from running the taxonomic profile through MaAsLin2.") %>
 
-#' ### MaAsLin2 Heatmap
+#' <% if not vars["bypass_maaslin"]: print("### MaAsLin2 Heatmap") %>
 #' <% if os.path.isfile(maaslin_taxonomy_heatmap): print("![Taxonomy heatmap]("+maaslin_taxonomy_heatmap+")\n") %>
-#' <% if not os.path.isfile(maaslin_taxonomy_heatmap): print("No significant associations.") %>
+#' <% if not os.path.isfile(maaslin_taxonomy_heatmap) and not vars["bypass_maaslin"]: print("No significant associations.") %>
 
-#' <% if pdf_format: print("\clearpage") %>
+#' <% if pdf_format and not vars["bypass_maaslin"]: print("\clearpage") %>
 
-#' ### MaAsLin2 Plots
+#' <% if not vars["bypass_maaslin"]: print("### MaAsLin2 Plots") %>
 
-#' The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.
+#' <% if not vars["bypass_maaslin"]: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
 
 #+ echo=False
 
@@ -53,13 +53,13 @@ def show_maaslin_metadata_plots(figures_folder, type):
     if not images_found:
         print("No significant associations.")
 
-#' <% show_maaslin_metadata_plots(maaslin_taxonomy_output_folder,"taxonomy") %>
+#' <% if not vars["bypass_maaslin"]: show_maaslin_metadata_plots(maaslin_taxonomy_output_folder,"taxonomy") %>
 
 #+ echo=False
 
 # check for the pathways/ecs results
 def check_for_masslin_runs(run_type):
-    if run_type in vars["maaslin_tasks_info"]:
+    if run_type in vars["maaslin_tasks_info"] and not vars["bypass_maaslin"]:
         heatmap_file = vars["maaslin_tasks_info"][run_type][1]
         output_folder = os.path.dirname(vars["maaslin_tasks_info"][run_type][1])
     else:

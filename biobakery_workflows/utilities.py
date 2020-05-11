@@ -29,6 +29,7 @@ import math
 import functools
 import time
 import collections
+import re
 
 from anadama2.tracked import TrackedDirectory
 
@@ -84,7 +85,7 @@ def run_univariate(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_
     return additional_stats_tasks,univariate
 
 
-def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_metadata,metadata_exclude,metadata_categorical,metadata_continuous,output):
+def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_metadata,metadata_exclude,metadata_categorical,metadata_continuous,top_pathways,maaslin_tasks_info,output):
     # if pathways are provided then generate stratified plots
 
     stratified_pathways_plots = []
@@ -97,7 +98,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
         metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
         # get all continuous or samples ids and remove (as they are not to be used for the plots)
-        metadata_exclude=args.metadata_exclude+[x for x,y in filter(lambda x: x[1] == "con", metadata_labels.items())]
+        metadata_exclude=metadata_exclude+[x for x,y in filter(lambda x: x[1] == "con", metadata_labels.items())]
         for metadata_row in metadata[1:]:
             if len(list(set(metadata_row[1:]))) > MAX_METADATA_CATEGORIES:
                 metadata_exclude+=[metadata_row[0]]
@@ -108,13 +109,13 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
         humann2_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
         workflow.add_task(
-            partial_function(utilities.create_merged_data_file, metadata=metadata),
+            partial_function(create_merged_data_file, metadata=metadata),
             depends=pathabundance,
             targets=humann2_barplot_input)
 
         metadata_row_names=[row[0] for row in metadata[1:]]
         metadata_end=metadata_row_names[-1]
-        for i in range(1,args.top_pathways+1):
+        for i in range(1,top_pathways+1):
             for metadata_focus in metadata_row_names:
                 if re.match('^[\w-]+$', metadata_focus) is None:
                     sys.exit("ERROR: Please modify metadata names to include only alpha-numeric characters: "+metadata_focus)
