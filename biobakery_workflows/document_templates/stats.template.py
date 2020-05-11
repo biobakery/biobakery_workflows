@@ -137,10 +137,14 @@ def show_stratified_plots(plots):
 
 #' <% if pdf_format: print("\clearpage") %>
 
-#' # Permanova
+#' <% if vars["taxon_permanova"]: print("# Permanova") %>
+#' <% if vars["univariate"]: print("# Univariate") %>
 
 #+ echo=False
 
-#' <% if os.path.isfile(vars["taxon_permanova"]): print("![Taxonomy permanova]({0})".format(vars["taxon_permanova"])) %>
-#' <% if not os.path.isfile(vars["taxon_permanova"]): print("Error generating permanova.") %>
+#' <% if vars["taxon_permanova"] and os.path.isfile(vars["taxon_permanova"]): print("![Taxonomy permanova]({0})".format(vars["taxon_permanova"])) %>
+#' <% if vars["taxon_permanova"] and not os.path.isfile(vars["taxon_permanova"]): print("Error generating permanova.") %>
+
+#' <% if vars["univariate"] and os.path.isfile(vars["univariate"]): print("![Taxonomy univariate]({0})".format(vars["univariate"])) %>
+#' <% if vars["univariate"] and not os.path.isfile(vars["univariate"]): print("Error generating univariate.") %>
 

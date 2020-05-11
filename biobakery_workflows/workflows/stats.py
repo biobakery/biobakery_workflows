@@ -48,12 +48,17 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
+workflow.add_argument("metadata-type",desc="the metadata type", required=True, choices=["univariate", "multi-variate", "longitudinal"])
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
 workflow.add_argument("individual-covariates",desc="the covariates, comma-delimited, that do not change per individual (to permutate within in permanova)", default="")
+workflow.add_argument("scale",desc="the scale to apply with the permanova", default="100")
+workflow.add_argument("min-abundance",desc="the min abundance to apply for filtering", default="0.0001")
+workflow.add_argument("min-prevalence",desc="the min prevalence to apply for filtering", default="0.1")
+workflow.add_argument("max-missing",desc="the max percentage of missing values for a metadata to not be filtered", default="20.0")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("top-pathways",desc="the top N significant pathways to plot stratified abundance", default=3)
 workflow.add_argument("metadata-categorical",desc="the categorical features (for the plot stratified pathways)", action="append", default=[])
@@ -68,17 +73,20 @@ args = workflow.parse_args()
 # get the paths for the required files from the set of all input files
 data_files=utilities.identify_data_files(args.input)
 
+if len(data_files.keys()) < 1:
+    sys.exit("ERROR: No data files found in the input folder.")
+
 study_type=utilities.get_study_type(data_files)
 
 # get inputs based on study type
 if study_type=="wmgx":
-    taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
+    taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy",required=True)
 
     # get the paths for the optional files from the set of input files
     pathabundance=utilities.find_data_file(data_files, "function_pathway", required=False)
     ecabundance=utilities.find_data_file(data_files, "wmgx_function_ec", required=False)
 else:
-    taxonomic_profile=utilities.find_data_file(data_files,"16s_taxonomy")
+    taxonomic_profile=utilities.find_data_file(data_files,"16s_taxonomy",required=True)
 
     # get the paths for the optional files from the set of input files
     pathabundance=utilities.find_data_file(data_files,"function_pathway", required=False)
@@ -187,26 +195,45 @@ if pathabundance and study_type=="wmgx":
                 name="run_humann2_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
             stratified_pathways_plots.append(new_pathways_plot)
 
-# run permanova on taxon data
-taxon_permanova=utilities.name_files("taxon_permanova.png",args.output,subfolder="permanova",create_folder=True)
-permanova_script_path = utilities.get_package_file("permanova_hmp2", "Rscript")
-optional_args=""
-if args.individual_covariates:
-    optional_args=" --individual_covariates "+args.individual_covariates
+# run permanova on taxon data if longitudinal
+taxon_permanova=None
+univariate=None
+permanova_task=None
+univariate_task=None
+additional_depends=[]
+if args.metadata_type == "longitudinal":
+    taxon_permanova=utilities.name_files("taxon_permanova.png",args.output,subfolder="permanova",create_folder=True)
+    permanova_script_path = utilities.get_package_file("permanova_hmp2", "Rscript")
+    if args.individual_covariates:
+        optional_args=" --individual_covariates "+args.individual_covariates
+    else:
+        sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
 
-permanova_task = workflow.add_task(
-    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
-    depends=[taxon_feature,args.input_metadata],
-    targets=taxon_permanova,
-    args=[permanova_script_path,"100","0.0001","0.1",args.permutations,optional_args],
-    name="hmp2_permanova")
+    permanova_task = workflow.add_task(
+        "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
+        depends=[taxon_feature,args.input_metadata],
+        targets=taxon_permanova,
+        args=[permanova_script_path,args.scale,args.min_abundance,args.min_prevalence,args.permutations,optional_args],
+        name="hmp2_permanova")
+    additional_depends.append(permanova_task)
+else:
+    univariate=utilities.name_files("taxon_univariate.png",args.output,subfolder="univariate",create_folder=True)  
+    univariate_script_path = utilities.get_package_file("beta_diversity", "Rscript")  
+
+    univariate_task = workflow.add_task(
+        "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
+        depends=[taxon_feature,args.input_metadata],
+        targets=univariate,
+        args=[univariate_script_path,args.min_abundance,args.min_prevalence,args.max_missing],
+        name="beta_diversity")
+    additional_depends.append(univariate_task)
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=maaslin_tasks+stratified_plots_tasks+[taxonomic_profile, permanova_task], 
+    depends=maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_depends, 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Stats Report",
           "project":args.project_name,
@@ -215,6 +242,7 @@ doc_task=workflow.add_document(
           "maaslin_tasks_info":maaslin_tasks_info,
           "stratified_pathways_plots":stratified_pathways_plots,
           "taxon_permanova":taxon_permanova,
+          "univariate":univariate,
           "format":args.format},
     table_of_contents=True)
 
