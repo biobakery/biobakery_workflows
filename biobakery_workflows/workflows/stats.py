@@ -88,24 +88,7 @@ taxonomic_profile,pathabundance,ecabundance=convert_from_biom_to_tsv_list(workfl
 maaslin_tasks_info=utilities.create_masslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,ecabundance)
 
 # run MaAsLiN2 on all input files
-maaslin_tasks=[]
-
-maaslin_optional_args=""
-if args.transform:
-    maaslin_optional_args+=",transform='"+args.transform+"'"
-if args.fixed_effects:
-    maaslin_optional_args+=",fixed_effects='"+args.fixed_effects+"'"
-if args.random_effects:
-    maaslin_optional_args+=",random_effects='"+args.random_effects+"'"
-
-for run_type, (maaslin_input_file, maaslin_heatmap, maaslin_results_table) in maaslin_tasks_info.items():
-    maaslin_tasks.append(
-        workflow.add_task(
-            "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
-            depends=[maaslin_input_file, args.input_metadata],
-            targets=maaslin_results_table,
-            args=os.path.dirname(maaslin_results_table),
-            name="R_Maaslin2_{}".format(run_type)))
+maaslin_tasks=utilities.run_masslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects)
 
 stratified_pathways_plots = []
 stratified_plots_tasks = []

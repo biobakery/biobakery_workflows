@@ -42,6 +42,29 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def run_masslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects):
+    # Run maaslin on all files in input set
+    
+    maaslin_tasks=[]
+    maaslin_optional_args=""
+    if transform:
+        maaslin_optional_args+=",transform='"+transform+"'"
+    if fixed_effects:
+        maaslin_optional_args+=",fixed_effects='"+fixed_effects+"'"
+    if random_effects:
+        maaslin_optional_args+=",random_effects='"+random_effects+"'"
+
+    for run_type, (maaslin_input_file, maaslin_heatmap, maaslin_results_table) in maaslin_tasks_info.items():
+        maaslin_tasks.append(
+            workflow.add_task(
+                "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
+                depends=[maaslin_input_file, input_metadata],
+                targets=maaslin_results_table,
+                args=os.path.dirname(maaslin_results_table),
+                name="R_Maaslin2_{}".format(run_type)))
+
+    return maaslin_tasks
+
 def create_masslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,ecabundance):
     # For all input files based on type create feature tables for input to maaslin
 
