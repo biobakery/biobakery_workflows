@@ -42,6 +42,52 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_metadata,metadata_exclude,metadata_categorical,metadata_continuous,output):
+    # if pathways are provided then generate stratified plots
+
+    stratified_pathways_plots = []
+    stratified_plots_tasks = []
+
+    if pathabundance and study_type=="wmgx":
+        # read in the metadata to merge with the data for the barplot script
+        metadata=read_metadata(input_metadata, pathabundance,
+            name_addition="_Abundance", ignore_features=metadata_exclude)
+
+        metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
+        # get all continuous or samples ids and remove (as they are not to be used for the plots)
+        metadata_exclude=args.metadata_exclude+[x for x,y in filter(lambda x: x[1] == "con", metadata_labels.items())]
+        for metadata_row in metadata[1:]:
+            if len(list(set(metadata_row[1:]))) > MAX_METADATA_CATEGORIES:
+                metadata_exclude+=[metadata_row[0]]
+        metadata_exclude=list(set(metadata_exclude))
+        metadata=read_metadata(input_metadata, pathabundance,
+            name_addition="_Abundance", ignore_features=metadata_exclude)
+        metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
+
+        humann2_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
+        workflow.add_task(
+            partial_function(utilities.create_merged_data_file, metadata=metadata),
+            depends=pathabundance,
+            targets=humann2_barplot_input)
+
+        metadata_row_names=[row[0] for row in metadata[1:]]
+        metadata_end=metadata_row_names[-1]
+        for i in range(1,args.top_pathways+1):
+            for metadata_focus in metadata_row_names:
+                if re.match('^[\w-]+$', metadata_focus) is None:
+                    sys.exit("ERROR: Please modify metadata names to include only alpha-numeric characters: "+metadata_focus)
+
+                new_pathways_plot=name_files("stratified_pathways_{0}_{1}.jpg".format(metadata_focus,i), output, subfolder="stratified_pathways")
+                stratified_plots_tasks.append(workflow.add_task(
+                    partial_function(run_humann2_barplot, number=i, metadata_end=metadata_end, metadata_focus=metadata_focus),
+                    depends=[maaslin_tasks_info["pathways"][2],humann2_barplot_input],
+                    targets=new_pathways_plot,
+                    name="run_humann2_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
+                stratified_pathways_plots.append(new_pathways_plot)
+
+    return stratified_pathways_plots,stratified_plots_tasks
+
+
 def run_masslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects):
     # Run maaslin on all files in input set
     

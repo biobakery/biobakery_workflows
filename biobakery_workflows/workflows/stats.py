@@ -90,42 +90,8 @@ maaslin_tasks_info=utilities.create_masslin_feature_table_inputs(workflow,study_
 # run MaAsLiN2 on all input files
 maaslin_tasks=utilities.run_masslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects)
 
-stratified_pathways_plots = []
-stratified_plots_tasks = []
-if pathabundance and study_type=="wmgx":
-    # read in the metadata to merge with the data for the barplot script
-    metadata=utilities.read_metadata(args.input_metadata, pathabundance,
-        name_addition="_Abundance", ignore_features=args.metadata_exclude)
-    metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
-    # get all continuous or samples ids and remove (as they are not to be used for the plots)
-    metadata_exclude=args.metadata_exclude+[x for x,y in filter(lambda x: x[1] == "con", metadata_labels.items())]
-    for metadata_row in metadata[1:]:
-        if len(list(set(metadata_row[1:]))) > utilities.MAX_METADATA_CATEGORIES:
-            metadata_exclude+=[metadata_row[0]]
-    metadata_exclude=list(set(metadata_exclude))
-    metadata=utilities.read_metadata(args.input_metadata, pathabundance,
-        name_addition="_Abundance", ignore_features=metadata_exclude)
-    metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
-
-    humann2_barplot_input = utilities.name_files("merged_data_metadata_input.tsv", args.output, subfolder="stratified_pathways", create_folder=True)
-    workflow.add_task(
-        utilities.partial_function(utilities.create_merged_data_file, metadata=metadata),
-        depends=pathabundance,
-        targets=humann2_barplot_input)
-
-    metadata_row_names=[row[0] for row in metadata[1:]]
-    metadata_end=metadata_row_names[-1]
-    for i in range(1,args.top_pathways+1):
-        for metadata_focus in metadata_row_names:
-            if re.match('^[\w-]+$', metadata_focus) is None:
-                sys.exit("ERROR: Please modify metadata names to include only alpha-numeric characters: "+metadata_focus)
-            new_pathways_plot=utilities.name_files("stratified_pathways_{0}_{1}.jpg".format(metadata_focus,i), args.output, subfolder="stratified_pathways")
-            stratified_plots_tasks.append(workflow.add_task(
-                utilities.partial_function(utilities.run_humann2_barplot, number=i, metadata_end=metadata_end, metadata_focus=metadata_focus),
-                depends=[maaslin_tasks_info["pathways"][2],humann2_barplot_input],
-                targets=new_pathways_plot,
-                name="run_humann2_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
-            stratified_pathways_plots.append(new_pathways_plot)
+# generate stratified pathways plots if pathways are provided
+stratified_pathways_plots,stratified_plots_tasks=utilities.create_stratified_pathways_plots(workflow,study_type,pathabundance,args.input_metadata,args.metadata_exclude,args.metadata_categorical,args.metadata_continuous,args.output)
 
 # run permanova on taxon data if longitudinal
 taxon_permanova=None
