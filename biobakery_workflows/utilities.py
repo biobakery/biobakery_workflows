@@ -42,6 +42,24 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def get_input_files_for_study_type(data_files, study_type):
+    # based on the type of study, find the input files in the input folder
+
+    if study_type=="wmgx":
+        taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=True)
+
+        # get the paths for the optional files from the set of input files
+        pathabundance=find_data_file(data_files, "function_pathway", required=False)
+        ecabundance=find_data_file(data_files, "wmgx_function_ec", required=False)
+    else:
+        taxonomic_profile=find_data_file(data_files,"16s_taxonomy",required=True)
+
+        # get the paths for the optional files from the set of input files
+        pathabundance=find_data_file(data_files,"function_pathway", required=False)
+        ecabundance=find_data_file(data_files,"16s_function_ec", required=False)
+
+    return taxonomic_profile,pathabundance,ecabundance
+
 # create a merged metadata table to be used as input for humann2_barplot
 def create_merged_data_file(task, metadata):
     # read in the pathabundance file
