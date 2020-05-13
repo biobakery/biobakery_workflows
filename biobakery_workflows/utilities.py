@@ -69,19 +69,20 @@ def run_permanova(workflow,metadata_type,individual_covariates,maaslin_tasks_inf
 def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,covariate_equation,output,additional_stats_tasks):
     # if not longitudinal then run univariate plus multi-variate if set
 
-    beta_diversity_plots = {"univariate": [], "multivariate": []}
+    beta_diversity_plots = {"univariate": {}, "multivariate": []}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
     if metadata_type != "longitudinal":
-        univariate=name_files("taxon_univariate.png",output,subfolder="beta_diversity",create_folder=True)
+        for filetype in maaslin_tasks_info.keys():
+            univariate=name_files(filetype+"_univariate.png",output,subfolder="beta_diversity",create_folder=True)
 
-        additional_stats_tasks.append(
-            workflow.add_task(
-                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
-                depends=[maaslin_tasks_info["taxonomy"][0],input_metadata],
-                targets=univariate,
-                args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
-                name="beta_diversity_univarite"))
-        beta_diversity_plots["univariate"].append(univariate)
+            additional_stats_tasks.append(
+                workflow.add_task(
+                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
+                    depends=[maaslin_tasks_info[filetype][0],input_metadata],
+                    targets=univariate,
+                    args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
+                    name="beta_diversity_univarite_"+filetype))
+            beta_diversity_plots["univariate"][filetype]=univariate
 
     if metadata_type == "multi-variate":
         # check for equation

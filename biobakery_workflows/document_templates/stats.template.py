@@ -142,11 +142,18 @@ def show_stratified_plots(plots):
 
 #+ echo=False
 
+def show_univariate_plot(filetype):
+    if vars["beta_diversity_plots"]["univariate"] and filetype in vars["beta_diversity_plots"]["univariate"] and os.path.isfile(vars["beta_diversity_plots"]["univariate"][filetype]):
+        print("![{0} univariate]({1})".format(filetype,vars["beta_diversity_plots"]["univariate"][filetype]))
+    elif filetype in vars["beta_diversity_plots"]["univariate"]:
+        print("Error generating univariate for file "+filetype)
+
 #' <% if vars["taxon_permanova"] and os.path.isfile(vars["taxon_permanova"]): print("![Taxonomy permanova]({0})".format(vars["taxon_permanova"])) %>
 #' <% if vars["taxon_permanova"] and not os.path.isfile(vars["taxon_permanova"]): print("Error generating permanova.") %>
 
-#' <% if vars["beta_diversity_plots"]["univariate"] and os.path.isfile(vars["beta_diversity_plots"]["univariate"][0]): print("![Taxonomy univariate]({0})".format(vars["beta_diversity_plots"]["univariate"][0])) %>
-#' <% if vars["beta_diversity_plots"]["univariate"] and not os.path.isfile(vars["beta_diversity_plots"]["univariate"][0]): print("Error generating univariate.") %>
+#' <% show_univariate_plot("taxonomy") %>
+#' <% show_univariate_plot("pathways") %>
+#' <% show_univariate_plot("ecs") %>
 
 #' <% if vars["beta_diversity_plots"]["multivariate"] and pdf_format: print("\clearpage") %>
 
