@@ -49,6 +49,7 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("metadata-type",desc="the metadata type", required=True, choices=["univariate", "multi-variate", "longitudinal"])
+workflow.add_argument("covariate-equation",desc="the covariate equation for multi-variate studies", default="")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
@@ -103,7 +104,7 @@ if not args.bypass_maaslin:
 additional_stats_tasks=[]
 additional_stats_tasks,taxon_permanova=utilities.run_permanova(workflow,args.metadata_type,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 
-additional_stats_tasks,univariate=utilities.run_univariate(workflow,args.metadata_type,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,args.output,additional_stats_tasks)
+additional_stats_tasks,beta_diversity_plots=utilities.run_beta_diversity(workflow,args.metadata_type,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,args.covariate_equation,args.output,additional_stats_tasks)
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 
@@ -120,7 +121,8 @@ doc_task=workflow.add_document(
           "bypass_maaslin":args.bypass_maaslin,
           "stratified_pathways_plots":stratified_pathways_plots,
           "taxon_permanova":taxon_permanova,
-          "univariate":univariate,
+          "beta_diversity_plots":beta_diversity_plots,
+          "covariate_equation":args.covariate_equation,
           "format":args.format},
     table_of_contents=True)
 
