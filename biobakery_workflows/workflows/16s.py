@@ -39,6 +39,9 @@ workflow = Workflow(version="0.1", description="A workflow for 16S sequencing da
 workflow_config = config.SixteenS()
 workflow.add_argument("method", desc="method to process 16s workflow", default="vsearch", choices=["usearch","dada2","vsearch","its"])
 workflow.add_argument("dada-db", desc="reference database for dada2 workflow", default="silva", choices=["gg","rdp","silva","unite"])
+workflow.add_argument("usearch-db", desc="full paths for the reference databases (fna and taxonomy, comma delimited) for the usearch workflow",
+    default=",".join([workflow_config.greengenes_fasta,workflow_config.greengenes_taxonomy]))
+workflow.add_argument("bypass-functional-profiling", desc="bypass the functional profiling tasks", action="store_true")
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("dual-barcode-file", desc="the string to identify the dual barcode file", default="")
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq"])
@@ -160,15 +163,20 @@ else:
             workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
 
     # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
+    try:
+        usearch_fna_db, usearch_taxon_tsv = args.usearch_db.strip().split(",")
+    except ValueError:
+        sys.exit("ERROR: Please provide two comma seperated strings for the custom usearch databases")
+
     closed_reference_tsv, closed_ref_fasta = sixteen_s.taxonomic_profile(
             workflow, args.method, filtered_truncated_fasta, truncated_fasta, original_fasta, args.output,
-            args.threads, args.percent_identity, workflow_config.greengenes_usearch, workflow_config.greengenes_fasta,
-            workflow_config.greengenes_taxonomy, args.min_size, args.bypass_msa)
+            args.threads, args.percent_identity, usearch_fna_db, usearch_fna_db,
+            usearch_taxon_tsv, args.min_size, args.bypass_msa)
 
     # functional profiling
-    categorized_function = sixteen_s.functional_profile(workflow, closed_reference_tsv, closed_ref_fasta, 
-            args.picrust_version, args.threads, args.output, otus=True)
-
+    if not args.bypass_functional_profiling:
+        categorized_function = sixteen_s.functional_profile(workflow, closed_reference_tsv, closed_ref_fasta, 
+                args.picrust_version, args.threads, args.output, otus=True)
 
 # start the workflow
 workflow.go()
