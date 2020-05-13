@@ -6,6 +6,7 @@
 library(vegan)
 library(ggplot2)
 library(optparse)
+library(gridExtra)
 
 # Add command line arguments #
 options <- optparse::OptionParser(
@@ -40,6 +41,16 @@ options <- optparse::add_option(options,
     default = 20.0,
     help = paste0("The max percent of data for which",
     "a feature can have missing values",
+    " [ Default: %default ]"
+    )
+)
+
+options <- optparse::add_option(options,
+    c("-c", "--covariate_equation"),
+    type = "character",
+    dest = "covariate_equation",
+    default = "",
+    help = paste0("The equation for multi-variate studies",
     " [ Default: %default ]"
     )
 )
@@ -118,34 +129,43 @@ if (current_args$data_type == "dna rna norm") {
 
 # check if valid data type was set
 if (! exists("method")) {
-    stop(paste("Please provide a data type from the valid set in the help message"))
+  stop(paste("Please provide a data type from the valid set in the help message"))
 }
 
 bray = vegdist(filtered_data, method)
 
-adonis_pval = vector()
-adonis_rsq = vector()
-for (col in names(filtered_metadata)){
-  adonis.univ = adonis(as.formula(paste("bray ~", col)), data = filtered_metadata)
-  adonis_pval[col] = adonis.univ$aov.tab[1,]$`Pr(>F)`
-  adonis_rsq[col] = adonis.univ$aov.tab[1,]$R2
+
+if (current_args$covariate_equation != "") {
+  results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
+  png(positional_args[3], height=300, width=700)
+  grid.table(as.data.frame(results$aov.tab))
+  dev.off()
+
+} else {
+  adonis_pval = vector()
+  adonis_rsq = vector()
+  for (col in names(filtered_metadata)){
+    adonis.univ = adonis(as.formula(paste("bray ~", col)), data = filtered_metadata)
+    adonis_pval[col] = adonis.univ$aov.tab[1,]$`Pr(>F)`
+    adonis_rsq[col] = adonis.univ$aov.tab[1,]$R2
+  }
+
+  univar_tax = rbind(adonis_pval, adonis_rsq)
+  univar_tax = as.data.frame(t(univar_tax))
+  names(univar_tax) = c("P-Value", "R2")
+  univar_tax$p_adj = p.adjust(univar_tax$`P-Value`, "fdr")
+
+  univar_tax$stars = cut(univar_tax$`P-Value`, c(0, 0.001, 0.01, 0.05, 0.1, 1), labels = c("***", "**", "*", "`", ""))
+
+  univar_tax$`P-Value` = round(univar_tax$`P-Value`, 3)
+  univar_tax$R2 = univar_tax$R2 *100
+
+  dodge = position_dodge(width = 0.8)
+
+  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, 3) + xlab("") + labs(fill = "")
+
+  png(positional_args[3], res = 150, height = 800, width = 1100)
+  print(plot)
+  dev.off()
 }
-
-univar_tax = rbind(adonis_pval, adonis_rsq)
-univar_tax = as.data.frame(t(univar_tax))
-names(univar_tax) = c("P-Value", "R2")
-univar_tax$p_adj = p.adjust(univar_tax$`P-Value`, "fdr")
-
-univar_tax$stars = cut(univar_tax$`P-Value`, c(0, 0.001, 0.01, 0.05, 0.1, 1), labels = c("***", "**", "*", "`", ""))
-
-univar_tax$`P-Value` = round(univar_tax$`P-Value`, 3)
-univar_tax$R2 = univar_tax$R2 *100
-
-dodge = position_dodge(width = 0.8)
-
-ggp_all <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, 3) + xlab("") + labs(fill = "")
-
-png(positional_args[3], res = 150, height = 800, width = 1100)
-print(ggp_all)
-dev.off()
 
