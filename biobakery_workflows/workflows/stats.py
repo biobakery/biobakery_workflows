@@ -48,8 +48,8 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
-workflow.add_argument("metadata-type",desc="the metadata type", required=True, choices=["univariate", "multi-variate", "longitudinal"])
-workflow.add_argument("covariate-equation",desc="the covariate equation for multi-variate studies", default="")
+workflow.add_argument("metadata-type",desc="the metadata type", required=True, choices=["univariate", "multivariate", "longitudinal"])
+workflow.add_argument("covariate-equation",desc="the covariate equation for multivariate studies", default="")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")

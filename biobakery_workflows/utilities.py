@@ -67,9 +67,9 @@ def run_permanova(workflow,metadata_type,individual_covariates,maaslin_tasks_inf
 
 
 def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,covariate_equation,output,additional_stats_tasks):
-    # if not longitudinal then run univariate plus multi-variate if set
+    # if not longitudinal then run univariate plus multivariate if set
 
-    beta_diversity_plots = {"univariate": {}, "multivariate": []}
+    beta_diversity_plots = {"univariate": {}, "multivariate": {}}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
     if metadata_type != "longitudinal":
         for filetype in maaslin_tasks_info.keys():
@@ -84,21 +84,22 @@ def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,
                     name="beta_diversity_univarite_"+filetype))
             beta_diversity_plots["univariate"][filetype]=univariate
 
-    if metadata_type == "multi-variate":
+    if metadata_type == "multivariate":
         # check for equation
         if not covariate_equation:
-            sys.exit("ERROR: For a multi-variate metadata type a covariate equation must be provided (ie --covariate-equation='age + gender')")
+            sys.exit("ERROR: For a multivariate metadata type a covariate equation must be provided (ie --covariate-equation='age + gender')")
 
-        multivariate=name_files("taxon_multivariate.png",output,subfolder="beta_diversity",create_folder=True)
+        for filetype in maaslin_tasks_info.keys():
+            multivariate=name_files(filetype+"_multivariate.png",output,subfolder="beta_diversity",create_folder=True)
 
-        additional_stats_tasks.append(
-            workflow.add_task(
-                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'",
-                depends=[maaslin_tasks_info["taxonomy"][0],input_metadata],
-                targets=multivariate,
-                args=[univariate_script_path,min_abundance,min_prevalence,max_missing,covariate_equation],
-                name="beta_diversity_multivariate"))
-        beta_diversity_plots["multivariate"].append(multivariate)
+            additional_stats_tasks.append(
+                workflow.add_task(
+                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'",
+                    depends=[maaslin_tasks_info[filetype][0],input_metadata],
+                    targets=multivariate,
+                    args=[univariate_script_path,min_abundance,min_prevalence,max_missing,covariate_equation],
+                    name="beta_diversity_multivariate_"+filetype))
+            beta_diversity_plots["multivariate"][filetype]=multivariate
 
     return additional_stats_tasks,beta_diversity_plots
 
