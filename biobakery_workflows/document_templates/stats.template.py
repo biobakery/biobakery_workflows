@@ -142,6 +142,10 @@ def show_stratified_plots(plots):
 
 #+ echo=False
 
+def show_all_variate_plots(runtype):
+    for filetype in vars["beta_diversity_plots"][runtype]:
+        show_univariate_plot(filetype,runtype)
+
 def show_univariate_plot(filetype,runtype):
     if vars["beta_diversity_plots"][runtype] and filetype in vars["beta_diversity_plots"][runtype] and os.path.isfile(vars["beta_diversity_plots"][runtype][filetype]):
         print("![{0} {1}]({2})\n\n\n".format(filetype,runtype,vars["beta_diversity_plots"][runtype][filetype]))
@@ -152,9 +156,7 @@ def show_univariate_plot(filetype,runtype):
 #' <% if vars["taxon_permanova"] and not os.path.isfile(vars["taxon_permanova"]): print("Error generating permanova.") %>
 
 #+ echo=False
-#' <% show_univariate_plot("taxonomy","univariate") %>
-#' <% show_univariate_plot("pathways","univariate") %>
-#' <% show_univariate_plot("ecs","univariate") %>
+#' <% show_all_variate_plots("univariate") %>
 
 #' <% if vars["beta_diversity_plots"]["multivariate"] and pdf_format: print("\clearpage") %>
 
@@ -163,9 +165,7 @@ def show_univariate_plot(filetype,runtype):
 #' <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: '"+vars["covariate_equation"]+"' .") %>
 
 #+ echo=False
-#' <% show_univariate_plot("taxonomy","multivariate") %>
-#' <% show_univariate_plot("pathways","multivariate") %>
-#' <% show_univariate_plot("ecs","multivariate") %>
+#' <% show_all_variate_plots("multivariate") %>
 
 
 
