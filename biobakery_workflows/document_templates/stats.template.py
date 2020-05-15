@@ -144,7 +144,7 @@ def show_stratified_plots(plots):
 
 def show_univariate_plot(filetype,runtype):
     if vars["beta_diversity_plots"][runtype] and filetype in vars["beta_diversity_plots"][runtype] and os.path.isfile(vars["beta_diversity_plots"][runtype][filetype]):
-        print("![{0} {1}]({2})".format(filetype,runtype,vars["beta_diversity_plots"][runtype][filetype]))
+        print("![{0} {1}]({2})\n\n\n".format(filetype,runtype,vars["beta_diversity_plots"][runtype][filetype]))
     elif filetype in vars["beta_diversity_plots"][runtype]:
         print("Error generating {0} for filetype {1}".format(runtype,filetype))
 
@@ -153,9 +153,7 @@ def show_univariate_plot(filetype,runtype):
 
 #+ echo=False
 #' <% show_univariate_plot("taxonomy","univariate") %>
-#+ echo=False
 #' <% show_univariate_plot("pathways","univariate") %>
-#+ echo=False
 #' <% show_univariate_plot("ecs","univariate") %>
 
 #' <% if vars["beta_diversity_plots"]["multivariate"] and pdf_format: print("\clearpage") %>
@@ -164,10 +162,9 @@ def show_univariate_plot(filetype,runtype):
 
 #' <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: '"+vars["covariate_equation"]+"' .") %>
 
+#+ echo=False
 #' <% show_univariate_plot("taxonomy","multivariate") %>
-#+ echo=False
 #' <% show_univariate_plot("pathways","multivariate") %>
-#+ echo=False
 #' <% show_univariate_plot("ecs","multivariate") %>
 
 
