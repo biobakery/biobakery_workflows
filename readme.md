@@ -8,11 +8,11 @@ automatically generated for most data types, which include 16S
 amplicons, metagenomes, and metatranscriptomes. Workflows are run
 directly from the command line and tasks can be imported to create your
 own custom workflows. The workflows and tasks are built with
-[AnADAMA2](https://bitbucket.org/biobakery/anadama2) which allows for
+[AnADAMA2](https://github.com/biobakery/anadama2) which allows for
 parallel task execution locally and in a grid compute environment.
 
 For additional information, see the
-[bioBakery workflows tutorial](https://bitbucket.org/biobakery/biobakery/wiki/biobakery_workflows).
+[bioBakery workflows tutorial](https://github.com/biobakery/biobakery/wiki/biobakery_workflows).
 
 Table of contents
   * [Getting Started](#getting-started)
@@ -43,7 +43,7 @@ Table of contents
 
 ### Requirements
 
-1.  [AnADAMA2](https://bitbucket.org/biobakery/anadama2) (installed
+1.  [AnADAMA2](https://github.com/biobakery/anadama2) (installed
     automatically)
 2.  Python v2.7+
 3.  See individual workflows and tasks for additional software
