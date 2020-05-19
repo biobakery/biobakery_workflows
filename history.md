@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.2 05-19-2020 ##
+
+* Fix join taxonomic tables script to allow for scientific notation in MetaPhlAn v3 outputs.
+
 ## v3.0.0-alpha.1 05-06-2020 ##
 
 * Modifications to work with StrainPhlAn v3.
