@@ -193,7 +193,7 @@ to make use of existing computing resources:
     default grid.
 
 For additional workflow options, see the
-[AnADAMA2](https://bitbucket.org/biobakery/anadama2) user manual.
+[AnADAMA2](https://github.com/biobakery/anadama2) user manual.
 
 ------------------------------------------------------------------------
 
@@ -207,7 +207,7 @@ command line with the following syntax:
 `$ biobakery_workflows $WORKFLOW --input $INPUT --output $OUTPUT`
 
 See the section on
-[parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+[parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
 to optimize the workflow run based on your computing resources.
 
 ### Whole Metagenome Shotgun (wmgx)
@@ -216,20 +216,20 @@ to optimize the workflow run based on your computing resources.
 
 **Super Tasks**
 
-1.  [Quality control](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-quality-control)
-2.  [Taxonomic profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-taxonomic-profiling)
-3.  [Functional profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-functional-profiling)
+1.  [Quality control]
+2.  [Taxonomic profiling]
+3.  [Functional profiling]
 4.  Strain profiling
 5.  Assembly (not run by default)
 
 **Requirements**
 
-1.  [KneadData](https://bitbucket.org/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
-2.  [MetaPhlAn2](https://bitbucket.org/biobakery/metaphlan2)
+2.  [MetaPhlAn2](https://github.com/biobakery/metaphlan)
     1.  Install with: `$ conda install -c bioconda metaphlan2`
-3.  [HUMAnN2](https://bitbucket.org/biobakery/humann2)
+3.  [HUMAnN2](https://github.com/biobakery/humann)
     1.  Install with: `$ conda install -c biobakery humann2` OR
         `$ pip install humann2`
 4.  [StrainPhlAN](http://segatalab.cibio.unitn.it/tools/strainphlan/)
@@ -267,7 +267,7 @@ The workflow by default expects input files with the extension
     containing your fastq input files and `$OUTPUT` with the path to the
     folder to write output files.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 -   The workflow runs with the default settings for all main tool
     subtasks. These settings will work for most data sets. However, if
@@ -296,19 +296,19 @@ The workflow by default expects input files with the extension
 
 **Super Tasks**
 
-1.  [Quality control](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-quality-control)
-2.  [Taxonomic profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-taxonomic-profiling)
-3.  [Functional profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-functional-profiling)
+1.  [Quality control]
+2.  [Taxonomic profiling]
+3.  [Functional profiling]
 4.  Strain profiling
 
 **Requirements**
 
-1.  [KneadData](https://bitbucket.org/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
-2.  [MetaPhlAn2](https://bitbucket.org/biobakery/metaphlan2)
+2.  [MetaPhlAn2](https://github.com/biobakery/metaphlan)
     1.  Install with: `$ conda install -c bioconda metaphlan2`
-3.  [HUMAnN2](https://bitbucket.org/biobakery/humann2)
+3.  [HUMAnN2](https://github.com/biobakery/humann)
     1.  Install with: `$ conda install -c biobakery humann2` OR
         `$ pip install humann2`
 4.  [StrainPhlAN](http://segatalab.cibio.unitn.it/tools/strainphlan/)
@@ -349,7 +349,7 @@ The workflow by default expects input files with the extension
     `$INPUT_MAPPING` with your file of mapping between the metagenome
     and metatranscriptome samples.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 -   The workflow runs with the default settings for all main tool
     subtasks. These settings will work for most data sets. However, if
@@ -437,7 +437,7 @@ The workflow by default expects input files with the extension
     plus additional tasks. To run with USEARCH as the executable add the
     option `--method dada2`.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 -   The workflow runs with default settings for the subtasks. Depending
     on the lengths of your reads you might want to change the setting
@@ -473,7 +473,7 @@ assessment, and then creates a final annotated contig file.
 
 **Requirements**
 
-1.  [KneadData](https://bitbucket.org/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
 2.  [SPAdes](http://cab.spbu.ru/software/spades/)
@@ -514,7 +514,7 @@ provide the identifier string for the first file in the set of pairs.
     output files. The `$SPECIES` input string is used as the basename of
     the contig files.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 
 Visualization Workflows
