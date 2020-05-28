@@ -14,7 +14,7 @@ except ImportError:
 
 from glob import glob    
 
-VERSION = "3.0.0-alpha.2"
+VERSION = "3.0.0-alpha.3"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"

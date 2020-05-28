@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.3 05-28-2020 ##
+
+* One change in utility function (map to list) for python 3 compatibility with visualization workflows.
+
 ## v3.0.0-alpha.2 05-19-2020 ##
 
 * Fix join taxonomic tables script to allow for scientific notation in MetaPhlAn v3 outputs.
