@@ -832,7 +832,7 @@ def relative_abundance(data, percent=False):
                 new_value=0
             new_row.append(new_value)
         if percent:
-            new_row = map(lambda x: x * 100.0, new_row)
+            new_row = list(map(lambda x: x * 100.0, new_row))
         relab.append(new_row)
         
     return relab
