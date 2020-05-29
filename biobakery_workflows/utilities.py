@@ -59,7 +59,7 @@ def get_package_file(basename, type="template"):
 
     # get all of the templates in this folder
     package_install_folder=os.path.join(os.path.dirname(os.path.realpath(__file__)), subfolder)
-    found_files=filter(lambda file: file.endswith(extension),os.listdir(package_install_folder))
+    found_files=list(filter(lambda file: file.endswith(extension),os.listdir(package_install_folder)))
 
     # return the template with the name
     matching_file=list(filter(lambda file: file.startswith(basename+extension), found_files))
