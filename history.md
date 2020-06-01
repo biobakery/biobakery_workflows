@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.4 06-01-2020 ##
+
+* Add utility visualization scripts, two from breadcrumbs, and new exe to access Rscripts directly.
+
 ## v3.0.0-alpha.3 05-28-2020 ##
 
 * One change in utility function (map to list) for python 3 compatibility with visualization workflows.
