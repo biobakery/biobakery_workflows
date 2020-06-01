@@ -54,6 +54,7 @@ setuptools.setup(
         'console_scripts': [
             'biobakery_workflows = biobakery_workflows.biobakery_workflows:main',
             'biobakery_workflows_databases = biobakery_workflows.biobakery_workflows_databases:main',
+            'biobakery_workflows_scripts = biobakery_workflows.biobakery_workflows_scripts:main',
         ]},
     package_data={
         'biobakery_workflows' : [
