@@ -7,8 +7,11 @@ library(optparse)
 
 # Create command line argument parser
 help_description <- "
+
 This script generates an ordination plot from StrainPhlAn output files.
+
 The following positional arguments are required:
+
 clade.distmat.txt (Input file): This is the distmat output file (created by providing the StrainPhlAn MSA file)
 metadata.txt (Input file): This is the metadata file
 ordination.png (Output file): This is the ordination plot image written"
@@ -25,6 +28,8 @@ library(vegan)
 # read in the file, skipping the first 8 rows and filling in empty columns, using the tab as sep, and stripping extra white space
 data <- read.table( args_list$args[1], skip = 8, fill = TRUE, sep="\t", strip.white = T)
 
+list = data$V33
+list = gsub(" .*", "", list)
 # remove the first column of the data as it is blank
 data[1] <- NULL
 
@@ -37,15 +42,13 @@ data[ncol(data)] <- NULL
 # remove the current last column from the data as it is blank
 data[ncol(data)] <- NULL
 
-# split header by space and digit to get the sample names
-samples <- strsplit(unlist(header), "[[:blank:]][[:xdigit:]]")
-
 # add the sample names to the columns and rows of the data matrix
-rownames(data) <- samples
-colnames(data) <- samples
+rownames(data) <- list
+colnames(data) <- list
 
 # make symmetric, add lower triangle to upper triangle
 data[lower.tri(data)] <- t(data)[lower.tri(data)]
+
 
 # ordinate on the distance matrix
 e.sir.pcoa <- cmdscale( data, eig = T )
@@ -66,12 +69,12 @@ e.sir.scores.meta <- merge( e.sir.scores, e.sir.meta, by = 'row.names' )
 rownames( e.sir.scores.meta ) <- e.sir.scores.meta[,1]
 e.sir.scores.meta[,1] <- NULL
 # change colnames
-colnames(e.sir.scores.meta) <- c( "PCo1", "PCo2", "SubjectID" )
+colnames(e.sir.scores.meta) <- c( "PCo1", "PCo2", "Country" )
 
 # plot ordination
-png( args_list$args[3], width = 750, height = 600, res = 150 )
+png( args_list$args[3], width = 6, height = 5, res = 300, units = "in" )
 
-ggplot( e.sir.scores.meta, aes(PCo1, PCo2, color=SubjectID) ) + 
+ggplot( e.sir.scores.meta, aes(PCo1, PCo2, color=Country) ) + 
   geom_point(size = 4, alpha = 0.75) + theme_classic() + 
   theme(axis.line.x = element_line(colour = 'black', size=0.75, linetype='solid'),
         axis.line.y = element_line(colour = 'black', size=0.75, linetype='solid'),
