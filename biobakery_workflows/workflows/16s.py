@@ -56,7 +56,7 @@ workflow.add_argument("minoverlap", desc="the min overlap required to merge pair
 workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pairs for the dada2 workflow", default=0)
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
-workflow.add_argument("picrust-version", desc="the picrust version to use", default="1")
+workflow.add_argument("picrust-version", desc="the picrust version to use", default="2")
 
 # get the arguments from the command line
 args = workflow.parse_args()
