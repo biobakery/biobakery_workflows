@@ -191,7 +191,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
     overlap=samples.intersection(possible_samples)
     if len(list(overlap)) == 0:
         # the samples must be the rows so invert the data
-        data=map(list,zip(*data))
+        data=[list(a) for a in zip(*data)]
         possible_samples=data[0][1:]
         overlap=samples.intersection(possible_samples)
     
@@ -208,6 +208,19 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
             new_data.append(row)
         else:
             ignore_features.remove(row[0])
+
+    # check for any features that do not vary
+    check_diff = {}
+    for row in new_data[1:]:
+        for value in row[1:]:
+            if not row[0] in check_diff:
+                check_diff[row[0]]=[]
+            check_diff[row[0]]=check_diff[row[0]]+[value]
+
+    for feature_name, feature_types in check_diff.items():
+        if len(list(set(feature_types))) == 1:
+            sys.exit("ERROR: Please remove feature '"+feature_name+"' as it"+
+                " only includes a single type of '"+feature_types[0]+"'.")
 
     # check for any features that were not found
     if ignore_features:
