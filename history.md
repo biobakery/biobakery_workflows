@@ -1,6 +1,12 @@
 
 # bioBakery workflows History #
 
+## v0.15.1 06-09-2020 ##
+
+* Added check in visualization to throw error if feature only has one type.
+* Increase metaphlan2 and strainphlan task times for larger grid runs.
+* Added option for custom databases for 16s usearch/vsearch methods.
+
 ## v0.15.0 04-24-2020 ##
 
 * Added WDL workflow.

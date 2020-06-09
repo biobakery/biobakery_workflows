@@ -20,26 +20,7 @@ except ImportError:
     
 from glob import glob    
 
-COUNTER_URL="http://bitbucket.org/biobakery/biobakery_workflows/downloads/counter.txt"
-
-def download(url, download_file):
-    """ Download a file from a url """
-
-    try:
-        print("Downloading "+url)
-        file, headers = urlretrieve(url,download_file)
-        # print final return to start new line of stdout
-        print("\n")
-    except EnvironmentError:
-        print("WARNING: Unable to download "+url)
-
-counter_file=os.path.basename(COUNTER_URL)
-if not os.path.isfile(counter_file):
-    print("Downloading counter file to track biobakery_workflows downloads"+
-    " since the global PyPI download stats are currently turned off.")
-    download(COUNTER_URL,counter_file)
-
-VERSION = "0.15.0"
+VERSION = "0.15.1"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
