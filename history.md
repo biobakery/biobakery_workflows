@@ -1,6 +1,15 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.5 07-06-2020 ##
+
+* Change default version run for PICRUSt from 1 to 2.
+* Update reverse comp barcodes script for python 3.
+* Update gzip file read for python 3.
+* Add check for feature with single metadata type to vis.
+* Update strainphlan vis script for latest demo inputs (Thanks, Kelsey!).
+* For PICRUSt 2 inputs remove taxonomy column to fit new requirements.
+
 ## v3.0.0-alpha.4 06-01-2020 ##
 
 * Add utility visualization scripts, two from breadcrumbs, and new exe to access Rscripts directly.
