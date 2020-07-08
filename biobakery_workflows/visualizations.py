@@ -233,7 +233,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
         average_data.append([sum(group)/(1.0*len(group)) for group in row])
 
     # reorder average data so it is grouped by taxonomy
-    average_data = zip(*average_data)
+    average_data = [list(a) for a in zip(*average_data)]
 
     # sort the data by abundance or name (depending on metadata type, use name if numeric)
     sort_by_name=False
