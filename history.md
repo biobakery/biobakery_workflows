@@ -1,6 +1,12 @@
 
 # bioBakery workflows History #
 
+
+## v3.0.0-alpha.6 07-10-2020 ##
+
+* Add custom usearch db option plus log to vis report for 16s.
+* Small change to allow for python 3 compatibility with vis with metadata (average barplots).
+
 ## v3.0.0-alpha.5 07-06-2020 ##
 
 * Change default version run for PICRUSt from 1 to 2.
