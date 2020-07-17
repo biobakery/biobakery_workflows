@@ -12,6 +12,7 @@ workflow workflowMTX {
     
     # Database locations
     File versionSpecifichumanDB
+    File versionSpecifictrancriptDB
     File versionSpecificrrnaDB
     File versionSpecificChocophlan
     File versionSpecificUniRef90
@@ -31,10 +32,10 @@ workflow workflowMTX {
   }
   
   # Set the docker tags
-  String kneaddataDockerImage = "biobakery/kneaddata:0.7.5_cloud"
+  String kneaddataDockerImage = "biobakery/kneaddata:0.7.9"
   String metaphlanDockerImage = "biobakery/metaphlan2:2.7.7_cloud_r1"
   String humannDockerImage = "biobakery/humann2:2.8.2_cloud"
-  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud"
+  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud_r2"
   
   # Set the default data type
   String dataTypeSetting = select_first([dataType, "mtx"])
@@ -92,6 +93,7 @@ workflow workflowMTX {
       rawfile2=ReadPair[1],
       sample=ReadPair[2],
       humanDB=versionSpecifichumanDB,
+      transcriptDB=versionSpecifictrancriptDB,
       rrnaDB=versionSpecificrrnaDB,
       customDB1=customQCDB1,
       customDB2=customQCDB2,
@@ -291,6 +293,7 @@ task QualityControl {
     File rawfile2
     String sample
     File humanDB
+    File transcriptDB
     File rrnaDB
     File? customDB1
     File? customDB2
@@ -299,7 +302,7 @@ task QualityControl {
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
- 
+  
   Int mem = select_first([MaxMemGB, 24])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
@@ -307,10 +310,11 @@ task QualityControl {
   String useCustomDB2 = if defined(customDB2) then "yes" else "no"
   
   String humanDatabase = "databases/kneaddata_human/"
-  String transcriptDatabase = "databases/kneaddata_rrna/"
+  String transcriptDatabase = "databases/kneaddata_transcript/"
+  String rrnaDatabase = "databases/kneaddata_rrna/"
   
   # Add additional database to run options depending on data type
-  String options = if dataType == "mtx" then "--reference-db ${transcriptDatabase}" else ""
+  String options = if dataType == "mtx" then "--reference-db ${transcriptDatabase} --reference-db ${rrnaDatabase}" else ""
   
   String customDatabase1 = "databases/db1/"
   String customDatabase2 = "databases/db2/"
@@ -332,7 +336,7 @@ task QualityControl {
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{custom_options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options}
     fi
     
     if [ ~{useCustomDB1} == 'no' ]; then
@@ -341,26 +345,30 @@ task QualityControl {
         kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
     
         # if data is of type mtx, then download additional database
-        if [ "${dataType}" != 'mtx' ]; then
+        if [ ~{dataType} == 'mtx' ]; then
             #create databases
             mkdir -p ~{transcriptDatabase}
-            kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{rrnaDB}
+            kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{transcriptDB}
+
+            mkdir -p ~{rrnaDatabase}
+            kneaddata_database --download ribosomal_RNA bowtie2 ~{rrnaDatabase} --database-location ~{rrnaDB}
         fi
     
         #run kneaddata with two reference databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options}
     fi
     
     # gzip outputs to save space
     gzip *.fastq
-  >>> 
+  >>>
   
   output {
     File QCFastqFile = "${sample}.fastq.gz"
     File LogFile = "${sample}.log"
     Array[File] ContaminateReads = glob("*contam*.fastq.gz") # Keep the intermediate contaminate sequences
-    Array[File] FastQCOutputs = glob("fastqc/*") # Keep the fastqc output files
+    Array[File] FastQCOutputsZip = glob("fastqc/*.zip") # Keep the fastqc output files (zip)
+    Array[File] FastQCOutputsHtml = glob("fastqc/*.html") # Keep the fastqc output files (html)
   }
   
   runtime {
