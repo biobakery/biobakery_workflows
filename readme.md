@@ -749,10 +749,10 @@ The WDL is located in this repository at: `biobakery_workflows/workflows/wtx.wdl
 
 **Inputs**
 
-The workflow has ten required inputs and nine optional inputs. 
+The workflow has eleven required inputs and nine optional inputs. 
 
 *Required inputs*
-The workflow requires ten inputs for each run. Five inputs can be modified for each project where as the other five inputs would only be modified with software version changes.
+The workflow requires eleven inputs for each run. Five inputs can be modified for each project where as the other six inputs would only be modified with software version changes.
 * ProjectName : The name of the sequencing project. The final output report and zip archive will use this name (only alphanumeric characters allowed).
 * InputExtension : The extension for all of the input files (example ".fastq.gz")
 * InputRead1Identifier : The identifier in the file name for those files that are read1 (example ".R1")
@@ -762,10 +762,11 @@ The workflow requires ten inputs for each run. Five inputs can be modified for e
 To generate a file to use as input for InputRead1Files, follow the Terra instructions https://support.terra.bio/hc/en-us/articles/360033353952-Creating-a-list-file-of-reads-for-input-to-a-workflow , adding to command #2 the InputRead1Identifier and the InputExtension. For example with InputRead1Identifier = ".R1" and InputExtension = ".fastq.gz" command #2 would now be 
 `gsutil ls gs:/your_data_Google_bucket_id/ | grep ".fastq.gz" | grep ".R1" > ubams.list` . Also since for this workflow we are looking for fastq or fastq.gz input files you might change the name of the file list in this command from "ubams.list" to "fastq_list.txt" . 
 
-These five required inputs would only be modified if the versions of Kneaddata and HUMAnN v2 change. These are databases that are specifically tied to the software version.
+These six required inputs would only be modified if the versions of Kneaddata and HUMAnN v2 change. These are databases that are specifically tied to the software version.
 * versionSpecificChocophlan : The Chocophlan database used by HUMAnN. This is located at `databases/humann/full_chocophlan_plus_viral.v0.1.1.tar.gz` in this workspace google bucket.
 * versionSpecifichumanDB : The human reference database used by Kneaddata. This is located at `databases/kneaddata/Homo_sapiens_hg37_human_contamination_Bowtie2_v0.1.tar.gz` in this workspace google bucket.
-* versionSpecificrrnaDB : The human rrna reference database used by Kneaddata. This is located at `databases/kneaddata/Homo_sapiens_hg38_transcriptome_Bowtie2_v0.1.tar.gz` in this workspace google bucket. 
+* versionSpecifictranscriptDB : The human rrna reference database used by Kneaddata. This is located at `databases/kneaddata/Homo_sapiens_hg38_transcriptome_Bowtie2_v0.1.tar.gz` in this workspace google bucket. 
+* versionSpecificrrnaDB : The SILVA rrna reference database used by Kneaddata. This is located at `databases/kneaddata/SILVA_128_LSUParc_SSUParc_ribosomal_RNA_v0.2.tar.gz` in this workspace google bucket. 
 * versionSpecificUniRef90 : The uniref90 reference database used by HUMAnN. This is located at `databases/humann/uniref90_annotated_1_1.tar.gz` in this workspace google bucket.
 * versionSpecificUtilityMapping : The utility mapping database used by HUMAnN. This is located at `databases/humann/full_utility_mapping_1_1.tar.gz` in this workspace google bucket.
 
@@ -825,9 +826,10 @@ IBDMDB (6 sample) demo run configuration:
 Required software specific databases:
 * versionSpecificChocophlan : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/full_chocophlan_plus_viral.v0.1.1.tar.gz"`
 * versionSpecifichumanDB : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/Homo_sapiens_hg37_human_contamination_Bowtie2_v0.1.tar.gz"`
+* versionSpecifictranscriptDB: `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/SILVA_128_LSUParc_SSUParc_ribosomal_RNA_v0.2.tar.gz"`
 * versionSpecificrrnaDB : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/Homo_sapiens_hg38_transcriptome_Bowtie2_v0.1.tar.gz"` 
 * versionSpecificUniRef90 : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/uniref90_annotated_1_1.tar.gz"`
-* versionSpecificUtilityMapping : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/full_utility_mapping_1_1.tar.gz"`
+* versionSpecificUtilityMapping : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/full_utility_mapping_1_1.tar.gz"``
 
 Optional custom databases (to run with one or more custom databases instead of the default references used in QC)
 * customQCDB1 : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/Clupus_bowtie2.tar.gz"`
