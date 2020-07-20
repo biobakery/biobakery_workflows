@@ -12,6 +12,7 @@ workflow workflowMTX {
     
     # Database locations
     File versionSpecifichumanDB
+    File versionSpecifictrancriptDB
     File versionSpecificrrnaDB
     File versionSpecificChocophlan
     File versionSpecificUniRef90
@@ -31,10 +32,10 @@ workflow workflowMTX {
   }
   
   # Set the docker tags
-  String kneaddataDockerImage = "biobakery/kneaddata:0.7.5_cloud"
-  String metaphlanDockerImage = "biobakery/metaphlan2:2.7.7_cloud_r1"
-  String humannDockerImage = "biobakery/humann2:2.8.2_cloud"
-  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud"
+  String kneaddataDockerImage = "biobakery/kneaddata:0.7.9"
+  String metaphlanDockerImage = "biobakery/metaphlan:3.0.1"
+  String humannDockerImage = "biobakery/humann:3.0.0.a.4"
+  String workflowsDockerImage = "biobakery/workflows:3.0.0.a.6_anadama0.7.8_no_metaphlan_db"
   
   # Set the default data type
   String dataTypeSetting = select_first([dataType, "mtx"])
@@ -48,8 +49,8 @@ workflow workflowMTX {
   # Output file names to match AnADAMA2 workflow output names
   String QCReadCountFileName = "kneaddata_read_count_table.tsv"  
 
-  String JoinedTaxonomicProfilesFileName="metaphlan2_taxonomic_profiles.tsv"
-  String TaxonomicProfilesCountsFileName="metaphlan2_species_counts_table.tsv"
+  String JoinedTaxonomicProfilesFileName="metaphlan_taxonomic_profiles.tsv"
+  String TaxonomicProfilesCountsFileName="metaphlan_species_counts_table.tsv"
 
   String JoinGeneFamilesOutFileName="genefamilies.tsv"
   String JoinECsOutFileName="ecs.tsv"
@@ -59,12 +60,12 @@ workflow workflowMTX {
   String JoinECsRelabOutFileName="ecs_relab.tsv"
   String JoinPathwaysRelabOutFileName="pathabundance_relab.tsv"
 
-  String CountRelabGenesFileName="humann2_genefamilies_relab_counts.tsv"
-  String CountRelabECsFileName="humann2_ecs_relab_counts.tsv"
-  String CountRelabPathwaysFileName="humann2_pathabundance_relab_counts.tsv"
+  String CountRelabGenesFileName="humann_genefamilies_relab_counts.tsv"
+  String CountRelabECsFileName="humann_ecs_relab_counts.tsv"
+  String CountRelabPathwaysFileName="humann_pathabundance_relab_counts.tsv"
 
-  String JoinedFeatureCountsFileName="humann2_feature_counts.tsv"
-  String FunctionalCountFileName = "humann2_read_and_species_count_table.tsv"
+  String JoinedFeatureCountsFileName="humann_feature_counts.tsv"
+  String FunctionalCountFileName = "humann_read_and_species_count_table.tsv"
   
   String VisualizationsFileName = ProjectName+"_visualizations"
   
@@ -92,6 +93,7 @@ workflow workflowMTX {
       rawfile2=ReadPair[1],
       sample=ReadPair[2],
       humanDB=versionSpecifichumanDB,
+      transcriptDB=versionSpecifictrancriptDB,
       rrnaDB=versionSpecificrrnaDB,
       customDB1=customQCDB1,
       customDB2=customQCDB2,
@@ -259,11 +261,11 @@ workflow workflowMTX {
     workflowsDockerImage=workflowsDockerImage
   } 
   # join all taxonomic profiles, gene families, ecs, and pathways (including relative abundance files) from all samples
-  call JoinTables as JoinTaxonomicProfiles {
+  call JoinTaxonomicProfiles {
     input:
     InFiles=TaxonomicProfile.TaxonomicProfileFile,
     OutFileName=JoinedTaxonomicProfilesFileName,
-    humannDockerImage=humannDockerImage,
+    workflowsDockerImage=workflowsDockerImage,
     MaxMemGB=JoinNormMemDefault
   }
 
@@ -291,6 +293,7 @@ task QualityControl {
     File rawfile2
     String sample
     File humanDB
+    File transcriptDB
     File rrnaDB
     File? customDB1
     File? customDB2
@@ -299,7 +302,7 @@ task QualityControl {
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
- 
+  
   Int mem = select_first([MaxMemGB, 24])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
@@ -307,10 +310,11 @@ task QualityControl {
   String useCustomDB2 = if defined(customDB2) then "yes" else "no"
   
   String humanDatabase = "databases/kneaddata_human/"
-  String transcriptDatabase = "databases/kneaddata_rrna/"
+  String transcriptDatabase = "databases/kneaddata_transcript/"
+  String rrnaDatabase = "databases/kneaddata_rrna/"
   
   # Add additional database to run options depending on data type
-  String options = if dataType == "mtx" then "--reference-db ${transcriptDatabase}" else ""
+  String options = if dataType == "mtx" then "--reference-db ${transcriptDatabase} --reference-db ${rrnaDatabase}" else ""
   
   String customDatabase1 = "databases/db1/"
   String customDatabase2 = "databases/db2/"
@@ -332,7 +336,7 @@ task QualityControl {
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{custom_options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options}
     fi
     
     if [ ~{useCustomDB1} == 'no' ]; then
@@ -341,26 +345,30 @@ task QualityControl {
         kneaddata_database --download human_genome bowtie2 ~{humanDatabase} --database-location ~{humanDB}
     
         # if data is of type mtx, then download additional database
-        if [ "${dataType}" != 'mtx' ]; then
+        if [ ~{dataType} == 'mtx' ]; then
             #create databases
             mkdir -p ~{transcriptDatabase}
-            kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{rrnaDB}
+            kneaddata_database --download human_transcriptome bowtie2 ~{transcriptDatabase} --database-location ~{transcriptDB}
+
+            mkdir -p ~{rrnaDatabase}
+            kneaddata_database --download ribosomal_RNA bowtie2 ~{rrnaDatabase} --database-location ~{rrnaDB}
         fi
     
         #run kneaddata with two reference databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-trf --run-fastqc-start ~{options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options}
     fi
     
     # gzip outputs to save space
     gzip *.fastq
-  >>> 
+  >>>
   
   output {
     File QCFastqFile = "${sample}.fastq.gz"
     File LogFile = "${sample}.log"
     Array[File] ContaminateReads = glob("*contam*.fastq.gz") # Keep the intermediate contaminate sequences
-    Array[File] FastQCOutputs = glob("fastqc/*") # Keep the fastqc output files
+    Array[File] FastQCOutputsZip = glob("fastqc/*.zip") # Keep the fastqc output files (zip)
+    Array[File] FastQCOutputsHtml = glob("fastqc/*.html") # Keep the fastqc output files (html)
   }
   
   runtime {
@@ -386,10 +394,10 @@ task TaxonomicProfile {
   
   String tmpdir = "tmp/"
 
-  # create a temp directory and then run metaphlan2
+  # create a temp directory and then run metaphlan
   command {
     mkdir -p ${tmpdir}
-    metaphlan2.py ${QCFastqFile} --input_type multifastq --nproc 8 --no_map --tmp_dir ${tmpdir} \
+    metaphlan ${QCFastqFile} --input_type fastq --nproc 8 --no_map --tmp_dir ${tmpdir} \
     --output_file ${sample}.tsv
   }
     
@@ -419,18 +427,18 @@ task FunctionalProfile {
     Int? preemptibleAttemptsOverride
   }
 
-  Int mem = select_first([MaxMemGB, 24])
+  Int mem = select_first([MaxMemGB, 32])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
   String databases = "databases/"
 
-  # download the two reference databases and run humann2
+  # download the two reference databases and run humann
   command {
     mkdir -p ${databases}
-    humann2_databases --download chocophlan full ${databases} --database-location ${versionSpecificChocophlan}
-    humann2_databases --download uniref uniref90_diamond ${databases} --database-location ${versionSpecificUniRef90}
+    humann_databases --download chocophlan full ${databases} --database-location ${versionSpecificChocophlan}
+    humann_databases --download uniref uniref90_diamond ${databases} --database-location ${versionSpecificUniRef90}
 
-    humann2 --input ${QCFastqFile} --output ./ --taxonomic-profile ${TaxonomicProfileFile} --threads 8 --o-log ${sample}.log
+    humann --input ${QCFastqFile} --output ./ --taxonomic-profile ${TaxonomicProfileFile} --threads 8 --o-log ${sample}.log
     }
     
     output {
@@ -438,7 +446,7 @@ task FunctionalProfile {
       File PathwayAbundanceFile = "${sample}_pathabundance.tsv"
       File PathwayCoverageFile = "${sample}_pathcoverage.tsv"
       File LogFile = "${sample}.log"
-      Array[File] UnalignedReads = glob("${sample}_humann2_temp/*.fa") # Keep the unaligned reads after each mapping step
+      Array[File] UnalignedReads = glob("${sample}_humann_temp/*.fa") # Keep the unaligned reads after each mapping step
     }
 
   runtime {
@@ -463,9 +471,9 @@ task RegroupECs {
   # download the utility databases and regroup to ECs
   command {
     mkdir -p ${databases}
-    humann2_databases --download utility_mapping full ${databases} --database-location ${versionSpecificUtilityMapping}
+    humann_databases --download utility_mapping full ${databases} --database-location ${versionSpecificUtilityMapping}
 
-    humann2_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups uniref90_level4ec
+    humann_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups uniref90_level4ec
   }
     
   output {
@@ -494,7 +502,7 @@ task RenormTable {
 
   # download the utility databases and renorm tables to relative abundance
   command {
-    humann2_renorm_table --input ${InFile} --output ${OutFileName} --units relab --special n
+    humann_renorm_table --input ${InFile} --output ${OutFileName} --units relab --special n
   }
 
   output {
@@ -536,6 +544,36 @@ task QCReadCount {
   }
 }
 
+task JoinTaxonomicProfiles {
+  input {
+    Array[File] InFiles
+    String OutFileName
+    String workflowsDockerImage
+    Int? MaxMemGB
+  }
+  
+  Int mem = select_first([MaxMemGB, 10])
+
+  # symlink input files to working directory
+  # join all files into a single file
+  command {
+    for infile in ${sep=' ' InFiles}; do ln -s $infile; done
+    
+    join_taxonomic_profiles.py --input ./ --output ${OutFileName} --file_name .tsv
+  }
+
+  output {
+    File OutFile = "${OutFileName}"
+  }
+
+  runtime {
+    docker: workflowsDockerImage
+    cpu: 1
+      memory: mem+" GB"
+      disks: "local-disk 10 SSD"
+  }
+}
+
 task JoinTables {
   input {
     Array[File] InFiles
@@ -551,7 +589,7 @@ task JoinTables {
   command {
     for infile in ${sep=' ' InFiles}; do ln -s $infile; done
     
-    humann2_join_tables --input ./ --output ${OutFileName} --file_name .tsv
+    humann_join_tables --input ./ --output ${OutFileName} --file_name .tsv
   }
 
   output {
@@ -578,7 +616,7 @@ task FunctionalCount {
   command {
     for infile in ${sep=' ' FunctionalLogFiles}; do ln -s $infile; done
   
-    get_counts_from_humann2_logs.py --input ./ --output ${OutFileName}
+    get_counts_from_humann_logs.py --input ./ --output ${OutFileName}
   }
 
   output {
@@ -635,9 +673,9 @@ task VisualizationReport {
   }
   
   String QCCountsFolder = "input/kneaddata/merged/"
-  String TaxonomyFolder = "input/metaphlan2/merged/"
-  String FunctionalMergedFolder = "input/humann2/merged/"
-  String FunctionalCountsFolder = "input/humann2/counts/"
+  String TaxonomyFolder = "input/metaphlan/merged/"
+  String FunctionalMergedFolder = "input/humann/merged/"
+  String FunctionalCountsFolder = "input/humann/counts/"
   
   # symlink files to the expected folder locations
   # run visualizations
