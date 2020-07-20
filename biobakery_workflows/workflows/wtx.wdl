@@ -35,7 +35,7 @@ workflow workflowMTX {
   String kneaddataDockerImage = "biobakery/kneaddata:0.7.9"
   String metaphlanDockerImage = "biobakery/metaphlan2:2.7.7_cloud_r1"
   String humannDockerImage = "biobakery/humann2:2.8.2_cloud"
-  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud_r2"
+  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud_r3"
   
   # Set the default data type
   String dataTypeSetting = select_first([dataType, "mtx"])
