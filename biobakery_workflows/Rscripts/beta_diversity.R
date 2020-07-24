@@ -121,9 +121,10 @@ if ((ncol(filtered_metadata) < 1) || (nrow(filtered_metadata) < 1)) {
   stop("No metadata remain after filtering for max missing")
 }
 
-# filter data and metadata to only include the same samples
-filtered_metadata <- filtered_metadata[row.names(filtered_metadata) %in% row.names(filtered_data), ]
-filtered_data <- filtered_data[row.names(filtered_data) %in% row.names(filtered_metadata), ]
+# filter data and metadata to only include the same samples in the same order
+sorted_samples <- sort(intersect(row.names(filtered_metadata), row.names(filtered_data)))
+filtered_metadata <- filtered_metadata[sorted_samples, , drop = FALSE]
+filtered_data <- filtered_data[sorted_samples, , drop = FALSE]
 
 # remove subject from metadata if present
 filtered_metadata <- filtered_metadata[ , -which(names(filtered_metadata) %in% c("subject"))]
@@ -173,7 +174,7 @@ if (current_args$covariate_equation != "") {
 
   dodge = position_dodge(width = 0.8)
 
-  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, 3) + xlab("") + labs(fill = "")
+  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))+1) + xlab("") + labs(fill = "")
 
   png(positional_args[3], res = 150, height = 800, width = 1100)
   print(plot)
