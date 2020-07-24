@@ -113,8 +113,9 @@ if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
 # Filter the metadata to remove any samples without data or metadata with more than max values missing
 metadata_zeros <- metadata
 metadata_zeros[metadata_zeros == "UNK"] <- NA
-max_missing_values <- current_args$max_missing * (ncol(metadata) - 1)
-filtered_metadata <- metadata[rowSums(metadata_zeros != 0, na.rm=TRUE) > max_missing_values, , drop = FALSE]
+
+max_not_missing_values <- (( 100 - current_args$max_missing ) / 100 ) * nrow(metadata)
+filtered_metadata <- na.omit(metadata_zeros[ ,colSums(metadata_zeros != 0, na.rm=TRUE) > max_not_missing_values, drop = FALSE])
 
 if ((ncol(filtered_metadata) < 1) || (nrow(filtered_metadata) < 1)) {
   stop("No metadata remain after filtering for max missing")
@@ -143,7 +144,7 @@ if (! exists("method")) {
   stop(paste("Please provide a data type from the valid set in the help message"))
 }
 
-bray = vegdist(filtered_data, method)
+bray = vegdist(filtered_data, method, na.remove = TRUE)
 
 if (current_args$covariate_equation != "") {
   results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
