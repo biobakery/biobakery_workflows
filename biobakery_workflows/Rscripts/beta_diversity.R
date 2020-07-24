@@ -103,6 +103,9 @@ data_zeros <- data
 data_zeros[is.na(data_zeros)] <- 0
 filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
 
+# remove empty rows from data
+filtered_data <- filtered_data[rowSums(filtered_data != 0, na.rm=TRUE) > 0, , drop = FALSE]
+
 if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
   stop("No data remain in the data after filtering for min abundance and prevalence")
 }
