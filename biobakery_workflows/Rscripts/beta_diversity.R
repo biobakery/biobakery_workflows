@@ -103,11 +103,19 @@ data_zeros <- data
 data_zeros[is.na(data_zeros)] <- 0
 filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
 
+if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
+  stop("No data remain in the data after filtering for min abundance and prevalence")
+}
+
 # Filter the metadata to remove any samples without data or metadata with more than max values missing
 metadata_zeros <- metadata
 metadata_zeros[metadata_zeros == "UNK"] <- NA
 max_missing_values <- current_args$max_missing * (ncol(metadata) - 1)
 filtered_metadata <- metadata[rowSums(metadata_zeros != 0, na.rm=TRUE) > max_missing_values, , drop = FALSE]
+
+if ((ncol(filtered_metadata) < 1) || (nrow(filtered_metadata) < 1)) {
+  stop("No metadata remain after filtering for max missing")
+}
 
 # filter data and metadata to only include the same samples
 filtered_metadata <- filtered_metadata[row.names(filtered_metadata) %in% row.names(filtered_data), ]
@@ -133,7 +141,6 @@ if (! exists("method")) {
 }
 
 bray = vegdist(filtered_data, method)
-
 
 if (current_args$covariate_equation != "") {
   results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
