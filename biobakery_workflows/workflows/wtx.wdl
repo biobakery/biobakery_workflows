@@ -78,7 +78,7 @@ workflow workflowMTX {
   
   # get the sample name and read2 file path
   scatter (read1 in inputRead1) {
-     Array[String] pairSet = [read1[0], sub(read1[0], inputRead1Identifier, inputRead2Identifier), sub(basename(read1[0]), inputRead1Identifier + inputExtension, "")]
+     Array[String] pairSet = [read1[0], sub(read1[0], inputRead1Identifier + inputExtension, inputRead2Identifier + inputExtension), sub(basename(read1[0]), inputRead1Identifier + inputExtension, "")]
   }
 
   Array[Array[String]] PairPaths = pairSet
