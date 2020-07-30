@@ -339,7 +339,7 @@ task QualityControl {
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options} --sequencer-source {adapterType}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options} --sequencer-source ~{adapterType}
     fi
     
     if [ ~{useCustomDB1} == 'no' ]; then
@@ -359,7 +359,7 @@ task QualityControl {
     
         #run kneaddata with two reference databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options} --sequencer-source {adapterType}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options} --sequencer-source ~{adapterType}
     fi
     
     # gzip outputs to save space
