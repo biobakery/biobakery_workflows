@@ -9,6 +9,7 @@ workflow workflowMTX {
     String inputRead2Identifier
     String inputExtension
     String ProjectName
+    String AdapterType
     
     # Database locations
     File versionSpecifichumanDB
@@ -92,6 +93,7 @@ workflow workflowMTX {
       rawfile1=ReadPair[0],
       rawfile2=ReadPair[1],
       sample=ReadPair[2],
+      adapterType=AdapterType,
       humanDB=versionSpecifichumanDB,
       transcriptDB=versionSpecifictrancriptDB,
       rrnaDB=versionSpecificrrnaDB,
@@ -292,6 +294,7 @@ task QualityControl {
     File rawfile1
     File rawfile2
     String sample
+    String adapterType
     File humanDB
     File transcriptDB
     File rrnaDB
@@ -336,7 +339,7 @@ task QualityControl {
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options} --sequencer-source {adapterType}
     fi
     
     if [ ~{useCustomDB1} == 'no' ]; then
@@ -356,7 +359,7 @@ task QualityControl {
     
         #run kneaddata with two reference databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options} --sequencer-source {adapterType}
     fi
     
     # gzip outputs to save space
