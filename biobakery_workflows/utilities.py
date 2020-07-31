@@ -126,11 +126,11 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
             name_addition="_Abundance", ignore_features=metadata_exclude)
         metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
 
-        humann2_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
+        humann_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
         workflow.add_task(
             partial_function(create_merged_data_file, metadata=metadata),
             depends=pathabundance,
-            targets=humann2_barplot_input)
+            targets=humann_barplot_input)
 
         metadata_row_names=[row[0] for row in metadata[1:]]
         metadata_end=metadata_row_names[-1]
@@ -141,10 +141,10 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
                 new_pathways_plot=name_files("stratified_pathways_{0}_{1}.jpg".format(metadata_focus,i), output, subfolder="stratified_pathways")
                 stratified_plots_tasks.append(workflow.add_task(
-                    partial_function(run_humann2_barplot, number=i, metadata_end=metadata_end, metadata_focus=metadata_focus),
-                    depends=[maaslin_tasks_info["pathways"][2],humann2_barplot_input],
+                    partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, metadata_focus=metadata_focus),
+                    depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
                     targets=new_pathways_plot,
-                    name="run_humann2_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
+                    name="run_humann_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
                 stratified_pathways_plots.append(new_pathways_plot)
 
     return stratified_pathways_plots,stratified_plots_tasks
@@ -229,7 +229,7 @@ def get_input_files_for_study_type(data_files, study_type):
 
     return taxonomic_profile,pathabundance,ecabundance
 
-# create a merged metadata table to be used as input for humann2_barplot
+# create a merged metadata table to be used as input for humann_barplot
 def create_merged_data_file(task, metadata):
     # read in the pathabundance file
     data = []
@@ -249,7 +249,7 @@ def create_merged_data_file(task, metadata):
 
 
 # gather the top N pathways to plot relative abundance (only run if pathways files are present)
-def run_humann2_barplot(task, number, metadata_end, metadata_focus):
+def run_humann_barplot(task, number, metadata_end, metadata_focus):
     # determine the pathway name
     with open(task.depends[0].name) as file_handle:
         try:
@@ -267,7 +267,7 @@ def run_humann2_barplot(task, number, metadata_end, metadata_focus):
             selected_pathway = "-".join(original_selected_pathway.split(".")[0:3])
 
         run_task(
-            "humann2_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]]",
+            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]]",
             depends=task.depends,
             targets=task.targets,
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
