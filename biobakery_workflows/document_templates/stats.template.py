@@ -58,7 +58,7 @@ def show_maaslin_metadata_plots(figures_folder, type):
 #+ echo=False
 
 # check for the pathways/ecs results
-def check_for_masslin_runs(run_type):
+def check_for_maaslin_runs(run_type):
     if run_type in vars["maaslin_tasks_info"] and not vars["bypass_maaslin"]:
         heatmap_file = vars["maaslin_tasks_info"][run_type][1]
         output_folder = os.path.dirname(vars["maaslin_tasks_info"][run_type][1])
@@ -74,7 +74,7 @@ def display_maaslin_heatmap(maaslin_heatmap, run_type):
         else:
             print("No significant associations.")
 
-maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_masslin_runs("pathways")
+maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_maaslin_runs("pathways")
 
 #' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
 
@@ -93,7 +93,7 @@ maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_masslin_run
 
 #+ echo=False
 
-maaslin_ecs_heatmap, maaslin_ecs_output_folder = check_for_masslin_runs("ecs")
+maaslin_ecs_heatmap, maaslin_ecs_output_folder = check_for_maaslin_runs("ecs")
 
 #' <% if maaslin_ecs_output_folder and pdf_format: print("\clearpage") %>
 
