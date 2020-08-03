@@ -49,7 +49,7 @@ def show_maaslin_metadata_plots(figures_folder, type):
         if file_name.endswith("_1.jpg"):
             images_found = True
             metadata_name=file_name.replace("_1.jpg","")
-            print("![Most significant "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n")
+            print("![Most significant "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
     if not images_found:
         print("No significant associations.")
 
@@ -125,13 +125,13 @@ def show_stratified_plots(plots):
         info = jpg_file.replace(".jpg","").split("_")
         pathway_number = info[-1]
         metadata_focus = info[-2]
-        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n".format(pathway_number, metadata_focus, jpg_file))
+        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, jpg_file))
 
 #' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
 
 #' <% if filtered_stratified_pathways_plots: print("# Stratified Pathways Plots") %>
 
-#' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN2 named humann2_barplot.") %>
+#' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN2 named humann_barplot.") %>
 
 #' <% show_stratified_plots(filtered_stratified_pathways_plots) %>
 
