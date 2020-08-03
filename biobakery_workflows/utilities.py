@@ -134,7 +134,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
         metadata_row_names=[row[0] for row in metadata[1:]]
         metadata_end=metadata_row_names[-1]
-        for i in range(1,top_pathways+1):
+        for i in range(top_pathways):
             for metadata_focus in metadata_row_names:
                 if re.match('^[\w-]+$', metadata_focus) is None:
                     sys.exit("ERROR: Please modify metadata names to include only alpha-numeric characters: "+metadata_focus)
@@ -251,11 +251,11 @@ def create_merged_data_file(task, metadata):
 # gather the top N pathways to plot relative abundance (only run if pathways files are present)
 def run_humann_barplot(task, number, metadata_end, metadata_focus):
     # determine the pathway name
-    with open(task.depends[0].name) as file_handle:
-        try:
-            original_selected_pathway = file_handle.readlines()[number].split("\t")[1]
-        except IndexError:
-            original_selected_pathway = None
+    try:
+        top_pathways_by_abundance = rank_species_average_abundance(task.depends[0].name, id_index=0, only_species=False)
+        original_selected_pathway = top_pathways_by_abundance[number]
+    except IndexError:
+        original_selected_pathway = None
 
     if original_selected_pathway:
         # only use pathway name and replace periods if present with dash
@@ -1902,7 +1902,7 @@ def read_picard(file, threshold=20):
         
     return data, below_threshold
 
-def rank_species_average_abundance(file):
+def rank_species_average_abundance(file, id_index=-1, only_species=True):
     """ Read in a taxonomy file, and sort species by average abundance 
     
     Args:
@@ -1932,21 +1932,24 @@ def rank_species_average_abundance(file):
             column_names = []
         for line in file_handle:
             line=line.rstrip().split("\t")
-            taxonomy=line.pop(0).split("|")[-1]
+            taxonomy=line.pop(0).split("|")[id_index]
             data=[try_format_data(i) for i in line]
             try:
                 average=sum(data)/(len(data)*1.0)
             except ZeroDivisionError:
                 average=0
             # only store values for species
-            if taxonomy.startswith("s__"):
+            if only_species:
+                if taxonomy.startswith("s__"):
+                    species[taxonomy]=average
+            else:
                 species[taxonomy]=average
                 
     # sort the species from highest to lowest average abundance
     sorted_species = sorted(species, key=species.get, reverse=True)
     # if abundances are not provided then use original ordering
     if sum(species.values()) == 0:
-        sorted_species = species.keys()
+        sorted_species = list(species.keys())
     
     return sorted_species
 
