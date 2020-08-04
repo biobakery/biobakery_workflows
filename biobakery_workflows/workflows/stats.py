@@ -87,12 +87,12 @@ taxonomic_profile,pathabundance,ecabundance=utilities.get_input_files_for_study_
 taxonomic_profile,pathabundance,ecabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance,ecabundance],args.output)
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
-maaslin_tasks_info=utilities.create_masslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,ecabundance)
+maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,ecabundance)
 
 # run MaAsLiN2 on all input files
 maaslin_tasks=[]
 if not args.bypass_maaslin:
-    maaslin_tasks=utilities.run_masslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects)
+    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects)
 
 # generate stratified pathways plots if pathways are provided
 stratified_plots_tasks=[]

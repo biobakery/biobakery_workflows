@@ -150,7 +150,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
     return stratified_pathways_plots,stratified_plots_tasks
 
 
-def run_masslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects):
+def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects):
     # Run maaslin on all files in input set
     
     maaslin_tasks=[]
@@ -173,7 +173,7 @@ def run_masslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,tra
 
     return maaslin_tasks
 
-def create_masslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,ecabundance):
+def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,ecabundance):
     # For all input files based on type create feature tables for input to maaslin
 
     taxon_feature=name_files("taxon_features.txt",output,subfolder="features",create_folder=True)
