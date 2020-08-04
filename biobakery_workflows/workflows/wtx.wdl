@@ -379,7 +379,7 @@ task QualityControl {
     cpu: 8
       memory: mem + " GB"
       preemptible: preemptible_attempts
-      disks: "local-disk 501 SSD"
+      disks: "local-disk 500 SSD"
   }
 }
 
@@ -456,7 +456,7 @@ task FunctionalProfile {
     docker: humannDockerImage
     cpu: 8
       memory: mem + " GB"
-      disks: "local-disk 120 SSD"
+      disks: "local-disk 500 SSD"
       preemptible: preemptible_attempts
   }
 }
