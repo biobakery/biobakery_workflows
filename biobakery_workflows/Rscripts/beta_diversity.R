@@ -92,7 +92,7 @@ metadata <- data.frame(read.table(positional_args[2], header = TRUE, row.names =
 samples_rows <- intersect(rownames(metadata),rownames(data))
 if (length(samples_rows) < 1) {
     sample <- colnames(metadata)
-    meta <- as.data.frame(t(metadata))
+    metadata <- as.data.frame(t(metadata))
 }
 
 # Filter by abundance using zero as value for NAs
@@ -127,7 +127,7 @@ filtered_metadata <- filtered_metadata[sorted_samples, , drop = FALSE]
 filtered_data <- filtered_data[sorted_samples, , drop = FALSE]
 
 # remove subject from metadata if present
-filtered_metadata <- filtered_metadata[ , -which(names(filtered_metadata) %in% c("subject"))]
+filtered_metadata <- filtered_metadata[ , !(names(filtered_metadata) %in% c("subject"))]
 
 # compute univariate beta diversity
 if (current_args$data_type == "relab") {
