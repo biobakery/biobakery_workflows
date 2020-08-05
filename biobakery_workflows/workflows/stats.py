@@ -81,7 +81,7 @@ if len(data_files.keys()) < 1:
 study_type=utilities.get_study_type(data_files)
 
 # get inputs based on study type
-taxonomic_profile,pathabundance,ecabundance=utilities.get_input_files_for_study_type(data_files,study_type)
+taxonomic_profile,pathabundance,ecabundance,study_type=utilities.get_input_files_for_study_type(data_files,study_type)
 
 # check for any biom files that need to be converted to txt
 taxonomic_profile,pathabundance,ecabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance,ecabundance],args.output)
@@ -102,7 +102,7 @@ if not args.bypass_maaslin:
 
 # run permanova on taxon data if longitudinal else run univariate
 additional_stats_tasks=[]
-additional_stats_tasks,taxon_permanova=utilities.run_permanova(workflow,args.metadata_type,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
+additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.metadata_type,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 
 additional_stats_tasks,beta_diversity_plots=utilities.run_beta_diversity(workflow,args.metadata_type,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,args.covariate_equation,args.output,additional_stats_tasks)
 
@@ -120,7 +120,7 @@ doc_task=workflow.add_document(
           "maaslin_tasks_info":maaslin_tasks_info,
           "bypass_maaslin":args.bypass_maaslin,
           "stratified_pathways_plots":stratified_pathways_plots,
-          "taxon_permanova":taxon_permanova,
+          "permanova_plots":permanova_plots,
           "beta_diversity_plots":beta_diversity_plots,
           "covariate_equation":args.covariate_equation,
           "format":args.format},

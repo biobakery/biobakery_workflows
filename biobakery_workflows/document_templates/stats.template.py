@@ -137,7 +137,7 @@ def show_stratified_plots(plots):
 
 #' <% if pdf_format: print("\clearpage") %>
 
-#' <% if vars["taxon_permanova"]: print("# Permanova") %>
+#' <% if vars["permanova_plots"]: print("# Permanova") %>
 #' <% if vars["beta_diversity_plots"]["univariate"]: print("# Univariate") %>
 
 #+ echo=False
@@ -152,8 +152,16 @@ def show_univariate_plot(filetype,runtype):
     elif filetype in vars["beta_diversity_plots"][runtype]:
         print("Error generating {0} for filetype {1}".format(runtype,filetype))
 
-#' <% if vars["taxon_permanova"] and os.path.isfile(vars["taxon_permanova"]): print("![Taxonomy permanova]({0})".format(vars["taxon_permanova"])) %>
-#' <% if vars["taxon_permanova"] and not os.path.isfile(vars["taxon_permanova"]): print("Error generating permanova.") %>
+def show_all_permanova(permanova_plots):
+    for filetype in permanova_plots:
+        permanova_file = permanova_plots[filetype]
+        if os.path.isfile(permanova_file):
+            print("![{0}]({1})\n\n".format(filetype, permanova_file))
+        else:
+            print("Error generating permanova for filetype {}".format(filetype))
+
+#+ echo=False
+#' <% show_all_permanova(vars["permanova_plots"]) %>
 
 #+ echo=False
 #' <% show_all_variate_plots("univariate") %>
