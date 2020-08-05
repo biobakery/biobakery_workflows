@@ -218,6 +218,7 @@ def get_input_files_for_study_type(data_files, study_type):
     taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=False)
 
     if study_type=="wmgx" or (taxonomic_profile and study_type=="both"):
+        study_type="wmgx"
         taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=True)
 
         # get the paths for the optional files from the set of input files
@@ -230,7 +231,7 @@ def get_input_files_for_study_type(data_files, study_type):
         pathabundance=find_data_file(data_files,"function_pathway", required=False)
         ecabundance=find_data_file(data_files,"16s_function_ec", required=False)
 
-    return taxonomic_profile,pathabundance,ecabundance
+    return taxonomic_profile,pathabundance,ecabundance,study_type
 
 # create a merged metadata table to be used as input for humann_barplot
 def create_merged_data_file(task, metadata):
