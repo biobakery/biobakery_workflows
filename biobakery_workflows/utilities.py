@@ -214,7 +214,10 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
 def get_input_files_for_study_type(data_files, study_type):
     # based on the type of study, find the input files in the input folder
 
-    if study_type=="wmgx":
+    # if study is of type "both" then first look for wmgx taxonomy file
+    taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=False)
+
+    if study_type=="wmgx" or (taxonomic_profile and study_type=="both"):
         taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=True)
 
         # get the paths for the optional files from the set of input files
