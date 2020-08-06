@@ -62,7 +62,7 @@ workflow.add_argument("min-abundance",desc="the min abundance to apply for filte
 workflow.add_argument("min-prevalence",desc="the min prevalence to apply for filtering", default="0.1")
 workflow.add_argument("max-missing",desc="the max percentage of missing values for a metadata to not be filtered", default="20.0")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
-workflow.add_argument("top-pathways",desc="the top N significant pathways to plot stratified abundance", default=3)
+workflow.add_argument("top-pathways",desc="the top N significant pathways/metadata variables to plot stratified abundance", default=15)
 workflow.add_argument("metadata-categorical",desc="the categorical features (for the plot stratified pathways)", action="append", default=[])
 workflow.add_argument("metadata-continuous",desc="the continuous features (for the plot stratified pathways)", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude (for the plot stratified pathways)", action="append", default=[])

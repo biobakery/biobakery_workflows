@@ -120,18 +120,21 @@ for plot_file in vars["stratified_pathways_plots"]:
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
-    for jpg_file in sorted(plots):
+    for jpg_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
         # get the pathway number and metadata name
         info = jpg_file.replace(".jpg","").split("_")
         pathway_number = info[-1]
-        metadata_focus = info[-2]
+        try:
+            metadata_focus = open(jpg_file.replace(".jpg",".txt")).readline().rstrip()
+        except EnvironmentError:
+            metadata_focus = "Unknown"
         print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, jpg_file))
 
 #' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
 
 #' <% if filtered_stratified_pathways_plots: print("# Stratified Pathways Plots") %>
 
-#' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(vars["top_pathways"])+" top pathways by average abundance are plotted stratified by species. These plots were generated with the utility script included with HUMAnN2 named humann_barplot.") %>
+#' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
 
 #' <% show_stratified_plots(filtered_stratified_pathways_plots) %>
 

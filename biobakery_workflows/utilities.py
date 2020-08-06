@@ -138,17 +138,14 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
         metadata_row_names=[row[0] for row in metadata[1:]]
         metadata_end=metadata_row_names[-1]
         for i in range(top_pathways):
-            for metadata_focus in metadata_row_names:
-                if re.match('^[\w-]+$', metadata_focus) is None:
-                    sys.exit("ERROR: Please modify metadata names to include only alpha-numeric characters: "+metadata_focus)
 
-                new_pathways_plot=name_files("stratified_pathways_{0}_{1}.jpg".format(metadata_focus,i), output, subfolder="stratified_pathways")
-                stratified_plots_tasks.append(workflow.add_task(
-                    partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, metadata_focus=metadata_focus),
-                    depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
-                    targets=new_pathways_plot,
-                    name="run_humann_barplot_pathway_{0}_{1}".format(i, metadata_focus)))
-                stratified_pathways_plots.append(new_pathways_plot)
+            new_pathways_plot=name_files("stratified_pathways_{0}.jpg".format(i), output, subfolder="stratified_pathways")
+            stratified_plots_tasks.append(workflow.add_task(
+                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end),
+                depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
+                targets=new_pathways_plot,
+                name="run_humann_barplot_pathway_{0}".format(i)))
+            stratified_pathways_plots.append(new_pathways_plot)
 
     return stratified_pathways_plots,stratified_plots_tasks
 
@@ -256,28 +253,27 @@ def create_merged_data_file(task, metadata):
 
 
 # gather the top pathways to plot from maaslin2 outputs
-def gather_top_pathway_maaslin2_results(filename, N):
-    pathways=[]
+def gather_top_N_associations_maaslin2_results(filename, N):
+    associations=[]
     with open(filename) as file_handle:
         for line in file_handle:
             data = line.rstrip().split("\t")
-            pathway_name = data[0]
-            if not pathway_name in pathways:
-                pathways.append(pathway_name)
+            associations.append([data[0], data[1]])
+
     # use N+1 to allow for the header value
     try:
-        selected_pathway = pathways[N+1]
+        selected_pathway, metadata_focus = associations[N+1]
     except IndexError:
-        selected_pathway = ""
+        selected_pathway, metadata_focus = "", ""
 
-    return selected_pathway
+    return selected_pathway, metadata_focus
 
-def run_humann_barplot(task, number, metadata_end, metadata_focus):
+def run_humann_barplot(task, number, metadata_end):
     # determine the pathway name
     try:
-        original_selected_pathway = gather_top_pathway_maaslin2_results(task.depends[0].name, number)
+        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number)
     except IndexError:
-        original_selected_pathway = None
+        original_selected_pathway, metadata_focus = None
 
     if original_selected_pathway:
         # only use pathway name and replace periods if present with dash
@@ -289,9 +285,9 @@ def run_humann_barplot(task, number, metadata_end, metadata_focus):
             selected_pathway = "-".join(original_selected_pathway.split(".")[0:3])
 
         run_task(
-            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]]",
+            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]] && echo '[args[2]]' > [targets[1]]",
             depends=task.depends,
-            targets=task.targets,
+            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")],
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
 
 def find_data_file(data_files, type, required=False):
