@@ -50,6 +50,15 @@ def show_maaslin_metadata_plots(figures_folder, type):
             images_found = True
             metadata_name=file_name.replace("_1.jpg","")
             print("![Most significant "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
+            if pdf_format:
+                print("\clearpage")
+    for i in range(2,11):
+        for file_name in os.listdir(figures_folder):
+            if file_name.endswith("_{}.jpg".format(i)):
+                metadata_name=file_name.replace("_{}.jpg".format(i),"")
+                print("![Significant #"+str(i)+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
+                if pdf_format:
+                    print("\clearpage")
     if not images_found:
         print("No significant associations.")
 
