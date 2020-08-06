@@ -255,12 +255,27 @@ def create_merged_data_file(task, metadata):
             file_handle.write("\t".join(line)+"\n")
 
 
-# gather the top N pathways to plot relative abundance (only run if pathways files are present)
+# gather the top pathways to plot from maaslin2 outputs
+def gather_top_pathway_maaslin2_results(filename, N):
+    pathways=[]
+    with open(filename) as file_handle:
+        for line in file_handle:
+            data = line.rstrip().split("\t")
+            pathway_name = data[0]
+            if not pathway_name in pathways:
+                pathways.append(pathway_name)
+    # use N+1 to allow for the header value
+    try:
+        selected_pathway = pathways[N+1]
+    except IndexError:
+        selected_pathway = ""
+
+    return selected_pathway
+
 def run_humann_barplot(task, number, metadata_end, metadata_focus):
     # determine the pathway name
     try:
-        top_pathways_by_abundance = rank_species_average_abundance(task.depends[0].name, id_index=0, only_species=False)
-        original_selected_pathway = top_pathways_by_abundance[number]
+        original_selected_pathway = gather_top_pathway_maaslin2_results(task.depends[0].name, number)
     except IndexError:
         original_selected_pathway = None
 

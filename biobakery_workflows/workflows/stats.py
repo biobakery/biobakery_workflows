@@ -123,7 +123,6 @@ doc_task=workflow.add_document(
           "permanova_plots":permanova_plots,
           "beta_diversity_plots":beta_diversity_plots,
           "covariate_equation":args.covariate_equation,
-          "top_pathways":args.top_pathways,
           "format":args.format},
     table_of_contents=True)
 
