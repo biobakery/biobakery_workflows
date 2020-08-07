@@ -49,11 +49,11 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("metadata-type",desc="the metadata type", required=True, choices=["univariate", "multivariate", "longitudinal"])
-workflow.add_argument("covariate-equation",desc="the covariate equation for multivariate studies", default="")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
-workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
-workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
+workflow.add_argument("fixed-effects",desc="the fixed effects to use in the models", default="")
+workflow.add_argument("multivariable-fixed-effects",desc="the fixed effects that are multivariable (ordered first in covariate equation)", default="")
+workflow.add_argument("random-effects",desc="the random effects to use in the models", default="")
 workflow.add_argument("bypass-maaslin",desc="bypass running MaAsLiN", action="store_true")
 workflow.add_argument("maaslin-options",desc="additional MaAsLiN options", default="")
 workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
@@ -105,7 +105,7 @@ if not args.bypass_maaslin:
 additional_stats_tasks=[]
 additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.metadata_type,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 
-additional_stats_tasks,beta_diversity_plots=utilities.run_beta_diversity(workflow,args.metadata_type,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,args.covariate_equation,args.output,additional_stats_tasks)
+additional_stats_tasks,beta_diversity_plots=utilities.run_beta_diversity(workflow,args.metadata_type,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks)
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 

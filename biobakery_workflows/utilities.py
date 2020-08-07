@@ -69,8 +69,12 @@ def run_permanova(workflow,metadata_type,individual_covariates,maaslin_tasks_inf
     return additional_stats_tasks,permanova_plots
 
 
-def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,covariate_equation,output,additional_stats_tasks):
+def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks):
     # if not longitudinal then run univariate plus multivariate if set
+
+    # construct the equation for the model based on the fixed effects provided
+    ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
+    covariate_equation=" + ".join(ordered_fixed_effects)
 
     beta_diversity_plots = {"univariate": {}, "multivariate": {}}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
