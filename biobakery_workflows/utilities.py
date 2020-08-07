@@ -150,11 +150,15 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
     return stratified_pathways_plots,stratified_plots_tasks
 
 
-def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects):
+def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects,maaslin_options=""):
     # Run maaslin on all files in input set
     
     maaslin_tasks=[]
-    maaslin_optional_args=""
+    maaslin_optional_args=maaslin_options
+    # add comma if not included
+    if maaslin_optional_args and not maaslin_optional_args.startswith(","):
+        maaslin_optional_args=","+maaslin_optional_args
+
     if transform:
         maaslin_optional_args+=",transform='"+transform+"'"
     if fixed_effects:

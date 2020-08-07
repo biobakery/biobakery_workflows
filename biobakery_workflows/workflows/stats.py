@@ -55,6 +55,7 @@ workflow.add_argument("transform",desc="the transform to apply to the data with 
 workflow.add_argument("fixed-effects",desc="the fixed effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("random-effects",desc="the random effects to apply to the data with MaAsLin2", default="")
 workflow.add_argument("bypass-maaslin",desc="bypass running MaAsLiN", action="store_true")
+workflow.add_argument("maaslin-options",desc="additional MaAsLiN options", default="")
 workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
 workflow.add_argument("individual-covariates",desc="the covariates, comma-delimited, that do not change per individual (to permutate within in permanova)", default="")
 workflow.add_argument("scale",desc="the scale to apply with the permanova", default="100")
@@ -92,7 +93,7 @@ maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_
 # run MaAsLiN2 on all input files
 maaslin_tasks=[]
 if not args.bypass_maaslin:
-    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects)
+    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
 
 # generate stratified pathways plots if pathways are provided
 stratified_plots_tasks=[]
