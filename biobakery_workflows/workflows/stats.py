@@ -104,7 +104,7 @@ if not args.bypass_maaslin:
 # run permanova on taxon data if longitudinal else run beta diversity
 additional_stats_tasks=[]
 permanova_plots=[]
-beta_diversity_plots=[]
+beta_diversity_plots={"univariate": {}, "multivariate": {}}
 covariate_equation=""
 
 if args.longitudinal:
