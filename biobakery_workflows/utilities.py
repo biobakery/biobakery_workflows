@@ -43,7 +43,7 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
-def run_permanova(workflow,metadata_type,individual_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
+def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
     # if longitudinal run the permanova
 
     permanova_plots = {}
@@ -52,50 +52,46 @@ def run_permanova(workflow,metadata_type,individual_covariates,maaslin_tasks_inf
     else:
         sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
 
-    if metadata_type == "longitudinal":
-        for filetype in maaslin_tasks_info.keys():
-            permanova_output=name_files(filetype+"_permanova.png",output,subfolder="permanova",create_folder=True)
-            permanova_script_path = get_package_file("permanova_hmp2", "Rscript")
+    for filetype in maaslin_tasks_info.keys():
+        permanova_output=name_files(filetype+"_permanova.png",output,subfolder="permanova",create_folder=True)
+        permanova_script_path = get_package_file("permanova_hmp2", "Rscript")
 
-            additional_stats_tasks.append(
-                workflow.add_task(
-                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
-                    depends=[maaslin_tasks_info[filetype][0],input_metadata],
-                    targets=permanova_output,
-                    args=[permanova_script_path,scale,min_abundance,min_prevalence,permutations,optional_args],
-                    name="hmp2_permanova_"+filetype))
-            permanova_plots[filetype]=permanova_output
+        additional_stats_tasks.append(
+            workflow.add_task(
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
+                depends=[maaslin_tasks_info[filetype][0],input_metadata],
+                targets=permanova_output,
+                args=[permanova_script_path,scale,min_abundance,min_prevalence,permutations,optional_args],
+                name="hmp2_permanova_"+filetype))
+        permanova_plots[filetype]=permanova_output
 
     return additional_stats_tasks,permanova_plots
 
 
-def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks):
+def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks):
     # if not longitudinal then run univariate plus multivariate if set
 
     # construct the equation for the model based on the fixed effects provided
     ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
-    covariate_equation=" + ".join(ordered_fixed_effects)
+    covariate_equation=""
+    if len(ordered_fixed_effects) > 1:
+        covariate_equation=ordered_fixed_effects[0]+" + ".join(ordered_fixed_effects[1:])
 
     beta_diversity_plots = {"univariate": {}, "multivariate": {}}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
-    if metadata_type != "longitudinal":
-        for filetype in maaslin_tasks_info.keys():
-            univariate=name_files(filetype+"_univariate.png",output,subfolder="beta_diversity",create_folder=True)
+    for filetype in maaslin_tasks_info.keys():
+        univariate=name_files(filetype+"_univariate.png",output,subfolder="beta_diversity",create_folder=True)
 
-            additional_stats_tasks.append(
-                workflow.add_task(
-                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
-                    depends=[maaslin_tasks_info[filetype][0],input_metadata],
-                    targets=univariate,
-                    args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
-                    name="beta_diversity_univarite_"+filetype))
-            beta_diversity_plots["univariate"][filetype]=univariate
+        additional_stats_tasks.append(
+            workflow.add_task(
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
+                depends=[maaslin_tasks_info[filetype][0],input_metadata],
+                targets=univariate,
+                args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
+                name="beta_diversity_univarite_"+filetype))
+        beta_diversity_plots["univariate"][filetype]=univariate
 
-    if metadata_type == "multivariate":
-        # check for equation
-        if not covariate_equation:
-            sys.exit("ERROR: For a multivariate metadata type a covariate equation must be provided (ie --covariate-equation='age + gender')")
-
+    if covariate_equation:
         for filetype in maaslin_tasks_info.keys():
             multivariate=name_files(filetype+"_multivariate.png",output,subfolder="beta_diversity",create_folder=True)
 
@@ -108,7 +104,7 @@ def run_beta_diversity(workflow,metadata_type,maaslin_tasks_info,input_metadata,
                     name="beta_diversity_multivariate_"+filetype))
             beta_diversity_plots["multivariate"][filetype]=multivariate
 
-    return additional_stats_tasks,beta_diversity_plots
+    return additional_stats_tasks,beta_diversity_plots,covariate_equation
 
 
 def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_metadata,metadata_exclude,metadata_categorical,metadata_continuous,top_pathways,maaslin_tasks_info,output):

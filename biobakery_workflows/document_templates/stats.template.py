@@ -182,7 +182,7 @@ def show_all_permanova(permanova_plots):
 
 #' <% if vars["beta_diversity_plots"]["multivariate"]: print("# Multivariate") %>
 
-#' <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: '"+vars["covariate_equation"]+"' .") %>
+#' <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: 'bray ~ "+vars["covariate_equation"]+"' .") %>
 
 #+ echo=False
 #' <% show_all_variate_plots("multivariate") %>
