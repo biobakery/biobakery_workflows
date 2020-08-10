@@ -339,11 +339,13 @@ def get_study_type(data_files):
     return types[0]
     
 
-def identify_data_files(folder,input_file_type):
+def identify_data_files(folder,input_file_type,metadata_input):
     """ For all files in the folder and subfolders, return all tab delimited files with their data type 
 
         Args:
             folder (string): The path to the main folder
+            input_file_type (array): The user provided file types
+            metadata_input (string): Full path to the user provided metadata file
 
         Returns:
             dict : A dictionary of data files organised by type 
@@ -374,6 +376,9 @@ def identify_data_files(folder,input_file_type):
         def __exit__(self, exc_type, exc_value, traceback):
             self.lines = []
 
+    # remove the path from the metadata input file
+    metadata_input = os.path.basename(metadata_input)
+
     # set the user provided data file types
     known_filetypes = dict([set.split(",") for set in input_file_type])
 
@@ -387,6 +392,11 @@ def identify_data_files(folder,input_file_type):
     # determine the type of each file
     data_files_types = {}
     for file in data_files:
+
+        # ignore the metadata input file
+        if os.path.basename(file) == metadata_input:
+            continue
+
         with openfile_txt_and_biom_gz(file) as file_handle:
             file_type = None
 

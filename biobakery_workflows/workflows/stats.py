@@ -75,7 +75,7 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
 args = workflow.parse_args()
 
 # get the paths for the required files from the set of all input files
-data_files=utilities.identify_data_files(args.input,args.input_file_type)
+data_files=utilities.identify_data_files(args.input,args.input_file_type,args.input_metadata)
 
 if len(data_files.keys()) < 1:
     sys.exit("ERROR: No data files found in the input folder.")
