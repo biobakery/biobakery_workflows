@@ -67,6 +67,7 @@ workflow.add_argument("top-pathways",desc="the top N significant pathways/metada
 workflow.add_argument("metadata-categorical",desc="the categorical features (for the plot stratified pathways)", action="append", default=[])
 workflow.add_argument("metadata-continuous",desc="the continuous features (for the plot stratified pathways)", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude (for the plot stratified pathways)", action="append", default=[])
+workflow.add_argument("input-file-type",desc="the file type for an input file formatted as 'filename,filetype'", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default="The data was run through the standard stats workflow.")
 
@@ -74,7 +75,7 @@ workflow.add_argument("introduction-text",desc="the text to include in the intro
 args = workflow.parse_args()
 
 # get the paths for the required files from the set of all input files
-data_files=utilities.identify_data_files(args.input)
+data_files=utilities.identify_data_files(args.input,args.input_file_type)
 
 if len(data_files.keys()) < 1:
     sys.exit("ERROR: No data files found in the input folder.")

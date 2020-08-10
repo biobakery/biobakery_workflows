@@ -326,20 +326,20 @@ def get_study_type(data_files):
     type = set(types)
     type.discard("both")
 
-    if len(list(type)) > 1:
+    if "16s" in type and "wmgx" in type:
         files = [key+"\t"+value[0] for key,value in data_files.items()]
         sys.exit("ERROR: Input files found of multiple study types:" + ",".join(types)+"\n"+"\n".join(files))
-
-    if len(list(types)) == 2:
-        try:
-            types.remove("both")
-        except ValueError:
-            pass
+    elif "16s" in type:
+        return "16s"
+    elif "wmgx" in type:
+        return "wmgx"
+    elif "both" in types:
+        return "both"
 
     return types[0]
     
 
-def identify_data_files(folder):
+def identify_data_files(folder,input_file_type):
     """ For all files in the folder and subfolders, return all tab delimited files with their data type 
 
         Args:
@@ -373,6 +373,9 @@ def identify_data_files(folder):
 
         def __exit__(self, exc_type, exc_value, traceback):
             self.lines = []
+
+    # set the user provided data file types
+    known_filetypes = dict([set.split(",") for set in input_file_type])
 
     # get all of the files of the tab delimited type
     data_files = []
@@ -422,10 +425,16 @@ def identify_data_files(folder):
                 elif data_info[0].startswith("ASV") and data_info[-1].lower().startswith("k__"):
                     file_type = "16s_taxonomy_asv"
 
+                # replace with user provided type, if set
+                if file in known_filetypes:
+                    file_type = known_filetypes[file]       
+
                 if file_type:
                     if not file_type in data_files_types:
                         data_files_types[file_type]=[]
                     data_files_types[file_type].append(file)
+                else:
+                    sys.exit("Unknown file type for filename {}. Please provide the file type with the option --input-file-type='filename,type' or remove the file from the input folder.".format(file))
     
     return data_files_types
 
