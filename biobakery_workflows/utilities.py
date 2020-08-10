@@ -177,13 +177,13 @@ def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,tra
 
     return maaslin_tasks
 
-def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,ecabundance):
+def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,other_data_files):
     # For all input files based on type create feature tables for input to maaslin
 
     taxon_feature=name_files("taxon_features.txt",output,subfolder="features",create_folder=True)
     create_feature_table_tasks_info=[]
     if study_type == "wmgx":
-        create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"_taxonomic_profile","--reduce-stratified-species-only")]
+        create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"--sample-tag-column '_taxonomic_profile' --reduce-stratified-species-only")]
     else:
         # reformat this table to move the taxonomic column and sum for species if 16s data
         workflow.add_task(
@@ -196,22 +196,24 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
 
     if pathabundance:
         pathabundance_feature=name_files("pathabundance_features.txt",output,subfolder="features",create_folder=True)
-        create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"_Abundance","--remove-stratified"))
+        create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
         maaslin_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_pathways","figures")),
             name_files("significant_results.tsv", output, subfolder="maaslin2_pathways"))
 
-    if ecabundance:
-        ecabundance_feature=name_files("ecabundance_features.txt",output,subfolder="features",create_folder=True)
-        create_feature_table_tasks_info.append((ecabundance,ecabundance_feature,"_Abundance-RPKs","--remove-stratified"))
-        maaslin_tasks_info["ecs"]=(ecabundance_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_ecs","figures")),
-            name_files("significant_results.tsv", output, subfolder="maaslin2_ecs"))
+    for newfile in other_data_files:
+        newfile_type = other_data_files[newfile]
+        new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
+        new_subfolder="maaslin2_"+newfile_type
+        create_feature_table_tasks_info.append((newfile,new_feature,"--remove-stratified"))
+        maaslin_tasks_info[newfile_type]=(new_feature,name_files("heatmap.jpg", output, subfolder=os.path.join(new_subfolder,"figures")),
+            name_files("significant_results.tsv", output, subfolder=new_subfolder))
 
-    for input_file, output_file, tag, options in create_feature_table_tasks_info:
+    for input_file, output_file, options in create_feature_table_tasks_info:
         workflow.add_task(
-            "create_feature_table.py --input [depends[0]] --output [targets[0]] --sample-tag-column [args[0]] [args[1]]",
+            "create_feature_table.py --input [depends[0]] --output [targets[0]] [args[0]]",
             depends=input_file,
             targets=output_file,
-            args=[tag,options])
+            args=[options])
 
     return maaslin_tasks_info
 
@@ -223,19 +225,19 @@ def get_input_files_for_study_type(data_files, study_type):
 
     if study_type=="wmgx" or (taxonomic_profile and study_type=="both"):
         study_type="wmgx"
-        taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=True)
 
         # get the paths for the optional files from the set of input files
         pathabundance=find_data_file(data_files, "function_pathway", required=False)
-        ecabundance=find_data_file(data_files, "wmgx_function_ec", required=False)
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if not filename[0] in [taxonomic_profile,pathabundance]])
+
     else:
         taxonomic_profile=find_data_file(data_files,"16s_taxonomy",required=True)
 
         # get the paths for the optional files from the set of input files
         pathabundance=find_data_file(data_files,"function_pathway", required=False)
-        ecabundance=find_data_file(data_files,"16s_function_ec", required=False)
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if not filename[0] in [taxonomic_profile,pathabundance]])
 
-    return taxonomic_profile,pathabundance,ecabundance,study_type
+    return taxonomic_profile,pathabundance,other_data_files,study_type
 
 # create a merged metadata table to be used as input for humann_barplot
 def create_merged_data_file(task, metadata):
@@ -440,7 +442,7 @@ def identify_data_files(folder,input_file_type,metadata_input):
                     # check for valid file type
                     file_type = known_filetypes[file]       
                     file_type_split_info = file_type.split("_")
-                    if not (file_type_split_info[0] in ["wmgx","16s"] and file_type_split_info[1] in ["function","taxonomy"]):
+                    if not (file_type_split_info[0] in ["wmgx","16s"] and file_type_split_info[1] in ["function","taxonomy"] and len(file_type_split_info)==3):
                         sys.exit("Please provide a valid file type of the format [wmgx|16s]_[function|taxonomy]_[type*] (valid functions types [ec|pathway|gene|module] and valid taxonomy types for 16s [otu|asv]) replacing the input provided of '"+file_type+"'.")
 
                 if file_type:

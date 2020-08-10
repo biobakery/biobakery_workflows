@@ -83,13 +83,14 @@ if len(data_files.keys()) < 1:
 study_type=utilities.get_study_type(data_files)
 
 # get inputs based on study type
-taxonomic_profile,pathabundance,ecabundance,study_type=utilities.get_input_files_for_study_type(data_files,study_type)
+taxonomic_profile,pathabundance,other_data_files,study_type=utilities.get_input_files_for_study_type(data_files,study_type)
 
 # check for any biom files that need to be converted to txt
-taxonomic_profile,pathabundance,ecabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance,ecabundance],args.output)
+taxonomic_profile,pathabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance],args.output)
+other_data_files=convert_from_biom_to_tsv_list(workflow,other_data_files,args.output)
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
-maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,ecabundance)
+maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
 
 # run MaAsLiN2 on all input files
 maaslin_tasks=[]
