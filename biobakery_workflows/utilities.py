@@ -437,7 +437,11 @@ def identify_data_files(folder,input_file_type,metadata_input):
 
                 # replace with user provided type, if set
                 if file in known_filetypes:
+                    # check for valid file type
                     file_type = known_filetypes[file]       
+                    file_type_split_info = file_type.split("_")
+                    if not (file_type_split_info[0] in ["wmgx","16s"] and file_type_split_info[1] in ["function","taxonomy"]):
+                        sys.exit("Please provide a valid file type of the format [wmgx|16s]_[function|taxonomy]_[type*] (valid functions types [ec|pathway|gene|module] and valid taxonomy types for 16s [otu|asv]) replacing the input provided of '"+file_type+"'.")
 
                 if file_type:
                     if not file_type in data_files_types:
