@@ -55,6 +55,7 @@ workflow workflowMTX {
 
   String JoinGeneFamilesOutFileName="genefamilies.tsv"
   String JoinECsOutFileName="ecs.tsv"
+  String JoinKOsOutFileName="kos.tsv"
   String JoinPathwaysOutFileName="pathabundance.tsv"
 
   String JoinGeneFamilesRelabOutFileName="genefamilies_relab.tsv"
@@ -132,13 +133,24 @@ workflow workflowMTX {
       }
 
       # regroup gene families to ECs
-      call RegroupECs {
+      call Regroup as RegroupECs {
         input:
         GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
         versionSpecificUtilityMapping=versionSpecificUtilityMapping,
         OutFileName=PairPaths[sample_index][2]+"_ecs.tsv",
-        humannDockerImage=humannDockerImage
+        humannDockerImage=humannDockerImage,
+        groupName="uniref90_level4ec"
       }
+      
+      # regroup gene families to KOs
+      call Regroup as RegroupKOs {
+        input:
+        GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
+        versionSpecificUtilityMapping=versionSpecificUtilityMapping,
+        OutFileName=PairPaths[sample_index][2]+"_kos.tsv",
+        humannDockerImage=humannDockerImage,
+        groupName="uniref90_ko"
+      }      
    
       # compute relative abundance for gene families, ecs, and pathways
       call RenormTable as RenormTableGenes {
@@ -183,6 +195,13 @@ workflow workflowMTX {
       input:
       InFiles=RegroupECs.OutFile,
       OutFileName=JoinECsOutFileName,
+      humannDockerImage=humannDockerImage,
+      MaxMemGB=JoinNormMemDefault
+    }
+    call JoinTables as JoinKOs {
+      input:
+      InFiles=RegroupKOs.OutFile,
+      OutFileName=JoinKOsOutFileName,
       humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
@@ -379,7 +398,7 @@ task QualityControl {
     cpu: 8
       memory: mem + " GB"
       preemptible: preemptible_attempts
-      disks: "local-disk 500 SSD"
+      disks: "local-disk 501 SSD"
   }
 }
 
@@ -456,19 +475,20 @@ task FunctionalProfile {
     docker: humannDockerImage
     cpu: 8
       memory: mem + " GB"
-      disks: "local-disk 500 SSD"
+      disks: "local-disk 120 SSD"
       preemptible: preemptible_attempts
   }
 }
 
-task RegroupECs {
+task Regroup {
   input {
     File GeneFamiliesFile
     File versionSpecificUtilityMapping
     String OutFileName
     String humannDockerImage
+    String groupName
   }
-  
+
   String databases = "databases/"
 
   # download the utility databases and regroup to ECs
@@ -476,7 +496,7 @@ task RegroupECs {
     mkdir -p ${databases}
     humann_databases --download utility_mapping full ${databases} --database-location ${versionSpecificUtilityMapping}
 
-    humann_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups uniref90_level4ec
+    humann_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups ${groupName}
   }
     
   output {
