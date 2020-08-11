@@ -101,23 +101,32 @@ maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_maaslin_run
 #' <% if maaslin_pathways_output_folder: show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
 
 #+ echo=False
+# check and plot other maaslin run types
+def show_other_maaslin_run_types(maaslin_tasks_info):
+    other_data=[type for type in maaslin_tasks_info if not type in ["taxonomy","pathways"]]
+    for newtype in other_data:
+        maaslin_heatmap, maaslin_output_folder = check_for_maaslin_runs(newtype)
+        if maaslin_output_folder and pdf_format:
+            newtype_title=newtype[0].upper()+newtype[1:]
+            if not newtype_title.endswith("s"):
+                newtype_title+="s"
 
-maaslin_ecs_heatmap, maaslin_ecs_output_folder = check_for_maaslin_runs("ecs")
+            print("\clearpage")
 
-#' <% if maaslin_ecs_output_folder and pdf_format: print("\clearpage") %>
+            print("## {}\n".format(newtype_title))
+            print("This report section contains the results from running the {} data through MaAsLin2.\n".format(newtype))
 
-#' <% if maaslin_ecs_output_folder: print("## ECs\n") %>
-#' <% if maaslin_ecs_output_folder: print("This report section contains the results from running the ECs through MaAsLin2.\n") %>
+            print("### MaAsLin2 Heatmap\n\n")
+            display_maaslin_heatmap(maaslin_heatmap, newtype)
+            print("\clearpage")
 
-#' <% if maaslin_ecs_output_folder: print("### MaAsLin2 Heatmap\n") %>
-#' <% if maaslin_ecs_output_folder: display_maaslin_heatmap(maaslin_ecs_heatmap, "ECs") %>
+            print("### MaAsLin2 Plots")
+            print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
 
-#' <% if maaslin_ecs_output_folder and pdf_format: print("\clearpage") %>
+            show_maaslin_metadata_plots(maaslin_output_folder, newtype)
+            print("\clearpage")
 
-#' <% if maaslin_ecs_output_folder: print("### MaAsLin2 Plots") %>
-#' <% if maaslin_ecs_output_folder: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
-
-#' <% if maaslin_ecs_output_folder: show_maaslin_metadata_plots(maaslin_ecs_output_folder,"ecs") %>
+#' <% show_other_maaslin_run_types(vars["maaslin_tasks_info"]) %>
 
 #+ echo=False
 
