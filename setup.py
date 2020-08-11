@@ -20,18 +20,7 @@ except ImportError:
     
 from glob import glob    
 
-def download(url, download_file):
-    """ Download a file from a url """
-
-    try:
-        print("Downloading "+url)
-        file, headers = urlretrieve(url,download_file)
-        # print final return to start new line of stdout
-        print("\n")
-    except EnvironmentError:
-        print("WARNING: Unable to download "+url)
-
-VERSION = "0.13.2"
+VERSION = "3.0.0-alpha.6"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
