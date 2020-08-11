@@ -607,7 +607,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
     overlap=samples.intersection(possible_samples)
     if len(list(overlap)) == 0:
         # the samples must be the rows so invert the data
-        data=list(map(list,zip(*data)))
+        data=[list(a) for a in zip(*data)]
         possible_samples=data[0][1:]
         overlap=samples.intersection(possible_samples)
     
