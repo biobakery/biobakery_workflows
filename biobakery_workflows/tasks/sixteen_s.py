@@ -868,7 +868,31 @@ def convert_to_biom_from_tsv(workflow, tsv_file, biom_file, table_type="OTU tabl
         depends=[tsv_file,TrackedExecutable("biom")],
         targets=biom_file,
         name="biom")
+   
+def convert_from_biom_to_tsv_list(workflow, input_files, output):
+    # if any of the files provided are of type biom then convert to tsv
     
+    if isinstance(input_files, dict):
+        converted_files = {}
+    else:
+        converted_files = []
+
+    for filename in input_files:
+        if filename.endswith(".biom"):
+            new_tsv = utilities.name_files(filename.replace(".biom",".tsv"),output,subfolder="biom_to_tsv",create_folder=True)
+            convert_from_biom_to_tsv(workflow, filename, new_tsv)
+            if isinstance(input_files, dict):
+                converted_files[new_tsv] = input_files[filename] 
+            else:
+                converted_files.append(new_tsv)
+        else:
+            if isinstance(input_files, dict):
+                converted_files[filename] = input_files[filename]
+            else:
+                converted_files.append(filename)
+
+    return converted_files
+ 
 def convert_from_biom_to_tsv(workflow, biom_file, tsv_file, table_type="OTU table", options=""):
     """ Convert from a biom file to a tsv file 
     
