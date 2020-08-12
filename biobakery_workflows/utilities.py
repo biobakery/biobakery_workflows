@@ -52,18 +52,22 @@ def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metada
     else:
         sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
 
-    for filetype in maaslin_tasks_info.keys():
-        permanova_output=name_files(filetype+"_permanova.png",output,subfolder="permanova",create_folder=True)
-        permanova_script_path = get_package_file("permanova_hmp2", "Rscript")
+    input_files=[]
+    permanova_plots["all"]=name_files("permanova.png",output,subfolder="permanova",create_folder=True)
 
-        additional_stats_tasks.append(
-            workflow.add_task(
-                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --scale [args[1]] --min_abundance [args[2]] --min_prevalence [args[3]] --permutations [args[4]] [args[5]]",
-                depends=[maaslin_tasks_info[filetype][0],input_metadata],
-                targets=permanova_output,
-                args=[permanova_script_path,scale,min_abundance,min_prevalence,permutations,optional_args],
-                name="hmp2_permanova_"+filetype))
-        permanova_plots[filetype]=permanova_output
+    for filetype in maaslin_tasks_info.keys():
+        input_files.append(maaslin_tasks_info[filetype][0])
+        permanova_plots[filetype]=name_files("permanova_{}.png".format(filetype),output,subfolder="permanova",create_folder=True)
+
+    permanova_script_path = get_package_file("permanova_hmp2", "Rscript")
+
+    additional_stats_tasks.append(
+        workflow.add_task(
+            "[args[0]] '[args[1]]' [depends[0]] [targets[0]] --scale [args[2]] --min_abundance [args[3]] --min_prevalence [args[4]] --permutations [args[5]] [args[6]]",
+            depends=[input_metadata]+input_files,
+            targets=list(permanova_plots.values()),
+            args=[permanova_script_path,",".join(input_files),scale,min_abundance,min_prevalence,permutations,optional_args],
+            name="hmp2_permanova"))
 
     return additional_stats_tasks,permanova_plots
 
@@ -180,7 +184,7 @@ def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,tra
 def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,other_data_files):
     # For all input files based on type create feature tables for input to maaslin
 
-    taxon_feature=name_files("taxon_features.txt",output,subfolder="features",create_folder=True)
+    taxon_feature=name_files("taxonomy_features.txt",output,subfolder="features",create_folder=True)
     create_feature_table_tasks_info=[]
     if study_type == "wmgx":
         create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"--sample-tag-column '_taxonomic_profile' --reduce-stratified-species-only")]
@@ -195,7 +199,7 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
         name_files("significant_results.tsv", output, subfolder="maaslin2_taxa"))}
 
     if pathabundance:
-        pathabundance_feature=name_files("pathabundance_features.txt",output,subfolder="features",create_folder=True)
+        pathabundance_feature=name_files("pathways_features.txt",output,subfolder="features",create_folder=True)
         create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
         maaslin_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_pathways","figures")),
             name_files("significant_results.tsv", output, subfolder="maaslin2_pathways"))

@@ -476,55 +476,96 @@ if (length(positional_args) != 3) {
 # Input variables
 ## assume data file has samples as columns
 ## allow for pounds in header lines
-data <- t(read.table(positional_args[1], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
-metadata <- data.frame(read.table(positional_args[2], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
 
-# check for samples as columns or rows
-samples_rows <- intersect(rownames(metadata),rownames(data))
-if (length(samples_rows) < 1) {
-    sample <- colnames(metadata)
-    meta <- as.data.frame(t(metadata))
+## allow for multiple input data files
+datatype_list <- c()
+for (datafile in unlist(strsplit(positional_args[1], ",", fixed = TRUE))) {
+
+    datatype <- unlist(strsplit(basename(datafile),"_features.txt"))[1]
+    datatype_list <- append(datatype_list, datatype)
+
+    data <- t(read.table(datafile, header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+    metadata <- data.frame(read.table(positional_args[2], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+
+    # check for samples as columns or rows
+    samples_rows <- intersect(rownames(metadata),rownames(data))
+    if (length(samples_rows) < 1) {
+        sample <- colnames(metadata)
+        meta <- as.data.frame(t(metadata))
+    }
+
+    covariates <- as.list(colnames(metadata))
+    names(covariates) <- covariates
+
+    # Set the individual covariates
+    if (is.null(current_args$individual_covariates)) {
+        blocks_off = TRUE
+        current_args$individual_covariates <- covariates
+    } else {
+        blocks_off = FALSE
+        current_args$individual_covariates <- unlist(strsplit(current_args$individual_covariates, ",", fixed = TRUE))
+    }
+
+    # add subject based on sample id if subject is not included
+    if (!"subject" %in% colnames(metadata)) {
+        metadata$subject <- rownames(metadata)
+    }
+
+    # apply scale
+    data <- data/current_args$scale
+
+    # Filter by abundance using zero as value for NAs
+    total_samples <- nrow(metadata)
+    min_samples <- total_samples * current_args$min_prevalence
+
+    data_zeros <- data
+    data_zeros[is.na(data_zeros)] <- 0
+    filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
+
+    # Filter the metadata to remove any samples without data
+    metadata_zeros <- metadata
+    metadata_zeros[metadata_zeros == "UNK"] <- NA
+    filtered_metadata <- metadata[rowSums(metadata_zeros != 0, na.rm=TRUE) > 0, , drop = FALSE]
+
+    ad <- bc_omnibus_tests(filtered_data,filtered_metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
+
+    if (! (exists("R2"))) {
+        R2 <- matrix(0, nrow=length(covariates) + 1, ncol=0)
+        P <- matrix(0, nrow=length(covariates) + 1, ncol=0)
+    }
+
+    R2 <<- cbind(R2, ad$aov.tab$R2)
+    row.names(R2) <- rownames(ad$aov.tab)
+    P <<- cbind(P, ad$aov.tab$`Pr(>F)`)
+    row.names(P) <- rownames(ad$aov.tab)
+
+    # generate the stacked barplot
+    univar_tax = rbind(ad$aov.tab$`Pr(>F)`, ad$aov.tab$R2)
+    univar_tax = as.data.frame(t(univar_tax))
+    names(univar_tax) = c("P-Value", "R2")
+
+    univar_tax$stars = cut(univar_tax$`P-Value`, c(0, 0.001, 0.01, 0.05, 0.1, 1), labels = c("***", "**", "*", "`", ""))
+
+    univar_tax$`P-Value` = round(univar_tax$`P-Value`, 3)
+    univar_tax$R2 = univar_tax$R2 *100
+
+    row.names(univar_tax) <- rownames(ad$aov.tab)
+
+    dodge = position_dodge(width = 0.8)
+
+    plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))+1) + xlab("") + labs(fill = "")
+
+    plot_file <- gsub(".png",paste("_",datatype,".png",sep=""),positional_args[3])
+    print(paste("Writing to plot file",plot_file))
+    png(plot_file, res = 150, height = 800, width = 1100)
+    print(plot)
+    dev.off()
+
 }
 
-covariates <- as.list(colnames(metadata))
-names(covariates) <- covariates
-
-# Set the individual covariates
-if (is.null(current_args$individual_covariates)) {
-    blocks_off = TRUE
-    current_args$individual_covariates <- covariates
-} else {
-    blocks_off = FALSE
-    current_args$individual_covariates <- unlist(strsplit(current_args$individual_covariates, ",", fixed = TRUE))
-}
-
-# add subject based on sample id if subject is not included
-if (!"subject" %in% colnames(metadata)) {
-    metadata$subject <- rownames(metadata)
-}
-
-# apply scale
-data <- data/current_args$scale
-
-# Filter by abundance using zero as value for NAs
-total_samples <- nrow(metadata)
-min_samples <- total_samples * current_args$min_prevalence
-
-data_zeros <- data
-data_zeros[is.na(data_zeros)] <- 0
-filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
-
-# Filter the metadata to remove any samples without data
-metadata_zeros <- metadata
-metadata_zeros[metadata_zeros == "UNK"] <- NA
-filtered_metadata <- metadata[rowSums(metadata_zeros != 0, na.rm=TRUE) > 0, , drop = FALSE]
-
-ad <- bc_omnibus_tests(filtered_data,filtered_metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
-
-R2 <- as.matrix(ad$aov.tab$R2)
-row.names(R2) <- rownames(ad$aov.tab)
-P <- as.matrix(ad$aov.tab$`Pr(>F)`)
-row.names(P) <- rownames(ad$aov.tab)
+# update the column names
+colnames(R2) <- datatype_list
+colnames(P) <- datatype_list
 
 alpha <- 1.9
 beta <- 0.1
