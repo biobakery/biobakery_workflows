@@ -89,6 +89,9 @@ taxonomic_profile,pathabundance,other_data_files,study_type=utilities.get_input_
 taxonomic_profile,pathabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance],args.output)
 other_data_files=convert_from_biom_to_tsv_list(workflow,other_data_files,args.output)
 
+# get metadata variables and check sample names
+metadata_variables=utilities.get_metadata_variables(args.input_metadata,taxonomic_profile)
+
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
 
@@ -112,7 +115,7 @@ covariate_equation=""
 if args.longitudinal:
     additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 else:
-    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks)
+    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables)
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 

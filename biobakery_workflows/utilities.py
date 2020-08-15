@@ -43,6 +43,38 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def get_metadata_variables(input_metadata, taxonomic_profile):
+    # get the metadata variables (might be columns or rows)
+
+    with open(taxonomic_profile) as file_handle:
+        samples = file_handle.readline().rstrip().split("\t")[1:-1]
+
+    row_names = []
+    col_names = []
+    with open(input_metadata) as file_handle:
+        for line in file_handle:
+            if not col_names:
+                col_names=line.rstrip().split("\t")[1:]
+            else:
+                row_names.append(line.rstrip().split("\t")[0])
+
+    if set(samples).intersection(set(col_names)):
+        metadata_variables = row_names
+    else:
+        metadata_variables = col_names
+
+    # check if samples start with numbers
+    start_number = [x for x in samples if x[0].isdigit()]
+    if start_number:
+        sys.exit("ERROR: Sample names start with a number: "+",".join(start_number)+".")
+
+    # check for duplicate samples
+    if len(list(set(samples))) != len(samples):
+        duplicate=[x for x, count in collections.Counter(samples).items() if count > 1]
+        sys.exit("ERROR: Duplicate samples in the taxonomic profile: "+",".join(duplicate)+".")
+
+    return metadata_variables
+
 def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
     # if longitudinal run the permanova
 
@@ -72,14 +104,19 @@ def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metada
     return additional_stats_tasks,permanova_plots
 
 
-def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks):
+def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks,random_effects,metadata_variables):
     # if not longitudinal then run univariate plus multivariate if set
 
     # construct the equation for the model based on the fixed effects provided
     ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
     covariate_equation=""
     if len(ordered_fixed_effects) > 1:
-        covariate_equation=ordered_fixed_effects[0]+" + ".join(ordered_fixed_effects[1:])
+        covariate_equation=" + ".join(ordered_fixed_effects)
+
+    # determine the covariate equation from the metadata if not provided
+    if not covariate_equation and len(metadata_variables) > 1:
+        fixed_effects = list(set(metadata_variables).difference(set(random_effects.split(","))))
+        covariate_equation=" + ".join(fixed_effects)
 
     beta_diversity_plots = {"univariate": {}, "multivariate": {}}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
