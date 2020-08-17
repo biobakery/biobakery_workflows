@@ -731,8 +731,7 @@ def run_picrust2(task, threads, otus=False):
     with open(task.depends[1].name) as file_handle:
         with open(reformat_input_tsv, "w") as file_handle_write:
             header = file_handle.readline()
-            if otus:
-                header="\t".join(header.split("\t")[:-1])+"\n"
+            header="\t".join(header.split("\t")[:-1])+"\n"
             file_handle_write.write(header)
             for line in file_handle:
                 if otus:
