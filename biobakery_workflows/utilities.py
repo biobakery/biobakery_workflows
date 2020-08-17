@@ -115,7 +115,10 @@ def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,
 
     # determine the covariate equation from the metadata if not provided
     if not covariate_equation and len(metadata_variables) > 1:
-        fixed_effects = list(set(metadata_variables).difference(set(random_effects.split(","))))
+        # discard subject if found
+        metadata_variables_set = set(metadata_variables)
+        metadata_variables_set.discard("subject")
+        fixed_effects = list(metadata_variables_set.difference(set(random_effects.split(","))))
         covariate_equation=" + ".join(fixed_effects)
 
     beta_diversity_plots = {"univariate": {}, "multivariate": {}}
