@@ -60,7 +60,7 @@ def show_maaslin_metadata_plots(figures_folder, type):
                 if pdf_format:
                     print("\clearpage")
     if not images_found:
-        print("No significant associations.")
+        print("No significant associations.\n\n")
 
 #' <% if not vars["bypass_maaslin"]: show_maaslin_metadata_plots(maaslin_taxonomy_output_folder,"taxonomy") %>
 
@@ -81,7 +81,7 @@ def display_maaslin_heatmap(maaslin_heatmap, run_type):
         if os.path.isfile(maaslin_heatmap):
             print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
         else:
-            print("No significant associations.")
+            print("No significant associations.\n\n")
 
 maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_maaslin_runs("pathways")
 
@@ -114,12 +114,14 @@ def show_other_maaslin_run_types(maaslin_tasks_info):
             print("\clearpage")
 
             print("## {}\n\n".format(newtype_title))
+            print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
 
             print("### MaAsLin2 Heatmap\n\n")
             display_maaslin_heatmap(maaslin_heatmap, newtype)
             print("\clearpage")
 
             print("### MaAsLin2 Plots\n\n")
+            print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
             show_maaslin_metadata_plots(maaslin_output_folder, newtype)
             print("\clearpage")
 
