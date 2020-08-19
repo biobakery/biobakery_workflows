@@ -119,7 +119,9 @@ def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,
         metadata_variables_set = set(metadata_variables)
         metadata_variables_set.discard("subject")
         fixed_effects = list(metadata_variables_set.difference(set(random_effects.split(","))))
-        covariate_equation=" + ".join(fixed_effects)
+        # only include a multivariate equation if more than one variable
+        if len(fixed_effects) > 1:
+            covariate_equation=" + ".join(fixed_effects)
 
     beta_diversity_plots = {"univariate": {}, "multivariate": {}}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
