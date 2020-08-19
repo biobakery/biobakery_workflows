@@ -476,10 +476,10 @@ def identify_data_files(folder,input_file_type,metadata_input):
                     file_type = "16s_function_pathway"
                 elif data_info[0].startswith("M0"):
                     file_type = "16s_function_module"
-                elif data_info[0].isdigit() and data_info[-1].lower().startswith("k__"):
-                    file_type = "16s_taxonomy_otu"
                 elif data_info[0].startswith("ASV") and data_info[-1].lower().startswith("k__"):
                     file_type = "16s_taxonomy_asv"
+                elif data_info[-1].lower().startswith("k__"):
+                    file_type = "16s_taxonomy_otu"
 
                 # replace with user provided type, if set
                 if file in known_filetypes:
