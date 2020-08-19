@@ -113,14 +113,14 @@ def show_other_maaslin_run_types(maaslin_tasks_info):
 
             print("\clearpage")
 
-            print("## {}\n".format(newtype_title))
+            print("## {}\n\n".format(newtype_title))
             print("This report section contains the results from running the {} data through MaAsLin2.\n".format(newtype))
 
             print("### MaAsLin2 Heatmap\n\n")
             display_maaslin_heatmap(maaslin_heatmap, newtype)
             print("\clearpage")
 
-            print("### MaAsLin2 Plots")
+            print("### MaAsLin2 Plots\n\n")
             print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
 
             show_maaslin_metadata_plots(maaslin_output_folder, newtype)
