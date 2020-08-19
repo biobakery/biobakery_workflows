@@ -151,7 +151,7 @@ def show_stratified_plots(plots):
 
 #' <% if filtered_stratified_pathways_plots: print("# Stratified Pathways Plots") %>
 
-#' <% if maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
+#' <% if filtered_stratified_pathways_plots and maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
 
 #' <% show_stratified_plots(filtered_stratified_pathways_plots) %>
 
