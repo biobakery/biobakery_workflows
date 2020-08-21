@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/n/sw/eb/apps/centos7/Anaconda3/2019.10/bin/python
 
 import sys
 import os
@@ -59,7 +59,7 @@ def main():
         open_read = open
 
     # read in the file and process depending on the arguments provided
-    with open_read(args.input) as file_handle_read:
+    with open_read(args.input, mode='rt') as file_handle_read:
         with open(args.output,"w") as file_handle_write:
             # remove sample tags from column headers if present
             header = file_handle_read.readline()
