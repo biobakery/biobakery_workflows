@@ -181,13 +181,14 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
             depends=pathabundance,
             targets=humann_barplot_input)
 
-        metadata_row_names=[row[0] for row in metadata[1:]]
+        # only include the categorical metadata
+        metadata_row_names=[row[0] for row in metadata[1:] if row[0] in metadata_labels.keys()]
         metadata_end=metadata_row_names[-1]
         for i in range(top_pathways):
 
             new_pathways_plot=name_files("stratified_pathways_{0}.jpg".format(i), output, subfolder="stratified_pathways")
             stratified_plots_tasks.append(workflow.add_task(
-                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end),
+                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=metadata_labels.keys()),
                 depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
                 targets=new_pathways_plot,
                 name="run_humann_barplot_pathway_{0}".format(i)))
@@ -305,7 +306,8 @@ def create_merged_data_file(task, metadata, name_addition):
 
 
 # gather the top pathways to plot from maaslin2 outputs
-def gather_top_N_associations_maaslin2_results(filename, N):
+# only gather categorical metadata features
+def gather_top_N_associations_maaslin2_results(filename, N, categorical):
     associations=[]
     with open(filename) as file_handle:
         for line in file_handle:
@@ -315,15 +317,18 @@ def gather_top_N_associations_maaslin2_results(filename, N):
     # use N+1 to allow for the header value
     try:
         selected_pathway, metadata_focus = associations[N+1]
+        while not metadata_focus in categorical:
+            N=N+1
+            selected_pathway, metadata_focus = associations[N+1]
     except IndexError:
         selected_pathway, metadata_focus = "", ""
 
     return selected_pathway, metadata_focus
 
-def run_humann_barplot(task, number, metadata_end):
+def run_humann_barplot(task, number, metadata_end, categorical):
     # determine the pathway name
     try:
-        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number)
+        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number, categorical)
     except IndexError:
         original_selected_pathway, metadata_focus = None
 
