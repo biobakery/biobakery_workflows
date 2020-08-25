@@ -137,6 +137,7 @@ for plot_file in vars["stratified_pathways_plots"]:
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
+    no_plots_found = True
     for jpg_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
         # get the pathway number and metadata name
         info = jpg_file.replace(".jpg","").split("_")
@@ -145,7 +146,13 @@ def show_stratified_plots(plots):
             metadata_focus = open(jpg_file.replace(".jpg",".txt")).readline().rstrip()
         except EnvironmentError:
             metadata_focus = "Unknown"
-        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, jpg_file))
+
+        if os.path.getsize(jpg_file) > 0:
+            no_plots_found = False
+            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, jpg_file))
+
+    if no_plots_found:
+        print("No significant associations for pathways with categorical metadata found.")
 
 #' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
 

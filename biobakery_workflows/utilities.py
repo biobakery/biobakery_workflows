@@ -346,6 +346,10 @@ def run_humann_barplot(task, number, metadata_end, categorical):
             depends=task.depends,
             targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")],
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
+    else:
+        run_task("touch [targets[0]] && touch [targets[1]]",
+            depends=task.depends,
+            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")])
 
 def find_data_file(data_files, type, required=False):
     """ Return an error if the file of that type has not been found """
