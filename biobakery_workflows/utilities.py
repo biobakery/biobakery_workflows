@@ -177,7 +177,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
         humann_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
         workflow.add_task(
-            partial_function(create_merged_data_file, metadata=metadata),
+            partial_function(create_merged_data_file, metadata=metadata, name_addition="_Abundance"),
             depends=pathabundance,
             targets=humann_barplot_input)
 
@@ -286,11 +286,11 @@ def get_input_files_for_study_type(data_files, study_type):
     return taxonomic_profile,pathabundance,other_data_files,study_type
 
 # create a merged metadata table to be used as input for humann_barplot
-def create_merged_data_file(task, metadata):
+def create_merged_data_file(task, metadata, name_addition):
     # read in the pathabundance file
     data = []
     with open(task.depends[0].name) as file_handle:
-        samples = file_handle.readline().rstrip().split("\t")[1:]
+        samples = [i.split(name_addition)[0] for i in file_handle.readline().rstrip().split("\t")[1:]]
         for line in file_handle:
             line=line.rstrip().split("\t")
             data.append(line)    
