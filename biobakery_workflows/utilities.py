@@ -188,7 +188,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
             new_pathways_plot=name_files("stratified_pathways_{0}.jpg".format(i), output, subfolder="stratified_pathways")
             stratified_plots_tasks.append(workflow.add_task(
-                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=metadata_labels.keys()),
+                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=list(metadata_labels.keys())),
                 depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
                 targets=new_pathways_plot,
                 name="run_humann_barplot_pathway_{0}".format(i)))
