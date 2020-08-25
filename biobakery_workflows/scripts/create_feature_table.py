@@ -67,8 +67,8 @@ def main():
             if header.startswith(BIOM_COMMENT):
                 header = file_handle_read.readline()
             if args.sample_tag_columns:
-                header = header.replace(args.sample_tag_columns,"")
-            file_handle_write.write(header)
+                header = "\t".join([i.split(args.sample_tag_columns)[0] for i in header.rstrip().split("\t")])
+            file_handle_write.write(header+"\n")
 
             for line in file_handle_read:
                 # ignore and do not write out commented lines

@@ -251,7 +251,7 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
         newfile_type = other_data_files[newfile]
         new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
         new_subfolder="maaslin2_"+newfile_type
-        create_feature_table_tasks_info.append((newfile,new_feature,"--remove-stratified"))
+        create_feature_table_tasks_info.append((newfile,new_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
         maaslin_tasks_info[newfile_type]=(new_feature,name_files("heatmap.jpg", output, subfolder=os.path.join(new_subfolder,"figures")),
             name_files("significant_results.tsv", output, subfolder=new_subfolder))
 
