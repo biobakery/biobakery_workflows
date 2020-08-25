@@ -32,7 +32,7 @@ maaslin_taxonomy_output_folder = os.path.dirname(maaslin_taxonomy_heatmap)
 
 #' <% if not vars["bypass_maaslin"]: print("### MaAsLin2 Heatmap") %>
 #' <% if os.path.isfile(maaslin_taxonomy_heatmap): print("![Taxonomy heatmap]("+maaslin_taxonomy_heatmap+")\n") %>
-#' <% if not os.path.isfile(maaslin_taxonomy_heatmap) and not vars["bypass_maaslin"]: print("No significant associations.") %>
+#' <% if not os.path.isfile(maaslin_taxonomy_heatmap) and not vars["bypass_maaslin"]: print("Not enough significant associations for heatmap.") %>
 
 #' <% if pdf_format and not vars["bypass_maaslin"]: print("\clearpage") %>
 
@@ -81,7 +81,7 @@ def display_maaslin_heatmap(maaslin_heatmap, run_type):
         if os.path.isfile(maaslin_heatmap):
             print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
         else:
-            print("No significant associations.\n\n")
+            print("Not enough significant associations for heatmap.\n\n")
 
 maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_maaslin_runs("pathways")
 
