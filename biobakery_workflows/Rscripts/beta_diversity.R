@@ -149,7 +149,7 @@ bray = vegdist(filtered_data, method, na.remove = TRUE)
 
 if (current_args$covariate_equation != "") {
   results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
-  png(positional_args[3], height=300, width=700)
+  png(positional_args[3], res=150, height=800, width=1100)
   grid.table(as.data.frame(results$aov.tab))
   dev.off()
 
