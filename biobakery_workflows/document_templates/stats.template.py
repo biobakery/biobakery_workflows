@@ -32,7 +32,7 @@ maaslin_taxonomy_output_folder = os.path.dirname(maaslin_taxonomy_heatmap)
 
 #' <% if not vars["bypass_maaslin"]: print("### MaAsLin2 Heatmap") %>
 #' <% if os.path.isfile(maaslin_taxonomy_heatmap): print("![Taxonomy heatmap]("+maaslin_taxonomy_heatmap+")\n") %>
-#' <% if not os.path.isfile(maaslin_taxonomy_heatmap) and not vars["bypass_maaslin"]: print("No significant associations.") %>
+#' <% if not os.path.isfile(maaslin_taxonomy_heatmap) and not vars["bypass_maaslin"]: print("Not enough significant associations for heatmap.") %>
 
 #' <% if pdf_format and not vars["bypass_maaslin"]: print("\clearpage") %>
 
@@ -81,7 +81,7 @@ def display_maaslin_heatmap(maaslin_heatmap, run_type):
         if os.path.isfile(maaslin_heatmap):
             print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
         else:
-            print("No significant associations.\n\n")
+            print("Not enough significant associations for heatmap.\n\n")
 
 maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_maaslin_runs("pathways")
 
@@ -137,6 +137,7 @@ for plot_file in vars["stratified_pathways_plots"]:
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
+    no_plots_found = True
     for png_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-1])):
         # get the pathway number and metadata name
         info = png_file.replace(".png","").split("_")
@@ -147,11 +148,18 @@ def show_stratified_plots(plots):
             metadata_focus = "Unknown"
         print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, png_file))
 
+        if os.path.getsize(png_file) > 0:
+            no_plots_found = False
+            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, png_file))
+
+    if no_plots_found:
+        print("No significant associations for pathways with categorical metadata found.")
+
 #' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
 
 #' <% if filtered_stratified_pathways_plots: print("# Stratified Pathways Plots") %>
 
-#' <% if filtered_stratified_pathways_plots and maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
+#' <% if filtered_stratified_pathways_plots and maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations, for categorical features only, are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
 
 #' <% show_stratified_plots(filtered_stratified_pathways_plots) %>
 

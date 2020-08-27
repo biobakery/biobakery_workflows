@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/n/sw/eb/apps/centos7/Anaconda3/2019.10/bin/python
 
 import sys
 import os
@@ -59,7 +59,7 @@ def main():
         open_read = open
 
     # read in the file and process depending on the arguments provided
-    with open_read(args.input) as file_handle_read:
+    with open_read(args.input, mode='rt') as file_handle_read:
         with open(args.output,"w") as file_handle_write:
             # remove sample tags from column headers if present
             header = file_handle_read.readline()
@@ -67,8 +67,8 @@ def main():
             if header.startswith(BIOM_COMMENT):
                 header = file_handle_read.readline()
             if args.sample_tag_columns:
-                header = header.replace(args.sample_tag_columns,"")
-            file_handle_write.write(header)
+                header = "\t".join([i.split(args.sample_tag_columns)[0] for i in header.rstrip().split("\t")])
+            file_handle_write.write(header+"\n")
 
             for line in file_handle_read:
                 # ignore and do not write out commented lines

@@ -177,17 +177,18 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
         humann_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
         workflow.add_task(
-            partial_function(create_merged_data_file, metadata=metadata),
+            partial_function(create_merged_data_file, metadata=metadata, name_addition="_Abundance"),
             depends=pathabundance,
             targets=humann_barplot_input)
 
-        metadata_row_names=[row[0] for row in metadata[1:]]
+        # only include the categorical metadata
+        metadata_row_names=[row[0] for row in metadata[1:] if row[0] in metadata_labels.keys()]
         metadata_end=metadata_row_names[-1]
         for i in range(top_pathways):
 
             new_pathways_plot=name_files("stratified_pathways_{0}.jpg".format(i), output, subfolder="stratified_pathways")
             stratified_plots_tasks.append(workflow.add_task(
-                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end),
+                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=list(metadata_labels.keys())),
                 depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
                 targets=new_pathways_plot,
                 name="run_humann_barplot_pathway_{0}".format(i)))
@@ -250,7 +251,7 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
         newfile_type = other_data_files[newfile]
         new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
         new_subfolder="maaslin2_"+newfile_type
-        create_feature_table_tasks_info.append((newfile,new_feature,"--remove-stratified"))
+        create_feature_table_tasks_info.append((newfile,new_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
         maaslin_tasks_info[newfile_type]=(new_feature,name_files("heatmap.png", output, subfolder=os.path.join(new_subfolder,"figures")),
             name_files("significant_results.tsv", output, subfolder=new_subfolder))
 
@@ -286,11 +287,11 @@ def get_input_files_for_study_type(data_files, study_type):
     return taxonomic_profile,pathabundance,other_data_files,study_type
 
 # create a merged metadata table to be used as input for humann_barplot
-def create_merged_data_file(task, metadata):
+def create_merged_data_file(task, metadata, name_addition):
     # read in the pathabundance file
     data = []
     with open(task.depends[0].name) as file_handle:
-        samples = file_handle.readline().rstrip().split("\t")[1:]
+        samples = [i.split(name_addition)[0] for i in file_handle.readline().rstrip().split("\t")[1:]]
         for line in file_handle:
             line=line.rstrip().split("\t")
             data.append(line)    
@@ -305,7 +306,8 @@ def create_merged_data_file(task, metadata):
 
 
 # gather the top pathways to plot from maaslin2 outputs
-def gather_top_N_associations_maaslin2_results(filename, N):
+# only gather categorical metadata features
+def gather_top_N_associations_maaslin2_results(filename, N, categorical):
     associations=[]
     with open(filename) as file_handle:
         for line in file_handle:
@@ -315,15 +317,18 @@ def gather_top_N_associations_maaslin2_results(filename, N):
     # use N+1 to allow for the header value
     try:
         selected_pathway, metadata_focus = associations[N+1]
+        while not metadata_focus in categorical:
+            N=N+1
+            selected_pathway, metadata_focus = associations[N+1]
     except IndexError:
         selected_pathway, metadata_focus = "", ""
 
     return selected_pathway, metadata_focus
 
-def run_humann_barplot(task, number, metadata_end):
+def run_humann_barplot(task, number, metadata_end, categorical):
     # determine the pathway name
     try:
-        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number)
+        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number, categorical)
     except IndexError:
         original_selected_pathway, metadata_focus = None
 
@@ -341,6 +346,10 @@ def run_humann_barplot(task, number, metadata_end):
             depends=task.depends,
             targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")],
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
+    else:
+        run_task("touch [targets[0]] && touch [targets[1]]",
+            depends=task.depends,
+            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")])
 
 def find_data_file(data_files, type, required=False):
     """ Return an error if the file of that type has not been found """
