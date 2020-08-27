@@ -237,13 +237,13 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
              depends=taxonomic_profile,
              targets=taxon_feature)
 
-    maaslin_tasks_info={"taxonomy":(taxon_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_taxa","figures")),
+    maaslin_tasks_info={"taxonomy":(taxon_feature,name_files("heatmap.png", output, subfolder=os.path.join("maaslin2_taxa","figures")),
         name_files("significant_results.tsv", output, subfolder="maaslin2_taxa"))}
 
     if pathabundance:
         pathabundance_feature=name_files("pathways_features.txt",output,subfolder="features",create_folder=True)
         create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
-        maaslin_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.jpg", output, subfolder=os.path.join("maaslin2_pathways","figures")),
+        maaslin_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.png", output, subfolder=os.path.join("maaslin2_pathways","figures")),
             name_files("significant_results.tsv", output, subfolder="maaslin2_pathways"))
 
     for newfile in other_data_files:
@@ -251,7 +251,7 @@ def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_pro
         new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
         new_subfolder="maaslin2_"+newfile_type
         create_feature_table_tasks_info.append((newfile,new_feature,"--remove-stratified"))
-        maaslin_tasks_info[newfile_type]=(new_feature,name_files("heatmap.jpg", output, subfolder=os.path.join(new_subfolder,"figures")),
+        maaslin_tasks_info[newfile_type]=(new_feature,name_files("heatmap.png", output, subfolder=os.path.join(new_subfolder,"figures")),
             name_files("significant_results.tsv", output, subfolder=new_subfolder))
 
     for input_file, output_file, options in create_feature_table_tasks_info:

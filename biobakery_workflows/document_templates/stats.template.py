@@ -46,16 +46,16 @@ def show_maaslin_metadata_plots(figures_folder, type):
     # show the top plot for each metadata
     images_found = False
     for file_name in os.listdir(figures_folder):
-        if file_name.endswith("_1.jpg"):
+        if file_name.endswith("_1.png"):
             images_found = True
-            metadata_name=file_name.replace("_1.jpg","")
+            metadata_name=file_name.replace("_1.png","")
             print("![Most significant "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
             if pdf_format:
                 print("\clearpage")
     for i in range(2,11):
         for file_name in os.listdir(figures_folder):
-            if file_name.endswith("_{}.jpg".format(i)):
-                metadata_name=file_name.replace("_{}.jpg".format(i),"")
+            if file_name.endswith("_{}.png".format(i)):
+                metadata_name=file_name.replace("_{}.png".format(i),"")
                 print("![Significant #"+str(i)+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
                 if pdf_format:
                     print("\clearpage")
@@ -137,15 +137,15 @@ for plot_file in vars["stratified_pathways_plots"]:
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
-    for jpg_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
+    for png_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-1])):
         # get the pathway number and metadata name
-        info = jpg_file.replace(".jpg","").split("_")
+        info = png_file.replace(".png","").split("_")
         pathway_number = info[-1]
         try:
-            metadata_focus = open(jpg_file.replace(".jpg",".txt")).readline().rstrip()
+            metadata_focus = open(png_file.replace(".png",".txt")).readline().rstrip()
         except EnvironmentError:
             metadata_focus = "Unknown"
-        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, jpg_file))
+        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, png_file))
 
 #' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
 
