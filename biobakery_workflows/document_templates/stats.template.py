@@ -146,7 +146,6 @@ def show_stratified_plots(plots):
             metadata_focus = open(image_file.replace(".jpg",".txt")).readline().rstrip()
         except EnvironmentError:
             metadata_focus = "Unknown"
-        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
 
         if os.path.getsize(image_file) > 0:
             no_plots_found = False
