@@ -138,19 +138,19 @@ for plot_file in vars["stratified_pathways_plots"]:
 def show_stratified_plots(plots):
     # Display each of the plots in the report
     no_plots_found = True
-    for png_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-1])):
+    for image_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
         # get the pathway number and metadata name
-        info = png_file.replace(".png","").split("_")
+        info = image_file.replace(".jpg","").split("_")
         pathway_number = info[-1]
         try:
-            metadata_focus = open(png_file.replace(".png",".txt")).readline().rstrip()
+            metadata_focus = open(image_file.replace(".jpg",".txt")).readline().rstrip()
         except EnvironmentError:
             metadata_focus = "Unknown"
-        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, png_file))
+        print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
 
-        if os.path.getsize(png_file) > 0:
+        if os.path.getsize(image_file) > 0:
             no_plots_found = False
-            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, png_file))
+            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
 
     if no_plots_found:
         print("No significant associations for pathways with categorical metadata found.")
