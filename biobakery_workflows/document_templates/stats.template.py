@@ -1,6 +1,7 @@
 
 #+ echo=False
 import os
+import re
 
 from biobakery_workflows import utilities, visualizations, files
 
@@ -28,13 +29,18 @@ def show_maaslin_metadata_plots(figures_folder, type):
     # show the top plots for each metadata
 
     images_found = False
-    for i in range(1,11):
-        for file_name in os.listdir(figures_folder):
-            if file_name.endswith("_{}.png".format(i)):
-                metadata_name=file_name.replace("_{}.png".format(i),"")
-                print("![ #"+str(i)+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
-                if pdf_format:
-                    print("\clearpage")
+    # get all the available images and sort by rank
+    ranked_files = [ (filename, re.findall(r'\d+', filename)[0]) for filename in os.listdir(figures_folder) if re.search(r'_\d+.png$',filename)]
+    ordered_files = sorted( ranked_files, key=lambda x: int(x[1]))
+
+    for file_name, rank in ordered_files:
+        if file_name.endswith("_{}.png".format(rank)):
+            images_found = True
+            metadata_name=file_name.replace("_{}.png".format(rank),"")
+            print("![ #"+rank+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
+            if pdf_format:
+                print("\clearpage")
+
     if not images_found:
         print("No significant associations.\n\n")
 
