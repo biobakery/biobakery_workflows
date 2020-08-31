@@ -16,124 +16,63 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #+ echo=False
 
-# display the heatmap
-maaslin_taxonomy_heatmap = vars["maaslin_tasks_info"]["taxonomy"][1]
-maaslin_taxonomy_output_folder = os.path.dirname(maaslin_taxonomy_heatmap)
-
 #' <% if not vars["bypass_maaslin"]: print("# MaAsLin2 Results") %>
 
 #' <% if not vars["bypass_maaslin"]: print("MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).") %>
 
 #' <% if not vars["bypass_maaslin"]: print("See the log file for the exact MaAsLiN2 commands run to generate these outputs. Also please note these are just a subset of the outputs, check out the MaAsLin2 results folders for the complete set of output files.") %>
 
-#' <% if not vars["bypass_maaslin"]: print("## Taxonomic Profile") %>
-
-#' <% if not vars["bypass_maaslin"]: print("This report section contains the results from running the taxonomic profile through MaAsLin2.") %>
-
-#' <% if not vars["bypass_maaslin"]: print("### MaAsLin2 Heatmap") %>
-#' <% if os.path.isfile(maaslin_taxonomy_heatmap): print("![Taxonomy heatmap]("+maaslin_taxonomy_heatmap+")\n") %>
-#' <% if not os.path.isfile(maaslin_taxonomy_heatmap) and not vars["bypass_maaslin"]: print("Not enough significant associations for a heatmap.") %>
-
-#' <% if pdf_format and not vars["bypass_maaslin"]: print("\clearpage") %>
-
-#' <% if not vars["bypass_maaslin"]: print("### MaAsLin2 Plots") %>
-
-#' <% if not vars["bypass_maaslin"]: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
-
 #+ echo=False
 
 def show_maaslin_metadata_plots(figures_folder, type):
-    # show the top plot for each metadata
+    # show the top plots for each metadata
+
     images_found = False
-    for file_name in os.listdir(figures_folder):
-        if file_name.endswith("_1.png"):
-            images_found = True
-            metadata_name=file_name.replace("_1.png","")
-            print("![Most significant "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
-            if pdf_format:
-                print("\clearpage")
-    for i in range(2,11):
+    for i in range(1,11):
         for file_name in os.listdir(figures_folder):
             if file_name.endswith("_{}.png".format(i)):
                 metadata_name=file_name.replace("_{}.png".format(i),"")
-                print("![Significant #"+str(i)+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
+                print("![ #"+str(i)+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
                 if pdf_format:
                     print("\clearpage")
     if not images_found:
         print("No significant associations.\n\n")
 
-#' <% if not vars["bypass_maaslin"]: show_maaslin_metadata_plots(maaslin_taxonomy_output_folder,"taxonomy") %>
 
-#+ echo=False
+def show_maaslin_heatmaps(maaslin_heatmap, run_type):
+    # display the heatmap if generated
 
-# check for the pathways/ecs results
-def check_for_maaslin_runs(run_type):
-    if run_type in vars["maaslin_tasks_info"] and not vars["bypass_maaslin"]:
-        heatmap_file = vars["maaslin_tasks_info"][run_type][1]
-        output_folder = os.path.dirname(vars["maaslin_tasks_info"][run_type][1])
+    if os.path.isfile(maaslin_heatmap):
+        print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
     else:
-        heatmap_file = ""
-        output_folder = ""
+        print("Not enough significant associations for a heatmap.\n\n")
 
-    return heatmap_file, output_folder
 
-def display_maaslin_heatmap(maaslin_heatmap, run_type):
-        if os.path.isfile(maaslin_heatmap):
-            print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
-        else:
-            print("Not enough significant associations for a heatmap.\n\n")
+def show_all_maaslin_run_types(maaslin_tasks_info):
+    # search through the maaslin tasks info and show all plots for all data types
 
-maaslin_pathways_heatmap, maaslin_pathways_output_folder = check_for_maaslin_runs("pathways")
+    for newtype in maaslin_tasks_info:
+        maaslin_heatmap = maaslin_tasks_info[newtype][1]
+        maaslin_output_folder = os.path.dirname(maaslin_heatmap)
 
-#' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
+        # Start tile with upper case
+        newtype_title=newtype[0].upper()+newtype[1:]
 
-#' <% if maaslin_pathways_output_folder: print("## Pathways\n") %>
-#' <% if maaslin_pathways_output_folder: print("This report section contains the results from running the pathways through MaAsLin2.\n") %>
+        print("## {}\n\n".format(newtype_title))
+        print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
 
-#' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Heatmap\n") %>
-#' <% if maaslin_pathways_output_folder: display_maaslin_heatmap(maaslin_pathways_heatmap, "Pathways") %>
+        print("### MaAsLin2 Heatmap\n\n")
+        show_maaslin_heatmaps(maaslin_heatmap, newtype)
+        print("\clearpage")
 
-#' <% if maaslin_pathways_output_folder and pdf_format: print("\clearpage") %>
+        print("### MaAsLin2 Plots\n\n")
+        print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
+        show_maaslin_metadata_plots(maaslin_output_folder, newtype)
+        print("\clearpage")
 
-#' <% if maaslin_pathways_output_folder: print("### MaAsLin2 Plots") %>
-#' <% if maaslin_pathways_output_folder: print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.") %>
-
-#' <% if maaslin_pathways_output_folder: show_maaslin_metadata_plots(maaslin_pathways_output_folder,"pathways") %>
-
-#+ echo=False
-# check and plot other maaslin run types
-def show_other_maaslin_run_types(maaslin_tasks_info):
-    other_data=[type for type in maaslin_tasks_info if not type in ["taxonomy","pathways"]]
-    for newtype in other_data:
-        maaslin_heatmap, maaslin_output_folder = check_for_maaslin_runs(newtype)
-        if maaslin_output_folder and pdf_format:
-            newtype_title=newtype[0].upper()+newtype[1:]
-            if not newtype_title.endswith("s"):
-                newtype_title+="s"
-
-            print("\clearpage")
-
-            print("## {}\n\n".format(newtype_title))
-            print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
-
-            print("### MaAsLin2 Heatmap\n\n")
-            display_maaslin_heatmap(maaslin_heatmap, newtype)
-            print("\clearpage")
-
-            print("### MaAsLin2 Plots\n\n")
-            print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
-            show_maaslin_metadata_plots(maaslin_output_folder, newtype)
-            print("\clearpage")
-
-#' <% show_other_maaslin_run_types(vars["maaslin_tasks_info"]) %>
+#' <% if not vars["bypass_maaslin"]: show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
 
 #+ echo=False
-
-# check for stratified pathways results
-filtered_stratified_pathways_plots=[]
-for plot_file in vars["stratified_pathways_plots"]:
-    if os.path.isfile(plot_file):
-        filtered_stratified_pathways_plots.append(plot_file)
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
@@ -147,20 +86,20 @@ def show_stratified_plots(plots):
         except EnvironmentError:
             metadata_focus = "Unknown"
 
-        if os.path.getsize(image_file) > 0:
+        if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
             no_plots_found = False
             print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
 
     if no_plots_found:
         print("No significant associations for pathways with categorical metadata found.")
 
-#' <% if filtered_stratified_pathways_plots and pdf_format: print("\clearpage") %>
+#' <% if vars["stratified_pathways_plots"] and pdf_format: print("\clearpage") %>
 
-#' <% if filtered_stratified_pathways_plots: print("# Stratified Pathways Plots") %>
+#' <% if vars["stratified_pathways_plots"]: print("# Stratified Pathways Plots") %>
 
-#' <% if filtered_stratified_pathways_plots and maaslin_pathways_output_folder: print("The abundance for each of the "+str(len(filtered_stratified_pathways_plots))+" most significant associations, for categorical features only, are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
+#' <% if vars["stratified_pathways_plots"] and "pathways" in vars["maaslin_tasks_info"]: print("The abundance for each of the "+str(len(vars["stratified_pathways_plots"]))+" most significant associations, for categorical features only, are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
 
-#' <% if filtered_stratified_pathways_plots: show_stratified_plots(filtered_stratified_pathways_plots) %>
+#' <% if vars["stratified_pathways_plots"]: show_stratified_plots(vars["stratified_pathways_plots"]) %>
 
 #' <% if pdf_format: print("\clearpage") %>
 
