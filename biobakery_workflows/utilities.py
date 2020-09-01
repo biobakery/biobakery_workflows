@@ -75,12 +75,12 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
 
     return metadata_variables
 
-def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
+def run_permanova(workflow,static_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
     # if longitudinal run the permanova
 
     permanova_plots = {}
-    if individual_covariates:
-        optional_args=" --individual_covariates "+individual_covariates
+    if static_covariates:
+        optional_args=" --static_covariates "+static_covariates
     else:
         sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
 

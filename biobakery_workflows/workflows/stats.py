@@ -56,7 +56,7 @@ workflow.add_argument("random-effects",desc="the random effects to use in the mo
 workflow.add_argument("bypass-maaslin",desc="bypass running MaAsLiN", action="store_true")
 workflow.add_argument("maaslin-options",desc="additional MaAsLiN options", default="")
 workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
-workflow.add_argument("individual-covariates",desc="the covariates, comma-delimited, that do not change per individual (to permutate within in permanova)", default="")
+workflow.add_argument("static-covariates",desc="the covariates, comma-delimited, that do not change per individual (to permutate within in permanova)", default="")
 workflow.add_argument("scale",desc="the scale to apply with the permanova", default="100")
 workflow.add_argument("min-abundance",desc="the min abundance to apply for filtering", default="0.0001")
 workflow.add_argument("min-prevalence",desc="the min prevalence to apply for filtering", default="0.1")
@@ -112,7 +112,7 @@ beta_diversity_plots={"univariate": {}, "multivariate": {}}
 covariate_equation=""
 
 if args.random_effects:
-    additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
+    additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.static_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 else:
     additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables)
 

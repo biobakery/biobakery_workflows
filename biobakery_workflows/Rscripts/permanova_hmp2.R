@@ -417,9 +417,9 @@ options <- optparse::add_option(options,
 )
 
 options <- optparse::add_option(options,
-    c("-i", "--individual_covariates"),
+    c("-i", "--static_covariates"),
     type = "character",
-    dest = "individual_covariates",
+    dest = "static_covariates",
     default = NULL,
     help = paste0("Treated as per-individual and permuted across individuals instead of longitudinally",
     " [ Default: All covariates ]"
@@ -498,12 +498,12 @@ for (datafile in unlist(strsplit(positional_args[1], ",", fixed = TRUE))) {
     names(covariates) <- covariates
 
     # Set the individual covariates
-    if (is.null(current_args$individual_covariates)) {
+    if (is.null(current_args$static_covariates)) {
         blocks_off = TRUE
-        current_args$individual_covariates <- covariates
+        current_args$static_covariates <- covariates
     } else {
         blocks_off = FALSE
-        current_args$individual_covariates <- unlist(strsplit(current_args$individual_covariates, ",", fixed = TRUE))
+        current_args$static_covariates <- unlist(strsplit(current_args$static_covariates, ",", fixed = TRUE))
     }
 
     # add subject based on sample id if subject is not included
@@ -527,7 +527,7 @@ for (datafile in unlist(strsplit(positional_args[1], ",", fixed = TRUE))) {
     metadata_zeros[metadata_zeros == "UNK"] <- NA
     filtered_metadata <- metadata[rowSums(metadata_zeros != 0, na.rm=TRUE) > 0, , drop = FALSE]
 
-    ad <- bc_omnibus_tests(filtered_data,filtered_metadata,covariates,current_args$individual_covariates,blocks_off,Nperms=current_args$nperms)
+    ad <- bc_omnibus_tests(filtered_data,filtered_metadata,covariates,current_args$static_covariates,blocks_off,Nperms=current_args$nperms)
 
     if (! (exists("R2"))) {
         R2 <- matrix(0, nrow=length(covariates) + 1, ncol=0)
