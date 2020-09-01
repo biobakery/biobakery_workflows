@@ -48,7 +48,6 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
-workflow.add_argument("longitudinal",desc="set for longitudinal studies", action="store_true")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
 workflow.add_argument("fixed-effects",desc="the fixed effects to use in the models", default="")
@@ -106,13 +105,13 @@ stratified_pathways_plots=[]
 if not args.bypass_maaslin:
     stratified_pathways_plots,stratified_plots_tasks=utilities.create_stratified_pathways_plots(workflow,study_type,pathabundance,args.input_metadata,args.metadata_exclude,args.metadata_categorical,args.metadata_continuous,args.top_pathways,maaslin_tasks_info,args.output)
 
-# run permanova on taxon data if longitudinal else run beta diversity
+# run permanova on taxon data if longitudinal (if random effects are set) else run beta diversity
 additional_stats_tasks=[]
 permanova_plots=[]
 beta_diversity_plots={"univariate": {}, "multivariate": {}}
 covariate_equation=""
 
-if args.longitudinal:
+if args.random_effects:
     additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.individual_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 else:
     additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables)
