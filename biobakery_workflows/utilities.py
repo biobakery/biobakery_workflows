@@ -500,13 +500,14 @@ def identify_data_files(folder,input_file_type,metadata_input):
                     if not (file_type_split_info[0] in ["wmgx","16s"] and file_type_split_info[1] in ["function","taxonomy"] and len(file_type_split_info)==3):
                         sys.exit("Please provide a valid file type of the format [wmgx|16s]_[function|taxonomy]_[type*] (valid functions types [ec|pathway|gene|module] and valid taxonomy types for 16s [otu|asv]) replacing the input provided of '"+file_type+"'.")
 
-                if file_type:
-                    if not file_type in data_files_types:
-                        data_files_types[file_type]=[]
-                    data_files_types[file_type].append(file)
-                else:
-                    sys.exit("Unknown file type for filename {}. Please provide the file type with the option --input-file-type='filename,type' or remove the file from the input folder.".format(file))
-    
+                if not file_type:
+                    # set the file type to the name of the file if not identified (remove underscore as those are used for file type info)
+                    file_type = os.path.basename(file).split(".")[0].replace("_","")
+
+                if not file_type in data_files_types:
+                    data_files_types[file_type]=[]
+                data_files_types[file_type].append(file)
+  
     return data_files_types
 
 def get_package_file(basename, type="template"):
