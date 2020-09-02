@@ -104,8 +104,13 @@ def run_permanova(workflow,static_covariates,maaslin_tasks_info,input_metadata,s
     return additional_stats_tasks,permanova_plots
 
 
-def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks,random_effects,metadata_variables):
+def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks,random_effects,metadata_variables,adonis_method):
     # if not longitudinal then run univariate plus multivariate if set
+
+    # if set, add the adnois method
+    optional_args=""
+    if adonis_method:
+        optional_args=" --adonis_method "+adonis_method
 
     # construct the equation for the model based on the fixed effects provided
     ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
@@ -130,7 +135,7 @@ def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,
 
         additional_stats_tasks.append(
             workflow.add_task(
-                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]"+optional_args,
                 depends=[maaslin_tasks_info[filetype][0],input_metadata],
                 targets=univariate,
                 args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
@@ -143,7 +148,7 @@ def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,
 
             additional_stats_tasks.append(
                 workflow.add_task(
-                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'",
+                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'"+optional_args,
                     depends=[maaslin_tasks_info[filetype][0],input_metadata],
                     targets=multivariate,
                     args=[univariate_script_path,min_abundance,min_prevalence,max_missing,covariate_equation],

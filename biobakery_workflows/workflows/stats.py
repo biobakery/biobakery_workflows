@@ -50,6 +50,7 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
+workflow.add_argument("adonis-method",desc="the method to apply for the adonis, default is based on file type (bray for relab)", default="bray", choices=["manhattan", "euclidean", "canberra", "bray", "kulczynski", "jaccard", "gower", "altGower", "morisita", "horn", "mountford", "raup" , "binomial", "chao", "cao", "mahalanobis"])
 workflow.add_argument("fixed-effects",desc="the fixed effects to use in the models", default="")
 workflow.add_argument("multivariable-fixed-effects",desc="the fixed effects that are multivariable (ordered first in covariate equation)", default="")
 workflow.add_argument("random-effects",desc="the random effects to use in the models", default="")
@@ -114,7 +115,7 @@ covariate_equation=""
 if args.random_effects:
     additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.static_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 else:
-    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables)
+    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
 
 templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
 
