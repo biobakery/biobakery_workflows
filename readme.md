@@ -784,7 +784,7 @@ Workflow arguments can be provided on the command line or with an optional confi
 5. Random effects: Used to generate the model (MaAsLin2).
 6. Bypass Maaslin: Skip running MaAsLin2 on all input files.
 7. Permutations: Total number of permutations to apply with the permanova (default=4999). (Only for longitudinal studies)
-8. Individual covariates: Metadata variable names. (Only for longitudinal studies)
+8. Static covariates: Metadata variable names. (Only for longitudinal studies)
 9. Scale: The scale to apply to the permanova. (Only for longitudinal studies)
 10. Min abundance: Min filtering value (default 0.0001)
 11. Min prevalence: Min filtering value (default 0.1)
