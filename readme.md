@@ -741,7 +741,7 @@ the output of the 16S workflow as input.
 
 # Stats workflow
 
-The stats workflow takes as input feature tables generated from the wmgx or 16s workflows.
+The stats workflow takes as input feature tables generated from the wmgx or 16s workflows. It can also be used with any tab-delimited feature table.
 
 `$ biobakery_workflows stats --input $INPUT --input-metadata $INPUT_METADATA --output $OUTPUT --project-name $PROJECT`
 
@@ -761,7 +761,7 @@ Workflow arguments can be provided on the command line or with an optional confi
 1. INPUT: The folder containing the input data files. 
 
     * Can be txt, tsv or biom (also compressed okay, like PICRUSt2 outputs)
-    * Looks for taxonomic profile, pathway abundance, and ec abundance.
+    * Looks for taxonomic profile, pathway abundance, ec abundance, etc.
     * Can identify filetype based on contents.
     * Works with wmgx and 16s input files.
     * Data file can have the samples as rows or columns.
