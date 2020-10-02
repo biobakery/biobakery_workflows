@@ -749,6 +749,7 @@ The stats workflow takes as input feature tables generated from the wmgx or 16s 
 
 1. MaAsLin2
 2. HUMAnN (for pathways barcharts stratified by species)
+3. R plus vegan, ggplot2, optparse, gridExtra, permute, reshape2, RColorBrewer, cowplot, plyr
 
 **Inputs**
 
