@@ -821,9 +821,9 @@ Workflow arguments can be provided on the command line or with an optional confi
 
 Using the HMP2 (IBDMDB) merged data files provided by the project, run the stats workflow to generate a report.
 
-`$ biobakery_workflows stats --input HMP2_data/ --input-metadata HMP2_metadata.tsv --fixed-effects="diagnosis,dysbiosisnonIBD,dysbiosisUC,dysbiosisCD,antibiotics,age" --random-effects="site,subject" --project-name HMP2 --output HMP2_stats_output --longitudinal  --individual-covariates="age" --permutations 10 --maaslin-options="reference='diagnosis,nonIBD'"`
+`$ biobakery_workflows stats --input HMP2_data/ --input-metadata HMP2_metadata.tsv --fixed-effects="diagnosis,dysbiosisnonIBD,dysbiosisUC,dysbiosisCD,antibiotics,age" --random-effects="site,subject" --project-name HMP2 --output HMP2_stats_output --longitudinal  --static-covariates="age" --permutations 10 --maaslin-options="reference='diagnosis,nonIBD'"`
 
-The files in the input folder are the taxonomic profile, pathway abundance, and ec abundance. Fixed and random effect variables are specified for the MaAsLin2 runs. The metadata type selected is longitudinal and the individual covariate in the study metadata is "age". The reduced number of permutations reduces the runtime for the three permanova calculations. The reference is provided to MaAsLiN2 since diagnosis is a variable with more than two levels to set the reference variable of "nonIBD" for the module and the resulting box plots.
+The files in the input folder are the taxonomic profile, pathway abundance, and ec abundance. Fixed and random effect variables are specified for the MaAsLin2 runs. The metadata type selected is longitudinal and the static covariate in the study metadata is "age". The reduced number of permutations reduces the runtime for the three permanova calculations. The reference is provided to MaAsLiN2 since diagnosis is a variable with more than two levels to set the reference variable of "nonIBD" for the module and the resulting box plots.
 
 Outputs include a folder for each MaAsLin2 run plus figures folders and a report.
 
