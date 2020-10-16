@@ -34,6 +34,7 @@ Table of contents
     + [Visualization for Whole Metagenome Shotgun (wmgx_vis)](#visualization-for-whole-metagenome-shotgun-wmgx_vis)
     + [Visualization for Whole Metagenome and Metatranscriptome Shotgun (wmgx_wmtx_vis)](#visualization-for-whole-metagenome-and-metatranscriptome-shotgun-wmgx_wmtx_vis)
     + [Visualization for 16S (16s_vis)](#visualization-for-16s-16s_vis)
+  * [Stats Workflow](#stats-workflow)
   * [WDL Workflow](#wdl-workflow)
 
 ------------------------------------------------------------------------
@@ -737,6 +738,94 @@ the output of the 16S workflow as input.
     running the 16s data processing workflow, `$PROJECT` with the name
     of the project, and `$OUTPUT` with the path to the folder to write
     output files.
+
+# Stats workflow
+
+The stats workflow takes as input feature tables generated from the wmgx or 16s workflows. It can also be used with any tab-delimited feature table.
+
+`$ biobakery_workflows stats --input $INPUT --input-metadata $INPUT_METADATA --output $OUTPUT --project-name $PROJECT`
+
+**Requirements**
+
+1. MaAsLin2
+2. HUMAnN (for pathways barcharts stratified by species)
+3. R plus vegan, ggplot2, optparse, gridExtra, permute, reshape2, RColorBrewer, cowplot, plyr
+
+**Inputs**
+
+The workflow requires five arguments and allows for seventeen optional arguments.
+
+Workflow arguments can be provided on the command line or with an optional config file using the AnADAMA2 built-in option "--config <FILE>".
+
+*Required*
+1. INPUT: The folder containing the input data files. 
+
+    * Can be txt, tsv or biom (also compressed okay, like PICRUSt2 outputs)
+    * Looks for taxonomic profile, pathway abundance, ec abundance, etc.
+    * Can identify filetype based on contents.
+    * Works with wmgx and 16s input files.
+    * Data file can have the samples as rows or columns.
+
+2. INPUT_METADATA: The metadata file for input.
+
+    * File can have the samples as rows or columns.
+
+3. OUTPUT: The folder to write the output files. 
+
+4. PROJECT: The name of the project (string for the report header).
+
+
+*Optional*
+
+1. Transform: Used with MaAsLin2.
+2. Longitudinal: Set if the study is longitudinal (default is univariate/multivariate).
+3. Fixed effects: Used to generate the model (MaAsLin2 and beta diversity).
+4. Multivariate fixed effects: Used to generate the model (MaAsLin2 and beta diversity). These variables are listed first in the beta diversity covariate equation.
+5. Random effects: Used to generate the model (MaAsLin2).
+6. Bypass Maaslin: Skip running MaAsLin2 on all input files.
+7. Permutations: Total number of permutations to apply with the permanova (default=4999). (Only for longitudinal studies)
+8. Static covariates: Metadata variable names. (Only for longitudinal studies)
+9. Scale: The scale to apply to the permanova. (Only for longitudinal studies)
+10. Min abundance: Min filtering value (default 0.0001)
+11. Min prevalence: Min filtering value (default 0.1)
+12. Max missing: Max percentage of values for a metadata variable that are missing (default 20%)
+13. Format: Format for the report (html or pdf)
+14. Top pathways: Max number of pathways to display for stratified abundance plots.
+15. Metadata categorical: Names of metadata variables that are categorical. (Only for stratified pathways plots)
+16. Metadata continuous: Names of the metadata variables that are continuous. (Only for stratified pathways plots)
+17. Metadata exclude: Exclude these variables from the metadata. (Only for stratified pathways plots)
+18. Introduction text: The text written to the beginning of the report.
+
+**Workflow steps**
+
+1. Identify data file types.
+
+    * Reads through the start of all tsv/txt and biom files in the input folder to find taxonomic profiles, pathway abundances, ec abundances, etc (with files of unknown referenced in the report with their name).
+    * Looks for files of those types for both wmgx and 16s.
+    * Requires at least one taxonomic profile.
+
+2. Determine the study type based on the input data files (ie. wmgx or 16s).
+3. If biom files are provided, convert biom files to tsv.
+4. Checks for sample names in feature tables that are not included in metadata file. Throws an error to request the user add the sample names to the metadata file.
+5. Create feature tables for all input files. These files are compatible with all downstream processing tasks (ie maaslin2, humann_barplots).
+6. Run maaslin2 on all input files.
+7. If pathway abundance files are provided, generate stratified pathways plots.
+
+    * For the top N pathways (based on significant results from maaslin2), generate plot for each categorical metadata variable.
+
+8. If longitudinal, run the permanova script.
+9. If not longitudinal, run the beta diversity script to generate stacked barplots of R-squared and P Values for adonis run on each metadata variable and again on all variables.
+10. Create a report with figures.
+
+**Run a demo**
+
+Using the HMP2 (IBDMDB) merged data files provided by the project, run the stats workflow to generate a report.
+
+`$ biobakery_workflows stats --input HMP2_data/ --input-metadata HMP2_metadata.tsv --fixed-effects="diagnosis,dysbiosisnonIBD,dysbiosisUC,dysbiosisCD,antibiotics,age" --random-effects="site,subject" --project-name HMP2 --output HMP2_stats_output --longitudinal  --static-covariates="age" --permutations 10 --maaslin-options="reference='diagnosis,nonIBD'"`
+
+The files in the input folder are the taxonomic profile, pathway abundance, and ec abundance. Fixed and random effect variables are specified for the MaAsLin2 runs. The metadata type selected is longitudinal and the static covariate in the study metadata is "age". The reduced number of permutations reduces the runtime for the three permanova calculations. The reference is provided to MaAsLiN2 since diagnosis is a variable with more than two levels to set the reference variable of "nonIBD" for the module and the resulting box plots.
+
+Outputs include a folder for each MaAsLin2 run plus figures folders and a report.
 
 
 # WDL workflow

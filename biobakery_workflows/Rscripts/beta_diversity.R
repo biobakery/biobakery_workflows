@@ -61,8 +61,18 @@ options <- optparse::add_option(options,
     dest = "data_type",
     default = "relab",
     help = paste0("The type of data provided",
-    "(examples are 'relab', 'present absent', and 'rna dna norm')",
+    "(examples are 'relab', 'present_absent', and 'rna_dna_norm')",
     " [ Default: %default ]"
+    )
+)
+
+options <- optparse::add_option(options,
+    c("-o", "--adonis_method"),
+    type = "character",
+    dest = "adonis_method",
+    default = "",
+    help = paste0("The method to use for the adnois",
+    " [ Default: based on data_type (bray for relab) ]"
     )
 )
 
@@ -133,11 +143,16 @@ filtered_metadata <- filtered_metadata[ , !(names(filtered_metadata) %in% c("sub
 if (current_args$data_type == "relab") {
   method = "bray"
 }
-if (current_args$data_type == "present absent") {
+if (current_args$data_type == "present_absent") {
   method="jaccard"
 }
-if (current_args$data_type == "dna rna norm") {
+if (current_args$data_type == "dna_rna_norm") {
   method="euclidean"
+}
+
+# use the user provided method, if set
+if (current_args$adonis_method != "") {
+  method=current_args$adonis_method
 }
 
 # check if valid data type was set

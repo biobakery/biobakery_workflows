@@ -75,12 +75,12 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
 
     return metadata_variables
 
-def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
+def run_permanova(workflow,static_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
     # if longitudinal run the permanova
 
     permanova_plots = {}
-    if individual_covariates:
-        optional_args=" --individual_covariates "+individual_covariates
+    if static_covariates:
+        optional_args=" --static_covariates "+static_covariates
     else:
         sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
 
@@ -104,8 +104,13 @@ def run_permanova(workflow,individual_covariates,maaslin_tasks_info,input_metada
     return additional_stats_tasks,permanova_plots
 
 
-def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks,random_effects,metadata_variables):
+def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks,random_effects,metadata_variables,adonis_method):
     # if not longitudinal then run univariate plus multivariate if set
+
+    # if set, add the adnois method
+    optional_args=""
+    if adonis_method:
+        optional_args=" --adonis_method "+adonis_method
 
     # construct the equation for the model based on the fixed effects provided
     ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
@@ -130,7 +135,7 @@ def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,
 
         additional_stats_tasks.append(
             workflow.add_task(
-                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]",
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]"+optional_args,
                 depends=[maaslin_tasks_info[filetype][0],input_metadata],
                 targets=univariate,
                 args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
@@ -143,7 +148,7 @@ def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,
 
             additional_stats_tasks.append(
                 workflow.add_task(
-                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'",
+                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'"+optional_args,
                     depends=[maaslin_tasks_info[filetype][0],input_metadata],
                     targets=multivariate,
                     args=[univariate_script_path,min_abundance,min_prevalence,max_missing,covariate_equation],
@@ -500,13 +505,14 @@ def identify_data_files(folder,input_file_type,metadata_input):
                     if not (file_type_split_info[0] in ["wmgx","16s"] and file_type_split_info[1] in ["function","taxonomy"] and len(file_type_split_info)==3):
                         sys.exit("Please provide a valid file type of the format [wmgx|16s]_[function|taxonomy]_[type*] (valid functions types [ec|pathway|gene|module] and valid taxonomy types for 16s [otu|asv]) replacing the input provided of '"+file_type+"'.")
 
-                if file_type:
-                    if not file_type in data_files_types:
-                        data_files_types[file_type]=[]
-                    data_files_types[file_type].append(file)
-                else:
-                    sys.exit("Unknown file type for filename {}. Please provide the file type with the option --input-file-type='filename,type' or remove the file from the input folder.".format(file))
-    
+                if not file_type:
+                    # set the file type to the name of the file if not identified (remove underscore as those are used for file type info)
+                    file_type = os.path.basename(file).split(".")[0].replace("_","")
+
+                if not file_type in data_files_types:
+                    data_files_types[file_type]=[]
+                data_files_types[file_type].append(file)
+  
     return data_files_types
 
 def get_package_file(basename, type="template"):
