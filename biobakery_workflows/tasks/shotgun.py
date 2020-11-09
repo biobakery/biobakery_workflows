@@ -275,7 +275,7 @@ def quality_control(workflow, input_files, extension, output_folder, threads, da
     return kneaddata_output_fastq, kneaddata_read_count_file
 
 
-def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension,already_profiled=False):
+def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension,already_profiled=False,options=""):
     """Taxonomic profile for whole genome shotgun sequences
     
     This set of tasks performs taxonomic profiling on whole genome shotgun
@@ -342,7 +342,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
     if not already_profiled:
         for sample, depend_fastq, target_profile, target_sam in zip(sample_names, input_files, metaphlan_output_files_profile, metaphlan_output_files_sam):
             workflow.add_task_gridable(
-                "metaphlan [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]]",
+                "metaphlan [depends[0]] --input_type [args[2]] --output_file [targets[0]] --samout [targets[1]] --nproc [args[0]] --no_map --tmp_dir [args[1]] "+options,
                 depends=[depend_fastq,TrackedExecutable("metaphlan")],
                 targets=[target_profile,target_sam],
                 args=[threads,metaphlan_output_folder,input_type],
