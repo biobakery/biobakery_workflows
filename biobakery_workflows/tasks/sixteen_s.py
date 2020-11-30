@@ -31,7 +31,7 @@ from biobakery_workflows import utilities
 from biobakery_workflows import files
 
     
-def quality_control(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len):
+def quality_control(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, fastq_ascii):
     """ Create a quality report, filter fastq, and then truncate fasta files
     
     Args:
@@ -54,14 +54,14 @@ def quality_control(workflow, method, fastq_file, output_folder, threads, maxee,
     qc_report = quality_report(workflow, method, fastq_file, output_folder, threads)
         
     # filter the fastq file with the maxee scores
-    filtered_truncated_fasta, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len)
+    filtered_truncated_fasta, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, fastq_ascii)
     
     # truncate reads based on length
-    truncated_fastas = truncate(workflow, method, [fasta], output_folder, threads, trunc_len)
+    truncated_fastas = truncate(workflow, method, [fasta], output_folder, threads, trunc_len, fastq_ascii)
     
     return filtered_truncated_fasta, truncated_fastas[0], fasta
 
-def merge_samples_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads):
+def merge_samples_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads, fastq_ascii):
     """ Merge the files, first if pairs, then rename sequence ids to match sample id
          Then merge all files into a single fastq file
 
@@ -83,7 +83,7 @@ def merge_samples_and_rename(workflow, method, input_files, extension, output_fo
     """
     
     # merge the files, if pairs, and then rename sequence ids to match sample ids
-    renamed_files = merge_pairs_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads)
+    renamed_files = merge_pairs_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads, fastq_ascii)
     
     # merge the renamed files into a single fastq file
     all_samples_fastq = merge_fastq(workflow, renamed_files, output_folder)
@@ -91,7 +91,7 @@ def merge_samples_and_rename(workflow, method, input_files, extension, output_fo
     return all_samples_fastq
 
 
-def merge_pairs(task, method, threads=1):
+def merge_pairs(task, method, threads=1, fastq_ascii="33"):
     """ Merge the pair files, allowing for empty input files 
     
         Args:
@@ -112,17 +112,17 @@ def merge_pairs(task, method, threads=1):
         # using usearch
         else:
             command="export OMP_NUM_THREADS=[args[0]]; " +\
-            "usearch -fastq_mergepairs [depends[0]] -reverse [depends[1]]  -fastqout [targets[0]] -fastqout_notmerged_fwd [targets[1]] -threads [args[0]]"
+            "usearch -fastq_mergepairs [depends[0]] -reverse [depends[1]]  -fastqout [targets[0]] -fastqout_notmerged_fwd [targets[1]] -threads [args[0]] -fastq_ascii [args[1]]"
         
     else:
         # the input files are empty, create empty output files
         command="touch [targets[0]] [targets[1]]"
         
     # run the task
-    return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, args=threads)
+    return_code = utilities.run_task(command, depends=task.depends, targets=task.targets, args=[threads, fastq_ascii])
     
 
-def merge_pairs_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads):
+def merge_pairs_and_rename(workflow, method, input_files, extension, output_folder, pair_identifier, threads, fastq_ascii):
     """ Merge the files if pairs and rename sequence ids to match sample id
     
     Args:
@@ -183,7 +183,7 @@ def merge_pairs_and_rename(workflow, method, input_files, extension, output_fold
                     name="vsearch_fastq_mergepairs")
             else:
                 workflow.add_task(
-                    utilities.partial_function(merge_pairs,method="userach", threads=threads),
+                    utilities.partial_function(merge_pairs,method="userach", threads=threads, fastq_ascii=fastq_ascii),
                     depends=[read1, read2, TrackedExecutable("usearch")],
                     targets=[stitched_output, unjoined_output],
                     name="usearch_fastq_mergepairs")
@@ -275,7 +275,7 @@ def quality_report(workflow, method, fastq_file, output_folder, threads, qmax=45
     return qc_file
   
   
-def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, qmax=45):
+def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, fastq_ascii, qmax=45):
     """ Filter the fastq files using the maxee value
     
     Args:
@@ -310,10 +310,10 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
     else:
         workflow.add_task(
             "export OMP_NUM_THREADS=[args[0]]; "+\
-            "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]] -fastq_trunclen [args[2]] -fastq_qmax [args[3]]",
+            "usearch -fastq_filter [depends[0]] -fastq_maxee [args[1]] -fastaout [targets[0]] -threads [args[0]] -fastaout_discarded [targets[1]] -fastq_trunclen [args[2]] -fastq_qmax [args[3]] -fastq_ascii [args[4]]",
             depends=[fastq_file,TrackedExecutable("usearch")],
             targets=[fasta_filtered_file, fasta_discarded_file],
-            args=[threads, maxee, trunc_len, qmax],
+            args=[threads, maxee, trunc_len, qmax, fastq_ascii],
             name="usearch_fastq_filter")
     
     # create a fasta file of all reads (included the discarded
@@ -326,7 +326,7 @@ def filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, tr
     return fasta_filtered_file, fasta_file
 
 
-def truncate(workflow, method, input_files, output_folder, threads, trunc_len):
+def truncate(workflow, method, input_files, output_folder, threads, trunc_len, fastq_ascii):
     """ Truncate the fasta sequences by length
     
     Args:
@@ -356,10 +356,10 @@ def truncate(workflow, method, input_files, output_folder, threads, trunc_len):
             name="vsearch_fastx_truncate")
     else:
         workflow.add_task_group(
-            "usearch -fastx_truncate [depends[0]] -trunclen [args[0]] -fastaout [targets[0]]",
+            "usearch -fastx_truncate [depends[0]] -trunclen [args[0]] -fastaout [targets[0]] -fastq_ascii [args[1]]",
             depends=input_files,
             targets=output_files,
-            args=trunc_len,
+            args=[trunc_len, fastq_ascii],
             name="usearch_fastx_truncate")
 
     return output_files

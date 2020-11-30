@@ -60,6 +60,7 @@ workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pa
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
 workflow.add_argument("picrust-version", desc="the picrust version to use", default="2")
+workflow.add_argument("fastq-ascii", desc="the coding of Q scores", default="33", choices=["33","64"])
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -156,11 +157,11 @@ else:
     # call vsearch or usearch workflow tasks
     #  merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
     all_samples_fastq = sixteen_s.merge_samples_and_rename(
-    	       workflow, args.method, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads)
+    	       workflow, args.method, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads, args.fastq_ascii)
 
 	# add quality control tasks: generate qc report, filter by maxee, and truncate
     filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
-            workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max)
+            workflow, args.method, all_samples_fastq, args.output, args.threads, args.maxee, args.trunc_len_max, args.fastq_ascii)
 
     # taxonomic profiling (pick otus and then align creating otu tables, closed and open reference)
     try:
