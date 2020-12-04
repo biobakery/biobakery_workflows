@@ -137,7 +137,7 @@ filtered_metadata <- filtered_metadata[sorted_samples, , drop = FALSE]
 filtered_data <- filtered_data[sorted_samples, , drop = FALSE]
 
 # remove subject from metadata if present
-filtered_metadata <- filtered_metadata[ , !(names(filtered_metadata) %in% c("subject"))]
+filtered_metadata <- filtered_metadata[ , !(names(filtered_metadata) %in% c("subject")), drop = FALSE]
 
 # compute univariate beta diversity
 if (current_args$data_type == "relab") {
