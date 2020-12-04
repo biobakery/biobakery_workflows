@@ -213,7 +213,7 @@ to optimize the workflow run based on your computing resources.
 
 ### Whole Metagenome Shotgun (wmgx)
 
-![](https://github.com/biobakery/biobakery_workflows/blob/master/images/135637619-111018-wms_workflow.png)
+![](https://github.com/biobakery/biobakery_workflows/blob/master/images/wms_workflow.png)
 
 **Super Tasks**
 
