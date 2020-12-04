@@ -105,7 +105,7 @@ workflow:
     find the installed databases.
 -   The database install requires some of the dependencies from the
     corresponding workflow to build and install the databases. For
-    example, installing the wmgx databases requires HUMAnN2, KneadData,
+    example, installing the wmgx databases requires HUMAnN, KneadData,
     StrainPhlAn and bowtie2. Please install these dependencies prior to
     installing the databases. Depending on the method used to install
     the workflows you might need to install these dependencies in
@@ -116,7 +116,7 @@ workflow:
 Alternatively the databases can be installed manually and then
 referenced with environment variables. The shotgun data processing
 workflows require Kneaddata (human, human transcriptome, and SILVA),
-HUMAnN2 (utility mapping, nucleotide, and protein databases), and
+HUMAnN (utility mapping, nucleotide, and protein databases), and
 StrainPhlAn (reference and marker) databases while the 16s data
 processing workflow requires the GreenGenes fasta, taxonomy, and usearch
 formatted files.
@@ -228,11 +228,11 @@ to optimize the workflow run based on your computing resources.
 1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
-2.  [MetaPhlAn2](https://github.com/biobakery/metaphlan)
-    1.  Install with: `$ conda install -c bioconda metaphlan2`
-3.  [HUMAnN2](https://github.com/biobakery/humann)
-    1.  Install with: `$ conda install -c biobakery humann2` OR
-        `$ pip install humann2`
+2.  [MetaPhlAn](https://github.com/biobakery/metaphlan)
+    1.  Install with: `$ conda install -c bioconda metaphlan`
+3.  [HUMAnN](https://github.com/biobakery/humann)
+    1.  Install with: `$ conda install -c biobakery humann` OR
+        `$ pip install humann`
 4.  [StrainPhlAN](http://segatalab.cibio.unitn.it/tools/strainphlan/)
     1.  Install with: `$ conda install -c bioconda strainphlan`
 5.  [Prokka](https://github.com/tseemann/prokka) (Only required if
@@ -307,11 +307,11 @@ The workflow by default expects input files with the extension
 1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
-2.  [MetaPhlAn2](https://github.com/biobakery/metaphlan)
-    1.  Install with: `$ conda install -c bioconda metaphlan2`
-3.  [HUMAnN2](https://github.com/biobakery/humann)
-    1.  Install with: `$ conda install -c biobakery humann2` OR
-        `$ pip install humann2`
+2.  [MetaPhlAn](https://github.com/biobakery/metaphlan)
+    1.  Install with: `$ conda install -c bioconda metaphlan`
+3.  [HUMAnN](https://github.com/biobakery/humann)
+    1.  Install with: `$ conda install -c biobakery humann` OR
+        `$ pip install humann`
 4.  [StrainPhlAN](http://segatalab.cibio.unitn.it/tools/strainphlan/)
     1.  Install with: `$ conda install -c bioconda strainphlan`
 
@@ -564,8 +564,8 @@ input.
         or paired end).
     2.  A file of the merged taxonomic profile.
     3.  A file of the merged pathway abundances (normalized).
-    4.  A file of the HUMAnN2 alignment counts.
-    5.  A file of the HUMAnN2 feature counts.
+    4.  A file of the HUMAnN alignment counts.
+    5.  A file of the HUMAnN feature counts.
     6.  The log file from the corresponding data processing workflow.
 2.  The project name.
 3.  Introduction text (Optional).
@@ -641,13 +641,13 @@ Please note this workflow is currently only for paired end reads.
     4.  A file of the merged pathway abundances for the wmgx samples
         (normalized).
     5.  The log file from the corresponding data processing workflow.
-    6.  A file of the HUMAnN2 alignment counts for the wmgx samples
+    6.  A file of the HUMAnN alignment counts for the wmgx samples
         (Optional).
-    7.  A file of the HUMAnN2 feature counts for the wmgx samples
+    7.  A file of the HUMAnN feature counts for the wmgx samples
         (Optional).
-    8.  A file of the HUMAnN2 alignment counts for the wmtx samples
+    8.  A file of the HUMAnN alignment counts for the wmtx samples
         (Optional).
-    9.  A file of the HUMAnN2 feature counts for the wmtx samples
+    9.  A file of the HUMAnN feature counts for the wmtx samples
         (Optional).
     10. A file of the gene families RNA/DNA normalized (Optional).
     11. A file of the ECs RNA/DNA normalized (Optional).
@@ -867,7 +867,7 @@ There are an additional nine optional inputs for each workflow run. These are no
 * MaxMemGB_FunctionalProfileTasks (Default = 24 Gb): This is the max memory to request for each HUMAnN v2.0 task. This might need to be increased for larger input files.
 * MaxMemGB_QualityControlTasks (Default = 8 Gb): This is the max memory to request for each Kneaddata task. This might need to be increased for larger input files.
 * MaxMemGB_TaxonomicProfileTasks (Default = 24 Gb): This is the max memory to request for each MetaPhlAn v2.0 task. This might need to be increased for larger input files.
-* preemptibleAttemptsOverride (Default = 2): This setting determines how many times to rerun one of the main compute tasks (HUMAnN2 v2.0, Kneaddata, and MetaPhlAn v2.0) on pre-emptible instances. If set to zero a non-pre-emptible instance will be used.
+* preemptibleAttemptsOverride (Default = 2): This setting determines how many times to rerun one of the main compute tasks (HUMAnN v3.0, Kneaddata, and MetaPhlAn v3.0) on pre-emptible instances. If set to zero a non-pre-emptible instance will be used.
 
 There are two additional optional inputs that can be used to run with one or more custom databases.
 * customQCDB1 (Default = None) : Provide a custom bowtie2 formatted datatabase to use for the quailty control step instead of the default human reference.
