@@ -1,7 +1,6 @@
 
 # bioBakery workflows History #
 
-
 ## v3.0.0-alpha.6 07-10-2020 ##
 
 * Add custom usearch db option plus log to vis report for 16s.
@@ -36,6 +35,12 @@
 
 * Updated to run with HUMAnN v3 and MetaPhlAn v3 (including StrainPhlAn).
 * Modified to run with python 3.
+
+## v0.15.1 06-09-2020 ##
+
+* Added check in visualization to throw error if feature only has one type.
+* Increase metaphlan2 and strainphlan task times for larger grid runs.
+* Added option for custom databases for 16s usearch/vsearch methods.
 
 ## v0.15.0 04-24-2020 ##
 

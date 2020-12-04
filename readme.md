@@ -8,11 +8,11 @@ automatically generated for most data types, which include 16S
 amplicons, metagenomes, and metatranscriptomes. Workflows are run
 directly from the command line and tasks can be imported to create your
 own custom workflows. The workflows and tasks are built with
-[AnADAMA2](https://bitbucket.org/biobakery/anadama2) which allows for
+[AnADAMA2](https://github.com/biobakery/anadama2) which allows for
 parallel task execution locally and in a grid compute environment.
 
 For additional information, see the
-[bioBakery workflows tutorial](https://bitbucket.org/biobakery/biobakery/wiki/biobakery_workflows).
+[bioBakery workflows tutorial](https://github.com/biobakery/biobakery/wiki/biobakery_workflows).
 
 Table of contents
   * [Getting Started](#getting-started)
@@ -44,7 +44,7 @@ Table of contents
 
 ### Requirements
 
-1.  [AnADAMA2](https://bitbucket.org/biobakery/anadama2) (installed
+1.  [AnADAMA2](https://github.com/biobakery/anadama2) (installed
     automatically)
 2.  Python v2.7+
 3.  See individual workflows and tasks for additional software
@@ -194,7 +194,7 @@ to make use of existing computing resources:
     default grid.
 
 For additional workflow options, see the
-[AnADAMA2](https://bitbucket.org/biobakery/anadama2) user manual.
+[AnADAMA2](https://github.com/biobakery/anadama2) user manual.
 
 ------------------------------------------------------------------------
 
@@ -208,7 +208,7 @@ command line with the following syntax:
 `$ biobakery_workflows $WORKFLOW --input $INPUT --output $OUTPUT`
 
 See the section on
-[parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+[parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
 to optimize the workflow run based on your computing resources.
 
 ### Whole Metagenome Shotgun (wmgx)
@@ -217,20 +217,20 @@ to optimize the workflow run based on your computing resources.
 
 **Super Tasks**
 
-1.  [Quality control](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-quality-control)
-2.  [Taxonomic profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-taxonomic-profiling)
-3.  [Functional profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-functional-profiling)
+1.  [Quality control]
+2.  [Taxonomic profiling]
+3.  [Functional profiling]
 4.  Strain profiling
 5.  Assembly (not run by default)
 
 **Requirements**
 
-1.  [KneadData](https://bitbucket.org/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
-2.  [MetaPhlAn2](https://bitbucket.org/biobakery/metaphlan2)
+2.  [MetaPhlAn2](https://github.com/biobakery/metaphlan)
     1.  Install with: `$ conda install -c bioconda metaphlan2`
-3.  [HUMAnN2](https://bitbucket.org/biobakery/humann2)
+3.  [HUMAnN2](https://github.com/biobakery/humann)
     1.  Install with: `$ conda install -c biobakery humann2` OR
         `$ pip install humann2`
 4.  [StrainPhlAN](http://segatalab.cibio.unitn.it/tools/strainphlan/)
@@ -268,7 +268,7 @@ The workflow by default expects input files with the extension
     containing your fastq input files and `$OUTPUT` with the path to the
     folder to write output files.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 -   The workflow runs with the default settings for all main tool
     subtasks. These settings will work for most data sets. However, if
@@ -297,19 +297,19 @@ The workflow by default expects input files with the extension
 
 **Super Tasks**
 
-1.  [Quality control](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-quality-control)
-2.  [Taxonomic profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-taxonomic-profiling)
-3.  [Functional profiling](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!shotgun-functional-profiling)
+1.  [Quality control]
+2.  [Taxonomic profiling]
+3.  [Functional profiling]
 4.  Strain profiling
 
 **Requirements**
 
-1.  [KneadData](https://bitbucket.org/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
-2.  [MetaPhlAn2](https://bitbucket.org/biobakery/metaphlan2)
+2.  [MetaPhlAn2](https://github.com/biobakery/metaphlan)
     1.  Install with: `$ conda install -c bioconda metaphlan2`
-3.  [HUMAnN2](https://bitbucket.org/biobakery/humann2)
+3.  [HUMAnN2](https://github.com/biobakery/humann)
     1.  Install with: `$ conda install -c biobakery humann2` OR
         `$ pip install humann2`
 4.  [StrainPhlAN](http://segatalab.cibio.unitn.it/tools/strainphlan/)
@@ -350,7 +350,7 @@ The workflow by default expects input files with the extension
     `$INPUT_MAPPING` with your file of mapping between the metagenome
     and metatranscriptome samples.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 -   The workflow runs with the default settings for all main tool
     subtasks. These settings will work for most data sets. However, if
@@ -438,7 +438,7 @@ The workflow by default expects input files with the extension
     plus additional tasks. To run with USEARCH as the executable add the
     option `--method dada2`.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 -   The workflow runs with default settings for the subtasks. Depending
     on the lengths of your reads you might want to change the setting
@@ -474,7 +474,7 @@ assessment, and then creates a final annotated contig file.
 
 **Requirements**
 
-1.  [KneadData](https://bitbucket.org/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
 2.  [SPAdes](http://cab.spbu.ru/software/spades/)
@@ -515,7 +515,7 @@ provide the identifier string for the first file in the set of pairs.
     output files. The `$SPECIES` input string is used as the basename of
     the contig files.
 -   See the section on
-    [parallelization options](https://bitbucket.org/biobakery/biobakery_workflows/wiki/Home#!parallelization-options)
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
 
 Visualization Workflows
@@ -838,10 +838,10 @@ The WDL is located in this repository at: `biobakery_workflows/workflows/wtx.wdl
 
 **Inputs**
 
-The workflow has ten required inputs and nine optional inputs. 
+The workflow has eleven required inputs and nine optional inputs. 
 
 *Required inputs*
-The workflow requires ten inputs for each run. Five inputs can be modified for each project where as the other five inputs would only be modified with software version changes.
+The workflow requires eleven inputs for each run. Five inputs can be modified for each project where as the other six inputs would only be modified with software version changes.
 * ProjectName : The name of the sequencing project. The final output report and zip archive will use this name (only alphanumeric characters allowed).
 * InputExtension : The extension for all of the input files (example ".fastq.gz")
 * InputRead1Identifier : The identifier in the file name for those files that are read1 (example ".R1")
@@ -851,10 +851,11 @@ The workflow requires ten inputs for each run. Five inputs can be modified for e
 To generate a file to use as input for InputRead1Files, follow the Terra instructions https://support.terra.bio/hc/en-us/articles/360033353952-Creating-a-list-file-of-reads-for-input-to-a-workflow , adding to command #2 the InputRead1Identifier and the InputExtension. For example with InputRead1Identifier = ".R1" and InputExtension = ".fastq.gz" command #2 would now be 
 `gsutil ls gs:/your_data_Google_bucket_id/ | grep ".fastq.gz" | grep ".R1" > ubams.list` . Also since for this workflow we are looking for fastq or fastq.gz input files you might change the name of the file list in this command from "ubams.list" to "fastq_list.txt" . 
 
-These five required inputs would only be modified if the versions of Kneaddata and HUMAnN v2 change. These are databases that are specifically tied to the software version.
+These six required inputs would only be modified if the versions of Kneaddata and HUMAnN v2 change. These are databases that are specifically tied to the software version.
 * versionSpecificChocophlan : The Chocophlan database used by HUMAnN. This is located at `databases/humann/full_chocophlan_plus_viral.v0.1.1.tar.gz` in this workspace google bucket.
 * versionSpecifichumanDB : The human reference database used by Kneaddata. This is located at `databases/kneaddata/Homo_sapiens_hg37_human_contamination_Bowtie2_v0.1.tar.gz` in this workspace google bucket.
-* versionSpecificrrnaDB : The human rrna reference database used by Kneaddata. This is located at `databases/kneaddata/Homo_sapiens_hg38_transcriptome_Bowtie2_v0.1.tar.gz` in this workspace google bucket. 
+* versionSpecifictranscriptDB : The human rrna reference database used by Kneaddata. This is located at `databases/kneaddata/Homo_sapiens_hg38_transcriptome_Bowtie2_v0.1.tar.gz` in this workspace google bucket. 
+* versionSpecificrrnaDB : The SILVA rrna reference database used by Kneaddata. This is located at `databases/kneaddata/SILVA_128_LSUParc_SSUParc_ribosomal_RNA_v0.2.tar.gz` in this workspace google bucket. 
 * versionSpecificUniRef90 : The uniref90 reference database used by HUMAnN. This is located at `databases/humann/uniref90_annotated_1_1.tar.gz` in this workspace google bucket.
 * versionSpecificUtilityMapping : The utility mapping database used by HUMAnN. This is located at `databases/humann/full_utility_mapping_1_1.tar.gz` in this workspace google bucket.
 
@@ -914,9 +915,10 @@ IBDMDB (6 sample) demo run configuration:
 Required software specific databases:
 * versionSpecificChocophlan : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/full_chocophlan_plus_viral.v0.1.1.tar.gz"`
 * versionSpecifichumanDB : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/Homo_sapiens_hg37_human_contamination_Bowtie2_v0.1.tar.gz"`
+* versionSpecifictranscriptDB: `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/SILVA_128_LSUParc_SSUParc_ribosomal_RNA_v0.2.tar.gz"`
 * versionSpecificrrnaDB : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/Homo_sapiens_hg38_transcriptome_Bowtie2_v0.1.tar.gz"` 
 * versionSpecificUniRef90 : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/uniref90_annotated_1_1.tar.gz"`
-* versionSpecificUtilityMapping : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/full_utility_mapping_1_1.tar.gz"`
+* versionSpecificUtilityMapping : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/humann/full_utility_mapping_1_1.tar.gz"``
 
 Optional custom databases (to run with one or more custom databases instead of the default references used in QC)
 * customQCDB1 : `"gs://fc-7130738a-5cde-4238-b00a-e07eba6047f2/databases/kneaddata/Clupus_bowtie2.tar.gz"`

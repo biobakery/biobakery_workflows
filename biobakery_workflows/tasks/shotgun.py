@@ -346,7 +346,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
                 depends=[depend_fastq,TrackedExecutable("metaphlan")],
                 targets=[target_profile,target_sam],
                 args=[threads,metaphlan_output_folder,input_type],
-                time="3*60 if file_size('[depends[0]]') < 25 else 4*3*60", # 3 hours or more depending on input file size
+                time="2*4*60 if file_size('[depends[0]]') < 25 else 5*3*60", # 3 hours or more depending on input file size
                 mem="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024", # 12 GB or more depending on input file size
                 cores=threads, # time/mem based on 8 cores
                 name=utilities.name_task(sample,"metaphlan"))
@@ -806,7 +806,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             depends=sam,
             targets=markers,
             args=[os.path.dirname(markers),threads],
-            time=30, # 30 minutes
+            time=3*60, # 3 hours
             mem=5*1024, # 5 GB
             cores=threads,
             name=utilities.name_task(sample_name,"strainphlan_sample2markers"))
