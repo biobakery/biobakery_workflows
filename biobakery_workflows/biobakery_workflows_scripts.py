@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-bioBakery Workflows : A collection of AnADAMA2 workflows
+bioBakery Workflows scripts : A collection of AnADAMA2 workflows
 
 Copyright (c) 2016 Harvard School of Public Health
 
@@ -26,71 +26,71 @@ THE SOFTWARE.
 
 
 import sys
-
-try:
-    import argparse
-except ImportError:
-    sys.exit("Please upgrade to python v2.7")
-
+import argparse
 import os
 import subprocess
 
-VERSION = "3.0.0-alpha.6"
+from . import utilities
 
-WORKFLOW_FOLDER="workflows"
-WORKFLOW_EXTENSION=".py"
+VERSION = "3.0.0-alpha.4"
+SCRIPTS_FOLDER="Rscripts"
+VIS_SCRIPT_EXTENSION="_vis.R"
+SCRIPT_EXTENSION=".R"
 
-def find_workflows():
-    """ Search for installed workflows """
+def find_vis_scripts():
+    """ Search for installed vis scripts """
     
-    workflow_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)),WORKFLOW_FOLDER)
-    workflows={}
-    for file in os.listdir(workflow_folder):
-        # look for files with the expected extension
-        if file.endswith(WORKFLOW_EXTENSION):
-            # do not need to add full path as these are also installed as executable scripts
-            workflows[file.replace(WORKFLOW_EXTENSION,"")]=file
+    scripts={}
+    scripts_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)),SCRIPTS_FOLDER)
+    for file in os.listdir(scripts_folder):
+        if file.endswith(VIS_SCRIPT_EXTENSION):
+            scripts[file.replace(SCRIPT_EXTENSION,"")]=file.replace(SCRIPT_EXTENSION,"")
     
-    return workflows
+    return scripts
 
-def parse_arguments(args,workflows):
+def parse_arguments(args,scripts):
     """ 
     Parse the arguments from the user
     """
     parser = argparse.ArgumentParser(
-        description= "bioBakery workflows: A collection of AnADAMA2 workflows\n",
+        description= "bioBakery workflows visualization scripts\n",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        prog="biobakery_workflows")
+        prog="biobakery_workflows_scripts")
     parser.add_argument(
         "--version",
         action="version",
         version="%(prog)s v"+VERSION)
     parser.add_argument(
-        "workflow",
-        choices=workflows,
-        help="workflow to run")
+        "script",
+        choices=scripts,
+        help="visualization script to run")
     
     return parser.parse_args(args)
 
-def run_workflow(args, workflow):
-    """ Run the workflow with the arguments provided """
+def run_script(args, script):
+    """ Run the script with the arguments provided """
+
+    # check for visualization script
+    visualization_script = utilities.get_package_file(script, "Rscript")
+
+    if not visualization_script:
+        sys.exit("ERROR: Unable to find script "+script)
     
     try:
-        command = [workflow]+args[2:]
+        command = [visualization_script]+args[2:]
         subprocess.call(command)
     except ( subprocess.CalledProcessError, EnvironmentError):
-        sys.exit("Error: Unable to run workflow: " +" ".join(command))
+        sys.exit("Error: Unable to run: " +" ".join(command))
 
 
 def main():
-    # find workflows
-    workflows=find_workflows()
+    scripts=find_vis_scripts()
     
-    # parse the arguments (only the first two as the rest are for the workflow)
-    args=parse_arguments(sys.argv[1:2],workflows.keys())
+    # parse the arguments (only the first two as the rest are for the script)
+    args=parse_arguments(sys.argv[1:2],scripts.keys())
     
-    # run the workflow (providing all of the arguments)
-    run_workflow(sys.argv,workflows[args.workflow])
+    # run the script (providing all of the arguments)
+    run_script(sys.argv,scripts[args.script])
     
     
 if __name__ == "__main__":

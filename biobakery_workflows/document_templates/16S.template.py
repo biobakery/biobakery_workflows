@@ -22,6 +22,7 @@ trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
 percent_identity = workflow_settings.get("percent_identity","UNK")
 min_cluster_size = workflow_settings.get("min_size","UNK")
 dada_db = workflow_settings.get("dada_db", "UNK").upper()
+usearch_db = workflow_settings.get("usearch_db", "UNK").lower()
 
 method=vars["method"]
 
@@ -34,10 +35,15 @@ if method == "dada2" or method == "its":
 else:
     columns, samples, data = document.read_table(vars["read_count_table"])
     
+    if "silva" in usearch_db:
+        db_info = "SILVA database"
+    else:
+        db_info = "GreenGenes 16S RNA Gene Database version 13_8"
+
     usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
         follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
         + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
-        + "\n\nThe GreenGenes 16S RNA Gene Database version 13_8 was used for taxonomy prediction.\
+        + "\n\nThe " + db_info + " was used for taxonomy prediction.\
         \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Filtered reads were \
         used to generate the OTUs. Reads not passing quality control were kept and used in the step \
         assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"

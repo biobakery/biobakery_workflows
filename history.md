@@ -1,6 +1,41 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.6 07-10-2020 ##
+
+* Add custom usearch db option plus log to vis report for 16s.
+* Small change to allow for python 3 compatibility with vis with metadata (average barplots).
+
+## v3.0.0-alpha.5 07-06-2020 ##
+
+* Change default version run for PICRUSt from 1 to 2.
+* Update reverse comp barcodes script for python 3.
+* Update gzip file read for python 3.
+* Add check for feature with single metadata type to vis.
+* Update strainphlan vis script for latest demo inputs (Thanks, Kelsey!).
+* For PICRUSt 2 inputs remove taxonomy column to fit new requirements.
+
+## v3.0.0-alpha.4 06-01-2020 ##
+
+* Add utility visualization scripts, two from breadcrumbs, and new exe to access Rscripts directly.
+
+## v3.0.0-alpha.3 05-28-2020 ##
+
+* One change in utility function (map to list) for python 3 compatibility with visualization workflows.
+
+## v3.0.0-alpha.2 05-19-2020 ##
+
+* Fix join taxonomic tables script to allow for scientific notation in MetaPhlAn v3 outputs.
+
+## v3.0.0-alpha.1 05-06-2020 ##
+
+* Modifications to work with StrainPhlAn v3.
+
+## v3.0.0-alpha 05-05-2020 ##
+
+* Updated to run with HUMAnN v3 and MetaPhlAn v3 (including StrainPhlAn).
+* Modified to run with python 3.
+
 ## v0.15.1 06-09-2020 ##
 
 * Added check in visualization to throw error if feature only has one type.

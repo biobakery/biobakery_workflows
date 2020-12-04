@@ -24,7 +24,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #' This report section contains information about the taxonomy
 #' for all DNA samples. These samples were
-#' run through [MetaPhlAn2](http://huttenhower.sph.harvard.edu/metaphlan2).
+#' run through [MetaPhlAn2](http://huttenhower.sph.harvard.edu/metaphlan).
 
 #' Taxonomic abundances are passed through a basic filter requiring each species or genus
 #' to have at least <% print(min_abundance)%> % abundance in at least 
@@ -40,17 +40,17 @@ samples=[s.replace("_taxonomic_profile","") for s in samples]
 
 # filter to only include data for the species level
 # get the rows with species but not strain information
-species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,data)
+species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,data)
 
 # now filter species also applying min abundance and min samples
-filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,
+filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=min_abundance, min_samples=min_samples)
 
 # filter to only include genus level
-genera_taxonomy, genera_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,data,level=5)
+genera_taxonomy, genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,data,level=5)
 
 # filter genus level plus min abundance and min samples
-filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_metaphlan2_format(taxonomy,
+filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=min_abundance, min_samples=min_samples, level=5)
 
 #' A total of <% print(len(species_taxonomy)) %> species and <% print(len(genera_taxonomy)) %> genera were identified. 

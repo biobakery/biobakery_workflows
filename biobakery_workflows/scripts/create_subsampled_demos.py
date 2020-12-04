@@ -7,28 +7,28 @@ import subprocess
 import random
 
 try:
-    from humann2 import config
-    from humann2 import store
+    from humann import config
+    from humann import store
 except ImportError:
-    sys.exit("Please install humann2.")
+    sys.exit("Please install humann.")
 
 # This script will take as input the bowtie2 alignment file from
-# running humann2 along with a list of species and pathways. The selection list
+# running humann along with a list of species and pathways. The selection list
 # will be formatted as two tab delimited columns of species \t pathway. 
 # To include all pathways for a species use the key "ALL". It can
 # have headers or comments starting with "#". The script will output a 
 # reduced fasta (or fastq if selected) file that only includes reads that 
-# will map to those species and pathways when running the fastq file as input to humann2.
+# will map to those species and pathways when running the fastq file as input to humann.
 
 # Please note since some pathways have reactions that overlap with other pathways
 # more than just the selected pathways may appear for a specific species. 
 
-# If running humann2 with the output from the script does not identify any species
-# in the metaphlan2 step, recreate the humann2 input file with this script adding
+# If running humann with the output from the script does not identify any species
+# in the metaphlan step, recreate the humann input file with this script adding
 # the option "--add-unintegrated". This option will add reads that map to a species
-# in the humann2 nucleotide alignment step but the gene families associated with these
+# in the humann nucleotide alignment step but the gene families associated with these
 # alignments are not included in any pathways (and are counted as "unintegrated" in 
-# the humann2 pathway abundance output file).
+# the humann pathway abundance output file).
 
 def parse_arguments(args):
     """ 
@@ -184,7 +184,7 @@ def main():
     reads_to_gene_familes={}
     reaction_totals={}
     
-    # open a fasta file to write the species specific sequences for input to metaphlan2
+    # open a fasta file to write the species specific sequences for input to metaphlan
     if args.add_markers:
         species_fasta_file=args.output+".species_specific_reads.fasta"
         species_fasta_file_handle=open(species_fasta_file,"w")
@@ -205,7 +205,7 @@ def main():
             for reaction in reactions_database.find_reactions(gene_family):
                 reaction_totals[reaction]=reaction_totals.get(reaction,0)+1.0
                 
-        # if this is a species in the list, and we are adding markers, write this to the fasta file for input to metaphlan2
+        # if this is a species in the list, and we are adding markers, write this to the fasta file for input to metaphlan
         if args.add_markers and species in genefamilies.keys():
             write_sequence(species_fasta_file_handle, read_name, sequence, quality_scores, "fasta")
            
@@ -228,19 +228,19 @@ def main():
         print("Finding reads mapped to markers with MetaPhlAn2")
         
         print("Running MetaPhlAn2")
-        metaphlan2_marker_file=species_fasta_file+".marker_alignments.tsv"
-        metaphlan2_bowtie2_file=species_fasta_file+".bowtie2.tsv"
+        metaphlan_marker_file=species_fasta_file+".marker_alignments.tsv"
+        metaphlan_bowtie2_file=species_fasta_file+".bowtie2.tsv"
         
         try:
-            # remove the bowtie2 output file if it exists to prevent metaphlan2 error
-            os.remove(metaphlan2_bowtie2_file)
+            # remove the bowtie2 output file if it exists to prevent metaphlan error
+            os.remove(metaphlan_bowtie2_file)
         except EnvironmentError:
             pass
         
-        output=subprocess.check_output(["metaphlan2.py","--input_type","fasta",species_fasta_file,"-t","reads_map","-o",metaphlan2_marker_file,"--bowtie2out",metaphlan2_bowtie2_file])
+        output=subprocess.check_output(["metaphlan","--input_type","fasta",species_fasta_file,"-t","reads_map","-o",metaphlan_marker_file,"--bowtie2out",metaphlan_bowtie2_file])
         
         # read through the file to identify the maker reads to add
-        for line in open(metaphlan2_marker_file):
+        for line in open(metaphlan_marker_file):
             if not line.startswith("#"):
                 read_name, taxon = line.rstrip().split("\t")
                 species = taxon.split("|")[-1]
@@ -253,7 +253,7 @@ def main():
                     all_reads_mapping_to_markers.add(read_name)
                     
         # read through the file to identify the name of the marker the reads map to
-        for line in open(metaphlan2_bowtie2_file):
+        for line in open(metaphlan_bowtie2_file):
             try:
                 read_name, marker_name = line.rstrip().split("\t")
             except IndexError:

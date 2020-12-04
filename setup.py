@@ -12,15 +12,9 @@ try:
 except ImportError:
     sys.exit("Please install setuptools.")
 
-# try to import urllib.request.urlretrieve for python3
-try:
-    from urllib.request import urlretrieve
-except ImportError:
-    from urllib import urlretrieve
-    
 from glob import glob    
 
-VERSION = "0.15.1"
+VERSION = "3.0.0-alpha.6"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
@@ -43,7 +37,7 @@ setuptools.setup(
         "The workflows and tasks are built with AnADAMA2 which allows for parallel "+\
         "task execution locally and in a grid compute environment.",
     url="http://huttenhower.sph.harvard.edu/biobakery_workflows",
-    keywords=['microbial','microbiome','bioinformatics','microbiology','metagenomic','metatranscriptomic','anadama2','humann2','metaphlan2','strainphlan'],
+    keywords=['microbial','microbiome','bioinformatics','microbiology','metagenomic','metatranscriptomic','anadama2','humann','metaphlan','strainphlan'],
     platforms=['Linux','MacOS'],
     classifiers=[
         "Programming Language :: Python",
@@ -60,6 +54,7 @@ setuptools.setup(
         'console_scripts': [
             'biobakery_workflows = biobakery_workflows.biobakery_workflows:main',
             'biobakery_workflows_databases = biobakery_workflows.biobakery_workflows_databases:main',
+            'biobakery_workflows_scripts = biobakery_workflows.biobakery_workflows_scripts:main',
         ]},
     package_data={
         'biobakery_workflows' : [

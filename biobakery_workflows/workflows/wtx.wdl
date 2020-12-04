@@ -9,6 +9,7 @@ workflow workflowMTX {
     String inputRead2Identifier
     String inputExtension
     String ProjectName
+    String AdapterType
     
     # Database locations
     File versionSpecifichumanDB
@@ -32,10 +33,10 @@ workflow workflowMTX {
   }
   
   # Set the docker tags
-  String kneaddataDockerImage = "biobakery/kneaddata:0.7.9"
-  String metaphlanDockerImage = "biobakery/metaphlan2:2.7.7_cloud_r1"
-  String humannDockerImage = "biobakery/humann2:2.8.2_cloud"
-  String workflowsDockerImage = "biobakery/workflows:0.14.3_cloud_r3"
+  String kneaddataDockerImage = "biobakery/kneaddata:0.7.10"
+  String metaphlanDockerImage = "biobakery/metaphlan:3.0.1"
+  String humannDockerImage = "biobakery/humann:3.0.0.a.4"
+  String workflowsDockerImage = "biobakery/workflows:3.0.0.a.6_anadama0.7.9_no_metaphlan_db"
   
   # Set the default data type
   String dataTypeSetting = select_first([dataType, "mtx"])
@@ -49,23 +50,24 @@ workflow workflowMTX {
   # Output file names to match AnADAMA2 workflow output names
   String QCReadCountFileName = "kneaddata_read_count_table.tsv"  
 
-  String JoinedTaxonomicProfilesFileName="metaphlan2_taxonomic_profiles.tsv"
-  String TaxonomicProfilesCountsFileName="metaphlan2_species_counts_table.tsv"
+  String JoinedTaxonomicProfilesFileName="metaphlan_taxonomic_profiles.tsv"
+  String TaxonomicProfilesCountsFileName="metaphlan_species_counts_table.tsv"
 
   String JoinGeneFamilesOutFileName="genefamilies.tsv"
   String JoinECsOutFileName="ecs.tsv"
+  String JoinKOsOutFileName="kos.tsv"
   String JoinPathwaysOutFileName="pathabundance.tsv"
 
   String JoinGeneFamilesRelabOutFileName="genefamilies_relab.tsv"
   String JoinECsRelabOutFileName="ecs_relab.tsv"
   String JoinPathwaysRelabOutFileName="pathabundance_relab.tsv"
 
-  String CountRelabGenesFileName="humann2_genefamilies_relab_counts.tsv"
-  String CountRelabECsFileName="humann2_ecs_relab_counts.tsv"
-  String CountRelabPathwaysFileName="humann2_pathabundance_relab_counts.tsv"
+  String CountRelabGenesFileName="humann_genefamilies_relab_counts.tsv"
+  String CountRelabECsFileName="humann_ecs_relab_counts.tsv"
+  String CountRelabPathwaysFileName="humann_pathabundance_relab_counts.tsv"
 
-  String JoinedFeatureCountsFileName="humann2_feature_counts.tsv"
-  String FunctionalCountFileName = "humann2_read_and_species_count_table.tsv"
+  String JoinedFeatureCountsFileName="humann_feature_counts.tsv"
+  String FunctionalCountFileName = "humann_read_and_species_count_table.tsv"
   
   String VisualizationsFileName = ProjectName+"_visualizations"
   
@@ -78,7 +80,7 @@ workflow workflowMTX {
   
   # get the sample name and read2 file path
   scatter (read1 in inputRead1) {
-     Array[String] pairSet = [read1[0], sub(read1[0], inputRead1Identifier, inputRead2Identifier), sub(basename(read1[0]), inputRead1Identifier + inputExtension, "")]
+     Array[String] pairSet = [read1[0], sub(read1[0], inputRead1Identifier + inputExtension, inputRead2Identifier + inputExtension), sub(basename(read1[0]), inputRead1Identifier + inputExtension, "")]
   }
 
   Array[Array[String]] PairPaths = pairSet
@@ -92,6 +94,7 @@ workflow workflowMTX {
       rawfile1=ReadPair[0],
       rawfile2=ReadPair[1],
       sample=ReadPair[2],
+      adapterType=AdapterType,
       humanDB=versionSpecifichumanDB,
       transcriptDB=versionSpecifictrancriptDB,
       rrnaDB=versionSpecificrrnaDB,
@@ -130,13 +133,24 @@ workflow workflowMTX {
       }
 
       # regroup gene families to ECs
-      call RegroupECs {
+      call Regroup as RegroupECs {
         input:
         GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
         versionSpecificUtilityMapping=versionSpecificUtilityMapping,
         OutFileName=PairPaths[sample_index][2]+"_ecs.tsv",
-        humannDockerImage=humannDockerImage
+        humannDockerImage=humannDockerImage,
+        groupName="uniref90_level4ec"
       }
+      
+      # regroup gene families to KOs
+      call Regroup as RegroupKOs {
+        input:
+        GeneFamiliesFile=FunctionalProfile.GeneFamiliesFile,
+        versionSpecificUtilityMapping=versionSpecificUtilityMapping,
+        OutFileName=PairPaths[sample_index][2]+"_kos.tsv",
+        humannDockerImage=humannDockerImage,
+        groupName="uniref90_ko"
+      }      
    
       # compute relative abundance for gene families, ecs, and pathways
       call RenormTable as RenormTableGenes {
@@ -181,6 +195,13 @@ workflow workflowMTX {
       input:
       InFiles=RegroupECs.OutFile,
       OutFileName=JoinECsOutFileName,
+      humannDockerImage=humannDockerImage,
+      MaxMemGB=JoinNormMemDefault
+    }
+    call JoinTables as JoinKOs {
+      input:
+      InFiles=RegroupKOs.OutFile,
+      OutFileName=JoinKOsOutFileName,
       humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
@@ -261,11 +282,11 @@ workflow workflowMTX {
     workflowsDockerImage=workflowsDockerImage
   } 
   # join all taxonomic profiles, gene families, ecs, and pathways (including relative abundance files) from all samples
-  call JoinTables as JoinTaxonomicProfiles {
+  call JoinTaxonomicProfiles {
     input:
     InFiles=TaxonomicProfile.TaxonomicProfileFile,
     OutFileName=JoinedTaxonomicProfilesFileName,
-    humannDockerImage=humannDockerImage,
+    workflowsDockerImage=workflowsDockerImage,
     MaxMemGB=JoinNormMemDefault
   }
 
@@ -292,6 +313,7 @@ task QualityControl {
     File rawfile1
     File rawfile2
     String sample
+    String adapterType
     File humanDB
     File transcriptDB
     File rrnaDB
@@ -336,7 +358,7 @@ task QualityControl {
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options} --sequencer-source ~{adapterType}
     fi
     
     if [ ~{useCustomDB1} == 'no' ]; then
@@ -356,7 +378,7 @@ task QualityControl {
     
         #run kneaddata with two reference databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial --reference-db ~{humanDatabase} \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{options} --sequencer-source ~{adapterType}
     fi
     
     # gzip outputs to save space
@@ -394,10 +416,10 @@ task TaxonomicProfile {
   
   String tmpdir = "tmp/"
 
-  # create a temp directory and then run metaphlan2
+  # create a temp directory and then run metaphlan
   command {
     mkdir -p ${tmpdir}
-    metaphlan2.py ${QCFastqFile} --input_type multifastq --nproc 8 --no_map --tmp_dir ${tmpdir} \
+    metaphlan ${QCFastqFile} --input_type fastq --nproc 8 --no_map --tmp_dir ${tmpdir} \
     --output_file ${sample}.tsv
   }
     
@@ -427,18 +449,18 @@ task FunctionalProfile {
     Int? preemptibleAttemptsOverride
   }
 
-  Int mem = select_first([MaxMemGB, 24])
+  Int mem = select_first([MaxMemGB, 32])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
   String databases = "databases/"
 
-  # download the two reference databases and run humann2
+  # download the two reference databases and run humann
   command {
     mkdir -p ${databases}
-    humann2_databases --download chocophlan full ${databases} --database-location ${versionSpecificChocophlan}
-    humann2_databases --download uniref uniref90_diamond ${databases} --database-location ${versionSpecificUniRef90}
+    humann_databases --download chocophlan full ${databases} --database-location ${versionSpecificChocophlan}
+    humann_databases --download uniref uniref90_diamond ${databases} --database-location ${versionSpecificUniRef90}
 
-    humann2 --input ${QCFastqFile} --output ./ --taxonomic-profile ${TaxonomicProfileFile} --threads 8 --o-log ${sample}.log
+    humann --input ${QCFastqFile} --output ./ --taxonomic-profile ${TaxonomicProfileFile} --threads 8 --o-log ${sample}.log
     }
     
     output {
@@ -446,7 +468,7 @@ task FunctionalProfile {
       File PathwayAbundanceFile = "${sample}_pathabundance.tsv"
       File PathwayCoverageFile = "${sample}_pathcoverage.tsv"
       File LogFile = "${sample}.log"
-      Array[File] UnalignedReads = glob("${sample}_humann2_temp/*.fa") # Keep the unaligned reads after each mapping step
+      Array[File] UnalignedReads = glob("${sample}_humann_temp/*.fa") # Keep the unaligned reads after each mapping step
     }
 
   runtime {
@@ -458,22 +480,23 @@ task FunctionalProfile {
   }
 }
 
-task RegroupECs {
+task Regroup {
   input {
     File GeneFamiliesFile
     File versionSpecificUtilityMapping
     String OutFileName
     String humannDockerImage
+    String groupName
   }
-  
+
   String databases = "databases/"
 
   # download the utility databases and regroup to ECs
   command {
     mkdir -p ${databases}
-    humann2_databases --download utility_mapping full ${databases} --database-location ${versionSpecificUtilityMapping}
+    humann_databases --download utility_mapping full ${databases} --database-location ${versionSpecificUtilityMapping}
 
-    humann2_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups uniref90_level4ec
+    humann_regroup_table --input ${GeneFamiliesFile} --output ${OutFileName} --groups ${groupName}
   }
     
   output {
@@ -502,7 +525,7 @@ task RenormTable {
 
   # download the utility databases and renorm tables to relative abundance
   command {
-    humann2_renorm_table --input ${InFile} --output ${OutFileName} --units relab --special n
+    humann_renorm_table --input ${InFile} --output ${OutFileName} --units relab --special n
   }
 
   output {
@@ -544,6 +567,36 @@ task QCReadCount {
   }
 }
 
+task JoinTaxonomicProfiles {
+  input {
+    Array[File] InFiles
+    String OutFileName
+    String workflowsDockerImage
+    Int? MaxMemGB
+  }
+  
+  Int mem = select_first([MaxMemGB, 10])
+
+  # symlink input files to working directory
+  # join all files into a single file
+  command {
+    for infile in ${sep=' ' InFiles}; do ln -s $infile; done
+    
+    join_taxonomic_profiles.py --input ./ --output ${OutFileName} --file_name .tsv
+  }
+
+  output {
+    File OutFile = "${OutFileName}"
+  }
+
+  runtime {
+    docker: workflowsDockerImage
+    cpu: 1
+      memory: mem+" GB"
+      disks: "local-disk 10 SSD"
+  }
+}
+
 task JoinTables {
   input {
     Array[File] InFiles
@@ -559,7 +612,7 @@ task JoinTables {
   command {
     for infile in ${sep=' ' InFiles}; do ln -s $infile; done
     
-    humann2_join_tables --input ./ --output ${OutFileName} --file_name .tsv
+    humann_join_tables --input ./ --output ${OutFileName} --file_name .tsv
   }
 
   output {
@@ -586,7 +639,7 @@ task FunctionalCount {
   command {
     for infile in ${sep=' ' FunctionalLogFiles}; do ln -s $infile; done
   
-    get_counts_from_humann2_logs.py --input ./ --output ${OutFileName}
+    get_counts_from_humann_logs.py --input ./ --output ${OutFileName}
   }
 
   output {
@@ -643,9 +696,9 @@ task VisualizationReport {
   }
   
   String QCCountsFolder = "input/kneaddata/merged/"
-  String TaxonomyFolder = "input/metaphlan2/merged/"
-  String FunctionalMergedFolder = "input/humann2/merged/"
-  String FunctionalCountsFolder = "input/humann2/counts/"
+  String TaxonomyFolder = "input/metaphlan/merged/"
+  String FunctionalMergedFolder = "input/humann/merged/"
+  String FunctionalCountsFolder = "input/humann/counts/"
   
   # symlink files to the expected folder locations
   # run visualizations

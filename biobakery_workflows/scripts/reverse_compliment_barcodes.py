@@ -4,7 +4,6 @@
 
 import sys
 import os
-import string
 import argparse
 
 def parse_arguments(args):
@@ -48,7 +47,7 @@ def main():
     except EnvironmentError:
         sys.exit("Unable to open output file.")
 
-    rev_cmp=string.maketrans("ACGT","TGCA")
+    rev_cmp=str.maketrans("ACGT","TGCA")
 
     newlines=[]
     # write the header

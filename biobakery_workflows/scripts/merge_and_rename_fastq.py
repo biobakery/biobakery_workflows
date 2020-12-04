@@ -31,7 +31,7 @@ def catch_open(file,write=None):
         if write:
             file_handle=open_function(file,"w")
         else:
-            file_handle=open_function(file)
+            file_handle=open_function(file,"rt")
     except EnvironmentError:
         sys.exit("ERROR: Unable to open file: " + file)
         

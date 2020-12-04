@@ -29,6 +29,7 @@ import math
 import functools
 import time
 import collections
+import re
 
 from anadama2.tracked import TrackedDirectory
 
@@ -37,6 +38,482 @@ try:
     from urllib.request import urlretrieve
 except ImportError:
     from urllib import urlretrieve
+
+MIN_SAMPLES_DATA_FILE = 3
+TAXONOMY_DELIMITER = "|"
+MAX_METADATA_CATEGORIES = 10
+
+def get_metadata_variables(input_metadata, taxonomic_profile):
+    # get the metadata variables (might be columns or rows)
+
+    with open(taxonomic_profile) as file_handle:
+        samples = file_handle.readline().rstrip().split("\t")[1:-1]
+
+    row_names = []
+    col_names = []
+    with open(input_metadata) as file_handle:
+        for line in file_handle:
+            if not col_names:
+                col_names=line.rstrip().split("\t")[1:]
+            else:
+                row_names.append(line.rstrip().split("\t")[0])
+
+    if set(samples).intersection(set(col_names)):
+        metadata_variables = row_names
+    else:
+        metadata_variables = col_names
+
+    # check if samples start with numbers
+    start_number = [x for x in samples if x[0].isdigit()]
+    if start_number:
+        sys.exit("ERROR: Sample names start with a number: "+",".join(start_number)+".")
+
+    # check for duplicate samples
+    if len(list(set(samples))) != len(samples):
+        duplicate=[x for x, count in collections.Counter(samples).items() if count > 1]
+        sys.exit("ERROR: Duplicate samples in the taxonomic profile: "+",".join(duplicate)+".")
+
+    return metadata_variables
+
+def run_permanova(workflow,static_covariates,maaslin_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
+    # if longitudinal run the permanova
+
+    permanova_plots = {}
+    if static_covariates:
+        optional_args=" --static_covariates "+static_covariates
+    else:
+        sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
+
+    input_files=[]
+    permanova_plots["all"]=name_files("permanova.png",output,subfolder="permanova",create_folder=True)
+
+    for filetype in maaslin_tasks_info.keys():
+        input_files.append(maaslin_tasks_info[filetype][0])
+        permanova_plots[filetype]=name_files("permanova_{}.png".format(filetype),output,subfolder="permanova",create_folder=True)
+
+    permanova_script_path = get_package_file("permanova_hmp2", "Rscript")
+
+    additional_stats_tasks.append(
+        workflow.add_task(
+            "[args[0]] '[args[1]]' [depends[0]] [targets[0]] --scale [args[2]] --min_abundance [args[3]] --min_prevalence [args[4]] --permutations [args[5]] [args[6]]",
+            depends=[input_metadata]+input_files,
+            targets=list(permanova_plots.values()),
+            args=[permanova_script_path,",".join(input_files),scale,min_abundance,min_prevalence,permutations,optional_args],
+            name="hmp2_permanova"))
+
+    return additional_stats_tasks,permanova_plots
+
+
+def run_beta_diversity(workflow,maaslin_tasks_info,input_metadata,min_abundance,min_prevalence,max_missing,fixed_effects,output,additional_stats_tasks,random_effects,metadata_variables,adonis_method):
+    # if not longitudinal then run univariate plus multivariate if set
+
+    # if set, add the adnois method
+    optional_args=""
+    if adonis_method:
+        optional_args=" --adonis_method "+adonis_method
+
+    # construct the equation for the model based on the fixed effects provided
+    ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
+    covariate_equation=""
+    if len(ordered_fixed_effects) > 1:
+        covariate_equation=" + ".join(ordered_fixed_effects)
+
+    # determine the covariate equation from the metadata if not provided
+    if not covariate_equation and len(metadata_variables) > 1:
+        # discard subject if found
+        metadata_variables_set = set(metadata_variables)
+        metadata_variables_set.discard("subject")
+        fixed_effects = list(metadata_variables_set.difference(set(random_effects.split(","))))
+        # only include a multivariate equation if more than one variable
+        if len(fixed_effects) > 1:
+            covariate_equation=" + ".join(fixed_effects)
+
+    beta_diversity_plots = {"univariate": {}, "multivariate": {}}
+    univariate_script_path = get_package_file("beta_diversity", "Rscript")
+    for filetype in maaslin_tasks_info.keys():
+        univariate=name_files(filetype+"_univariate.png",output,subfolder="beta_diversity",create_folder=True)
+
+        additional_stats_tasks.append(
+            workflow.add_task(
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]]"+optional_args,
+                depends=[maaslin_tasks_info[filetype][0],input_metadata],
+                targets=univariate,
+                args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
+                name="beta_diversity_univarite_"+filetype))
+        beta_diversity_plots["univariate"][filetype]=univariate
+
+    if covariate_equation:
+        for filetype in maaslin_tasks_info.keys():
+            multivariate=name_files(filetype+"_multivariate.png",output,subfolder="beta_diversity",create_folder=True)
+
+            additional_stats_tasks.append(
+                workflow.add_task(
+                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --covariate_equation='[args[4]]'"+optional_args,
+                    depends=[maaslin_tasks_info[filetype][0],input_metadata],
+                    targets=multivariate,
+                    args=[univariate_script_path,min_abundance,min_prevalence,max_missing,covariate_equation],
+                    name="beta_diversity_multivariate_"+filetype))
+            beta_diversity_plots["multivariate"][filetype]=multivariate
+
+    return additional_stats_tasks,beta_diversity_plots,covariate_equation
+
+
+def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_metadata,metadata_exclude,metadata_categorical,metadata_continuous,top_pathways,maaslin_tasks_info,output):
+    # if pathways are provided then generate stratified plots
+
+    stratified_pathways_plots = []
+    stratified_plots_tasks = []
+
+    if pathabundance and study_type=="wmgx":
+        # read in the metadata to merge with the data for the barplot script
+        metadata=read_metadata(input_metadata, pathabundance,
+            name_addition="_Abundance", ignore_features=metadata_exclude)
+
+        metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
+        # get all continuous or samples ids and remove (as they are not to be used for the plots)
+        metadata_exclude=metadata_exclude+[x for x,y in filter(lambda x: x[1] == "con", metadata_labels.items())]
+        for metadata_row in metadata[1:]:
+            if len(list(set(metadata_row[1:]))) > MAX_METADATA_CATEGORIES:
+                metadata_exclude+=[metadata_row[0]]
+        metadata_exclude=list(set(metadata_exclude))
+        metadata=read_metadata(input_metadata, pathabundance,
+            name_addition="_Abundance", ignore_features=metadata_exclude)
+        metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
+
+        humann_barplot_input = name_files("merged_data_metadata_input.tsv", output, subfolder="stratified_pathways", create_folder=True)
+        workflow.add_task(
+            partial_function(create_merged_data_file, metadata=metadata, name_addition="_Abundance"),
+            depends=pathabundance,
+            targets=humann_barplot_input)
+
+        # only include the categorical metadata
+        metadata_row_names=[row[0] for row in metadata[1:] if row[0] in metadata_labels.keys()]
+        metadata_end=metadata_row_names[-1]
+        for i in range(top_pathways):
+
+            new_pathways_plot=name_files("stratified_pathways_{0}.jpg".format(i), output, subfolder="stratified_pathways")
+            stratified_plots_tasks.append(workflow.add_task(
+                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=list(metadata_labels.keys())),
+                depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
+                targets=new_pathways_plot,
+                name="run_humann_barplot_pathway_{0}".format(i)))
+            stratified_pathways_plots.append(new_pathways_plot)
+
+    return stratified_pathways_plots,stratified_plots_tasks
+
+
+def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects,maaslin_options=""):
+    # Run maaslin on all files in input set
+    
+    maaslin_tasks=[]
+    maaslin_optional_args=maaslin_options
+    # add comma if not included
+    if maaslin_optional_args and not maaslin_optional_args.startswith(","):
+        maaslin_optional_args=","+maaslin_optional_args
+
+    if transform:
+        maaslin_optional_args+=",transform='"+transform+"'"
+    if fixed_effects:
+        maaslin_optional_args+=",fixed_effects='"+fixed_effects+"'"
+    if random_effects:
+        maaslin_optional_args+=",random_effects='"+random_effects+"'"
+
+    for run_type, (maaslin_input_file, maaslin_heatmap, maaslin_results_table) in maaslin_tasks_info.items():
+        maaslin_tasks.append(
+            workflow.add_task(
+                "R -e \"library('Maaslin2'); results <- Maaslin2('[depends[0]]','[depends[1]]','[args[0]]'"+maaslin_optional_args+")\"",
+                depends=[maaslin_input_file, input_metadata],
+                targets=maaslin_results_table,
+                args=os.path.dirname(maaslin_results_table),
+                name="R_Maaslin2_{}".format(run_type)))
+
+    return maaslin_tasks
+
+def create_maaslin_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,other_data_files):
+    # For all input files based on type create feature tables for input to maaslin
+
+    taxon_feature=name_files("taxonomy_features.txt",output,subfolder="features",create_folder=True)
+    create_feature_table_tasks_info=[]
+    if study_type == "wmgx":
+        create_feature_table_tasks_info=[(taxonomic_profile,taxon_feature,"--sample-tag-column '_taxonomic_profile' --reduce-stratified-species-only")]
+    else:
+        # reformat this table to move the taxonomic column and sum for species if 16s data
+        workflow.add_task(
+            "trim_taxonomy.py --input [depends[0]] --output [targets[0]] --end-taxonomy-column 0",
+             depends=taxonomic_profile,
+             targets=taxon_feature)
+
+    maaslin_tasks_info={"taxonomy":(taxon_feature,name_files("heatmap.png", output, subfolder=os.path.join("maaslin2_taxa","figures")),
+        name_files("significant_results.tsv", output, subfolder="maaslin2_taxa"))}
+
+    if pathabundance:
+        pathabundance_feature=name_files("pathways_features.txt",output,subfolder="features",create_folder=True)
+        create_feature_table_tasks_info.append((pathabundance,pathabundance_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
+        maaslin_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.png", output, subfolder=os.path.join("maaslin2_pathways","figures")),
+            name_files("significant_results.tsv", output, subfolder="maaslin2_pathways"))
+
+    for newfile in other_data_files:
+        newfile_type = other_data_files[newfile]
+        new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
+        new_subfolder="maaslin2_"+newfile_type
+        create_feature_table_tasks_info.append((newfile,new_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
+        maaslin_tasks_info[newfile_type]=(new_feature,name_files("heatmap.png", output, subfolder=os.path.join(new_subfolder,"figures")),
+            name_files("significant_results.tsv", output, subfolder=new_subfolder))
+
+    for input_file, output_file, options in create_feature_table_tasks_info:
+        workflow.add_task(
+            "create_feature_table.py --input [depends[0]] --output [targets[0]] [args[0]]",
+            depends=input_file,
+            targets=output_file,
+            args=[options])
+
+    return maaslin_tasks_info
+
+def get_input_files_for_study_type(data_files, study_type):
+    # based on the type of study, find the input files in the input folder
+
+    # if study is of type "both" then first look for wmgx taxonomy file
+    taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=False)
+
+    if study_type=="wmgx" or (taxonomic_profile and study_type=="both"):
+        study_type="wmgx"
+
+        # get the paths for the optional files from the set of input files
+        pathabundance=find_data_file(data_files, "function_pathway", required=False)
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if not filename[0] in [taxonomic_profile,pathabundance]])
+
+    else:
+        taxonomic_profile=find_data_file(data_files,"16s_taxonomy",required=True)
+
+        # get the paths for the optional files from the set of input files
+        pathabundance=find_data_file(data_files,"function_pathway", required=False)
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if not filename[0] in [taxonomic_profile,pathabundance]])
+
+    return taxonomic_profile,pathabundance,other_data_files,study_type
+
+# create a merged metadata table to be used as input for humann_barplot
+def create_merged_data_file(task, metadata, name_addition):
+    # read in the pathabundance file
+    data = []
+    with open(task.depends[0].name) as file_handle:
+        samples = [i.split(name_addition)[0] for i in file_handle.readline().rstrip().split("\t")[1:]]
+        for line in file_handle:
+            line=line.rstrip().split("\t")
+            data.append(line)    
+
+    merged_data, metadata_samples=merge_metadata(metadata, samples, data)
+
+    with open(task.targets[0].name, "w") as file_handle:
+        header = "\t".join(["Feature"]+metadata_samples)+"\n"
+        file_handle.write(header)
+        for line in merged_data:
+            file_handle.write("\t".join(line)+"\n")
+
+
+# gather the top pathways to plot from maaslin2 outputs
+# only gather categorical metadata features
+def gather_top_N_associations_maaslin2_results(filename, N, categorical):
+    associations=[]
+    with open(filename) as file_handle:
+        for line in file_handle:
+            data = line.rstrip().split("\t")
+            associations.append([data[0], data[1]])
+
+    # use N+1 to allow for the header value
+    try:
+        selected_pathway, metadata_focus = associations[N+1]
+        while not metadata_focus in categorical:
+            N=N+1
+            selected_pathway, metadata_focus = associations[N+1]
+    except IndexError:
+        selected_pathway, metadata_focus = "", ""
+
+    return selected_pathway, metadata_focus
+
+def run_humann_barplot(task, number, metadata_end, categorical):
+    # determine the pathway name
+    try:
+        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number, categorical)
+    except IndexError:
+        original_selected_pathway, metadata_focus = None
+
+    if original_selected_pathway:
+        # only use pathway name and replace periods if present with dash
+        selected_pathway = original_selected_pathway
+        if not "-" in selected_pathway:
+            selected_pathway = "-".join(original_selected_pathway.split(".")[0:2])
+
+        if not "pwy" in selected_pathway.lower():
+            selected_pathway = "-".join(original_selected_pathway.split(".")[0:3])
+
+        run_task(
+            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]] && echo '[args[2]]' > [targets[1]]",
+            depends=task.depends,
+            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")],
+            args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
+    else:
+        run_task("touch [targets[0]] && touch [targets[1]]",
+            depends=task.depends,
+            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")])
+
+def find_data_file(data_files, type, required=False):
+    """ Return an error if the file of that type has not been found """
+
+    not_found = False
+    try:
+        file_name = data_files[type][0]
+    except KeyError:
+        not_found = True
+
+    if not_found:
+        # look for a partial key
+        for data_type in data_files.keys():
+            if data_type.startswith(type) or data_type.endswith(type):
+                file_name = data_files[data_type][0]
+                not_found = False
+
+    if not_found:
+        if required:
+            sys.exit("ERROR: A required file of type "+type+" can not be found in the input folder")
+        else:
+            file_name=""
+
+    return file_name
+
+def get_study_type(data_files):
+    """ Determine the type of study based on the data files """
+
+    types = [file_type.split("_")[0] for file_type in data_files.keys()]
+
+    type = set(types)
+    type.discard("both")
+
+    if "16s" in type and "wmgx" in type:
+        files = [key+"\t"+value[0] for key,value in data_files.items()]
+        sys.exit("ERROR: Input files found of multiple study types:" + ",".join(types)+"\n"+"\n".join(files))
+    elif "16s" in type:
+        return "16s"
+    elif "wmgx" in type:
+        return "wmgx"
+    elif "both" in types:
+        return "both"
+
+    return types[0]
+    
+
+def identify_data_files(folder,input_file_type,metadata_input):
+    """ For all files in the folder and subfolders, return all tab delimited files with their data type 
+
+        Args:
+            folder (string): The path to the main folder
+            input_file_type (array): The user provided file types
+            metadata_input (string): Full path to the user provided metadata file
+
+        Returns:
+            dict : A dictionary of data files organised by type 
+    """
+
+    class openfile_txt_and_biom_gz():
+        def __init__(self, filename):
+            self.filename = filename
+
+        def readline(self):
+            try:
+                line = self.lines.pop(0)
+            except IndexError:
+                line = ""
+            return line
+
+        def __enter__(self):
+            if self.filename.endswith(".biom"):
+                import biom
+                self.lines = biom.load_table(self.filename).to_tsv().split("\n")[:100]
+            elif self.filename.endswith(".gz"):
+                import gzip
+                self.lines = gzip.open(self.filename,"rt").readlines()[:100]
+            else:
+                self.lines = open(self.filename).readlines()[:100]
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.lines = []
+
+    # remove the path from the metadata input file
+    metadata_input = os.path.basename(metadata_input)
+
+    # set the user provided data file types
+    known_filetypes = dict([set.split(",") for set in input_file_type])
+
+    # get all of the files of the tab delimited type
+    data_files = []
+    for root, dir, files in os.walk(folder):
+        for file_name in files:
+            if file_name.endswith(".tsv") or file_name.endswith(".txt") or file_name.endswith(".biom") or file_name.endswith(".gz"):
+                data_files.append(os.path.join(root,file_name))
+
+    # determine the type of each file
+    data_files_types = {}
+    for file in data_files:
+
+        # ignore the metadata input file
+        if os.path.basename(file) == metadata_input:
+            continue
+
+        with openfile_txt_and_biom_gz(file) as file_handle:
+            file_type = None
+
+            # ignore all comment lines and header
+            header = file_handle.readline()
+            next_line = file_handle.readline()
+            while next_line.startswith("#"):
+                next_line = file_handle.readline()
+            header = next_line
+
+            # check this is a data file for at least a few samples
+            first_data_line = file_handle.readline()
+            data_info = first_data_line.split("\t")
+            if len(data_info) > MIN_SAMPLES_DATA_FILE + 1:
+                # remove stratification if present
+                if TAXONOMY_DELIMITER in data_info[0]:
+                    data_info[0]=data_info[0].split(TAXONOMY_DELIMITER)[0]                    
+                
+                # check the first column for the data type
+                if "." in data_info[0] and data_info[0].split(":")[0].replace(".","").isdigit():
+                    file_type = "wmgx_function_ec"
+                elif "pwy" in data_info[0].lower():         
+                    file_type = "both_function_pathway"
+                elif "k__" in data_info[0] or "s__" in data_info[0] or "g__" in data_info[0]:         
+                    file_type = "wmgx_taxonomy"
+                elif data_info[0].startswith("K0"):
+                    file_type = "16s_function_gene"
+                elif data_info[0].startswith("EC"):
+                    file_type = "16s_function_ec"
+                elif data_info[0].startswith("ko"):
+                    file_type = "16s_function_pathway"
+                elif data_info[0].startswith("M0"):
+                    file_type = "16s_function_module"
+                elif data_info[0].startswith("ASV") and data_info[-1].lower().startswith("k__"):
+                    file_type = "16s_taxonomy_asv"
+                elif data_info[-1].lower().startswith("k__"):
+                    file_type = "16s_taxonomy_otu"
+
+                # replace with user provided type, if set
+                if file in known_filetypes:
+                    # check for valid file type
+                    file_type = known_filetypes[file]       
+                    file_type_split_info = file_type.split("_")
+                    if not (file_type_split_info[0] in ["wmgx","16s"] and file_type_split_info[1] in ["function","taxonomy"] and len(file_type_split_info)==3):
+                        sys.exit("Please provide a valid file type of the format [wmgx|16s]_[function|taxonomy]_[type*] (valid functions types [ec|pathway|gene|module] and valid taxonomy types for 16s [otu|asv]) replacing the input provided of '"+file_type+"'.")
+
+                if not file_type:
+                    # set the file type to the name of the file if not identified (remove underscore as those are used for file type info)
+                    file_type = os.path.basename(file).split(".")[0].replace("_","")
+
+                if not file_type in data_files_types:
+                    data_files_types[file_type]=[]
+                data_files_types[file_type].append(file)
+  
+    return data_files_types
 
 def get_package_file(basename, type="template"):
     """ Get the full path to a file included in the installed python package.
@@ -59,7 +536,7 @@ def get_package_file(basename, type="template"):
 
     # get all of the templates in this folder
     package_install_folder=os.path.join(os.path.dirname(os.path.realpath(__file__)), subfolder)
-    found_files=filter(lambda file: file.endswith(extension),os.listdir(package_install_folder))
+    found_files=list(filter(lambda file: file.endswith(extension),os.listdir(package_install_folder)))
 
     # return the template with the name
     matching_file=list(filter(lambda file: file.startswith(basename+extension), found_files))
@@ -845,7 +1322,7 @@ def relative_abundance(data, percent=False):
                 new_value=0
             new_row.append(new_value)
         if percent:
-            new_row = map(lambda x: x * 100.0, new_row)
+            new_row = list(map(lambda x: x * 100.0, new_row))
         relab.append(new_row)
         
     return relab
@@ -1043,7 +1520,7 @@ def filter_taxa_abundance(taxonomy, data, min_abundance, min_samples):
     
     return filtered_taxonomy, filtered_data
 
-def filter_taxa_level_metaphlan2_format(taxonomy, data, min_abundance=None, min_samples=None, level=6):
+def filter_taxa_level_metaphlan_format(taxonomy, data, min_abundance=None, min_samples=None, level=6):
     """ Remove the taxons that are not a species level (or set a different level with keyword) from the data set.
         Also filter the species if filters are provided. Metaphlan2 format with "|" delimiters and tiered
         abundances (so genus level is split and repeated stratified by species).
@@ -1064,7 +1541,7 @@ def filter_taxa_level_metaphlan2_format(taxonomy, data, min_abundance=None, min_
             (list): A list of lists of the data.
             
         Example:
-            filter_taxa_level_metaphlan2_format(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]])
+            filter_taxa_level_metaphlan_format(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]])
     """
 
     taxonomic_levels=["|k__","|p__","|c__","|o__","|f__","|g__","|s__","|t__"]
@@ -1548,7 +2025,7 @@ def read_picard(file, threshold=20):
         
     return data, below_threshold
 
-def rank_species_average_abundance(file):
+def rank_species_average_abundance(file, id_index=-1, only_species=True):
     """ Read in a taxonomy file, and sort species by average abundance 
     
     Args:
@@ -1578,21 +2055,24 @@ def rank_species_average_abundance(file):
             column_names = []
         for line in file_handle:
             line=line.rstrip().split("\t")
-            taxonomy=line.pop(0).split("|")[-1]
+            taxonomy=line.pop(0).split("|")[id_index]
             data=[try_format_data(i) for i in line]
             try:
                 average=sum(data)/(len(data)*1.0)
             except ZeroDivisionError:
                 average=0
             # only store values for species
-            if taxonomy.startswith("s__"):
+            if only_species:
+                if taxonomy.startswith("s__"):
+                    species[taxonomy]=average
+            else:
                 species[taxonomy]=average
                 
     # sort the species from highest to lowest average abundance
     sorted_species = sorted(species, key=species.get, reverse=True)
     # if abundances are not provided then use original ordering
     if sum(species.values()) == 0:
-        sorted_species = species.keys()
+        sorted_species = list(species.keys())
     
     return sorted_species
 
@@ -1602,7 +2082,7 @@ def order_clade_list(task,clade_list,abundance_file,output_file):
     Args:
         task (anadama2.task): An instance of the task class.
         clade_list (string): The path to the file containing the strainphlan list of clades.
-        abundance_file (string): The path to the merged abundance file from metaphlan2.
+        abundance_file (string): The path to the merged abundance file from metaphlan.
         output_file (string): The file to write the ordered clade list.
         
     Requires:
@@ -1619,8 +2099,8 @@ def order_clade_list(task,clade_list,abundance_file,output_file):
     clades=set()
     with open(clade_list) as file_handle:
         for line in file_handle:
-            if line.startswith("s__"):
-                clades.add(line.rstrip().split(" ")[0])
+            if "s__" in line:
+                clades.add(line.strip().split("\t")[1].split(": in ")[0])
         
     # write out ordered species also included in clade list
     with open(output_file,"w") as file_handle:
