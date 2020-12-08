@@ -131,25 +131,25 @@ class ShotGun(Workflow):
     # set the taxonomy file names
     file_info["taxonomic_profile"]=FileInfo("metaphlan_taxonomic_profiles.tsv",subfolder=os.path.join("metaphlan","merged"),
         description=("A tab-delimited file with samples as columns and relative abundance as rows.",
-            "This file contains the merged taxonomic profiles computed by MetaPhlAn2 for all samples."))
+            "This file contains the merged taxonomic profiles computed by MetaPhlAn for all samples."))
     file_info["species_counts"]=FileInfo("metaphlan_species_counts_table.tsv",subfolder=os.path.join("metaphlan","merged"),
         description=("A tab-delimited file with samples as rows and counts as columns.",
             "This file contains the counts of total species for each sample using the ",
-            "species identified by MetaPhlAn2."))
+            "species identified by MetaPhlAn."))
     
     # set the merged feature file names
     file_info["genefamilies"]=FileInfo("genefamilies.tsv",subfolder=os.path.join("humann","merged"),
         description=("A tab-delimited file with samples as columns and gene families ",
             "as rows. This file is a merged set of gene families for all samples ",
-            "computed by HUMAnN2. This file contains stratified counts as RPKs."))
+            "computed by HUMAnN. This file contains stratified counts as RPKs."))
     file_info["ecs"]=FileInfo("ecs.tsv", subfolder=os.path.join("humann","merged"),
         description=("A tab-delimited file with samples as columns and ecs as rows. ",
             "This file is a merged set of ecs for all samples generated from the gene ",
-            "families computed by HUMAnN2. This file contains stratified counts as RPKs."))
+            "families computed by HUMAnN. This file contains stratified counts as RPKs."))
     file_info["pathabundance"]=FileInfo("pathabundance.tsv", subfolder=os.path.join("humann","merged"),
         description=("A tab-delimited file with samples as columns and pathways ",
             "as rows. This file is a merged set of pathway abundances for all ",
-            "samples computed by HUMAnN2. This file contains stratified counts ",
+            "samples computed by HUMAnN. This file contains stratified counts ",
             "of non-normalized abundances."))
     
     # set the normed feature file names
@@ -158,7 +158,7 @@ class ShotGun(Workflow):
     file_info["pathabundance_relab"]=FileInfo("pathabundance_relab.tsv", subfolder=os.path.join("humann","merged"),
         description=("A tab-delimited file with samples as columns and pathways ",
                 "as rows. This file is a merged set of pathway abundances for all ",
-                "samples computed by HUMAnN2. This file contains stratified counts ",
+                "samples computed by HUMAnN. This file contains stratified counts ",
                 "of relative abundances."))
     
     # set the feature count file names
@@ -170,10 +170,10 @@ class ShotGun(Workflow):
     file_info["feature_counts"]=FileInfo("humann_feature_counts.tsv", subfolder=os.path.join("humann","counts"),
         description=("A tab-delimited file with samples as rows and features ",
             "as columns. This file includes the total feature counts (non-stratified)",
-            "for the features computed by HUMAnN2 (genes, ecs, and pathways)."))
+            "for the features computed by HUMAnN (genes, ecs, and pathways)."))
     file_info["humann_read_counts"]=FileInfo("humann_read_and_species_count_table.tsv", subfolder=os.path.join("humann","counts"),
         description=("A tab-delimited file with samples as rows and counts as columns.",
-            "This file was created using the HUMAnN2 logs. It includes the total number ",
+            "This file was created using the HUMAnN logs. It includes the total number ",
             "of species used to generate the custom database, the total number of initial",
             "reads, and the total reads aligning for both search steps."))
     

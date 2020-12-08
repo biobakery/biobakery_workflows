@@ -24,7 +24,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #' This report section contains information about the taxonomy
 #' for all DNA samples. These samples were
-#' run through [MetaPhlAn2](http://huttenhower.sph.harvard.edu/metaphlan).
+#' run through [MetaPhlAn](http://huttenhower.sph.harvard.edu/metaphlan).
 
 #' Taxonomic abundances are passed through a basic filter requiring each species or genus
 #' to have at least <% print(min_abundance)%> % abundance in at least 

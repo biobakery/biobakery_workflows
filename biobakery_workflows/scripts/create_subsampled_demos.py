@@ -39,7 +39,7 @@ def parse_arguments(args):
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--input-sam",
-        help="the sam bowtie2 alignment temp file from running HUMAnN2\n[REQUIRED]",
+        help="the sam bowtie2 alignment temp file from running HUMAnN\n[REQUIRED]",
         metavar="<input.sam>",
         required=True)
     parser.add_argument(
@@ -73,16 +73,16 @@ def parse_arguments(args):
         default=100)
     parser.add_argument(
         "--add-markers",
-        help="add in the reads that align to markers for the selected species using MetaPhlAn2\n[OPTIONAL]",
+        help="add in the reads that align to markers for the selected species using MetaPhlAn\n[OPTIONAL]",
         action="store_true")
     parser.add_argument(
         "--min-markers",
-        help="the minimum number of reads that map to markers for each species using MetaPhlAn2\n[OPTIONAL]",
+        help="the minimum number of reads that map to markers for each species using MetaPhlAn\n[OPTIONAL]",
         type=int,
         default=20)
     parser.add_argument(
         "--min-reads-per-marker",
-        help="the minimum number of reads per marker for each species using MetaPhlAn2\n[OPTIONAL]",
+        help="the minimum number of reads per marker for each species using MetaPhlAn\n[OPTIONAL]",
         type=int,
         default=5)
     parser.add_argument(
@@ -225,9 +225,9 @@ def main():
     read_to_marker_name={}
     all_reads_mapping_to_markers=set()
     if args.add_markers:
-        print("Finding reads mapped to markers with MetaPhlAn2")
+        print("Finding reads mapped to markers with MetaPhlAn")
         
-        print("Running MetaPhlAn2")
+        print("Running MetaPhlAn")
         metaphlan_marker_file=species_fasta_file+".marker_alignments.tsv"
         metaphlan_bowtie2_file=species_fasta_file+".bowtie2.tsv"
         

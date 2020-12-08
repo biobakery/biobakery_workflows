@@ -22,7 +22,7 @@ SAM_SEQ_INDEX = 9
 workflow = Workflow()
 
 # input folder should have sam alignment files from metaphlan run
-workflow.add_argument("pkl-database", desc="MetaPhlAn2 pkl database", default="metaphlan_db/mpa_v30_CHOCOPhlAn_201901.pkl")
+workflow.add_argument("pkl-database", desc="MetaPhlAn pkl database", default="metaphlan_db/mpa_v30_CHOCOPhlAn_201901.pkl")
 workflow.add_argument("species-list", desc="the list of species to pull reads for", default="species_list.txt")
 workflow.add_argument("input-tag-extension", desc="the file name tag and extension", default="_bowtie2.sam")
 args = workflow.parse_args()

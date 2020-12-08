@@ -18,7 +18,7 @@ def parse_arguments(args):
     Parse the arguments from the user
     """
     parser = argparse.ArgumentParser(
-        description= "Reads the HUMAnN2 logs and prints a table of read counts\n",
+        description= "Reads the HUMAnN logs and prints a table of read counts\n",
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "-i", "--input", 

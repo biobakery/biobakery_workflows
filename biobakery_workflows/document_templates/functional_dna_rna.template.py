@@ -69,7 +69,7 @@ show_norm_ratio=False
 if vars["genefamilies_norm_ratio"] and vars["ecs_norm_ratio"] and vars["paths_norm_ratio"]:
     show_norm_ratio=True 
 
-norm_intro="The heatmaps show RNA normalized to DNA for the three features computed by HUMAnN2: gene families, ecs and pathways."
+norm_intro="The heatmaps show RNA normalized to DNA for the three features computed by HUMAnN: gene families, ecs and pathways."
 norm_intro+=" Note the most abundant DNA features are not necessarily those with the highest transcription (RNA) levels."
 
 #' <% if show_norm_ratio and pdf_format: print("\clearpage") %>

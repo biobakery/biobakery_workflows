@@ -154,7 +154,7 @@ def main():
     # check required dependencies are installed for wmgx installs
     dependencies=[]
     if "wmgx" in args.install:
-        dependencies=[("humann_databases","HUMAnN2"),("kneaddata_database","Kneaddata"),
+        dependencies=[("humann_databases","HUMAnN"),("kneaddata_database","Kneaddata"),
             ("strainphlan","StrainPhlAn"),("bowtie2-inspect","Bowtie2")]
     elif "usearch" in args.install:
         dependencies=[("usearch","usearch")]    

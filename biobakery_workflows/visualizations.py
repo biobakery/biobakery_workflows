@@ -629,12 +629,12 @@ class ShotGun(Workflow):
     
     # add captions for functional data section
     captions["functional_intro"]="This report section contains preliminary "+\
-        "exploratory figures that summarize HUMAnN2 functional profiling of "+\
-        "all samples. HUMAnN2 performs species-specific and species-agnostic "+\
+        "exploratory figures that summarize HUMAnN functional profiling of "+\
+        "all samples. HUMAnN performs species-specific and species-agnostic "+\
         " quantification of gene families, EC enzyme modules, and pathways, "+\
         "using the UniRef and MetaCyc databases. For more information on "+\
         "functional profiling and the databases used, see websites for "+\
-        "[HUMAnN2](http://huttenhower.sph.harvard.edu/humann), "+\
+        "[HUMAnN](http://huttenhower.sph.harvard.edu/humann), "+\
         "[UniRef](http://www.uniprot.org/help/uniref), "+\
         "and [MetaCyc](https://metacyc.org/)."
         
@@ -649,11 +649,11 @@ class ShotGun(Workflow):
         
     captions["feature_detection"]="Feature detection as a function of sequencing "+\
         "depth. Effect of sample sequencing depth on the ability to detect "+\
-        "microbiome functional features in {seq_type} sequence data. HUMAnN2 "+\
+        "microbiome functional features in {seq_type} sequence data. HUMAnN "+\
         "functional profiling of {seq_short_type} quality filtered reads was performed on "+\
         "individual samples in species-specific mode (blue), i.e. nucleotide "+\
         "alignment against pangenomes of species identified in the sample "+\
-        "with MetaPhlAn2, and in combined species-specific and -agnostic "+\
+        "with MetaPhlAn, and in combined species-specific and -agnostic "+\
         "(orange) mode, in which reads not matching any pangenome reference "+\
         "sequences were subjected to translated searching against the "+\
         "UniRef90 database. Each profiled sample is represented by a "+\
@@ -664,7 +664,7 @@ class ShotGun(Workflow):
         "prior to clustering. The color bar represents relative abundances on a {norm} scale."  
         
     captions["scatter_reads_aligned"]="Number of aligned reads in species-specific "+\
-        "(nucleotide search) and species-agnostic (translated search) HUMAnN2 mode "+\
+        "(nucleotide search) and species-agnostic (translated search) HUMAnN mode "+\
         "as a function of input reads."
         
     captions["scatter_features"]="Detection of UniRef90 gene families, enzyme modules,"+\
