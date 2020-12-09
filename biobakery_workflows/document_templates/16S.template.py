@@ -267,7 +267,7 @@ visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted
 #+ echo=False
 max_sets_heatmap=25
 
-#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera and terminal taxa",method="Spearman and Bray-Curtis") %>
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera and terminal taxa",method="Spearman and Bray-Curtis", data_type="taxa") %>
 
 #' ## Genera
 

@@ -29,7 +29,7 @@ dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_an
 
 #' ## Pathway and ECs Abundance
 
-#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets,type="pathways",method="Spearman") %>
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets,type="pathways",method="Spearman", data_type="pathways") %>
 
 #+ echo=False
 # update the figure size based on output format for the heatmaps

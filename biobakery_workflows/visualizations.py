@@ -643,7 +643,7 @@ class ShotGun(Workflow):
         "with highest mean relative abundance among samples. "+\
         "The 'average linkage' clustering on the Euclidean "+\
         "distance metric was used to cluster samples. The {type} "+\
-        "dendrogram is based on pairwise ( {method} ) correlation between pathways. "+\
+        "dendrogram is based on pairwise ( {method} ) correlation between {data_type}. "+\
         "Samples are columns and pathway are rows. The heatmaps were generated "+\
         "with [Hclust2](https://bitbucket.org/nsegata/hclust2)."
         

@@ -130,7 +130,7 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, 
 
 #' ## Heatmaps
 
-#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="species and genera",method="Spearman and Bray-Curtis") %>
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="species and genera",method="Spearman and Bray-Curtis",data_type="taxa") %>
 
 #' ### Species
 
