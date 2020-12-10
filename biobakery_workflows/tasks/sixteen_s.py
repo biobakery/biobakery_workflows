@@ -51,7 +51,11 @@ def quality_control(workflow, method, fastq_file, output_folder, threads, maxee,
     """
     
     # generate a quality report that can be used again for filtering
-    qc_report = quality_report(workflow, method, fastq_file, output_folder, threads)
+    # increase qmax for old illumina format
+    if fastq_ascii != "33":
+        qmax=75
+
+    qc_report = quality_report(workflow, method, fastq_file, output_folder, threads, qmax)
         
     # filter the fastq file with the maxee scores
     filtered_truncated_fasta, fasta = filter_fastq(workflow, method, fastq_file, output_folder, threads, maxee, trunc_len, fastq_ascii)
