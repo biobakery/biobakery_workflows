@@ -163,6 +163,14 @@ if (! exists("method")) {
 bray = vegdist(filtered_data, method, na.remove = TRUE)
 
 if (current_args$covariate_equation != "") {
+
+  # check for filtered covariates
+  if (length(names(metadata)) != length(names(filtered_metadata)))
+  {
+    diff <- setdiff(names(metadata),names(filtered_metadata))
+    stop("Metadata covariates have been filtered from the data set that are included in the covariate equation: ", paste(diff, collapse=" , "))
+  }
+
   results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
   png(positional_args[3], res=150, height=800, width=1500)
   grid.table(as.data.frame(results$aov.tab))
