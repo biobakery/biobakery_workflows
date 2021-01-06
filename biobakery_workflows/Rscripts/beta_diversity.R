@@ -125,7 +125,7 @@ metadata_zeros <- metadata
 metadata_zeros[metadata_zeros == "UNK"] <- NA
 
 max_not_missing_values <- (( 100 - current_args$max_missing ) / 100 ) * nrow(metadata)
-filtered_metadata <- na.omit(metadata_zeros[ ,colSums(metadata_zeros != 0, na.rm=TRUE) > max_not_missing_values, drop = FALSE])
+filtered_metadata <- na.omit(metadata_zeros[ ,colSums(metadata_zeros !='NA', na.rm=TRUE) > max_not_missing_values, drop = FALSE])
 
 if ((ncol(filtered_metadata) < 1) || (nrow(filtered_metadata) < 1)) {
   stop("No metadata remain after filtering for max missing")
