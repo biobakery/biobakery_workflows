@@ -714,7 +714,7 @@ def build_otu_tables(workflow, reference_taxonomy, reference_fasta, reference_ma
     
     return closed_ref_tsv, closed_ref_fasta
 
-def run_picrust2(task, threads, otus=False):
+def run_picrust2(task, threads, otus=False, method="16s"):
     """ Run picrust2, first changing sequence ids to avoid all numeric (as per picrust2 tutorial) """
 
     picrust2_input_dir = os.path.dirname(task.depends[0].name)
@@ -743,13 +743,25 @@ def run_picrust2(task, threads, otus=False):
                 line="\t".join(line.split("\t")[:-1])+"\n"
                 file_handle_write.write(line)
 
-    utilities.run_task("remove_if_exists.py [args[0]] --is-folder ; picrust2_pipeline.py -s [args[1]] -i [args[2]] -o [args[0]] -p [args[3]]",
+    db_changes=""
+    if method == "its":
+        # change the databases to fungi
+        from picrust2.default import project_dir
+
+        trait_table = os.path.join(project_dir, "default_files","fungi","ec_ITS_counts.txt.gz")
+        reference_folder = os.path.join(project_dir, "default_files","fungi","fungi_ITS")
+        gene_table = os.path.join(project_dir, "default_files","fungi","ITS_counts.txt.gz")
+        pathway_map = os.path.join(project_dir, "default_files","pathway_mapfiles","metacyc_path2rxn_struc_filt_fungi_present.txt")
+
+        db_changes = " --custom_trait_tables {0} --min_reads 1 -r {1} --marker_gene_table {2} --pathway_map {3} --reaction_func {2} ".format(trait_table,reference_folder,gene_table,pathway_map)
+
+    utilities.run_task("remove_if_exists.py [args[0]] --is-folder ; picrust2_pipeline.py -s [args[1]] -i [args[2]] -o [args[0]] -p [args[3]] "+db_changes,
         depends=task.depends,
         targets=task.depends,
         args=[picrust2_output_dir, reformat_input_fasta, reformat_input_tsv, threads])
 
 
-def functional_profile(workflow, closed_reference_tsv, closed_reference_fasta, picrust_version, threads, output_folder, otus):
+def functional_profile(workflow, closed_reference_tsv, closed_reference_fasta, picrust_version, threads, output_folder, otus, method="16s"):
     """ Run picrust for functional profiling
     
     Args:
@@ -760,6 +772,7 @@ def functional_profile(workflow, closed_reference_tsv, closed_reference_fasta, p
         threads (int): The number of threads/cores for each task.
         output_folder (string): The path of the output folder.
         otus (bool): Are the inputs from OTUs (so all numerical ids).
+        method (string): Method used for data processing.
         
     Requires:
         Picrust v1.1 or v2: Software to predict metagenome function.
@@ -794,7 +807,7 @@ def functional_profile(workflow, closed_reference_tsv, closed_reference_fasta, p
         # run the v2 pipeline
         functional_data_predicted_tre = utilities.name_files("out.tre", output_folder, subfolder="picrust2")
         workflow.add_task(
-            utilities.partial_function(run_picrust2,threads=threads,otus=otus),
+            utilities.partial_function(run_picrust2,threads=threads,otus=otus,method=method),
             depends=[closed_reference_fasta, closed_reference_tsv],
             targets=functional_data_predicted_tre)
         return functional_data_predicted_tre

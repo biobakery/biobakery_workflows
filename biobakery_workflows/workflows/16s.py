@@ -151,7 +151,7 @@ if args.method == "dada2" or args.method == "its":
         print("WARNING: PICRUSt v1 is not compatible with ASV tables so will not be run for this workflow.")
     else:
         categorized_function = sixteen_s.functional_profile(workflow, closed_reference_tsv, seqs_fasta_path, 
-                args.picrust_version, args.threads, args.output, otus=False)
+                args.picrust_version, args.threads, args.output, otus=False, method=args.method)
 
 else:
     # call vsearch or usearch workflow tasks
