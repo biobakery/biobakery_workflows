@@ -101,8 +101,15 @@ metadata <- data.frame(read.table(positional_args[2], header = TRUE, row.names =
 # check for samples as columns or rows
 samples_rows <- intersect(rownames(metadata),rownames(data))
 if (length(samples_rows) < 1) {
-    sample <- colnames(metadata)
-    metadata <- as.data.frame(t(metadata))
+    # allow for special chars in names
+    original_metadata_rownames <- rownames(metadata)
+    rownames(metadata) <- make.names(rownames(metadata))
+    samples_rows <- intersect(rownames(metadata),rownames(data))
+    if (length(samples_rows) < 1) {
+        rownames(metadata) <- original_metadata_rownames
+        sample <- colnames(metadata)
+        metadata <- as.data.frame(t(metadata))
+    }
 }
 
 # Filter by abundance using zero as value for NAs
