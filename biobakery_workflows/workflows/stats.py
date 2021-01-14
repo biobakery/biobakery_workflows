@@ -48,6 +48,8 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project", required=True)
+workflow.add_argument("author-name",desc="the name of the author of the report", required=True)
+workflow.add_argument("header-image",desc="the image to add to the report header", default="")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
 workflow.add_argument("adonis-method",desc="the method to apply for the adonis, default is based on file type (bray for relab)", default="bray", choices=["manhattan", "euclidean", "canberra", "bray", "kulczynski", "jaccard", "gower", "altGower", "morisita", "horn", "mountford", "raup" , "binomial", "chao", "cao", "mahalanobis"])
@@ -117,15 +119,20 @@ if args.random_effects:
 else:
     additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
 
-templates=[utilities.get_package_file("header"),utilities.get_package_file("stats")]
+if args.header_image:
+    templates=[utilities.get_package_file("header_image"),utilities.get_package_file("stats")]
+else:
+    templates=[utilities.get_package_file("header_author"),utilities.get_package_file("stats")]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
     depends=maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks, 
     targets=workflow.name_output_files("stats_report."+args.format),
-    vars={"title":"Stats Report",
+    vars={"title":"Statistics report",
           "project":args.project_name,
+          "author":args.author_name,
+          "header_image":args.header_image,
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
           "maaslin_tasks_info":maaslin_tasks_info,
