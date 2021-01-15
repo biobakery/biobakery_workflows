@@ -99,8 +99,10 @@ maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_
 
 # run MaAsLiN2 on all input files
 maaslin_tasks=[]
+maaslin_tiles=""
 if not args.bypass_maaslin:
     maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
+    maaslin_tiles=utilities.generate_tiles_of_maaslin_figures(workflow, maaslin_tasks_info)
 
 # generate stratified pathways plots if pathways are provided
 stratified_plots_tasks=[]
@@ -136,6 +138,7 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
           "maaslin_tasks_info":maaslin_tasks_info,
+          "maaslin_tiles":maaslin_tiles,
           "bypass_maaslin":args.bypass_maaslin,
           "stratified_pathways_plots":stratified_pathways_plots,
           "permanova_plots":permanova_plots,

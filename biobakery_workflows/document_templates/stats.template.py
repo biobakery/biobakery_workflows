@@ -25,21 +25,47 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #+ echo=False
 
-def show_maaslin_metadata_plots(figures_folder, type):
+def show_maaslin_tile(figures_list):
     # show the top plots for each metadata
 
     images_found = False
-    # get all the available images and sort by rank
-    ranked_files = [ (filename, re.findall(r'\d+', filename)[0]) for filename in os.listdir(figures_folder) if re.search(r'_\d+.png$',filename)]
-    ordered_files = sorted( ranked_files, key=lambda x: int(x[1]))
+    for image_file in figures_list:
+        if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
+            images_found = True
+            
 
+    # group images by metadata type
+    metadata_images={}
     for file_name, rank in ordered_files:
         if file_name.endswith("_{}.png".format(rank)):
             images_found = True
             metadata_name=file_name.replace("_{}.png".format(rank),"")
-            print("![ #"+rank+" "+metadata_name+" association for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
-            if pdf_format:
-                print("\clearpage")
+            if not metadata_name in metadata_images:
+                metadata_images[metadata_name]=[]
+            metadata_images[metadata_name].append(os.path.join(figures_folder,file_name))
+
+    # plot all the images for each metadata on a single page
+    columns = 2
+    rows = 4
+    import numpy
+    import matplotlib.pyplot as pyplot
+
+    for metadata_name in metadata_images:
+        figure = pyplot.figure(figsize=(8,8))
+        for index in range(1, columns*rows+1):
+            try:
+                new_file=metadata_images[metadata_name][index]
+            except IndexError:
+                break
+
+            image = pyplot.imread(new_file)
+            figure.add_subplot(rows, columns, index)
+            pyplot.imshow(image)
+        pyplot.show()
+        print("![ Top # 1-"+index-1+" "+metadata_name+" associations for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
+
+        if pdf_format:
+            print("\clearpage")
 
     if not images_found:
         print("No significant associations.\n\n")
@@ -73,7 +99,7 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
 
         print("### MaAsLin2 Plots\n\n")
         print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
-        show_maaslin_metadata_plots(maaslin_output_folder, newtype)
+        show_maaslin_tiles(vars["maaslin_tiles"][newtype])
         print("\clearpage")
 
 #' <% if not vars["bypass_maaslin"]: show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
