@@ -202,7 +202,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
     return stratified_pathways_plots,stratified_plots_tasks
 
 
-def generate_tile_of_images(task):
+def generate_tile_of_images(input_files, output_file):
     # for the set of images, generate a single tile with a table of images
     import matplotlib.pyplot as pyplot
 
@@ -212,7 +212,7 @@ def generate_tile_of_images(task):
     figure = pyplot.figure(figsize=(8,8),dpi=300)
     for index in range(1, columns*rows+1):
         try:
-            new_file=task.depends[index].name
+            new_file=input_files[index]
         except IndexError:
             break
 
@@ -225,13 +225,13 @@ def generate_tile_of_images(task):
     pyplot.tight_layout()
     pyplot.draw()
 
-    pyplot.savefig(task.targets[0].name, dpi=300)
+    pyplot.savefig(output_file, dpi=300)
 
 
-def generate_tiles_of_maaslin_figures(workflow, maaslin_tasks_info):
-    # Generate a tile of the top plots for each metadata for each maaslin run to be displayed in the report
-
+def get_maaslin_image_files(maaslin_tasks_info):
+    # Get a list of all the generaged maaslin2 image files
     maaslin_tiles={}
+    metadata_images={}
     for datatype in maaslin_tasks_info:
         # get all the available images and sort by rank
         figures_folder = os.path.dirname(maaslin_tasks_info[datatype][1])
@@ -239,27 +239,29 @@ def generate_tiles_of_maaslin_figures(workflow, maaslin_tasks_info):
         ordered_files = sorted( ranked_files, key=lambda x: int(x[1]))
 
         # group images by metadata type
-        metadata_images={}
+        metadata_images[datatype]={}
         for file_name, rank in ordered_files:
             if file_name.endswith("_{}.png".format(rank)):
                 images_found = True
                 metadata_name=file_name.replace("_{}.png".format(rank),"")
-                if not metadata_name in metadata_images:
-                    metadata_images[metadata_name]=[]
-                metadata_images[metadata_name].append(os.path.join(figures_folder,file_name))
+                if not metadata_name in metadata_images[datatype]:
+                    metadata_images[datatype][metadata_name]=[]
+                metadata_images[datatype][metadata_name].append(os.path.join(figures_folder,file_name))
 
-        for metadata_name in metadata_images:
+        maaslin_tiles[datatype]={}
+        for metadata_name in metadata_images[datatype]:
             new_image="{}_tiled.png".format(os.path.join(figures_folder,metadata_name))
-            workflow.add_task(
-                generate_tile_of_images,
-                depends=metadata_images[metadata_name],
-                target=new_image)
+            maaslin_tiles[datatype][metadata_name]=new_image
 
-            if not metadata_name in maaslin_tiles:
-                maaslin_tiles[metadata_name]=[]
-            maaslin_tiles[metadata_name].append(new_image)
+    return metadata_images, maaslin_tiles
 
-    return maaslin_tiles
+def generate_tiles_of_maaslin_figures(task, maaslin_tasks_info):
+    # Generate a tile of the top plots for each metadata for each maaslin run to be displayed in the report
+
+    metadata_images, maaslin_tiles = get_maaslin_image_files(maaslin_tasks_info)
+    for datatype in maaslin_tasks_info:
+        for metadata_name in metadata_images[datatype]:
+            generate_tile_of_images(metadata_images[datatype][metadata_name],maaslin_tiles[datatype][metadata_name])
 
 def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects,maaslin_options=""):
     # Run maaslin on all files in input set

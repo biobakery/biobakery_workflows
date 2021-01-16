@@ -25,47 +25,18 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #+ echo=False
 
-def show_maaslin_tile(figures_list):
+def show_maaslin_tile(figures, type):
     # show the top plots for each metadata
 
     images_found = False
-    for image_file in figures_list:
-        if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
+
+    for metadata_name in figures:
+        if ( os.path.isfile(figures[metadata_name]) and os.path.getsize(figures[metadata_name]) > 0 ):
             images_found = True
-            
+            print("\n![Top "+metadata_name+" associations for "+type+"]("+figures[metadata_name]+")\n\n\n")
 
-    # group images by metadata type
-    metadata_images={}
-    for file_name, rank in ordered_files:
-        if file_name.endswith("_{}.png".format(rank)):
-            images_found = True
-            metadata_name=file_name.replace("_{}.png".format(rank),"")
-            if not metadata_name in metadata_images:
-                metadata_images[metadata_name]=[]
-            metadata_images[metadata_name].append(os.path.join(figures_folder,file_name))
-
-    # plot all the images for each metadata on a single page
-    columns = 2
-    rows = 4
-    import numpy
-    import matplotlib.pyplot as pyplot
-
-    for metadata_name in metadata_images:
-        figure = pyplot.figure(figsize=(8,8))
-        for index in range(1, columns*rows+1):
-            try:
-                new_file=metadata_images[metadata_name][index]
-            except IndexError:
-                break
-
-            image = pyplot.imread(new_file)
-            figure.add_subplot(rows, columns, index)
-            pyplot.imshow(image)
-        pyplot.show()
-        print("![ Top # 1-"+index-1+" "+metadata_name+" associations for "+type+"]("+os.path.join(figures_folder,file_name)+")\n\n")
-
-        if pdf_format:
-            print("\clearpage")
+            if pdf_format:
+                print("\clearpage")
 
     if not images_found:
         print("No significant associations.\n\n")
@@ -75,7 +46,7 @@ def show_maaslin_heatmaps(maaslin_heatmap, run_type):
     # display the heatmap if generated
 
     if os.path.isfile(maaslin_heatmap):
-        print("!["+run_type+" heatmap]("+maaslin_heatmap+")\n")
+        print("\n\n!["+run_type+" heatmap]("+maaslin_heatmap+")\n\n")
     else:
         print("Not enough significant associations for a heatmap.\n\n")
 
@@ -98,8 +69,10 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
         print("\clearpage")
 
         print("### MaAsLin2 Plots\n\n")
-        print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n")
-        show_maaslin_tiles(vars["maaslin_tiles"][newtype])
+        print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n\n\n")
+        image_files, maaslin_tiles = utilities.get_maaslin_image_files(maaslin_tasks_info)
+        
+        show_maaslin_tile(maaslin_tiles[newtype], newtype)
         print("\clearpage")
 
 #' <% if not vars["bypass_maaslin"]: show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
