@@ -261,7 +261,11 @@ def generate_tiles_of_maaslin_figures(task, maaslin_tasks_info):
     metadata_images, maaslin_tiles = get_maaslin_image_files(maaslin_tasks_info)
     for datatype in maaslin_tasks_info:
         for metadata_name in metadata_images[datatype]:
-            generate_tile_of_images(metadata_images[datatype][metadata_name],maaslin_tiles[datatype][metadata_name])
+            run_task(
+                "create_image_tile.py --input '[args[0]]' --output [targets[0]]",
+                depends=metadata_images[datatype][metadata_name],
+                targets=maaslin_tiles[datatype][metadata_name],
+                args=",".join(metadata_images[datatype][metadata_name]))
 
 def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects,maaslin_options=""):
     # Run maaslin on all files in input set
