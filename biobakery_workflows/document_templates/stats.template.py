@@ -33,10 +33,9 @@ def show_maaslin_tile(figures, type):
     for metadata_name in figures:
         if ( os.path.isfile(figures[metadata_name]) and os.path.getsize(figures[metadata_name]) > 0 ):
             images_found = True
+            print("#### "+metadata_name+"\n\n")
             print("\n![Top "+metadata_name+" associations for "+type+"]("+figures[metadata_name]+")\n\n\n")
-
-            if pdf_format:
-                print("\clearpage")
+            print("\clearpage \n\n")
 
     if not images_found:
         print("No significant associations.\n\n")
@@ -66,14 +65,14 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
 
         print("### MaAsLin2 Heatmap\n\n")
         show_maaslin_heatmaps(maaslin_heatmap, newtype)
-        print("\clearpage")
+        print("\clearpage \n\n")
 
         print("### MaAsLin2 Plots\n\n")
         print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n\n\n")
         image_files, maaslin_tiles = utilities.get_maaslin_image_files(maaslin_tasks_info)
         
         show_maaslin_tile(maaslin_tiles[newtype], newtype)
-        print("\clearpage")
+        print("\clearpage \n\n")
 
 #' <% if not vars["bypass_maaslin"]: show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
 
