@@ -102,7 +102,7 @@ trunc_len_max2 <- strtoi(args.list$trunc_len_max)
 if(trunc_len_max2 == 0){
   trunc_len_max1 <- 0
 }else{
-trunc_len_max1 <- trunc_len_max2 + 40
+trunc_len_max1 <- trunc_len_max2 + strtoi(args.list$trunc_len_rev_offset)
 }
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
