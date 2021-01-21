@@ -30,10 +30,11 @@ workflow workflowMTX {
     
     File? customQCDB1
     File? customQCDB2
+    File? customQCDB3
   }
   
   # Set the docker tags
-  String kneaddataDockerImage = "biobakery/kneaddata:0.9.0"
+  String kneaddataDockerImage = "biobakery/kneaddata:0.7.10"
   String metaphlanDockerImage = "biobakery/metaphlan:3.0.1"
   String humannDockerImage = "biobakery/humann:3.0.0.a.4"
   String workflowsDockerImage = "biobakery/workflows:3.0.0.a.6_anadama0.7.9_no_metaphlan_db"
@@ -52,7 +53,6 @@ workflow workflowMTX {
 
   String JoinedTaxonomicProfilesFileName="metaphlan_taxonomic_profiles.tsv"
   String TaxonomicProfilesCountsFileName="metaphlan_species_counts_table.tsv"
-
   String JoinGeneFamilesOutFileName="genefamilies.tsv"
   String JoinECsOutFileName="ecs.tsv"
   String JoinKOsOutFileName="kos.tsv"
@@ -100,12 +100,12 @@ workflow workflowMTX {
       rrnaDB=versionSpecificrrnaDB,
       customDB1=customQCDB1,
       customDB2=customQCDB2,
+      customDB3=customQCDB3,
       dataType=dataTypeSetting,
       kneaddataDockerImage=kneaddataDockerImage,
       preemptibleAttemptsOverride=preemptibleAttemptsOverride,
       MaxMemGB=MaxMemGB_QualityControlTasks
     }
-
     # Part 2: For each sample, run taxonomic profiling with MetaPhlAn v2
     call TaxonomicProfile {
       input:
@@ -215,7 +215,7 @@ workflow workflowMTX {
     call JoinTables as JoinGeneFamiliesRelab {
       input:
       InFiles=RenormTableGenes.OutFile,
-      OutFileName=JoinGeneFamilesRelabOutFileName,
+     OutFileName=JoinGeneFamilesRelabOutFileName,
       humannDockerImage=humannDockerImage,
       MaxMemGB=JoinNormMemDefault
     }
@@ -319,17 +319,18 @@ task QualityControl {
     File rrnaDB
     File? customDB1
     File? customDB2
+    File? customDB3
     String dataType
     String kneaddataDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
-  
   Int mem = select_first([MaxMemGB, 24])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
   String useCustomDB1 = if defined(customDB1) then "yes" else "no"
   String useCustomDB2 = if defined(customDB2) then "yes" else "no"
+  String useCustomDB3 = if defined(customDB3) then "yes" else "no"
   
   String humanDatabase = "databases/kneaddata_human/"
   String transcriptDatabase = "databases/kneaddata_transcript/"
@@ -340,11 +341,20 @@ task QualityControl {
   
   String customDatabase1 = "databases/db1/"
   String customDatabase2 = "databases/db2/"
+  String customDatabase3 = "databases/db3/"
   String custom_options = if defined(customDB2) then "--reference-db ${customDatabase1} --reference-db ${customDatabase2}" else "--reference-db ${customDatabase1}"
+  String custom_options_add = if defined(customDB3) then "--reference-db ${customDatabase3} " else " "
+  
 
   # download the two reference databases and then run kneaddata.
   command <<< 
   
+    # download second custom database if set
+    if [ ~{useCustomDB3} == 'yes' ]; then
+        mkdir -p ~{customDatabase3}
+        tar xzvf ~{customDB3} -C ~{customDatabase3}
+    fi
+
     # download second custom database if set
     if [ ~{useCustomDB2} == 'yes' ]; then
         mkdir -p ~{customDatabase2}
@@ -358,7 +368,7 @@ task QualityControl {
         
         #run kneaddata with custom databases
         kneaddata --input ~{rawfile1} --input ~{rawfile2} --output ./ --serial \
-        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options} --sequencer-source ~{adapterType}
+        --threads 8 --output-prefix ~{sample} --cat-final-output --run-fastqc-start ~{custom_options} ~{custom_options_add} --sequencer-source ~{adapterType}
     fi
     
     if [ ~{useCustomDB1} == 'no' ]; then
@@ -479,7 +489,6 @@ task FunctionalProfile {
       preemptible: preemptible_attempts
   }
 }
-
 task Regroup {
   input {
     File GeneFamiliesFile
