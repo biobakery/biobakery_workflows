@@ -33,7 +33,7 @@ workflow workflowMTX {
   }
   
   # Set the docker tags
-  String kneaddataDockerImage = "biobakery/kneaddata:0.7.10"
+  String kneaddataDockerImage = "biobakery/kneaddata:0.9.0"
   String metaphlanDockerImage = "biobakery/metaphlan:3.0.1"
   String humannDockerImage = "biobakery/humann:3.0.0.a.4"
   String workflowsDockerImage = "biobakery/workflows:3.0.0.a.6_anadama0.7.9_no_metaphlan_db"
