@@ -860,18 +860,20 @@ These six required inputs would only be modified if the versions of Kneaddata an
 * versionSpecificUtilityMapping : The utility mapping database used by HUMAnN. This is located at `databases/humann/full_utility_mapping_1_1.tar.gz` in this workspace google bucket.
 
 *Optional inputs*
-There are an additional nine optional inputs for each workflow run. These are not required. If not set, the default values will be used.
+There are an additional ten optional inputs for each workflow run. These are not required. If not set, the default values will be used.
 * bypassFunctionalProfiling (Default = false): This set to true will bypass running functional profiling and all of the downstream tasks including normalization and merging of the functional data products including gene families, ecs, and pathways.
 * dataType (Default = "mtx"): This is the sequencing data type (mtx or mgx).
 * inputMetadataFile (Default = None) : This file is used with the visualization task to annotate the figures with metadata.
-* MaxMemGB_FunctionalProfileTasks (Default = 24 Gb): This is the max memory to request for each HUMAnN v2.0 task. This might need to be increased for larger input files.
+* MaxMemGB_FunctionalProfileTasks (Default = 32 Gb): This is the max memory to request for each HUMAnN v3.0 task. This might need to be increased for larger input files.
 * MaxMemGB_QualityControlTasks (Default = 8 Gb): This is the max memory to request for each Kneaddata task. This might need to be increased for larger input files.
-* MaxMemGB_TaxonomicProfileTasks (Default = 24 Gb): This is the max memory to request for each MetaPhlAn v2.0 task. This might need to be increased for larger input files.
+* MaxMemGB_TaxonomicProfileTasks (Default = 24 Gb): This is the max memory to request for each MetaPhlAn v3.0 task. This might need to be increased for larger input files.
 * preemptibleAttemptsOverride (Default = 2): This setting determines how many times to rerun one of the main compute tasks (HUMAnN v3.0, Kneaddata, and MetaPhlAn v3.0) on pre-emptible instances. If set to zero a non-pre-emptible instance will be used.
 
-There are two additional optional inputs that can be used to run with one or more custom databases.
+There are three additional optional inputs that can be used to run with one or more custom databases.
 * customQCDB1 (Default = None) : Provide a custom bowtie2 formatted datatabase to use for the quailty control step instead of the default human reference.
-* customQCDB2 (Default = None) : Provide a second custom bowtie2 formatted database to be used in addition to the other custom database provided. 
+* customQCDB2 (Default = None) : Provide a second custom bowtie2 formatted database to be used in addition to the other custom database provided.
+* customQCDB3 (Default = None) : Provide a third custom bowtie2 formatted database to be used in addition to the other custom database provided.
+There are an additional nine optional inputs for each workflow run. These are not required. If not set, the default values will be used.
 
 **Outputs**
 
