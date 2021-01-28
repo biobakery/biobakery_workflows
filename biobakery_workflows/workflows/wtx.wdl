@@ -39,7 +39,12 @@ workflow workflowMTX {
   String kneaddataDockerImage = "biobakery/kneaddata:0.9.0"
   String metaphlanDockerImage = "biobakery/metaphlan:3.0.1"
   String humannDockerImage = "biobakery/humann:3.0.0.a.4"
+  
+  # for the workflows script tasks use the workflows image without the databases (to reduce data download amount)
   String workflowsDockerImage = "biobakery/workflows:3.0.0.a.6_anadama0.7.9_no_metaphlan_db"
+  
+  # for the strainphlan tasks use the workflows image with the databases (to include the mapping of references)
+  String strainphlanDockerImage = "biobakery/workflows:3.0.0.a.6"
   
   # Set the default data type
   String dataTypeSetting = select_first([dataType, "mtx"])
@@ -278,7 +283,7 @@ workflow workflowMTX {
       input:
         TaxonomicProfileSam=TaxonomicProfile.TaxonomicProfileSam[sample_index],
         sample=PairPaths[sample_index][2],
-        metaphlanDockerImage=metaphlanDockerImage,
+        strainphlanDockerImage=strainphlanDockerImage,
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
         MaxMemGB=MaxMemGB_TaxonomicProfileTasks
       }
@@ -288,7 +293,7 @@ workflow workflowMTX {
       input:
         InFiles=StrainMarkers.StrainMarkersOutput,
         OutFileName=StrainPhlAnCladeList,
-        metaphlanDockerImage=metaphlanDockerImage,
+        strainphlanDockerImage=strainphlanDockerImage,
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
         MaxMemGB=MaxMemGB_TaxonomicProfileTasks
       }
@@ -299,7 +304,7 @@ workflow workflowMTX {
          InFiles=StrainMarkers.StrainMarkersOutput,
          StrainList=StrainList.OutFile,
          StrainNumber=StrainNumber,
-         metaphlanDockerImage=metaphlanDockerImage,
+         strainphlanDockerImage=strainphlanDockerImage,
          preemptibleAttemptsOverride=preemptibleAttemptsOverride,
          MaxMemGB=MaxMemGB_TaxonomicProfileTasks
       }
@@ -492,7 +497,7 @@ task StrainMarkers {
   input {
     File TaxonomicProfileSam
     String sample
-    String metaphlanDockerImage
+    String strainphlanDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -510,7 +515,7 @@ task StrainMarkers {
   }
   
   runtime {
-    docker: metaphlanDockerImage
+    docker: strainphlanDockerImage
     cpu: 1
       memory: mem + " GB"
       preemptible: preemptible_attempts
@@ -522,7 +527,7 @@ task StrainList {
   input {
     Array[File] InFiles
     String OutFileName
-    String metaphlanDockerImage
+    String strainphlanDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -540,7 +545,7 @@ task StrainList {
   }
 
   runtime {
-    docker: metaphlanDockerImage
+    docker: strainphlanDockerImage
     cpu: 1
       memory: mem+" GB"
       disks: "local-disk 50 SSD"
@@ -552,7 +557,7 @@ task StrainProfile {
     Array[File] InFiles
     File StrainList
     Int StrainNumber
-    String metaphlanDockerImage
+    String strainphlanDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
   }
@@ -580,7 +585,7 @@ task StrainProfile {
   }
 
   runtime {
-    docker: metaphlanDockerImage
+    docker: strainphlanDockerImage
     cpu: 8
       memory: mem+" GB"
       disks: "local-disk 50 SSD"
