@@ -21,6 +21,8 @@ workflow workflowMTX {
     
     # Optional input variables
     Boolean? bypassFunctionalProfiling
+    Boolean? bypassStrainProfiling
+    Int? MaxStrains
     String? dataType
     File? inputMetadataFile
     Int? preemptibleAttemptsOverride
@@ -47,6 +49,9 @@ workflow workflowMTX {
   
   # Set bypass mode
   Boolean setbypassFunctionalProfiling = select_first([bypassFunctionalProfiling,false])
+  Boolean setbypassStrainProfiling = select_first([bypassStrainProfiling,false])  
+  
+  Int setMaxStrains = select_first([MaxStrains,10])
 
   # Output file names to match AnADAMA2 workflow output names
   String QCReadCountFileName = "kneaddata_read_count_table.tsv"  
@@ -68,6 +73,8 @@ workflow workflowMTX {
 
   String JoinedFeatureCountsFileName="humann_feature_counts.tsv"
   String FunctionalCountFileName = "humann_read_and_species_count_table.tsv"
+  
+  String StrainPhlAnCladeList = "strainphlan_clade_list.txt"
   
   String VisualizationsFileName = ProjectName+"_visualizations"
   
@@ -265,6 +272,40 @@ workflow workflowMTX {
     }   
   }
 
+  if (! setbypassStrainProfiling ) {
+   scatter (sample_index in range(length(PairPaths))) {
+    call StrainMarkers {        
+      input:
+        TaxonomicProfileSam=TaxonomicProfile.TaxonomicProfileSam[sample_index],
+        sample=PairPaths[sample_index][2],
+        metaphlanDockerImage=metaphlanDockerImage,
+        preemptibleAttemptsOverride=preemptibleAttemptsOverride,
+        MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+      }
+    }
+    
+    call StrainList {
+      input:
+        InFiles=StrainMarkers.StrainMarkersOutput,
+        OutFileName=StrainPhlAnCladeList,
+        metaphlanDockerImage=metaphlanDockerImage,
+        preemptibleAttemptsOverride=preemptibleAttemptsOverride,
+        MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+      }
+    
+	scatter (StrainNumber in range(setMaxStrains)){      
+      call StrainProfile {
+         input:
+         InFiles=StrainMarkers.StrainMarkersOutput,
+         StrainList=StrainList.OutFile,
+         StrainNumber=StrainNumber,
+         metaphlanDockerImage=metaphlanDockerImage,
+         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
+         MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+      }
+    }
+  }
+
   # count the reads during each step of QC
   call QCReadCount {
     input:
@@ -430,11 +471,12 @@ task TaxonomicProfile {
   command {
     mkdir -p ${tmpdir}
     metaphlan ${QCFastqFile} --input_type fastq --nproc 8 --no_map --tmp_dir ${tmpdir} \
-    --output_file ${sample}.tsv
+    --output_file ${sample}.tsv --samout ${sample}.sam
   }
     
   output {
     File TaxonomicProfileFile = "${sample}.tsv"
+    File TaxonomicProfileSam = "${sample}.sam"
   }
   
   runtime {
@@ -442,6 +484,105 @@ task TaxonomicProfile {
     cpu: 8
       memory: mem + " GB"
       preemptible: preemptible_attempts
+      disks: "local-disk 50 SSD"
+  }
+}
+
+task StrainMarkers {
+  input {
+    File TaxonomicProfileSam
+    String sample
+    String metaphlanDockerImage
+    Int? MaxMemGB
+    Int? preemptibleAttemptsOverride
+  }
+  
+  Int mem = select_first([MaxMemGB, 8])
+  Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
+
+  # create a temp directory and then run strainphlan
+  command {
+    sample2markers.py --input ${TaxonomicProfileSam} --input_format sam --output_dir . --nprocs 1
+  }
+    
+  output {
+    File StrainMarkersOutput = "${sample}.pkl"
+  }
+  
+  runtime {
+    docker: metaphlanDockerImage
+    cpu: 1
+      memory: mem + " GB"
+      preemptible: preemptible_attempts
+      disks: "local-disk 10 SSD"
+  }
+}
+
+task StrainList {
+  input {
+    Array[File] InFiles
+    String OutFileName
+    String metaphlanDockerImage
+    Int? MaxMemGB
+    Int? preemptibleAttemptsOverride
+  }
+  
+  Int mem = select_first([MaxMemGB, 10])
+
+  command {
+    for infile in ${sep=' ' InFiles}; do ln -s $infile; done
+    
+    strainphlan --samples ./*.pkl --output_dir . --print_clades_only > ${OutFileName}
+  }
+
+  output {
+    File OutFile = "${OutFileName}"
+  }
+
+  runtime {
+    docker: metaphlanDockerImage
+    cpu: 1
+      memory: mem+" GB"
+      disks: "local-disk 50 SSD"
+  }
+}
+
+task StrainProfile {
+  input {
+    Array[File] InFiles
+    File StrainList
+    Int StrainNumber
+    String metaphlanDockerImage
+    Int? MaxMemGB
+    Int? preemptibleAttemptsOverride
+  }
+  
+  Int mem = select_first([MaxMemGB, 10])
+
+  Array[String] Clades = read_lines(StrainList)
+
+  String CurrentClade = Clades[StrainNumber]
+
+  command {
+    mkdir ${CurrentClade}
+
+    for infile in ${sep=' ' InFiles}; do ln -s $infile; done
+
+    extract_markers.py --clade ${CurrentClade} --output_dir .
+
+    strainphlan --samples ./*.pkl --output_dir ${CurrentClade} --clade ${CurrentClade} --nprocs 8
+
+    tar -czf ${CurrentClade}.tar.gz ${CurrentClade}
+  }
+
+  output {
+    File OutFile = "${CurrentClade}.tar.gz"
+  }
+
+  runtime {
+    docker: metaphlanDockerImage
+    cpu: 8
+      memory: mem+" GB"
       disks: "local-disk 50 SSD"
   }
 }
@@ -744,3 +885,4 @@ task VisualizationReport {
       disks: "local-disk 10 SSD"
   }
 }
+
