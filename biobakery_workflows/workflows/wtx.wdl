@@ -300,7 +300,8 @@ workflow workflowMTX {
       
     call PickStrains {
       input:
-        StrainList=StrainList.OutFile
+        StrainList=StrainList.OutFile,
+        strainphlanDockerImage=strainphlanDockerImage
       }
     
 	scatter (StrainNumber in range(setMaxStrains)){      
@@ -560,19 +561,26 @@ task StrainList {
 task PickStrains {
   input {
     File StrainList
+    String strainphlanDockerImage
   }
   
-command <<<
+  command {
     python <<CODE
-    
-    for line in open(${StrainList}):
+    for line in open("${StrainList}"):
       if "s__" in line:
           print(line.rstrip().split(" ")[5][:-1])
     CODE
-  >>>
+  }
   
   output {
     Array[String] SelectedStrains = read_lines(stdout())
+  }
+  
+  runtime {
+    docker: strainphlanDockerImage
+    cpu: 1
+      memory: "10 GB"
+      disks: "local-disk 10 SSD"
   }
 }
 
