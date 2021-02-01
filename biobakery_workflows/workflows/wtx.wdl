@@ -297,12 +297,17 @@ workflow workflowMTX {
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
         MaxMemGB=MaxMemGB_TaxonomicProfileTasks
       }
+      
+    call PickStrains {
+      input:
+        StrainList=StrainList.OutFile
+      }
     
 	scatter (StrainNumber in range(setMaxStrains)){      
       call StrainProfile {
          input:
          InFiles=StrainMarkers.StrainMarkersOutput,
-         StrainList=StrainList.OutFile,
+         StrainList=PickStrains.SelectedStrains,
          StrainNumber=StrainNumber,
          strainphlanDockerImage=strainphlanDockerImage,
          preemptibleAttemptsOverride=preemptibleAttemptsOverride,
@@ -552,10 +557,30 @@ task StrainList {
   }
 }
 
+task PickStrains {
+  input {
+    File StrainList
+  }
+  
+command <<<
+    python <<CODE
+    
+    for line in open(${StrainList}):
+      if "s__" in line:
+          print(line.rstrip().split(" ")[5][:-1])
+    CODE
+  >>>
+  
+  output {
+    Array[String] SelectedStrains = read_lines(stdout())
+  }
+}
+
+
 task StrainProfile {
   input {
     Array[File] InFiles
-    File StrainList
+    Array[String] StrainList
     Int StrainNumber
     String strainphlanDockerImage
     Int? MaxMemGB
@@ -563,21 +588,22 @@ task StrainProfile {
   }
   
   Int mem = select_first([MaxMemGB, 10])
-
-  Array[String] Clades = read_lines(StrainList)
-
-  String CurrentClade = Clades[StrainNumber]
+  
+  String CurrentClade = StrainList[StrainNumber]
 
   command {
+    
+    echo ${CurrentClade}
+    
     mkdir ${CurrentClade}
 
     for infile in ${sep=' ' InFiles}; do ln -s $infile; done
 
-    extract_markers.py --clade ${CurrentClade} --output_dir .
+    extract_markers.py -c ${CurrentClade} -o ./
 
-    strainphlan --samples ./*.pkl --output_dir ${CurrentClade} --clade ${CurrentClade} --nprocs 8
+    strainphlan -s ./*.pkl -o ${CurrentClade} -c ${CurrentClade} -n 8
 
-    tar -czf ${CurrentClade}.tar.gz ${CurrentClade}
+    tar -czf ${StrainNumber}.tar.gz ${CurrentClade}
   }
 
   output {
