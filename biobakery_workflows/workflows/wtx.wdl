@@ -611,7 +611,7 @@ task StrainProfile {
 
     strainphlan -s ./*.pkl -o ${CurrentClade} -c ${CurrentClade} -n 8
 
-    tar -czf ${StrainNumber}.tar.gz ${CurrentClade}
+    tar -czf ${CurrentClade}.tar.gz ${CurrentClade}
   }
 
   output {
