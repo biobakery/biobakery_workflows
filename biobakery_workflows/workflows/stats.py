@@ -57,7 +57,9 @@ workflow.add_argument("fixed-effects",desc="the fixed effects to use in the mode
 workflow.add_argument("multivariable-fixed-effects",desc="the fixed effects that are multivariable (ordered first in covariate equation)", default="")
 workflow.add_argument("random-effects",desc="the random effects to use in the models", default="")
 workflow.add_argument("bypass-maaslin",desc="bypass running MaAsLiN", action="store_true")
+workflow.add_argument("bypass-halla",desc="bypass running HAllA", action="store_true")
 workflow.add_argument("maaslin-options",desc="additional MaAsLiN options", default="")
+workflow.add_argument("halla-options",desc="additional HAllA options", default="")
 workflow.add_argument("permutations",desc="the total number of permutations to apply to the permanova", default="4999")
 workflow.add_argument("static-covariates",desc="the covariates, comma-delimited, that do not change per individual (to permutate within in permanova)", default="")
 workflow.add_argument("scale",desc="the scale to apply with the permanova", default="100")
@@ -104,9 +106,9 @@ if not args.bypass_maaslin:
     maaslin_tiles_task=workflow.add_task(
         utilities.partial_function(utilities.generate_tiles_of_maaslin_figures, maaslin_tasks_info=maaslin_tasks_info),
         depends=maaslin_tasks)
-    #a, b = utilities.get_maaslin_image_files(maaslin_tasks_info)
-    #print(b)
-    #sys.exit()
+
+if not args.bypass_halla:
+    halla_tasks=utilities.run_halla_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.output,args.halla_options)
 
 # generate stratified pathways plots if pathways are provided
 stratified_plots_tasks=[]

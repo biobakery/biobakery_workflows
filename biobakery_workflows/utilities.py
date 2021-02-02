@@ -267,6 +267,22 @@ def generate_tiles_of_maaslin_figures(task, maaslin_tasks_info):
                 targets=maaslin_tiles[datatype][metadata_name],
                 args=",".join(metadata_images[datatype][metadata_name]))
 
+def run_halla_on_input_file_set(workflow,halla_tasks_info,input_metadata,output,halla_options=""):
+    # Run maaslin on all files in input set
+    
+    halla_tasks=[]
+    for run_type, infiles in halla_tasks_info.items():
+        current_target=os.path.join(output,"halla_"+run_type,"hallagram.png")
+        halla_tasks.append(
+            workflow.add_task(
+                "halla -x [depends[0]] -y [depends[1]] -o [args[0]]",
+                depends=[infiles[0], input_metadata],
+                targets=current_target,
+                args=os.path.dirname(current_target),
+                name="HAllA_{}".format(run_type)))
+
+    return halla_tasks
+
 def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects,maaslin_options=""):
     # Run maaslin on all files in input set
     
