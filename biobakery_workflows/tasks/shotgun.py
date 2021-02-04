@@ -863,7 +863,7 @@ def get_panphlan_species_name(abundance_file, species_number, panphlan_db):
         # get the version number based on the files found
         possible_dbs=[]
         for file in os.listdir(panphlan_db):
-            if file.startswith("panphlan_"+selected_species) and file.endswith(BOWTIE2_EXTENSION):
+            if file.startswith(selected_species) and file.endswith(BOWTIE2_EXTENSION):
                 possible_dbs.append(file)
 
         if not possible_dbs:
@@ -881,7 +881,7 @@ def panphlan_map(task,species_number,threads,panphlan_db,output_file):
 
     if selected_species:
         # get a single folder for this species database
-        species_db = os.path.join(panphlan_db, "panphlan_"+selected_species+BOWTIE2_EXTENSION)
+        species_db = os.path.join(panphlan_db, selected_species+BOWTIE2_EXTENSION)
     
         # run the task
         return_code = utilities.run_task(
@@ -901,7 +901,7 @@ def panphlan_profile(task,species_number,panphlan_db):
 
     if selected_species:
         # get a single folder for this species database
-        species_db = os.path.join(panphlan_db, "panphlan_"+selected_species+BOWTIE2_EXTENSION)
+        species_db = os.path.join(panphlan_db, selected_species+BOWTIE2_EXTENSION)
 
         # get the name of the species gene file target
         output_folder = os.path.dirname(task.depends[1].name)
