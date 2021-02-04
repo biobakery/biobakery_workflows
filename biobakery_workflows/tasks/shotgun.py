@@ -863,7 +863,7 @@ def get_panphlan_species_name(abundance_file, species_number, panphlan_db):
         # get the version number based on the files found
         possible_dbs=[]
         for file in os.listdir(panphlan_db):
-            if file.startswith(selected_species) and file.endswith(BOWTIE2_EXTENSION):
+            if file.startswith(selected_species[0].upper()) and selected_species[1:] in file and file.endswith(BOWTIE2_EXTENSION):
                 possible_dbs.append(file)
 
         if not possible_dbs:
