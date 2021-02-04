@@ -885,9 +885,9 @@ def panphlan_map(task,species_number,threads,panphlan_db,output_file):
     
         # run the task
         return_code = utilities.run_task(
-            "panphlan_map.py -c [args[0]] -i [depends[1]] -o [args[1]] --i_bowtie2_indexes [args[2]] --tmp [args[3]] --nproc [args[4]] --verbose > [targets[0]]", 
+            "panphlan_map.py -p [args[0]] -i [depends[1]] -o [args[1]] --indexes [args[2]] --tmp [args[3]] --nproc [args[4]] --verbose > [targets[0]]", 
             depends=task.depends+[species_db], targets=task.targets, 
-            args=[selected_species,output_file,panphlan_db,os.path.dirname(task.targets[0].name),threads])
+            args=[os.path.join(selected_species+"_pangenome.tsv"),output_file,os.path.join(panphlan_db,selected_species),os.path.dirname(task.targets[0].name),threads])
     else:
         # there is not a clade of this number, create an empty output file
         utilities.run_task("touch [targets[0]]", targets=task.targets)
@@ -908,9 +908,9 @@ def panphlan_profile(task,species_number,panphlan_db):
         gene_target=os.path.join(output_folder,selected_species+"_gene_presence_absence.tsv")
         # run the task
         return_code = utilities.run_task(
-            "panphlan_profile.py -c [args[0]] -i [args[1]] --o_dna [targets[0]] --add_strains --i_bowtie2_indexes [args[2]] --verbose > [targets[1]]",
+            "panphlan_profile.py -p [args[0]] -i [args[1]] --o_matrix [targets[0]] --verbose > [targets[1]]",
             depends=task.depends+[species_db], targets=[gene_target]+task.targets,
-            args=[selected_species,output_folder,panphlan_db])
+            args=[(os.path.join(panphlan_db,selected_species+"_pangenome.tsv"),output_folder,panphlan_db])
     else:
         # there is not a clade of this number, create an empty output file
         utilities.run_task("touch [targets[0]]", targets=task.targets)
