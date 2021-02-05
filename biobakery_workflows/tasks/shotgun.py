@@ -885,9 +885,9 @@ def panphlan_map(task,species_number,threads,panphlan_db,output_file):
     
         # run the task
         return_code = utilities.run_task(
-            "panphlan_map.py -p [args[0]] -i [depends[1]] -o [args[1]] --indexes [args[2]] --tmp [args[3]] --nproc [args[4]] --verbose > [targets[0]]", 
+            "panphlan_map.py -p [args[0]] -i [depends[1]] -o [args[1]] --indexes [args[2]] --nproc [args[3]] --verbose > [targets[0]]", 
             depends=task.depends+[species_db], targets=task.targets, 
-            args=[os.path.join(panphlan_db,selected_species+"_pangenome.tsv"),output_file,os.path.join(panphlan_db,selected_species),os.path.dirname(task.targets[0].name),threads])
+            args=[os.path.join(panphlan_db,selected_species+"_pangenome.tsv"),output_file,os.path.join(panphlan_db,selected_species),threads])
     else:
         # there is not a clade of this number, create an empty output file
         utilities.run_task("touch [targets[0]]", targets=task.targets)
