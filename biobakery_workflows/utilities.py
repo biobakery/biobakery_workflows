@@ -267,13 +267,14 @@ def generate_tiles_of_maaslin_figures(task, maaslin_tasks_info):
                 targets=maaslin_tiles[datatype][metadata_name],
                 args=",".join(metadata_images[datatype][metadata_name]))
 
-def run_halla_on_input_file_set(workflow,halla_tasks_info,output,halla_options=""):
+def run_halla_on_input_file_set(workflow,maaslin_tasks_info,output,halla_options=""):
     # Run maaslin on all files in input set
     
     halla_tasks=[]
-    for run_type, infiles in halla_tasks_info.items():
-        for run_type2, infiles2 in halla_tasks_info.items():
-            if run_type == run_type2:
+    halla_tasks_info={}
+    for run_type, infiles in maaslin_tasks_info.items():
+        for run_type2, infiles2 in maaslin_tasks_info.items():
+            if run_type == run_type2 or run_type2+" "+run_type in halla_tasks_info:
                 continue
 
             current_target=os.path.join(output,"halla_"+run_type+"_"+run_type2,"hallagram.png")
@@ -285,7 +286,9 @@ def run_halla_on_input_file_set(workflow,halla_tasks_info,output,halla_options="
                     args=os.path.dirname(current_target),
                     name="HAllA_{0}_{1}".format(run_type,run_type2)))
 
-    return halla_tasks
+            halla_tasks_info[run_type+" "+run_type2]=current_target
+
+    return halla_tasks, halla_tasks_info
 
 def run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,input_metadata,transform,fixed_effects,random_effects,maaslin_options=""):
     # Run maaslin on all files in input set
