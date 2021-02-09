@@ -277,7 +277,7 @@ def run_halla_on_input_file_set(workflow,maaslin_tasks_info,output,halla_options
             if run_type == run_type2 or run_type2+" "+run_type in halla_tasks_info:
                 continue
 
-            current_target=os.path.join(output,"halla_"+run_type+"_"+run_type2,"hallagram.png")
+            current_target=os.path.join(os.path.abspath(output),"halla_"+run_type+"_"+run_type2,"hallagram.png")
             halla_tasks.append(
                 workflow.add_task(
                     "halla -x [depends[0]] -y [depends[1]] -o [args[0]]",
