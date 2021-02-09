@@ -17,6 +17,29 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #+ echo=False
 
+#' <% if not vars["bypass_halla"]: print("# HAllA Results") %>
+
+#' <% if not vars["bypass_halla"]: print("HAllA (Hierarchical All-against-All Association Testing) discovers densely-associated blocks of features between two high-dimensional 'omics datasets. HAllA was run on each possible set of pairs from the data sets provided. The heatmaps for each run type are shown. For more information from each HAllA run, check out the HAllA results folders for a complete set of output files.") %>
+
+#+ echo=False
+
+def show_heatmaps(heatmap, run_type):
+    # display the heatmap if generated
+
+    if os.path.isfile(heatmap):
+        print("\n\n!["+run_type+" heatmap]("+heatmap+")\n\n")
+    else:
+        print("Not enough significant associations for a heatmap.\n\n")
+
+
+def show_halla_results(halla_tasks_info):
+    for run_type in halla_tasks_info:
+        print("## HAllA "+run_type.replace(" "," vs. ")+"\n\n")
+        show_heatmaps(halla_tasks_info[run_type], run_type)
+        print("\clearpage \n\n")
+
+#' <% show_halla_results(vars["halla_tasks_info"]) %>
+
 #' <% if not vars["bypass_maaslin"]: print("# MaAsLin2 Results") %>
 
 #' <% if not vars["bypass_maaslin"]: print("MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).") %>
@@ -40,16 +63,6 @@ def show_maaslin_tile(figures, type):
     if not images_found:
         print("No significant associations.\n\n")
 
-
-def show_maaslin_heatmaps(maaslin_heatmap, run_type):
-    # display the heatmap if generated
-
-    if os.path.isfile(maaslin_heatmap):
-        print("\n\n!["+run_type+" heatmap]("+maaslin_heatmap+")\n\n")
-    else:
-        print("Not enough significant associations for a heatmap.\n\n")
-
-
 def show_all_maaslin_run_types(maaslin_tasks_info):
     # search through the maaslin tasks info and show all plots for all data types
 
@@ -64,7 +77,7 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
         print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
 
         print("### MaAsLin2 Heatmap\n\n")
-        show_maaslin_heatmaps(maaslin_heatmap, newtype)
+        show_heatmaps(maaslin_heatmap, newtype)
         print("\clearpage \n\n")
 
         print("### MaAsLin2 Plots\n\n")

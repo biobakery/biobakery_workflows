@@ -108,7 +108,7 @@ if not args.bypass_maaslin:
         depends=maaslin_tasks)
 
 if not args.bypass_halla:
-    halla_tasks=utilities.run_halla_on_input_file_set(workflow,maaslin_tasks_info,args.output,args.halla_options)
+    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,maaslin_tasks_info,args.output,args.halla_options)
 
 # generate stratified pathways plots if pathways are provided
 stratified_plots_tasks=[]
@@ -144,7 +144,9 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
           "maaslin_tasks_info":maaslin_tasks_info,
+          "halla_tasks_info":halla_tasks_info,
           "bypass_maaslin":args.bypass_maaslin,
+          "bypass_halla":args.bypass_halla,
           "stratified_pathways_plots":stratified_pathways_plots,
           "permanova_plots":permanova_plots,
           "beta_diversity_plots":beta_diversity_plots,
