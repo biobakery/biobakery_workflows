@@ -120,6 +120,7 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
 
 #' <% if not vars["bypass_maaslin"]: show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
 
+#+ echo=False
 def show_stratified_plots(plots):
     # Display each of the plots in the report
     no_plots_found = True
