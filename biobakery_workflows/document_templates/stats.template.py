@@ -15,37 +15,15 @@ vars = document.get_vars()
 # determine the document format
 pdf_format = True if vars["format"] == "pdf" else False
 
-#+ echo=False
-
-def show_stratified_plots(plots):
-    # Display each of the plots in the report
-    no_plots_found = True
-    for image_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
-        # get the pathway number and metadata name
-        info = image_file.replace(".jpg","").split("_")
-        pathway_number = info[-1]
-        try:
-            metadata_focus = open(image_file.replace(".jpg",".txt")).readline().rstrip()
-        except EnvironmentError:
-            metadata_focus = "Unknown"
-
-        if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
-            no_plots_found = False
-            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
-
-    if no_plots_found:
-        print("No significant associations for pathways with categorical metadata found.")
-
-#' <% if vars["stratified_pathways_plots"]: print("# Stratified Pathways Plots") %>
-
-#' <% if vars["stratified_pathways_plots"] and "pathways" in vars["maaslin_tasks_info"]: print("The abundance for each of the "+str(len(vars["stratified_pathways_plots"]))+" most significant associations, for categorical features only, are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
-
-#' <% if vars["stratified_pathways_plots"]: show_stratified_plots(vars["stratified_pathways_plots"]) %>
-
 #' <% if pdf_format: print("\clearpage") %>
 
-#' <% if vars["permanova_plots"]: print("# Permanova") %>
-#' <% if vars["beta_diversity_plots"]["univariate"]: print("# Univariate") %>
+#' <% if vars["mantel_plots"]: print("# All against all: Mantel test") %>
+
+#' <% if vars["mantel_plots"]: print("\n\n\n\nPlaceholder for mantel text and plots.\n\n\n\n") %>
+#' <% if pdf_format: print("\clearpage") %>
+
+#' <% if vars["permanova_plots"] or vars["beta_diversity_plots"]["univariate"] or vars["beta_diversity_plots"]["multivariate"]: print("# One against all: Permanova test") %>
+#' <% if vars["beta_diversity_plots"]["univariate"]: print("## Univariate") %>
 
 #+ echo=False
 
@@ -77,7 +55,7 @@ def show_all_permanova(permanova_plots):
 
 #' <% if vars["beta_diversity_plots"]["multivariate"] and pdf_format: print("\clearpage") %>
 
-#' <% if vars["beta_diversity_plots"]["multivariate"]: print("# Multivariate") %>
+#' <% if vars["beta_diversity_plots"]["multivariate"]: print("## Multivariate") %>
 
 #' <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: 'bray ~ "+vars["covariate_equation"]+"' .") %>
 
@@ -85,7 +63,7 @@ def show_all_permanova(permanova_plots):
 #' <% show_all_variate_plots("multivariate") %>
 #' <% if vars["beta_diversity_plots"]["multivariate"] and pdf_format: print("\clearpage") %>
 
-#' <% if not vars["bypass_maaslin"]: print("# MaAsLin2 Results") %>
+#' <% if not vars["bypass_maaslin"]: print("# Each metadata against all data: MaAsLin2") %>
 
 #' <% if not vars["bypass_maaslin"]: print("MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).") %>
 
@@ -142,8 +120,35 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
 
 #' <% if not vars["bypass_maaslin"]: show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
 
+def show_stratified_plots(plots):
+    # Display each of the plots in the report
+    no_plots_found = True
+    for image_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
+        # get the pathway number and metadata name
+        info = image_file.replace(".jpg","").split("_")
+        pathway_number = info[-1]
+        try:
+            metadata_focus = open(image_file.replace(".jpg",".txt")).readline().rstrip()
+        except EnvironmentError:
+            metadata_focus = "Unknown"
+
+        if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
+            no_plots_found = False
+            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
+
+    if no_plots_found:
+        print("No significant associations for pathways with categorical metadata found.")
+
+#' <% if vars["stratified_pathways_plots"]: print("## MaAsLiN2 stratified pathways plots") %>
+
+#' <% if vars["stratified_pathways_plots"] and "pathways" in vars["maaslin_tasks_info"]: print("The abundance for each of the "+str(len(vars["stratified_pathways_plots"]))+" most significant associations, for categorical features only, are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.") %>
+
+#' <% if vars["stratified_pathways_plots"]: show_stratified_plots(vars["stratified_pathways_plots"]) %>
+
+#' <% if pdf_format: print("\clearpage") %>
+
 #+ echo=False
-#' <% if not vars["bypass_halla"]: print("# HAllA Results") %>
+#' <% if not vars["bypass_halla"]: print("# Each data type against all other data types: HAllA") %>
 
 #' <% if not vars["bypass_halla"]: print("HAllA (Hierarchical All-against-All Association Testing) discovers densely-associated blocks of features between two high-dimensional 'omics datasets. HAllA was run on each possible set of pairs from the data sets provided. The heatmaps for each run type are shown. For more information from each HAllA run, check out the HAllA results folders for a complete set of output files.") %>
 

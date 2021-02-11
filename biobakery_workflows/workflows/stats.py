@@ -37,7 +37,7 @@ from biobakery_workflows import utilities
 from biobakery_workflows.tasks.sixteen_s import convert_from_biom_to_tsv_list
 
 # import the files for descriptions and paths
-from biobakery_workflows import files
+from biobakery_workflows import files, visualizations
 
 # create a workflow instance, providing the version number and description
 workflow = Workflow(version="0.1", remove_options=["input"],
@@ -47,6 +47,7 @@ workflow = Workflow(version="0.1", remove_options=["input"],
 workflow.add_argument("input",desc="the folder containing taxonomy and functional data files",required=True)
 
 # add the custom arguments to the workflow
+workflow_vis = visualizations.Stats()
 workflow.add_argument("project-name",desc="the name of the project", required=True)
 workflow.add_argument("author-name",desc="the name of the author of the report", required=True)
 workflow.add_argument("header-image",desc="the image to add to the report header", default="")
@@ -73,7 +74,7 @@ workflow.add_argument("metadata-continuous",desc="the continuous features (for t
 workflow.add_argument("metadata-exclude",desc="the features to exclude (for the plot stratified pathways)", action="append", default=[])
 workflow.add_argument("input-file-type",desc="the file type for an input file formatted as 'filename,filetype'", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
-    default="The data was run through the standard stats workflow.")
+    default=workflow_vis.captions["intro"])
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -98,6 +99,9 @@ metadata_variables=utilities.get_metadata_variables(args.input_metadata,taxonomi
 
 # create feature table files for all input files (for input to maaslin2 and other downstream stats)
 maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
+
+# run mantel tests
+mantel_plots=[""]
 
 # run MaAsLiN2 on all input files
 maaslin_tasks=[]
@@ -143,6 +147,7 @@ doc_task=workflow.add_document(
           "header_image":args.header_image,
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
+          "mantel_plots":mantel_plots,
           "maaslin_tasks_info":maaslin_tasks_info,
           "halla_tasks_info":halla_tasks_info,
           "bypass_maaslin":args.bypass_maaslin,
