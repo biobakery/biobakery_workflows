@@ -55,7 +55,7 @@ theme_nature <- function() list(
 
 # Add command line arguments #
 options <- optparse::OptionParser(
-    usage = paste("%prog [options]", " <data.tsv> ", " <data2.tsv> ", " <output_file.png> ")
+    usage = paste("%prog [options]", " <data.tsv> ", " <output_file.png> ")
 )
 
 options <- optparse::add_option(options,
@@ -100,69 +100,52 @@ current_args <- parsed_arguments[["options"]]
 positional_args <- parsed_arguments[["args"]]
 
 # check three positional arguments are provided
-if (length(positional_args) != 3) {
+if (length(positional_args) != 2) {
     optparse::print_help(options)
-    stop(paste("Please provide the required","positional arguments","<data1.tsv> <data2.tsv> <output_file.png>"))
+    stop(paste("Please provide the required","positional arguments","<data1.tsv> <output_file.png>"))
 }
 
-# Input variables
-## assume data file has samples as columns
-## allow for pounds in header lines
-data <- t(read.table(positional_args[1], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
-data2 <- t(read.table(positional_args[2], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+datafiles <- unlist(strsplit(positional_args[1], ",", fixed = TRUE))
 
-# check for samples as columns or rows
-samples_rows <- intersect(rownames(data2),rownames(data))
-if (length(samples_rows) < 1) {
-    # allow for special chars in names
-    original_data2_rownames <- rownames(data2)
-    rownames(data2) <- make.names(rownames(data2))
-    samples_rows <- intersect(rownames(data2),rownames(data))
-    if (length(samples_rows) < 1) {
-        samples_col <- intersect(rownames(data2,colnames(data)))
-        if (length(samples_col) < 1){
-            rownames(data2) <- original_data2_rownames
-            sample <- colnames(data2)
-            data2 <- as.data.frame(t(data2))
-        } else {
-            sample <- colnames(data)
-            data <- as.data.frame(t(data))
-        }
+M <- matrix(NA, nrow=length(datafiles), ncol=length(datafiles))
+
+mt_intra <- list(C=M, Cil=M, Ciu=M, P=M)
+mt_inter_doa <- mt_intra
+
+datatype_list <- c()
+input_list <- vector(mode = "list", length = length(datafiles))
+input_index <- 1
+
+### assume all input files have the samples as the column names
+for (datafile in datafiles) {
+
+    datatype <- unlist(strsplit(basename(datafile),"_features.txt"))[1]
+    datatype_list <- append(datatype_list, datatype)
+
+    data <- t(read.table(datafile, header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+    samples <- row.names(data)
+
+    # Filter by abundance using zero as value for NAs
+    total_samples <- length(samples)
+    min_samples <- total_samples * current_args$min_prevalence
+
+    data_zeros <- data
+    data_zeros[is.na(data_zeros)] <- 0
+    filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
+
+    # remove empty rows from data
+    filtered_data <- filtered_data[rowSums(filtered_data != 0, na.rm=TRUE) > 0, , drop = FALSE]
+
+    if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
+      stop("No data remain in the data after filtering for min abundance and prevalence")
     }
+
+    input_list[[input_index]] <- filtered_data
+    input_index <- input_index + 1
 }
 
-# Filter by abundance using zero as value for NAs
-total_samples <- nrow(data2)
-min_samples <- total_samples * current_args$min_prevalence
-
-data_zeros <- data
-data_zeros[is.na(data_zeros)] <- 0
-filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
-
-# remove empty rows from data
-filtered_data <- filtered_data[rowSums(filtered_data != 0, na.rm=TRUE) > 0, , drop = FALSE]
-
-if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
-  stop("No data remain in the data after filtering for min abundance and prevalence")
-}
-
-# Filter the data2 to remove any samples without data or data2 with more than max values missing
-data2_zeros <- data2
-data2_zeros[is.na(data2_zeros)] <- 0
-filtered_data2 <- data[,colSums(data2_zeros > current_args$min_abundance) > min_samples, drop = FALSE]
-
-# remove empty rows from data
-filtered_data2 <- filtered_data2[rowSums(filtered_data2 != 0, na.rm=TRUE) > 0, , drop = FALSE]
-
-if ((ncol(filtered_data2) < 1) || (nrow(filtered_data2) < 1)) {
-  stop("No data2 remain in the data after filtering for min abundance and prevalence")
-}
-
-# filter data and data2 to only include the same samples in the same order
-sorted_samples <- sort(intersect(row.names(filtered_data2), row.names(filtered_data)))
-filtered_data2 <- filtered_data2[sorted_samples, , drop = FALSE]
-filtered_data <- filtered_data[sorted_samples, , drop = FALSE]
-
+rownames(M) <- datatype_list
+colnames(M) <- datatype_list
 
 ##############################################################
 #                                                            #
@@ -194,14 +177,29 @@ interindividual_mantel_test_doa <- function(pcl1, method1, pcl2, method2, Nperms
     return (mt)
 }
 
-mt <- interindividual_mantel_test_doa(
-      filtered_data, distance_method["Taxonomy"],
-      filtered_data2, distance_method["Taxonomy"],
-      Nperms=current_args$nperms)
-#mt_inter_doa$C[i,j] <- mt$obs
-#mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
-#mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
-#mt_inter_doa$P[i,j] <- mt$pvalue
+for (i in seq_along(datafiles)) {
+    for (j in seq_along(datafiles)) {
+        if (i != j && is.na(mt_inter_doa$C[i,j])) {
+
+            # filter data and data2 to only include the same samples in the same order
+            sorted_samples <- sort(intersect(row.names(input_list[[i]]), row.names(input_list[[j]])))
+
+            filtered_data <- input_list[[i]][sorted_samples, , drop = FALSE]
+            filtered_data2 <- input_list[[j]][sorted_samples, , drop = FALSE]
+
+
+            mt <- interindividual_mantel_test_doa(
+                  filtered_data, distance_method["Taxonomy"],
+                  filtered_data2, distance_method["Taxonomy"],
+                  Nperms=current_args$nperms)
+
+            mt_inter_doa$C[i,j] <- mt$obs
+            mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
+            mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
+            mt_inter_doa$P[i,j] <- mt$pvalue
+        }
+    }
+}
 
 # Plots
 library(RColorBrewer)
@@ -269,7 +267,7 @@ manteltest_plot <- function(O, P, Ocil, Ociu, title, stars=F) {
     return (ggp)
 }
 
-#png(positional_args[3], res = 150, height = 800, width = 1100)
-#print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, title="Inter-individual (DOA)"))
-#dev.off()
+png(positional_args[2], res = 150, height = 800, width = 1100)
+print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, title="Inter-individual (DOA)"))
+dev.off()
 
