@@ -725,7 +725,7 @@ class Stats(Workflow):
     captions = {}
 
     captions["intro"]='The data for this project was run through the standard stats workflow. The workflow is composed of four sections.\n\n \
-        \n\n1. All against all : A mantel test, which computes the correlation between two matrices of the same dimension, is run to compare all points of a data set with all variables in the metadata. \
+        \n\n1. All against all : A mantel test, which computes the correlation between two matrices of the same dimension, is run to compare all points of each data set provided will all points of all other data sets. \
         \n\n2. One against all : A permanova, used to compare groups of objects, is run with two different approaches to the statistical analysis for each of the data types, eg taxonomy, provided for the study. First the permanova is run to compare a single metadata variable with the data set. Next, in a multivariate analysis, all of the metadata variables are used for the analysis against the data set. For a longitudinal study, where there are multiple time points for each individual, the metadata co-variates that do not vary for each individual are factored into the analysis.\
         \n\n3. Each metadata against all data : MaAsLiN2 filters, transforms, and then generates a linear model to fit a single metadata variable at a time to the data. If taxonomy and pathways are provided plots for the significant pathways, stratified by species are generated.\
         \n\n4. Each data type against all other data types : HAllA tests all possible associations of each feature in a data set against all features in a second data set. It is run to compare each of the data sets provided for the study against all others, eg taxonomy vs pathways. \n\n\n '
