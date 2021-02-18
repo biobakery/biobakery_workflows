@@ -43,6 +43,21 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def run_mantel_tests(workflow,maaslin_tasks_info,output,nperm):
+
+    # name the output file and folder
+    mantel_plots=[name_files("mantel_plot.png",output,subfolder="mantel_test",create_folder=True)]
+
+    input_files=[data[1][0] for data in maaslin_tasks_info.items()]
+    workflow.add_task(
+        "[args[0]] '[args[1]]' [targets[0]] --permutations [args[2]]",
+        depends=input_files,
+        targets=mantel_plots,
+        name="mantel_test",
+        args=[get_package_file("mantel_test", "Rscript"),",".join(input_files),nperm])
+
+    return mantel_plots
+
 def get_metadata_variables(input_metadata, taxonomic_profile):
     # get the metadata variables (might be columns or rows)
 
@@ -274,7 +289,7 @@ def run_halla_on_input_file_set(workflow,maaslin_tasks_info,output,halla_options
     halla_tasks_info={}
     for run_type, infiles in maaslin_tasks_info.items():
         for run_type2, infiles2 in maaslin_tasks_info.items():
-            if run_type == run_type2 or run_type2+" "+run_type in halla_tasks_info:
+            if run_type == run_type2 or run_type2+" "+run_type in halla_tasks_info or "gene" in run_type or "gene" in run_type2:
                 continue
 
             current_target=os.path.join(os.path.abspath(output),"halla_"+run_type+"_"+run_type2,"hallagram.png")

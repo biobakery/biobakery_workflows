@@ -19,7 +19,7 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 #' <% if vars["mantel_plots"]: print("# All against all: Mantel test") %>
 
-#' <% if vars["mantel_plots"]: print("\n\n\n\nPlaceholder for mantel text and plots.\n\n\n\n") %>
+#' <% if vars["mantel_plots"] and os.path.isfile(vars["mantel_plots"][0]): print("![{0}]({1})\n\n\n".format("Mantel test",vars["mantel_plots"][0])) %>
 #' <% if pdf_format: print("\clearpage") %>
 
 #' <% if vars["permanova_plots"] or vars["beta_diversity_plots"]["univariate"] or vars["beta_diversity_plots"]["multivariate"]: print("# One against all: Permanova test") %>
