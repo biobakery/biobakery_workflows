@@ -1,6 +1,20 @@
 
 # bioBakery workflows History #
 
+## v3.0.0-alpha.7 02-19-2021 ##
+
+* Add initial (alpha) stats workflow.
+* Update stats workflow to include mantel tests and HAllA plus reorder sections. Also tile MaAsLin2 plots to fit more on one page. Add author option. Add option to add image to header. Update beta diversity table to scale with number of metadata variables. Allow for different orientations for data/metadata files for beta diversity script plus allow for special characters in sample names. In beta diversity script only consider NA values as "missing" and not zeros in metadata. Update maaslin plots from jpeg to png.
+* Update panphlan tasks to work with panphlan v3.
+* Update WDL to include strainphlan tasks (minus references and selection of clades by average abundance).
+* Add third custom database option to WDL.
+* In dada2 workflow, add option to set reverse trunc len to different value then forward and also allow for zero maxee.
+* In ITS workflow, update database selection to find ITS database installed in picrust2 library folder.
+* In usearch workflow, increase qmax for eestats for old illumina format and add ascii option for older format.
+* Added a new utility script to remove primers. 
+* In wmgx workflow, add option to provide options for taxonomic profiling. 
+* In 16s workflows, change format of picrust2 inputs for asv tables to also remove taxonomic profiling information to resolve error with latest picrust2.
+
 ## v3.0.0-alpha.6 07-10-2020 ##
 
 * Add custom usearch db option plus log to vis report for 16s.
