@@ -749,7 +749,8 @@ The stats workflow takes as input feature tables generated from the wmgx or 16s 
 
 1. MaAsLin2
 2. HUMAnN (for pathways barcharts stratified by species)
-3. R plus vegan, ggplot2, optparse, gridExtra, permute, reshape2, RColorBrewer, cowplot, plyr
+3. HAllA
+4. R plus vegan, ggplot2, optparse, gridExtra, permute, reshape2, RColorBrewer, cowplot, plyr, ade4, viridis
 
 **Inputs**
 
@@ -808,14 +809,16 @@ Workflow arguments can be provided on the command line or with an optional confi
 3. If biom files are provided, convert biom files to tsv.
 4. Checks for sample names in feature tables that are not included in metadata file. Throws an error to request the user add the sample names to the metadata file.
 5. Create feature tables for all input files. These files are compatible with all downstream processing tasks (ie maaslin2, humann_barplots).
-6. Run maaslin2 on all input files.
+6. Run mantel tests compairing all data files input.
 7. If pathway abundance files are provided, generate stratified pathways plots.
 
     * For the top N pathways (based on significant results from maaslin2), generate plot for each categorical metadata variable.
 
 8. If longitudinal, run the permanova script.
 9. If not longitudinal, run the beta diversity script to generate stacked barplots of R-squared and P Values for adonis run on each metadata variable and again on all variables.
-10. Create a report with figures.
+10. Run MaAsLin2 on all input files.
+11. Run HAllA on all input files (minus gene families due to size).
+12. Create a report with figures.
 
 **Run a demo**
 
