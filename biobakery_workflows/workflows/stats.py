@@ -74,7 +74,7 @@ workflow.add_argument("metadata-continuous",desc="the continuous features (for t
 workflow.add_argument("metadata-exclude",desc="the features to exclude (for the plot stratified pathways)", action="append", default=[])
 workflow.add_argument("input-file-type",desc="the file type for an input file formatted as 'filename,filetype'", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
-    default="The data for this project was run through the standard stats workflow.")
+    default=workflow_vis.captions["intro"])
 
 # get the arguments from the command line
 args = workflow.parse_args()
