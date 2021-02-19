@@ -107,7 +107,6 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
         print("## {}\n\n".format(newtype_title))
         print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
 
-        print("### MaAsLin2 Heatmap\n\n")
         show_heatmaps(maaslin_heatmap, newtype)
         print("\clearpage \n\n")
 
