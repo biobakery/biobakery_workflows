@@ -52,6 +52,7 @@ def quality_control(workflow, method, fastq_file, output_folder, threads, maxee,
     
     # generate a quality report that can be used again for filtering
     # increase qmax for old illumina format
+    qmax=45
     if fastq_ascii != "33":
         qmax=75
 
