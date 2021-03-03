@@ -18,17 +18,20 @@ workflow workflowMTX {
     File versionSpecificChocophlan
     File versionSpecificUniRef90
     File versionSpecificUtilityMapping
+    File StrainphlanReferences
     
     # Optional input variables
     Boolean? bypassFunctionalProfiling
     Boolean? bypassStrainProfiling
     Int? MaxStrains
+    File? CustomStrainList
     String? dataType
     File? inputMetadataFile
     Int? preemptibleAttemptsOverride
     Int? MaxMemGB_QualityControlTasks
     Int? MaxMemGB_TaxonomicProfileTasks
     Int? MaxMemGB_FunctionalProfileTasks
+    Int? MaxDiskGB_FunctionalProfileTasks
     
     File? customQCDB1
     File? customQCDB2
@@ -36,7 +39,7 @@ workflow workflowMTX {
   }
   
   # Set the docker tags
-  String kneaddataDockerImage = "biobakery/kneaddata:0.9.0"
+  String kneaddataDockerImage = "biobakery/kneaddata:0.10.0"
   String metaphlanDockerImage = "biobakery/metaphlan:3.0.1"
   String humannDockerImage = "biobakery/humann:3.0.0.a.4"
   
@@ -141,7 +144,8 @@ workflow workflowMTX {
         versionSpecificUniRef90=versionSpecificUniRef90,
         humannDockerImage=humannDockerImage,
         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
-        MaxMemGB=MaxMemGB_FunctionalProfileTasks
+        MaxMemGB=MaxMemGB_FunctionalProfileTasks,
+        MaxDiskGB=MaxDiskGB_FunctionalProfileTasks
       }
 
       # regroup gene families to ECs
@@ -289,30 +293,47 @@ workflow workflowMTX {
       }
     }
     
-    call StrainList {
-      input:
-        InFiles=StrainMarkers.StrainMarkersOutput,
-        OutFileName=StrainPhlAnCladeList,
-        strainphlanDockerImage=strainphlanDockerImage,
-        preemptibleAttemptsOverride=preemptibleAttemptsOverride,
-        MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+    if (! defined(CustomStrainList) ) {
+      call StrainList {
+        input:
+          InFiles=StrainMarkers.StrainMarkersOutput,
+          OutFileName=StrainPhlAnCladeList,
+          strainphlanDockerImage=strainphlanDockerImage,
+          preemptibleAttemptsOverride=preemptibleAttemptsOverride,
+          MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+        }
       }
       
     call PickStrains {
       input:
         StrainList=StrainList.OutFile,
-        strainphlanDockerImage=strainphlanDockerImage
+        TaxonomicProfileFile=JoinTaxonomicProfiles.OutFile,
+        CustomStrainList=CustomStrainList,
+        workflowsDockerImage=workflowsDockerImage
       }
     
-	scatter (StrainNumber in range(setMaxStrains)){      
-      call StrainProfile {
-         input:
-         InFiles=StrainMarkers.StrainMarkersOutput,
-         StrainList=PickStrains.SelectedStrains,
-         StrainNumber=StrainNumber,
-         strainphlanDockerImage=strainphlanDockerImage,
-         preemptibleAttemptsOverride=preemptibleAttemptsOverride,
-         MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+	scatter (StrainNumber in range(setMaxStrains)){     
+      if (StrainNumber < length(PickStrains.SelectedStrains)) {
+      
+        call PickReferences {
+           input:
+           StrainList=PickStrains.SelectedStrains,
+           StrainNumber=StrainNumber,
+           References=StrainphlanReferences,
+           workflowsDockerImage=workflowsDockerImage
+        }
+        
+        call StrainProfile {
+           input:
+           InFiles=StrainMarkers.StrainMarkersOutput,
+           StrainList=PickStrains.SelectedStrains,
+           StrainNumber=StrainNumber,
+           References=StrainphlanReferences,
+           ReferencesOptions=PickReferences.SelectedReferences[0],
+           strainphlanDockerImage=strainphlanDockerImage,
+           preemptibleAttemptsOverride=preemptibleAttemptsOverride,
+           MaxMemGB=MaxMemGB_TaxonomicProfileTasks
+        }
       }
     }
   }
@@ -560,15 +581,35 @@ task StrainList {
 
 task PickStrains {
   input {
-    File StrainList
-    String strainphlanDockerImage
+    File? StrainList
+    File TaxonomicProfileFile
+    File? CustomStrainList
+    String workflowsDockerImage
   }
   
+  String UserSelectedStrainList = if defined(CustomStrainList) then "yes" else "no"
+  
   command {
-    python <<CODE
-    for line in open("${StrainList}"):
-      if "s__" in line:
-          print(line.rstrip().split(" ")[5][:-1])
+    python3 <<CODE
+    
+    from biobakery_workflows import utilities
+    
+    if "${UserSelectedStrainList}" == "yes":
+        for line in open("${CustomStrainList}"):
+            if "s__" in line:
+                print(line.rstrip())    
+    else:
+        species_ranked = utilities.rank_species_average_abundance("${TaxonomicProfileFile}")
+    
+        clades=set()
+        with open("${StrainList}") as file_handle:
+            for line in file_handle:
+                if "s__" in line:
+                    clades.add(line.strip().split("\t")[1].split(": in ")[0])
+        
+        for taxon in species_ranked:
+            if taxon in clades:
+                print(taxon)
     CODE
   }
   
@@ -577,10 +618,65 @@ task PickStrains {
   }
   
   runtime {
-    docker: strainphlanDockerImage
+    docker: workflowsDockerImage
     cpu: 1
-      memory: "10 GB"
-      disks: "local-disk 10 SSD"
+      memory: "5 GB"
+      disks: "local-disk 5 SSD"
+  }
+}
+
+task PickReferences {
+  input {
+    Array[String] StrainList
+    Int StrainNumber
+    File References
+    String workflowsDockerImage
+  }
+  
+  String CurrentClade = StrainList[StrainNumber]
+
+  command {
+    python3 <<CODE
+   
+    import tarfile
+
+    from biobakery_workflows import data
+
+    refnames = tarfile.open("${References}").getnames()
+ 
+    # get the list of reference genomes
+    genomes=set()
+    with open(data.get_file("strainphlan_species_gcf.tsv")) as file_handle:
+        for line in file_handle:
+            if line.startswith("${CurrentClade}"):
+                genomes.add(line.rstrip().split("\t")[-1]+".fna.bz2")
+        
+    genomes=list(filter(lambda x: x in refnames, genomes))
+    
+    # if more than six references are found, limit total used
+    # this resolves e. coli which has so many references it can exceed command line length
+    if len(genomes) > 6:
+        genomes = genomes[:6]    
+        
+    # add the reference genome files to the command, if any are found
+    command_option =  " "
+    if len(genomes):
+        command_option = " --references ./references/" + " --references ./references/".join(genomes)
+
+    print(command_option)
+
+    CODE
+  }
+  
+  output {
+    Array[String] SelectedReferences = read_lines(stdout())
+  }
+  
+  runtime {
+    docker: workflowsDockerImage
+    cpu: 1
+      memory: "5 GB"
+      disks: "local-disk 15 SSD"
   }
 }
 
@@ -590,6 +686,8 @@ task StrainProfile {
     Array[File] InFiles
     Array[String] StrainList
     Int StrainNumber
+    File References
+    String ReferencesOptions
     String strainphlanDockerImage
     Int? MaxMemGB
     Int? preemptibleAttemptsOverride
@@ -604,12 +702,14 @@ task StrainProfile {
     echo ${CurrentClade}
     
     mkdir ${CurrentClade}
+    
+    mkdir references && tar xzvf ${References} -C references
 
     for infile in ${sep=' ' InFiles}; do ln -s $infile; done
 
     extract_markers.py -c ${CurrentClade} -o ./
 
-    strainphlan -s ./*.pkl -o ${CurrentClade} -c ${CurrentClade} -n 8
+    strainphlan -s ./*.pkl -o ${CurrentClade} -c ${CurrentClade} -n 8 ${ReferencesOptions}
 
     tar -czf ${CurrentClade}.tar.gz ${CurrentClade}
   }
@@ -636,10 +736,12 @@ task FunctionalProfile {
     File versionSpecificUniRef90
     String humannDockerImage
     Int? MaxMemGB
+    Int? MaxDiskGB
     Int? preemptibleAttemptsOverride
   }
 
   Int mem = select_first([MaxMemGB, 32])
+  Int disk = select_first([MaxDiskGB, 120])
   Int preemptible_attempts = select_first([preemptibleAttemptsOverride, 2])
   
   String databases = "databases/"
@@ -665,7 +767,7 @@ task FunctionalProfile {
     docker: humannDockerImage
     cpu: 8
       memory: mem + " GB"
-      disks: "local-disk 120 SSD"
+      disks: "local-disk "+ disk +" SSD"
       preemptible: preemptible_attempts
   }
 }
