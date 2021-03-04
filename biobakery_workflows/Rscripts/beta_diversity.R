@@ -181,7 +181,9 @@ if (current_args$covariate_equation != "") {
   if (length(names(metadata)) != length(names(filtered_metadata)))
   {
     diff <- setdiff(names(metadata),names(filtered_metadata))
-    stop("Metadata covariates have been filtered from the data set that are included in the covariate equation: ", paste(diff, collapse=" , "))
+    if (! length(diff) == 1 && diff[1] == "subject") {
+      stop("Metadata covariates have been filtered from the data set that are included in the covariate equation: ", paste(diff, collapse=" , "))
+    }
   }
 
   results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
