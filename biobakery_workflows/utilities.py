@@ -449,6 +449,10 @@ def run_humann_barplot(task, number, metadata_end, categorical):
         if not "pwy" in selected_pathway.lower():
             selected_pathway = "-".join(original_selected_pathway.split(".")[0:3])
 
+        # check for maaslin added X at start of pathway
+        if selected_pathway[1].isdigit() and selected_pathway[0].lower() == "x":
+            selected_pathway = selected_pathway[1:]
+
         run_task(
             "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]] && echo '[args[2]]' > [targets[1]]",
             depends=task.depends,
