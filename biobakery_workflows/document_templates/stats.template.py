@@ -61,7 +61,7 @@ def show_all_permanova(permanova_plots):
 
 #+ echo=False
 #' <% show_all_variate_plots("multivariate") %>
-#' <% if vars["beta_diversity_plots"]["multivariate"] and pdf_format: print("\clearpage") %>
+#' <% if (vars["beta_diversity_plots"]["multivariate"] or vars["permanova_plots"]) and pdf_format: print("\clearpage") %>
 
 #' <% if not vars["bypass_maaslin"]: print("# Each metadata against all data: MaAsLin2") %>
 

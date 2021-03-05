@@ -2,6 +2,7 @@
 #' % Author: <% print(vars["author"]) %>
 #' % Date: <% import time; print(time.strftime("%m/%d/%Y")+"\n") %>
 
+#' <% if vars["format"] == "pdf": print("\clearpage") %>
 
 #' # Introduction
 
