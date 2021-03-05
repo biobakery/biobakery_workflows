@@ -206,7 +206,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
         metadata_end=metadata_row_names[-1]
         for i in range(top_pathways):
 
-            new_pathways_plot=name_files("stratified_pathways_{0}.jpg".format(i), output, subfolder="stratified_pathways")
+            new_pathways_plot=name_files("stratified_pathways_{0}.png".format(i), output, subfolder="stratified_pathways")
             stratified_plots_tasks.append(workflow.add_task(
                 partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=list(metadata_labels.keys())),
                 depends=[maaslin_tasks_info["pathways"][2],humann_barplot_input],
@@ -440,14 +440,22 @@ def run_humann_barplot(task, number, metadata_end, categorical):
     except IndexError:
         original_selected_pathway, metadata_focus = None
 
-    if original_selected_pathway:
+    # first check for stratified pathways prior to running barplot script to prevent error
+    stratified_pathways=False
+    for line in open(task.depends[1].name):
+        data = line.split("\t")
+        if "|" in data[0]:
+            stratified_pathways=True
+
+    if original_selected_pathway and stratified_pathways:
         # only use pathway name and replace periods if present with dash
         selected_pathway = original_selected_pathway
         if not "-" in selected_pathway:
             selected_pathway = "-".join(original_selected_pathway.split(".")[0:2])
 
         if not "pwy" in selected_pathway.lower():
-            selected_pathway = "-".join(original_selected_pathway.split(".")[0:3])
+            split_pathway = original_selected_pathway.split("..")
+            selected_pathway = "-".join(split_pathway[0].split("."))
 
         # check for maaslin added X at start of pathway
         if selected_pathway[1].isdigit() and selected_pathway[0].lower() == "x":
@@ -456,12 +464,12 @@ def run_humann_barplot(task, number, metadata_end, categorical):
         run_task(
             "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]] && echo '[args[2]]' > [targets[1]]",
             depends=task.depends,
-            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")],
+            targets=task.targets+[task.targets[0].name.replace(".png",".txt")],
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
     else:
         run_task("touch [targets[0]] && touch [targets[1]]",
             depends=task.depends,
-            targets=task.targets+[task.targets[0].name.replace(".jpg",".txt")])
+            targets=task.targets+[task.targets[0].name.replace(".png",".txt")])
 
 def find_data_file(data_files, type, required=False):
     """ Return an error if the file of that type has not been found """

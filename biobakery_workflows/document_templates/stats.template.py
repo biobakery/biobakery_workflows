@@ -123,12 +123,12 @@ def show_all_maaslin_run_types(maaslin_tasks_info):
 def show_stratified_plots(plots):
     # Display each of the plots in the report
     no_plots_found = True
-    for image_file in sorted(plots, key=lambda x: int(x.replace(".jpg","").split("_")[-1])):
+    for image_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-1])):
         # get the pathway number and metadata name
-        info = image_file.replace(".jpg","").split("_")
+        info = image_file.replace(".png","").split("_")
         pathway_number = info[-1]
         try:
-            metadata_focus = open(image_file.replace(".jpg",".txt")).readline().rstrip()
+            metadata_focus = open(image_file.replace(".png",".txt")).readline().rstrip()
         except EnvironmentError:
             metadata_focus = "Unknown"
 
