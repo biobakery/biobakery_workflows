@@ -24,8 +24,8 @@ distance_method <- c(
 theme_nature <- function() list(
     theme_cowplot(),
     theme(
-        text               = element_text(size=6),
-        axis.text          = element_text(size=5),
+        text               = element_text(size=8),
+        axis.text          = element_text(size=8),
         axis.title.x       = element_text(margin=margin(1, 0, 0.5, 0)),
         axis.title.x.top   = element_text(margin=margin(0, 0, 2, 0)),
         axis.title.y       = element_text(margin=margin(0, 1, 0, 0.5)),
@@ -47,7 +47,7 @@ theme_nature <- function() list(
         plot.title         = element_text(size=8),
         plot.margin        = margin(5, 5, 5, 5),
         strip.background   = element_blank(),
-        strip.text         = element_text(size=6),
+        strip.text         = element_text(size=8),
         strip.text.x       = element_text(margin=margin(3, 0, 3, 0)),
         strip.text.y       = element_text(margin=margin(0, 3, 0, 3))
     )
@@ -234,11 +234,11 @@ manteltest_plot <- function(O, P, Ocil, Ociu, datatype_list, title) {
         geom_tile(aes(fill=obs)) 
 
     #ggp
-    ggp <- ggp + geom_text(aes(label=ifelse(is.na(padj), "", sprintf("FDR p\n%.2g", padj))), color="black", size=1.7)
-    ggp <- ggp + geom_text(aes(label=ifelse(is.na(obs), "", sprintf("%.1f%%\n[%.1f%% - %.1f%%]", 100*obs, 100*cil, 100*ciu))), color="white", size=1.7)
+    ggp <- ggp + geom_text(aes(label=ifelse(is.na(padj), "", sprintf("FDR p\n%.2g", padj))), color="black", size=2.5)
+    ggp <- ggp + geom_text(aes(label=ifelse(is.na(obs), "", sprintf("%.1f%%\n[%.1f%% - %.1f%%]", 100*obs, 100*cil, 100*ciu))), color="white", size=2.5)
     ggp <- ggp + xlab(NULL) + ylab(NULL)
     ggp <- ggp + theme_nature()
-    ggp <- ggp + geom_text(aes(label=ifelse(V1==V2, ifelse(is.na(obs), "N/A", ""), "")), size=1.7, color="gray") 
+    ggp <- ggp + geom_text(aes(label=ifelse(V1==V2, ifelse(is.na(obs), "N/A", ""), "")), size=2.5, color="gray") 
     ggp <- ggp + theme(axis.text.x=element_text(angle=-17, hjust=0.05), legend.position = "left")  
     ggp <- ggp + guides(fill=guide_colourbar(title=NULL, barheight=unit(0.65,"npc"), label.position = "left"), color="none")
   
