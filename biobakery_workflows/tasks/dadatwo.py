@@ -208,13 +208,13 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
                --output_dir=[args[0]]\
                --filtered_dir=[args[1]]\
                --error_ratesF_png=[targets[0]]\
-               --error_ratesR_png=[targets[1]]\
-               --error_ratesF_path=[targets[2]]\
-               --error_ratesR_path=[targets[3]]\
+               --error_ratesR_png=[args[2]]\
+               --error_ratesF_path=[targets[1]]\
+               --error_ratesR_path=[args[3]]\
                --threads=[vars[1]]",
              depends = [readcounts_tsv_path],
-             targets = [error_ratesF_png, error_ratesR_png, error_ratesF_path, error_ratesR_path],  
-             args = [output_folder, filtered_dir],
+             targets = [error_ratesF_png, error_ratesF_path],  
+             args = [output_folder, filtered_dir, error_ratesR_png, error_ratesR_path],
              vars = [script_path, threads],
              name = "learn_error_rates"
              )

@@ -39,14 +39,23 @@ filtRs <- file.path(filt.path,sort(grep( "*_R_filt.fastq*", list.files(filt.path
 set.seed(100)
 # Filtered forward read error rates
 errF <- dada2::learnErrors(filtFs, nread=1e6, multithread=as.numeric(args.list$threads))
-# Filtered reverse read error rates
-errR <- dada2::learnErrors(filtRs, nread=1e6, multithread=as.numeric(args.list$threads))
 
+
+# Filtered reverse read error rates
+if (length(filtRs) > 0) {
+  errR <- dada2::learnErrors(filtRs, nread=1e6, multithread=as.numeric(args.list$threads))
+}
 
 # Visualize the estimated error rates
 ggplot2::ggsave(args.list$error_ratesF_png, dada2::plotErrors(errF, nominalQ=TRUE) , device = "png")
-ggplot2::ggsave(args.list$error_ratesR_png, dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
+
+if (length(filtRs) > 0) {
+  ggplot2::ggsave(args.list$error_ratesR_png, dada2::plotErrors(errR, nominalQ=TRUE) , device = "png")
+}
 
 # Save as rds files
 saveRDS(errF, args.list$error_ratesF_path) 
-saveRDS(errR, args.list$error_ratesR_path)
+
+if (length(filtRs) > 0) {
+  saveRDS(errR, args.list$error_ratesR_path)
+}
