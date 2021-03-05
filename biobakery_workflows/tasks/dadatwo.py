@@ -249,14 +249,14 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
               --output_dir=[args[0]]\
               --filtered_dir=[args[1]]\
               --error_ratesF_path=[depends[0]]\
-              --error_ratesR_path=[depends[1]]\
+              --error_ratesR_path=[args[4]]\
               --mergers_file_path=[targets[0]]\
               --threads=[vars[1]]\
               --minoverlap=[args[2]]\
               --maxmismatch=[args[3]]",
-            depends = [error_ratesF_path, error_ratesR_path],
+            depends = [error_ratesF_path],
             targets = [mergers_file_path],                       
-            args = [output_dir, filtered_dir, minoverlap, maxmismatch],
+            args = [output_dir, filtered_dir, minoverlap, maxmismatch, error_ratesR_path],
             vars = [script_path, threads],
             name = "dereplicate_and_merge"
             )

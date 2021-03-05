@@ -37,6 +37,10 @@ filt_path <- file.path(output.path, args.list$filtered_dir)
 fnFs <- sort(grep( "_F_filt.*\\.fastq", list.files(filt_path), value = T ) )
 fnRs <- sort(grep( "_R_filt.*\\.fastq", list.files(filt_path), value = T ) )
 
+paired <- FALSE
+if (length(fnRs) > 0) {
+  paired <- TRUE
+}
 
 # Extract sample extension
 sample.ext <- tools::file_ext(fnFs)
@@ -45,20 +49,28 @@ if(identical("gz",sample.ext[1])){
 }
 # Extract sample names,allowing variable filenames
 sample.names <- gsub( paste0("_F_filt.*\\.", sample.ext), "", fnFs, perl = T)
-sample.namesR <- gsub( paste0("_R_filt.*\\.", sample.ext), "", fnRs, perl = T)
 
-if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
+if (paired) {
+  sample.namesR <- gsub( paste0("_R_filt.*\\.", sample.ext), "", fnRs, perl = T)
+
+  if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
+}
 
 cwd <- getwd()
 
 # Define filenames for filtered input files
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
-filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
+
+if (paired) {
+  filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
+}
 
 # Read error rates from saved files 
 errF <- readRDS(args.list$error_ratesF_path)
-errR <- readRDS(args.list$error_ratesR_path)
 
+if (paired) {
+  errR <- readRDS(args.list$error_ratesR_path)
+}
 
 # Sample inference of dereplicated reads, and merger of paired-end reads
 mergers <- vector("list", length(sample.names))
@@ -70,12 +82,23 @@ for(sam in sample.names) {
   print(filtFs[[sam]])
   derepF <- dada2::derepFastq(filtFs[[sam]])
   ddF <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads))
-  derepR <- dada2::derepFastq(filtRs[[sam]])
-  ddR <- dada2::dada(derepR, err=errR, multithread=as.numeric(args.list$threads))
-  merger <- dada2::mergePairs(ddF, derepF, ddR, derepR, minOverlap=as.numeric(args.list$minoverlap), maxMismatch=as.numeric(args.list$maxmismatch))
-  mergers[[sam]] <- merger
+
+  if(paired) {
+    derepR <- dada2::derepFastq(filtRs[[sam]])
+    ddR <- dada2::dada(derepR, err=errR, multithread=as.numeric(args.list$threads))
+    merger <- dada2::mergePairs(ddF, derepF, ddR, derepR, minOverlap=as.numeric(args.list$minoverlap), maxMismatch=as.numeric(args.list$maxmismatch))
+    mergers[[sam]] <- merger
+  } else {
+    # method from dada2 qiime2 plugin
+    mergers[[sam]] <- dada2::dada(derepF, err=errR, multithread=as.numeric(args.list$threads),verbose=FALSE)
+  }
+
 }
-rm(derepF); rm(derepR)
+rm(derepF)
+
+if (paired) {
+  rm(derepR)
+}
 
 # Save mergers to file 
 saveRDS(mergers, args.list$mergers_file_path)
