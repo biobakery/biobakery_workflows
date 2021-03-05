@@ -41,6 +41,12 @@ pair_id2 <- sub("1","2",pair_id1)
 fnFs <- sort(grep(paste0(pair_id1,".*\\.fastq"), list.files(input.path), value = T ) )
 fnRs <- sort(grep(paste0(pair_id2,".*\\.fastq"), list.files(input.path), value = T ) )
 
+paired <- TRUE
+if (length(fnFs)==0 || length(fnRs)==0) {
+  paired <- FALSE
+  fnFs <- sort(grep(".*\\.fastq", list.files(input.path), value = T ) )
+}
+
 # Extract sample files extension
 sample.ext <- tools::file_ext(fnFs)
 
@@ -50,13 +56,19 @@ if(identical("gz",sample.ext[1])){
   }
 # Extract sample names  allowing variable filenames
 sample.names <- gsub( paste0(pair_id1,".*\\.",sample.ext), "", fnFs, perl = T)
-sample.namesR <- gsub( paste0(pair_id2,".*\\.",sample.ext), "", fnRs, perl = T)
 
-if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
+if (paired) {
+  sample.namesR <- gsub( paste0(pair_id2,".*\\.",sample.ext), "", fnRs, perl = T)
+
+  if(!identical(sample.names, sample.namesR)) stop("Forward and reverse files do not match.")
+}
 
 # Specify the full path to the fnFs and fnR
 fnFs <- file.path(input.path, fnFs)
-fnRs <- file.path(input.path, fnRs)
+
+if (paired) {
+  fnRs <- file.path(input.path, fnRs)
+}
 
 # Create filtered_input/ subdirectory for storing filtered fastq reads
 filt_path <- file.path(output.dir, args.list$filtered_dir) 
@@ -76,21 +88,26 @@ dev.off()
 rm(fwd.qc.plots.list)
 
 # Reverse reads
-rev.qc.plots.list <- list()
-for( i in 1 : length(fnRs)) {
-  rev.qc.plots.list[[i]] <- dada2::plotQualityProfile(fnRs[i])
-  rm(i)
-}
-# Save to file
-png(args.list$reads_plotR)
-gridExtra::marrangeGrob( rev.qc.plots.list, ncol=2, nrow=3, top = NULL )
-dev.off()
-rm(rev.qc.plots.list)
+if (paired) {
+  rev.qc.plots.list <- list()
+  for( i in 1 : length(fnRs)) {
+    rev.qc.plots.list[[i]] <- dada2::plotQualityProfile(fnRs[i])
+    rm(i)
+  }
+  # Save to file
+  png(args.list$reads_plotR)
+  gridExtra::marrangeGrob( rev.qc.plots.list, ncol=2, nrow=3, top = NULL )
+  dev.off()
 
+  rm(rev.qc.plots.list)
+}
 
 # Define filenames for filtered input files
 filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.", sample.ext))
-filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
+
+if (paired) {
+  filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
+}
 
 # Filter the forward and reverse reads:
 # Note that:
@@ -107,11 +124,19 @@ trunc_len_max1 <- trunc_len_max2 + strtoi(args.list$trunc_len_rev_offset)
 maxee1 <- strtoi(args.list$maxee)
 maxee2 <- maxee1 * 2
 
-rd.counts <- as.data.frame(
-  dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(trunc_len_max1,trunc_len_max2),
-                       minLen = 50, maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
-                compress=TRUE, multithread=as.numeric(args.list$threads)) 
-)
+if (paired) {
+  rd.counts <- as.data.frame(
+    dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(trunc_len_max1,trunc_len_max2),
+                         minLen = 50, maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
+                  compress=TRUE, multithread=as.numeric(args.list$threads)) 
+  ) 
+  } else {
+  rd.counts <- as.data.frame(
+    dada2::filterAndTrim(fnFs, filtFs, truncLen=trunc_len_max2,
+                         minLen = 50, maxN=0, maxEE=maxee1, truncQ=2, rm.phix=TRUE,
+                  compress=TRUE, multithread=as.numeric(args.list$threads)) 
+  )
+}
 # Table of before/after read counts
 rd.counts$ratio <- round( rd.counts$reads.out / rd.counts$reads.in, digits = 2 )
 
