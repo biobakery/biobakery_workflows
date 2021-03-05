@@ -163,13 +163,13 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                --readcounts_tsv_path=[targets[0]]\
                --readcounts_rds_path=[targets[1]]\
                --reads_plotF=[targets[2]]\
-               --reads_plotR=[targets[3]]\
+               --reads_plotR=[args[7]]\
                --pair_id=[args[4]]\
                --threads=[args[5]]\
                --trunc_len_rev_offset='[args[6]]'",
              depends =[TrackedDirectory(input_folder)],
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png],
-             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset],
+             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png],
              vars = [script_path,filtered_dir],
              name ="filter_and_trim"
              )
