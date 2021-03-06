@@ -76,7 +76,11 @@ if (paired) {
 mergers <- vector("list", length(sample.names))
 names(mergers) <- sample.names
 names(filtFs) <- sample.names
-names(filtRs) <- sample.names
+
+if (paired) {
+  names(filtRs) <- sample.names
+}
+
 for(sam in sample.names) {
   cat("Processing:", sam, "\n")
   print(filtFs[[sam]])
