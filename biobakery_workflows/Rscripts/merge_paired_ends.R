@@ -94,7 +94,7 @@ for(sam in sample.names) {
     mergers[[sam]] <- merger
   } else {
     # method from dada2 qiime2 plugin
-    mergers[[sam]] <- dada2::dada(derepF, err=errR, multithread=as.numeric(args.list$threads),verbose=FALSE)
+    mergers[[sam]] <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads),verbose=FALSE)
   }
 
 }
