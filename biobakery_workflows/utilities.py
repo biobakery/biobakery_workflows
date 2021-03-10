@@ -227,6 +227,76 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
     return stratified_pathways_plots,stratified_plots_tasks
 
+def show_stratified_plots(plots):
+    # Display each of the plots in the report
+    no_plots_found = True
+    for image_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-1])):
+        # get the pathway number and metadata name
+        info = image_file.replace(".png","").split("_")
+        pathway_number = info[-1]
+        try:
+            metadata_focus = open(image_file.replace(".png",".txt")).readline().rstrip()
+        except EnvironmentError:
+            metadata_focus = "Unknown"
+
+        if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
+            no_plots_found = False
+            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
+
+    if no_plots_found:
+        print("No significant associations for pathways with categorical metadata found.")
+
+def show_halla_results(halla_tasks_info):
+    for run_type in halla_tasks_info:
+        print("## HAllA "+run_type.replace(" "," vs. ")+"\n\n")
+        show_heatmaps(halla_tasks_info[run_type], run_type)
+        print("\clearpage \n\n")
+
+def show_heatmaps(heatmap, run_type):
+    # display the heatmap if generated
+
+    if os.path.isfile(heatmap):
+        print("\n\n!["+run_type+" heatmap]("+heatmap+")\n\n")
+    else:
+        print("Not enough significant associations for a heatmap.\n\n")
+
+def show_maaslin_tile(figures, type):
+    # show the top plots for each metadata
+
+    images_found = False
+
+    for metadata_name in figures:
+        if ( os.path.isfile(figures[metadata_name]) and os.path.getsize(figures[metadata_name]) > 0 ):
+            images_found = True
+            print("#### "+metadata_name+"\n\n")
+            print("\n![Top "+metadata_name+" associations for "+type+"]("+figures[metadata_name]+")\n\n\n")
+            print("\clearpage \n\n")
+
+    if not images_found:
+        print("No significant associations.\n\n")
+
+def show_all_maaslin_run_types(maaslin_tasks_info):
+    # search through the maaslin tasks info and show all plots for all data types
+
+    for newtype in maaslin_tasks_info:
+        maaslin_heatmap = maaslin_tasks_info[newtype][1]
+        maaslin_output_folder = os.path.dirname(maaslin_heatmap)
+
+        # Start tile with upper case
+        newtype_title=newtype[0].upper()+newtype[1:]
+
+        print("## {}\n\n".format(newtype_title))
+        print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
+
+        show_heatmaps(maaslin_heatmap, newtype)
+        print("\clearpage \n\n")
+
+        print("### MaAsLin2 Plots\n\n")
+        print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n\n\n")
+        image_files, maaslin_tiles = get_maaslin_image_files(maaslin_tasks_info)
+
+        show_maaslin_tile(maaslin_tiles[newtype], newtype)
+        print("\clearpage \n\n")
 
 def generate_tile_of_images(input_files, output_file):
     # for the set of images, generate a single tile with a table of images
@@ -253,6 +323,23 @@ def generate_tile_of_images(input_files, output_file):
 
     pyplot.savefig(output_file, dpi=300)
 
+
+def show_all_variate_plots(runtype,variate_plots):
+    for filetype, image_file in variate_plots[runtype].items():
+        if image_file and os.path.isfile(image_file):
+            print("![{0} {1}]({2})\n\n\n".format(filetype,runtype,image_file))
+        elif not os.path.isfile(image_file):
+            print("Error generating variate plots for filetype {}".format(filetype))
+
+def show_all_permanova(permanova_plots):
+    for filetype in permanova_plots:
+        permanova_file = permanova_plots[filetype]
+        if filetype == "all":
+            filetype = "Heatmap of all data features"
+        if os.path.isfile(permanova_file):
+            print("![{0}]({1})\n\n".format(filetype, permanova_file))
+        else:
+            print("Error generating permanova for filetype {}".format(filetype))
 
 def get_maaslin_image_files(maaslin_tasks_info):
     # Get a list of all the generaged maaslin2 image files

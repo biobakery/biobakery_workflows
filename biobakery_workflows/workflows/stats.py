@@ -146,9 +146,24 @@ else:
 
 # determine template based on if a header image is provided
 if args.header_image:
-    templates=[utilities.get_package_file("header_image"),utilities.get_package_file("stats")]
+    templates=[utilities.get_package_file("header_image")]
 else:
-    templates=[utilities.get_package_file("header_author"),utilities.get_package_file("stats")]
+    templates=[utilities.get_package_file("header_author")]
+
+# if mantel tests then add in the template
+if mantel_plots:
+    templates+=[utilities.get_package_file("stats_mantel_plots")]
+
+templates+=[utilities.get_package_file("stats_permanova")]
+
+if not args.bypass_maaslin:
+    templates+=[utilities.get_package_file("stats_maaslin")]
+
+if stratified_pathways_plots:
+    templates+=[utilities.get_package_file("stats_maaslin_stratified")]
+
+if not args.bypass_halla:
+    templates+=[utilities.get_package_file("stats_halla")]
 
 if args.print_template:
     # only print the template to stdout
