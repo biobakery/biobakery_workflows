@@ -4,9 +4,10 @@
 
 #+ echo=False
 import os
+import re
 import numpy
 
-from biobakery_workflows import visualizations, utilities
+from biobakery_workflows import visualizations, utilities, files
 
 # determine the document format
 pdf_format=True if vars["format"] == "pdf" else False
@@ -16,3 +17,5 @@ pdf_format=True if vars["format"] == "pdf" else False
 #' # Introduction
 
 #' <% print(vars["introduction_text"]) %>
+
+#' <% if pdf_format: print("\clearpage") %>
