@@ -196,6 +196,10 @@ if not args.introduction:
 else:
     methodvars["introduction"]=args.introduction
 
+# add author and image if included
+methodvars["author"]=args.author_name
+methodvars["header_image"]=args.header_image
+
 if args.print_template:
     # only print the template to stdout
     utilities.print_template(templates)
