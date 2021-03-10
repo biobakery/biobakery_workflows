@@ -83,87 +83,13 @@ log_file=None
 if not args.exclude_workflow_info:
     log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
 
-# identify method and list the required and optional files for the workflow
-# these are expected to be included in the input folder
+# get the variables, input files, and method depending on the input files provided for the workflow
+method_vars, method_depends, input_files, method = utilities.set_variables_for_16s_workflow_based_on_input(args,otu_table,files)
 
-# for dada2/its workflow
-if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
-    method = "dada2"
-    if os.path.isdir(files.SixteenS.path("filtN", args.input, error_if_not_found=False)):
-        method = "its"
-    doc_title = method.upper() + " 16s Report"
-    input_files = {
-        "required": [
-            "otu_table_closed_reference",
-            "msa_nonchimera",
-            "counts_each_step",
-            "error_ratesF",
-            "error_ratesR",
-            "readF_qc",
-            "readR_qc"]}
-
-    # get the paths for the required files and check they are found
-    centroid_fasta = files.SixteenS.path("msa_nonchimera", args.input, error_if_not_found=True)
-    counts_each_step = files.SixteenS.path("counts_each_step", args.input, error_if_not_found=True)
-    error_ratesF = files.SixteenS.path("error_ratesF", args.input, error_if_not_found=True)
-    error_ratesR = files.SixteenS.path("error_ratesR", args.input, error_if_not_found=True)
-    readF_qc = files.SixteenS.path("readF_qc", args.input, error_if_not_found=True)
-    readR_qc = files.SixteenS.path("readR_qc", args.input, error_if_not_found=True)
-
-    methoddepends = [counts_each_step, otu_table, centroid_fasta, error_ratesF, error_ratesR, readF_qc, readR_qc]
-
-    # variables
-    methodvars = {
-        "title": doc_title,
-        "project": args.project_name,
-        "method": method,
-        "outputdir": args.output,
-        "otu_table": otu_table,
-        "counts_each_step": counts_each_step,
-        "error_ratesF": error_ratesF,
-        "error_ratesR": error_ratesR,
-        "readF_qc": readF_qc,
-        "readR_qc": readR_qc,
-        "format": args.format,
-        "log": log_file,
-        "metadata": metadata,
-        "metadata_labels": metadata_labels,
-        "picard": args.input_picard,
-        "picard_ext": args.input_picard_extension}
- 
-# for usearch workflow
-else:
-    method = "usearch"
-    input_files={
-	 "required":[
-	 	"otu_table_closed_reference",
-		"otu_table_open_reference",
-		"read_count_table",
-		"eestats2"]}
-
-    # get the paths for the required files and check they are found
-    otu_open_table=files.SixteenS.path("otu_table_open_reference",args.input, error_if_not_found=True)
-    read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
-    eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=True)
-    centroid_fasta = files.SixteenS.path("msa_nonchimera",args.input, none_if_not_found=True)
-    centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", args.input, none_if_not_found=True)
-	       
-    methoddepends=[otu_table, read_count_table, otu_open_table, eestats_table, centroid_fasta, centroid_closed_fasta]
-    
-    # variables
-    methodvars={"title":"USEARCH 16S Report",
-          "project":args.project_name,
-          "method":method,
-          "otu_table":otu_table,
-          "read_count_table":read_count_table,
-          "eestats_table":eestats_table,
-          "format":args.format,
-          "log":log_file,
-          "metadata":metadata,
-          "metadata_labels":metadata_labels,
-          "picard":args.input_picard,
-          "picard_ext":args.input_picard_extension}
-
+# add additional variables
+method_vars["metadata"]=metadata
+method_vars["metadata_labels"]=metadata_labels
+method_vars["log"]=log_file
 
 # listing all expected input files
 input_desc+=files.SixteenS.list_file_path_description("",input_files)
@@ -175,7 +101,7 @@ else:
     templates += [utilities.get_package_file("quality_control_dada2")]
 
 # if picard files are present then add to the template
-if methodvars["picard"]:
+if method_vars["picard"]:
     templates += [utilities.get_package_file("picard")]
 
 # add the correct read count template
@@ -192,13 +118,13 @@ if not args.exclude_workflow_info:
 
 # get the introduction text if not provided by the user
 if not args.introduction:
-    methodvars["introduction"]=visualizations.Sixteen_S.compile_default_intro(methodvars)
+    method_vars["introduction"]=visualizations.Sixteen_S.compile_default_intro(method_vars)
 else:
-    methodvars["introduction"]=args.introduction
+    method_vars["introduction"]=args.introduction
 
 # add author and image if included
-methodvars["author"]=args.author_name
-methodvars["header_image"]=args.header_image
+method_vars["author"]=args.author_name
+method_vars["header_image"]=args.header_image
 
 if args.print_template:
     # only print the template to stdout
@@ -207,9 +133,9 @@ if args.print_template:
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=methoddepends, 
+    depends=method_depends, 
     targets=workflow.name_output_files("16S_report."+args.format),
-    vars=methodvars,
+    vars=method_vars,
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
