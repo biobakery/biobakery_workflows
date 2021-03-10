@@ -1,21 +1,5 @@
 
 #+ echo=False
-import os
-import re
-
-from biobakery_workflows import utilities, visualizations, files
-
-from anadama2 import PweaveDocument
-
-document=PweaveDocument()  
-
-# get the variables for this document generation task
-vars = document.get_vars()
-
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
-
-#' <% if pdf_format: print("\clearpage") %>
 
 #' <% if vars["mantel_plots"]: print("# All against all: Mantel test") %>
 
