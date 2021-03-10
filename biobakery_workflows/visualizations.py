@@ -643,6 +643,63 @@ class ShotGun(Workflow):
         
 
 class Sixteen_S(Workflow):
+    @classmethod
+    def compile_default_intro(cls,vars):
+        # read through the workflow log to gather information and compile the default intro for the report
+
+        # get the variable settings from the data processing workflow
+        from anadama2.reporters import LoggerReporter
+        from anadama2 import PweaveDocument
+        document=PweaveDocument()
+
+        try:
+            workflow_settings = LoggerReporter.read_log(vars["log"],"variables")
+        except AttributeError:
+            workflow_settings = []
+
+        # print a warning if the variables could not be read
+        if isinstance(workflow_settings, list):
+            print("WARNING: Unable to read workflow settings from log file.")
+            workflow_settings={}
+
+        maxee = workflow_settings.get("maxee","UNK")
+        trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
+        percent_identity = workflow_settings.get("percent_identity","UNK")
+        min_cluster_size = workflow_settings.get("min_size","UNK")
+        dada_db = workflow_settings.get("dada_db", "UNK").upper()
+        usearch_db = workflow_settings.get("usearch_db", "UNK").lower()
+
+        method = vars["method"]
+        if method == "dada2" or method == "its":
+            if method == "its":
+                dada_db = "UNITE"
+            dadadb_info="\nThe " + str(dada_db) + " database was used for taxonomy prediction."
+            columns, samples, data = document.read_table(vars["counts_each_step"])
+    
+        else:
+            columns, samples, data = document.read_table(vars["read_count_table"])
+
+            if "silva" in usearch_db:
+                db_info = "SILVA database"
+            else:
+                db_info = "GreenGenes 16S RNA Gene Database version 13_8"
+
+            usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
+                follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
+                + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
+                + "\n\nThe " + db_info + " was used for taxonomy prediction.\
+                \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Filtered reads were \
+                used to generate the OTUs. Reads not passing quality control were kept and used in the step \
+                assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
+
+        if method == "its":
+            return cls.captions["itsintro"]+"\n\n"+cls.captions["dada2stepsinfo"]+"\n\n"+dadadb_info
+        elif method == "dada2":
+            return cls.captions["dada2intro"]+"\n\n"+cls.captions["dada2stepsinfo"]+"\n\n"+dadadb_info
+        else:
+            return usearchintro
+
+
     captions={}
 
     captions["itsintro"]='Implementing ITS pipeline for resolving sequence variants from ITS region\

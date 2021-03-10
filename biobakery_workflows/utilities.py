@@ -43,6 +43,17 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+
+def print_template(templates):
+    # print the templates to stdout and exit
+
+    for template in templates:
+        with open(template) as file_handle:
+            print("".join(file_handle.readlines()))
+
+    sys.exit(0)
+
+
 def run_mantel_tests(workflow,maaslin_tasks_info,output,nperm):
 
     # name the output file and folder

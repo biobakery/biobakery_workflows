@@ -4,6 +4,15 @@
 #' % Author: <% print(vars["author"]) %>
 #' % Date: <% import time; print(time.strftime("%m/%d/%Y")+"\n") %>
 
+#+ echo=False
+import os
+import numpy
+
+from biobakery_workflows import visualizations, utilities
+
+# determine the document format
+pdf_format=True if vars["format"] == "pdf" else False
+
 
 #' # Introduction
 
