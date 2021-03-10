@@ -105,32 +105,32 @@ metadata_variables=utilities.get_metadata_variables(args.input_metadata,taxonomi
 
 ## 1. Add tasks to create feature tables from all input files to be used. Feature tables will be used in downstream tasks                   .
 
-maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
+feature_tasks_info=utilities.create_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
 
 ## 2. Add tasks to run mantel tests on all data file pairs
 
-mantel_plots=utilities.run_mantel_tests(workflow,maaslin_tasks_info,args.output,args.permutations)
+mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.output,args.permutations)
 
 ## 3. Add tasks to run MaAsLiN2 on all input data files (feature tables)
 
 maaslin_tasks=[]
 if not args.bypass_maaslin:
-    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
+    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,feature_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
     maaslin_tiles_task=workflow.add_task(
-        utilities.partial_function(utilities.generate_tiles_of_maaslin_figures, maaslin_tasks_info=maaslin_tasks_info),
+        utilities.partial_function(utilities.generate_tiles_of_maaslin_figures, feature_tasks_info=feature_tasks_info),
         depends=maaslin_tasks)
 
 ## 4. Add tasks to run halla on all sets of data files            
 
 if not args.bypass_halla:
-    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,maaslin_tasks_info,args.output,args.halla_options)
+    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.output,args.halla_options)
 
 ## 5. Add tasks to run stratified pathways plots, if pathways provided  
 
 stratified_plots_tasks=[]
 stratified_pathways_plots=[]
 if not args.bypass_maaslin:
-    stratified_pathways_plots,stratified_plots_tasks=utilities.create_stratified_pathways_plots(workflow,study_type,pathabundance,args.input_metadata,args.metadata_exclude,args.metadata_categorical,args.metadata_continuous,args.top_pathways,maaslin_tasks_info,args.output)
+    stratified_pathways_plots,stratified_plots_tasks=utilities.create_stratified_pathways_plots(workflow,study_type,pathabundance,args.input_metadata,args.metadata_exclude,args.metadata_categorical,args.metadata_continuous,args.top_pathways,feature_tasks_info,args.output)
 
 ## 6. Add tasks to run permanova if longitudinal (if random effects are set) and if not run beta diversity script
 
@@ -140,9 +140,9 @@ beta_diversity_plots={"univariate": {}, "multivariate": {}}
 covariate_equation=""
 
 if args.random_effects:
-    additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.static_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
+    additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.static_covariates,feature_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 else:
-    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
+    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,feature_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
 
 # determine template based on if a header image is provided
 if args.header_image:
@@ -181,7 +181,7 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
           "mantel_plots":mantel_plots,
-          "maaslin_tasks_info":maaslin_tasks_info,
+          "feature_tasks_info":feature_tasks_info,
           "halla_tasks_info":halla_tasks_info,
           "bypass_maaslin":args.bypass_maaslin,
           "bypass_halla":args.bypass_halla,

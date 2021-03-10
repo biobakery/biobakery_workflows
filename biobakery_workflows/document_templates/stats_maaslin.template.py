@@ -4,5 +4,5 @@
 
 #' See the log file for the exact MaAsLiN2 commands run to generate these outputs. Also please note these are just a subset of the outputs, check out the MaAsLin2 results folders for the complete set of output files.
 
-#' <% utilities.show_all_maaslin_run_types(vars["maaslin_tasks_info"]) %>
+#' <% utilities.show_all_maaslin_run_types(vars["feature_tasks_info"]) %>
 
