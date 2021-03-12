@@ -76,6 +76,7 @@ workflow.add_argument("input-file-type",desc="the file type for an input file fo
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default=workflow_vis.captions["intro"])
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
+workflow.add_argument("use-template",desc="provide a report template to use instead of using that which is automatically generated", default="")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -168,6 +169,10 @@ if not args.bypass_halla:
 if args.print_template:
     # only print the template to stdout
     utilities.print_template(templates)
+
+# use the template from the user if provided
+if args.use_template:
+    templates=[args.use_template]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
