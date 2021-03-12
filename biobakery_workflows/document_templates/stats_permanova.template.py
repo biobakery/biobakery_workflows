@@ -12,7 +12,7 @@
 
 #' <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: 'bray ~ "+vars["covariate_equation"]+"' .") %>
 
-#' <% show_all_variate_plots("multivariate") %>
+#' <% utilities.show_all_variate_plots("multivariate",vars["beta_diversity_plots"]) %>
 
 #' <% if pdf_format: print("\clearpage") %>
 
