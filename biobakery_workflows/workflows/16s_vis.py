@@ -59,6 +59,7 @@ workflow.add_argument("exclude-workflow-info",desc="do not include data processi
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("introduction",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
+workflow.add_argument("use-template",desc="provide a report template to use instead of using that which is automatically generated", default="")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -129,6 +130,10 @@ method_vars["header_image"]=args.header_image
 if args.print_template:
     # only print the template to stdout
     utilities.print_template(templates)
+
+# use the template from the user if provided
+if args.use_template:
+    templates=[args.use_template]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
