@@ -57,7 +57,7 @@ workflow.add_argument("metadata-continuous",desc="the continuous features", acti
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
-workflow.add_argument("introduction",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
+workflow.add_argument("introduction-text",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
 workflow.add_argument("use-template",desc="provide a report template to use instead of using that which is automatically generated", default="")
 
@@ -118,10 +118,10 @@ if not args.exclude_workflow_info:
     templates += [utilities.get_package_file("workflow_info")]
 
 # get the introduction text if not provided by the user
-if not args.introduction:
+if not args.introduction_text:
     method_vars["introduction"]=visualizations.Sixteen_S.compile_default_intro(method_vars)
 else:
-    method_vars["introduction"]=args.introduction
+    method_vars["introduction"]=args.introduction_text
 
 # add author and image if included
 method_vars["author"]=args.author_name
