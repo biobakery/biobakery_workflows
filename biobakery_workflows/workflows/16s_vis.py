@@ -96,9 +96,9 @@ method_vars["log"]=log_file
 input_desc+=files.SixteenS.list_file_path_description("",input_files)
 
 # add the correct QC template based on the method
-if method == "usearch":
-    templates += [utilities.get_package_file("quality_control_usearch")]
-else:
+if method_vars["eestats_table"]:
+        templates += [utilities.get_package_file("quality_control_usearch")]
+elif method_vars["error_ratesF"] and method_vars["error_ratesR"] and method_vars["readF_qc"] and method_vars["readR_qc"]:
     templates += [utilities.get_package_file("quality_control_dada2")]
 
 # if picard files are present then add to the template
@@ -106,9 +106,9 @@ if method_vars["picard"]:
     templates += [utilities.get_package_file("picard")]
 
 # add the correct read count template
-if method == "usearch":
+if method_vars["read_count_table"]:
     templates += [utilities.get_package_file("read_count_usearch")]
-else:
+elif method_vars["counts_each_step"]:
     templates += [utilities.get_package_file("read_count_dada2")]
 
 # add the rest of the 16s template

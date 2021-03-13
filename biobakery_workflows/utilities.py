@@ -572,30 +572,22 @@ def run_humann_barplot(task, number, metadata_end, categorical):
 def set_variables_for_16s_workflow_based_on_input(args,otu_table,files):
     """ Determine the variables, method and input files based on the data in the input folder """
 
+
+    method_depends=[otu_table]
+    input_files = { "required": ["otu_table_closed_reference"] }
+
     if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
         method = "dada2"
         if os.path.isdir(files.SixteenS.path("filtN", args.input, error_if_not_found=False)):
             method = "its"
         doc_title = method.upper() + " 16s Report"
-        input_files = {
-            "required": [
-                "otu_table_closed_reference",
-                "msa_nonchimera",
-                "counts_each_step",
-                "error_ratesF",
-                "error_ratesR",
-                "readF_qc",
-                "readR_qc"]}
 
         # get the paths for the required files and check they are found
-        centroid_fasta = files.SixteenS.path("msa_nonchimera", args.input, error_if_not_found=True)
-        counts_each_step = files.SixteenS.path("counts_each_step", args.input, error_if_not_found=True)
-        error_ratesF = files.SixteenS.path("error_ratesF", args.input, error_if_not_found=True)
-        error_ratesR = files.SixteenS.path("error_ratesR", args.input, error_if_not_found=True)
-        readF_qc = files.SixteenS.path("readF_qc", args.input, error_if_not_found=True)
-        readR_qc = files.SixteenS.path("readR_qc", args.input, error_if_not_found=True)
-
-        method_depends = [counts_each_step, otu_table, centroid_fasta, error_ratesF, error_ratesR, readF_qc, readR_qc]
+        counts_each_step = files.SixteenS.path("counts_each_step", args.input, error_if_not_found=False)
+        error_ratesF = files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)
+        error_ratesR = files.SixteenS.path("error_ratesR", args.input, error_if_not_found=False)
+        readF_qc = files.SixteenS.path("readF_qc", args.input, error_if_not_found=False)
+        readR_qc = files.SixteenS.path("readR_qc", args.input, error_if_not_found=False)
 
         # variables
         method_vars = {
@@ -614,21 +606,10 @@ def set_variables_for_16s_workflow_based_on_input(args,otu_table,files):
             "picard_ext": args.input_picard_extension}
     else:
         method = "usearch"
-        input_files={
-           "required":[
-                "otu_table_closed_reference",
-                "otu_table_open_reference",
-                "read_count_table",
-                "eestats2"]}
   
         # get the paths for the required files and check they are found
-        otu_open_table=files.SixteenS.path("otu_table_open_reference",args.input, error_if_not_found=True)
-        read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=True)
-        eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=True)
-        centroid_fasta = files.SixteenS.path("msa_nonchimera",args.input, none_if_not_found=True)
-        centroid_closed_fasta = files.SixteenS.path("msa_closed_reference", args.input, none_if_not_found=True)
-
-        method_depends=[otu_table, read_count_table, otu_open_table, eestats_table, centroid_fasta, centroid_closed_fasta]
+        read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=False)
+        eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=False)
 
         # variables
         method_vars={"title":"USEARCH 16S Report",
