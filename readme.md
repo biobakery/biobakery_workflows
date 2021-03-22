@@ -82,7 +82,7 @@ To install with pip:
     not install the dependencies for the workflows (ie KneadData,
     MetaPhlan2, etc.).
 -   Please read the page on our wiki with details on [how to install the workflows
-    plus dependencies with pip](https://github.com/biobakery/biobakery_workflows/wiki/Installing-the-workflows).
+    plus dependencies with pip](https://github.com/biobakery/biobakery_workflows/wiki/Installing-the-workflows-with-pip).
 
 #### Install databases
 
