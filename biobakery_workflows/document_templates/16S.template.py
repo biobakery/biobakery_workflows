@@ -1,9 +1,3 @@
-
-#+ echo=False
-
-min_abundance=0.01
-min_samples=10
-
 #' # Taxonomy
     
 #' ## Genera
@@ -14,13 +8,11 @@ min_samples=10
 samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
 
 # plot the top taxa by genus level, plotting the relative abundance values
-max_taxa=15
 
 # get the relative abundance values for the samples
 relab_data = utilities.relative_abundance(data, percent=True)
 
 # get the top taxa by genus level
-max_taxa = 15
 sorted_samples, sorted_top_data, top_data, top_taxa_short_names, legend_size = visualizations.get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa)
 
 # add other to the taxonomy data, other represents total genera not shown on plot
@@ -66,7 +58,6 @@ visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted
 #' # Heatmaps
 
 #+ echo=False
-max_sets_heatmap=25
 
 #' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="genera and terminal taxa",method="Spearman and Bray-Curtis", data_type="taxa") %>
 
@@ -86,7 +77,6 @@ utilities.change_pweave_figure_size_heatmap(pdf_format)
 visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
     pdf_format,"Top {} genera by average abundance (Bray-Curtis)".format(max_sets_heatmap),max_sets_heatmap,method="lbraycurtis")
 utilities.reset_pweave_figure_size()
-
 
 
 #' ## Terminal Taxa
@@ -111,8 +101,6 @@ utilities.reset_pweave_figure_size()
 #' ## Genera
 
 #+ echo=False
-import numpy
-
 # filter then get top genera
 filtered_taxonomy_all, filtered_relab_data_all = utilities.filter_taxa_abundance(taxonomy, relab_data, min_abundance, min_samples)
 samples_genera, sorted_top_data_genera, top_data_genera, top_taxa_genera, legend_size = visualizations.get_top_taxonomy_by_level(filtered_taxonomy_all, samples, filtered_relab_data_all, max_sets_heatmap)

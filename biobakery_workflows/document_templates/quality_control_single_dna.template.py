@@ -1,20 +1,4 @@
-
 #+ echo=False
-import os
-import numpy
-
-from biobakery_workflows import utilities, visualizations, files
-
-from anadama2 import PweaveDocument
-
-document=PweaveDocument()  
-
-# get the variables for this document generation task
-vars = document.get_vars()
-
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
-
 # read in the DNA samples
 dna_columns, dna_samples, dna_data = visualizations.qc_read_counts(document, vars["dna_read_counts"])
 
@@ -60,8 +44,4 @@ table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, 
 document.plot_grouped_barchart(numpy.transpose(dna_data), row_labels=dna_columns, 
     column_labels=dna_samples, title="DNA reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
-
-
-
-
 

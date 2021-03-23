@@ -1,20 +1,3 @@
-
-#+ echo=False
-max_sets=50
-
-from biobakery_workflows import utilities
-from biobakery_workflows import visualizations
-
-from anadama2 import PweaveDocument
-
-document=PweaveDocument()  
-
-# get the variables for this document generation task
-vars = document.get_vars()
-
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
-
 #' # Functional Profiling of Metagenomic Reads
 
 #' <%= visualizations.ShotGun.captions["functional_intro"] %>
@@ -23,13 +6,13 @@ pdf_format = True if vars["format"] == "pdf" else False
 
 # read in the top average pathways
 dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
-    document, vars["dna_pathabundance"], max_sets)
+    document, vars["dna_pathabundance"], max_sets_heatmap)
 dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
-    document, vars["dna_ecabundance"], max_sets)
+    document, vars["dna_ecabundance"], max_sets_heatmap)
 
 #' ## Pathway and ECs Abundance
 
-#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets,type="pathways",method="Spearman", data_type="pathways") %>
+#' <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="pathways",method="Spearman", data_type="pathways") %>
 
 #+ echo=False
 # update the figure size based on output format for the heatmaps
@@ -48,11 +31,11 @@ def log10_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, d
         # get the metadata row numbers
         metadata_rows=range(1,len(vars['metadata']))
         document.show_hclust2(metadata_samples, metadata_pathways, merged_data,
-            title="Top "+str(max_sets)+" "+data_type+" by average abundance",
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
             metadata_rows=metadata_rows)
     else:
         document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
-            title="Top "+str(max_sets)+" "+data_type+" by average abundance")  
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance")  
 
     return merged_data, metadata_pathways, metadata_samples
 
@@ -89,12 +72,12 @@ def zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, 
         filtered_merged_data+=merged_data[total_features:]
       
         document.show_hclust2(metadata_samples, filtered_metadata_pathways, filtered_merged_data,
-            title="Top "+str(max_sets)+" "+data_type+" by average abundance",
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
             log_scale=False,zscore=True,
             metadata_rows=filtered_metadata_rows)
     else:
         document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
-            title="Top "+str(max_sets)+" "+data_type+" by average abundance",
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
             log_scale=False,zscore=True)
 
 zscore_heatmap(dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples)
@@ -118,7 +101,7 @@ average_abundance_variance=visualizations.write_pathway_average_variance_table(d
 
 table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
     top_names_and_descriptions, [" Average "," Variance "], 
-    "Top "+str(max_sets)+" pathways by average abundance", pathway_file_name, font=7)
+    "Top "+str(max_sets_heatmap)+" pathways by average abundance", pathway_file_name, font=7)
 
 #' <%= table_message %>
 

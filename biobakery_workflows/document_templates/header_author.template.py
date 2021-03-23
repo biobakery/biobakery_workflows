@@ -12,6 +12,14 @@ from biobakery_workflows import visualizations, utilities, files
 # determine the document format
 pdf_format=True if vars["format"] == "pdf" else False
 
+# set universal constants
+min_abundance=0.01
+min_samples=10
+
+max_taxa=15
+max_sets_heatmap=25
+max_sets_barplot=15
+
 #' <% if pdf_format: print("\clearpage") %>
 
 #' # Introduction

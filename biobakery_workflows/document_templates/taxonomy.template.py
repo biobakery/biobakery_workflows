@@ -1,24 +1,5 @@
-
 #+ echo=False
-import os
 import math
-
-min_abundance=0.01
-min_samples=10
-max_sets_heatmap=25
-max_sets_barplot=15
-
-from biobakery_workflows import utilities, visualizations, files
-
-from anadama2 import PweaveDocument
-
-document=PweaveDocument()  
-
-# get the variables for this document generation task
-vars = document.get_vars()
-
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
 
 #' # Taxonomic Profiling of Metagenomic Reads
 
@@ -59,8 +40,6 @@ filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_met
 #' ## Taxonomic Count Table
 
 #+ echo=False
-import numpy
-
 # count the number of species that pass filters for each sample
 def count_filtered_columns(data, min):
     # first transpose the data
@@ -217,3 +196,4 @@ document.plot_stacked_barchart(sorted_data_genera, row_labels=top_taxonomy_gener
 categorical_metadata=visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_genera, sorted_data_genera, top_taxonomy_genera, max_sets_barplot, feature="genera")
 
 #' <% if categorical_metadata: print("Stacked barplot of genera average abundance grouped by metadata.") %>
+

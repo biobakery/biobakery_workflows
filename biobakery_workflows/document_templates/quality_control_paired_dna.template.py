@@ -1,20 +1,4 @@
-
 #+ echo=False
-import os
-import numpy
-
-from biobakery_workflows import utilities, visualizations, files
-
-from anadama2 import PweaveDocument
-
-document=PweaveDocument()  
-
-# get the variables for this document generation task
-vars = document.get_vars()
-
-# determine the document format
-pdf_format = True if vars["format"] == "pdf" else False
-
 # read in the DNA samples
 (dna_paired_columns, dna_orphan_columns), dna_samples, (dna_paired_data, dna_orphan_data) = visualizations.qc_read_counts(document, vars["dna_read_counts"])
 
@@ -94,8 +78,4 @@ sorted_samples, sorted_all_read_data = sort_samples_reads_decreasing(numpy.trans
 document.plot_grouped_barchart(sorted_all_read_data, row_labels=dna_orphan_columns, 
     column_labels=sorted_samples, title="DNA Orphan reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
-
-
-
-
 
