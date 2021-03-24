@@ -97,6 +97,15 @@ class Workflow(object):
             desc=""
             
         return desc
+
+    @classmethod
+    def filename(cls, name):
+        try: 
+            fname=cls.file_info[name].keywords["names"]
+        except (KeyError, AttributeError):
+            fname=""
+
+        return fname
     
     @classmethod
     def list_file_path_description(cls,folder,input_files):
@@ -105,6 +114,16 @@ class Workflow(object):
         desc=""
         for required in input_files:
             desc+="\n\n".join(["* "+cls.path(name,folder)+ " ( " + required + " )\n-- "+cls.description(name) for name in input_files[required]])+"\n"
+            
+        return desc
+
+    @classmethod
+    def list_file_description(cls,input_files):
+        """ List the file names and descriptions in a format to be used in an argument help description """
+        
+        desc=""
+        for required in input_files:
+            desc+="\n".join(["* "+cls.filename(name)+ " ( " + required + " )\n-- "+cls.description(name)+"\n\n" for name in input_files[required]])+"\n"
             
         return desc
 
@@ -154,7 +173,10 @@ class ShotGun(Workflow):
     
     # set the normed feature file names
     file_info["genefamilies_relab"]=FileInfo("genefamilies_relab.tsv", subfolder=os.path.join("humann","merged"))
-    file_info["ecs_relab"]=FileInfo("ecs_relab.tsv", subfolder=os.path.join("humann","merged"))
+    file_info["ecs_relab"]=FileInfo("ecs_relab.tsv", subfolder=os.path.join("humann","merged"),
+        description=("A tab-delimited file with samples as columns and ECs as rows.",
+                "This file is a merged set of EC abundances for all samples computed ",
+                "by HUMAnN. This file contains relative abundances."))
     file_info["pathabundance_relab"]=FileInfo("pathabundance_relab.tsv", subfolder=os.path.join("humann","merged"),
         description=("A tab-delimited file with samples as columns and pathways ",
                 "as rows. This file is a merged set of pathway abundances for all ",

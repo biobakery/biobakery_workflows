@@ -53,6 +53,26 @@ def print_template(templates):
 
     sys.exit(0)
 
+def get_vis_input_description(files):
+    # set the input files as optional/required by study type
+    input_desc="A folder containing the final products from the data workflow with at least one file containing the taxonomic profile or OTUs or ASVs.\n\n\n"
+
+    # list the required and optional files for the workflow
+    # these are expected to be included in the input folder
+    input_files={"required for MGX study":["taxonomic_profile"]}
+    input_files["optional for MGX study"]=["kneaddata_read_counts","pathabundance_relab","ecs_relab","humann_read_counts","feature_counts"]
+
+    # create a custom description for the input argument listing all expected input files
+    input_desc+=files.ShotGun.list_file_description(input_files)+"\n\n\n"
+
+    # listing all expected input files
+    input_files = { "required for 16S study": ["otu_table_closed_reference"] }
+    input_files["optional for 16S DADA2 study"] = ["counts_each_step", "error_ratesF", "error_ratesR", "readF_qc", "readR_qc"]
+    input_files["optional for 16S USEARCH study"] = ["read_count_table", "eestats2"]
+
+    input_desc+=files.SixteenS.list_file_description(input_files)
+
+    return input_desc
 
 def run_mantel_tests(workflow,feature_tasks_info,output,nperm):
 
@@ -569,12 +589,12 @@ def run_humann_barplot(task, number, metadata_end, categorical):
             depends=task.depends,
             targets=task.targets+[task.targets[0].name.replace(".png",".txt")])
 
-def set_variables_for_16s_workflow_based_on_input(args,otu_table,files):
+def set_variables_for_16s_workflow_based_on_input(args,files):
     """ Determine the variables, method and input files based on the data in the input folder """
 
+    otu_table = files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_found=True)
 
     method_depends=[otu_table]
-    input_files = { "required": ["otu_table_closed_reference"] }
 
     if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
         method = "dada2"
@@ -622,7 +642,7 @@ def set_variables_for_16s_workflow_based_on_input(args,otu_table,files):
             "picard":args.input_picard,
             "picard_ext":args.input_picard_extension}
 
-    return method_vars, method_depends, input_files, method
+    return method_vars, method_depends, method, otu_table
 
 def find_data_file(data_files, type, required=False):
     """ Return an error if the file of that type has not been found """

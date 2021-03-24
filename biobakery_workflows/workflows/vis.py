@@ -3,7 +3,7 @@
 """
 bioBakery Workflows: workflow for visualization
 
-Copyright (c) 2017 Harvard School of Public Health
+Copyright (c) 2021 Harvard School of Public Health
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@ from biobakery_workflows import document_templates, utilities, visualizations
 # import the files for descriptions and paths
 from biobakery_workflows import files
 import os
+import sys
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with multiple input files
@@ -40,7 +41,8 @@ workflow = Workflow(version="0.1", remove_options=["input"],
                     description="A workflow for visualization")
                     
 # add the custom arguments to the workflow 
-workflow.add_argument("input",desc=utilities.get_vis_input_description(files),required=True)
+input_desc=utilities.get_vis_input_description(files)
+workflow.add_argument("input",desc=input_desc,required=True)
 
 # add the custom arguments to the workflow
 workflow.add_argument("project-name",desc="the name of the project",required=True)
@@ -86,7 +88,7 @@ else:
 
 if workflow_type == "16S" :
     # get the variables, input files, and method depending on the input files provided for the workflow
-    otu_table, method_vars, method_depends, method = utilities.set_variables_for_16s_workflow_based_on_input(args,files)
+    method_vars, method_depends, method, otu_table = utilities.set_variables_for_16s_workflow_based_on_input(args,files)
 
     # read and label the metadata
     metadata=None
@@ -97,12 +99,13 @@ if workflow_type == "16S" :
 
     # get the introduction text if not provided by the user
     if not args.introduction_text:
+        method_vars["log"]=log_file
         method_vars["introduction"]=visualizations.Sixteen_S.compile_default_intro(method_vars)
     else:
         method_vars["introduction"]=args.introduction_text
 
     # add the correct QC template based on the method
-    if method_vars["eestats_table"]:
+    if "eestats_table" in method_vars:
             templates += [utilities.get_package_file("quality_control_usearch")]
     elif method_vars["error_ratesF"] and method_vars["error_ratesR"] and method_vars["readF_qc"] and method_vars["readR_qc"]:
         templates += [utilities.get_package_file("quality_control_dada2")]
@@ -112,7 +115,7 @@ if workflow_type == "16S" :
         templates += [utilities.get_package_file("picard")]
 
     # add the correct read count template
-    if method_vars["read_count_table"]:
+    if "read_count_table" in method_vars:
         templates += [utilities.get_package_file("read_count_usearch")]
     elif method_vars["counts_each_step"]:
         templates += [utilities.get_package_file("read_count_dada2")]
