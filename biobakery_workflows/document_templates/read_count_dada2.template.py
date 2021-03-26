@@ -1,6 +1,7 @@
 #' # Read Count
 
 #+ echo=False
+columns, samples, data = document.read_table(vars["counts_each_step"])
 total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
 sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]

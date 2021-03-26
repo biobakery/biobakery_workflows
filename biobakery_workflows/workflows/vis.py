@@ -54,7 +54,7 @@ workflow.add_argument("input-picard-extension",desc="the extensions for the pica
 workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
 workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
-workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report", action="store_true")
+workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report (use this option if a workflow anadama.log file is not available)", action="store_true")
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("introduction-text",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
@@ -100,14 +100,16 @@ if workflow_type == "16S" :
     # get the introduction text if not provided by the user
     if not args.introduction_text:
         method_vars["log"]=log_file
-        method_vars["introduction"]=visualizations.Sixteen_S.compile_default_intro(method_vars)
+        if not log_file:
+            sys.exit("When running the workflow without a log file, please provide the introduction text with the option '--introduction-text <txt>'")
+        method_vars["introduction_text"]=visualizations.Sixteen_S.compile_default_intro(method_vars)
     else:
-        method_vars["introduction"]=args.introduction_text
+        method_vars["introduction_text"]=args.introduction_text
 
     # add the correct QC template based on the method
-    if "eestats_table" in method_vars:
+    if method_vars.get("eestats_table",None):
             templates += [utilities.get_package_file("quality_control_usearch")]
-    elif method_vars["error_ratesF"] and method_vars["error_ratesR"] and method_vars["readF_qc"] and method_vars["readR_qc"]:
+    elif method_vars.get("error_ratesF",None) and method_vars["error_ratesR"] and method_vars["readF_qc"] and method_vars["readR_qc"]:
         templates += [utilities.get_package_file("quality_control_dada2")]
 
     # if picard files are present then add to the template
@@ -115,9 +117,9 @@ if workflow_type == "16S" :
         templates += [utilities.get_package_file("picard")]
 
     # add the correct read count template
-    if "read_count_table" in method_vars:
+    if method_vars.get("read_count_table",None):
         templates += [utilities.get_package_file("read_count_usearch")]
-    elif method_vars["counts_each_step"]:
+    elif method_vars.get("counts_each_step",None):
         templates += [utilities.get_package_file("read_count_dada2")]
 
     # add the rest of the 16s template
@@ -125,6 +127,10 @@ if workflow_type == "16S" :
 
     workflow_targets=workflow.name_output_files("16S_report."+args.format)
 else:
+    # set default introduction text
+    if not args.introduction_text:
+        args.introduction_text = "The data was run through the standard workflow for whole metagenome shotgun sequencing."
+
     # get the paths for the required files and check they are found
     qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, none_if_not_found=True)
     taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_not_found=True)

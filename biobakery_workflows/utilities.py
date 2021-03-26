@@ -603,11 +603,11 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
         doc_title = method.upper() + " 16s Report"
 
         # get the paths for the required files and check they are found
-        counts_each_step = files.SixteenS.path("counts_each_step", args.input, error_if_not_found=False)
-        error_ratesF = files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)
-        error_ratesR = files.SixteenS.path("error_ratesR", args.input, error_if_not_found=False)
-        readF_qc = files.SixteenS.path("readF_qc", args.input, error_if_not_found=False)
-        readR_qc = files.SixteenS.path("readR_qc", args.input, error_if_not_found=False)
+        counts_each_step = files.SixteenS.path("counts_each_step", args.input, none_if_not_found=True)
+        error_ratesF = files.SixteenS.path("error_ratesF", args.input, none_if_not_found=True)
+        error_ratesR = files.SixteenS.path("error_ratesR", args.input, none_if_not_found=True)
+        readF_qc = files.SixteenS.path("readF_qc", args.input, none_if_not_found=True)
+        readR_qc = files.SixteenS.path("readR_qc", args.input, none_if_not_found=True)
 
         # variables
         method_vars = {
@@ -628,8 +628,8 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
         method = "usearch"
   
         # get the paths for the required files and check they are found
-        read_count_table=files.SixteenS.path("read_count_table",args.input, error_if_not_found=False)
-        eestats_table=files.SixteenS.path("eestats2",args.input, error_if_not_found=False)
+        read_count_table=files.SixteenS.path("read_count_table",args.input, none_if_not_found=True)
+        eestats_table=files.SixteenS.path("eestats2",args.input, none_if_not_found=True)
 
         # variables
         method_vars={"title":"USEARCH 16S Report",

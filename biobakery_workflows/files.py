@@ -75,6 +75,11 @@ class Workflow(object):
         merged_keywords.update(cls.file_info[name].get_path_keywords())
         file_path=name_files(folder=main_folder, **merged_keywords)
 
+        # if the file is not found, then look in the input folder
+        if not os.path.isfile(file_path):
+            file_name = cls.filename(name)
+            file_path=os.path.join(main_folder, file_name)
+
         # if set, error if the file does not exist
         if error_if_not_found and not os.path.isfile(file_path):
             message="\nERROR: Unable to find file: "+file_path
@@ -86,7 +91,7 @@ class Workflow(object):
         # if set, check if the file exists, if not return None
         if none_if_not_found and not os.path.isfile(file_path):
                 file_path = None
-            
+           
         return file_path
     
     @classmethod
