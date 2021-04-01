@@ -347,7 +347,7 @@ def generate_tile_of_images(input_files, output_file):
 def show_all_variate_plots(runtype,variate_plots):
     for filetype, image_file in variate_plots[runtype].items():
         if image_file and os.path.isfile(image_file):
-            print("![{0} {1}]({2})\n\n\n".format(filetype,runtype,image_file))
+            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the fdr adjusted p-value",image_file))
         elif not os.path.isfile(image_file):
             print("Error generating variate plots for filetype {}".format(filetype))
 
