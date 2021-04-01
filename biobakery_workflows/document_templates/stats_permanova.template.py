@@ -1,4 +1,4 @@
-#' # One against all: Permanova test
+#' # One against all: PERMANOVA
 
 #' <% if vars["beta_diversity_plots"]["univariate"]: print("## Univariate") %>
 

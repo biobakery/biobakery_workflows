@@ -355,7 +355,7 @@ def show_all_permanova(permanova_plots):
     for filetype in permanova_plots:
         permanova_file = permanova_plots[filetype]
         if filetype == "all":
-            filetype = "Heatmap of all data features"
+            filetype = "Heatmap of univariable R-squared value"
         if os.path.isfile(permanova_file):
             print("![{0}]({1})\n\n".format(filetype, permanova_file))
         else:
@@ -817,7 +817,7 @@ def get_package_file(basename, type="template"):
 
     if type == "template":
         subfolder = "document_templates"
-        extension = ".template.py"
+        extension = ".template.pmd"
     else:
         subfolder = "Rscripts"
         extension = ".R"
