@@ -61,6 +61,7 @@ setuptools.setup(
             'workflows/*.py',
             'document_templates/*.py',
             'document_templates/*.mdw',
+            'document_templates/*.pmd',
             'data/*',
             'Rscripts/*'
         ]},

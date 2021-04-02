@@ -1,6 +1,6 @@
-#' # Read Count
+# Read Count
 
-#+ echo=False
+```{python, echo=False}
 columns, samples, data = document.read_table(vars["read_count_table"])
 
 total_reads=[row[0] for row in data]
@@ -22,7 +22,8 @@ if visualizations.metadata_provided(vars):
     for cat_metadata in categorical_metadata:
         visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"],
             samples_found, title="Read counts by sample", ylabel="Total Reads", legend_title="")
+```
 
-#' <% print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
+<% print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
 
-#' <% if pdf_format: print("\clearpage") %>
+<% if pdf_format: print("\clearpage") %>

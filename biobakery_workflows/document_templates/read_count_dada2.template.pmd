@@ -1,6 +1,6 @@
-#' # Read Count
+# Read Count
 
-#+ echo=False
+```{python, echo=False}
 columns, samples, data = document.read_table(vars["counts_each_step"])
 total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
@@ -24,8 +24,9 @@ if visualizations.metadata_provided(vars):
         visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata,
             ["total","filtered","merged","tabled","nochimera"], samples_found,
             title="Read counts by sample", ylabel="Total Reads", legend_title="")
+```
 
-#' <% print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>
+<% print(visualizations.Sixteen_S.captions["dada2countsinfo"]) %>
 
-#' <% if pdf_format: print("\clearpage") %>
+<% if pdf_format: print("\clearpage") %>
 

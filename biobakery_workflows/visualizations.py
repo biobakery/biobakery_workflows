@@ -316,6 +316,58 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
             ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
 
+def zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples, data_type="pathways"):
+    # if there is metadata, add it to the heatmap
+    if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
+        # get the total number of features
+        total_features=len(vars['metadata'])-1
+        # for the zscore to be applied first all of the categorical data must be removed
+        filtered_metadata_pathways=[]
+        filtered_merged_data=[]
+        filtered_row_count=0
+        for i in range(total_features):
+            label = vars['metadata_labels'].get(metadata_pathways[i],"cat")
+            if label != "cat":
+                filtered_metadata_pathways.append(metadata_pathways[i])
+                filtered_merged_data.append(merged_data[i])
+            else:
+                filtered_row_count+=1
+        filtered_metadata_rows=range(1,total_features-filtered_row_count+1)
+
+        # add abundance data to filtered metadata
+        filtered_metadata_pathways+=metadata_pathways[total_features:]
+        filtered_merged_data+=merged_data[total_features:]
+
+        document.show_hclust2(metadata_samples, filtered_metadata_pathways, filtered_merged_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
+            log_scale=False,zscore=True,
+            metadata_rows=filtered_metadata_rows)
+    else:
+        document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
+            log_scale=False,zscore=True)
+
+
+def log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, data_type="pathways"):
+    merged_data=[]
+    metadata_pathways=[]
+    metadata_samples=[]
+    if 'metadata' in vars and vars['metadata']:
+        merged_data, metadata_samples=merge_metadata(vars['metadata'], dna_samples,
+            [[dna_top_average_pathways[i]]+dna_top_average_data[i] for i in range(len(dna_top_average_pathways))])
+        metadata_pathways=[row.pop(0) for row in merged_data]
+        # get the metadata row numbers
+        metadata_rows=range(1,len(vars['metadata']))
+        document.show_hclust2(metadata_samples, metadata_pathways, merged_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
+            metadata_rows=metadata_rows)
+    else:
+        document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance")
+
+    return merged_data, metadata_pathways, metadata_samples
+
+
 def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=None,max_sets_heatmap=25,method="correlation"):
     """ Generate a heatmap using the doc function. Include metadata if available. """
 

@@ -1,0 +1,81 @@
+# Functional Profiling of Metagenomic Reads
+
+<%= visualizations.ShotGun.captions["functional_intro"] %>
+
+```{python, echo=False}
+dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
+    document, vars["dna_pathabundance"], max_sets_heatmap)
+dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
+    document, vars["dna_ecabundance"], max_sets_heatmap)
+```
+
+## Pathway and ECs Abundance
+
+<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="pathways",method="Spearman", data_type="pathways") %>
+
+```{python, echo=False}
+merged_data, metadata_pathways, metadata_samples=visualizations.log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data)
+```
+
+<%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="log10") %> 
+
+```{python, echo=False}
+ec_merged_data, ec_pathways, ec_samples=log10_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
+```
+
+<% if pdf_format: print("\clearpage") %>
+
+```{python, echo=False}
+zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples)
+```
+
+<%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
+
+```{python, echo=False}
+zscore_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, ec_merged_data, ec_pathways, ec_samples, "ecs")
+```
+
+<% if pdf_format: print("\clearpage") %>
+
+
+```{python, echo=False}
+pathway_file_name="top_average_pathways_names.tsv"
+average_abundance_variance=visualizations.write_pathway_average_variance_table(document, pathway_file_name, dna_top_average_data, top_names_and_descriptions)
+
+table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
+    top_names_and_descriptions, [" Average "," Variance "], 
+    "Top "+str(max_sets_heatmap)+" pathways by average abundance", pathway_file_name, font=7)
+```
+
+<%= table_message %>
+
+<% visualizations.print_pathways_urls(dna_top_average_pathways,top_names_and_descriptions,3) %>
+
+<% if pdf_format: print("\clearpage") %>
+
+## Features
+
+<%= visualizations.ShotGun.format_caption("feature_detection",seq_type="metagenomic",seq_short_type="DNA") %>
+
+```{python, echo=False}
+total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts = visualizations.feature_counts(
+    document, vars["read_counts"],vars["feature_counts"])
+
+document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
+```
+
+<%= visualizations.ShotGun.captions["scatter_reads_aligned"] %> 
+
+```{python, echo=False}
+document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
+
+document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="Enzymes (ECs)",
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
+
+document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="Pathways",
+                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
+```
+
+<%= visualizations.ShotGun.captions["scatter_features"] %>

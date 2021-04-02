@@ -26,3 +26,12 @@ max_sets_barplot=15
 <%= vars["introduction_text"] %>
 
 <% if pdf_format: print("\clearpage") %>
+
+```import
+filename="myfile.txt"
+```
+
+
+```import
+filename="myfile2.txt"
+```
