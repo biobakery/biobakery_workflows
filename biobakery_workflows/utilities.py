@@ -817,7 +817,7 @@ def get_package_file(basename, type="template"):
 
     if type == "template":
         subfolder = "document_templates"
-        extension = ".template.pmd"
+        extension = ".pmd"
     else:
         subfolder = "Rscripts"
         extension = ".R"
