@@ -621,7 +621,6 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
             "error_ratesR": error_ratesR,
             "readF_qc": readF_qc,
             "readR_qc": readR_qc,
-            "format": args.format,
             "picard": args.input_picard,
             "picard_ext": args.input_picard_extension}
     else:
@@ -638,7 +637,6 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
             "otu_table":otu_table,
             "read_count_table":read_count_table,
             "eestats_table":eestats_table,
-            "format":args.format,
             "picard":args.input_picard,
             "picard_ext":args.input_picard_extension}
 

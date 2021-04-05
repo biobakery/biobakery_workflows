@@ -1,0 +1,69 @@
+% <% from anadama2 import PweaveDocument; document=PweaveDocument(); vars = document.get_vars(); document.print_title() %>
+% Author: <%= vars["author"] %>
+% Date: <% import time; print(time.strftime("%m/%d/%Y")+"\n") %>
+
+```{python, echo=False}
+import os
+import re
+import numpy
+import math
+
+from biobakery_workflows import visualizations, utilities, files
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+# Introduction
+
+<%= vars["introduction_text"] %>
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{import, echo=False}
+# add QC templates based on study type
+if vars.get("study_type") == "WGX":
+    if vars.get("dna_read_counts") and vars.get("is_paired"):
+        filename="quality_control_paired_dna.pmd"
+    elif vars.get("dna_read_counts"):
+        filename="quality_control_single_dna.pmd"
+else:
+    if vars.get("eestats_table"):
+        filename="quality_control_usearch.pmd"
+    if vars.get("error_ratesF") and vars.get("error_ratesR") and vars.get("readF_qc") and vars.get("readR_qc"):
+        filename="quality_control_dada2.pmd"
+```
+
+```{import, echo=False}
+# add the read count templates
+if vars.get("read_count_table"):
+    filename="read_count_usearch.pmd"
+elif vars.get("counts_each_step"):
+    filename="read_count_dada2.pmd"
+```
+
+```{import, echo=False}
+# add picard files if included
+if vars.get("picard"):
+    filename="picard.pmd"
+```
+
+```{import, echo=False}
+# add the taxonomy templates
+if vars.get("study_type") == "WGX" and vars.get("taxonomic_profile"):
+    filename="taxonomy.pmd"
+elif var.get("otu_table"):
+    filename="16S.pmd"
+```
+
+```{import, echo=False}
+# add the functional data template
+if vars.get("study_type") == "MGX" and vars.get("pathabundance") and vars.get("dna_read_counts") and vars.get("feature_counts") and vars.get("ecsabundance"):
+    filename="functional_dna.pmd"
+```
+
+```{import, echo=False}
+# add the workflow template if a log is provided
+if vars.get("log"):
+    filename="workflow_info.pmd"
+``` 
+

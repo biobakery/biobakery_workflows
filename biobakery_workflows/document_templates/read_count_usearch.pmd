@@ -26,4 +26,4 @@ if visualizations.metadata_provided(vars):
 
 <% print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
 
-<% if pdf_format: print("\clearpage") %>
+<% if vars["pdf_format"]: print("\clearpage") %>

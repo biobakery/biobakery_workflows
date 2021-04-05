@@ -23,7 +23,7 @@ merged_data, metadata_pathways, metadata_samples=visualizations.log10_heatmap(do
 ec_merged_data, ec_pathways, ec_samples=log10_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
 ```
 
-<% if pdf_format: print("\clearpage") %>
+<% if vars["pdf_format"]: print("\clearpage") %>
 
 ```{python, echo=False}
 zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples)
@@ -35,7 +35,7 @@ zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_
 zscore_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, ec_merged_data, ec_pathways, ec_samples, "ecs")
 ```
 
-<% if pdf_format: print("\clearpage") %>
+<% if vars["pdf_format"]: print("\clearpage") %>
 
 
 ```{python, echo=False}
@@ -51,7 +51,7 @@ table_message=visualizations.show_table_max_rows(document, average_abundance_var
 
 <% visualizations.print_pathways_urls(dna_top_average_pathways,top_names_and_descriptions,3) %>
 
-<% if pdf_format: print("\clearpage") %>
+<% if vars["pdf_format"]: print("\clearpage") %>
 
 ## Features
 

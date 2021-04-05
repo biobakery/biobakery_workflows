@@ -145,26 +145,7 @@ if args.random_effects:
 else:
     additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,feature_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
 
-# determine template based on if a header image is provided
-if args.header_image:
-    templates=[utilities.get_package_file("header_image")]
-else:
-    templates=[utilities.get_package_file("header_author")]
-
-# if mantel tests then add in the template
-if mantel_plots:
-    templates+=[utilities.get_package_file("stats_mantel_plots")]
-
-templates+=[utilities.get_package_file("stats_permanova")]
-
-if not args.bypass_maaslin:
-    templates+=[utilities.get_package_file("stats_maaslin")]
-
-if stratified_pathways_plots:
-    templates+=[utilities.get_package_file("stats_maaslin_stratified")]
-
-if not args.bypass_halla:
-    templates+=[utilities.get_package_file("stats_halla")]
+templates=[utilities.get_package_file("stats")]
 
 if args.print_template:
     # only print the template to stdout
@@ -194,7 +175,7 @@ doc_task=workflow.add_document(
           "permanova_plots":permanova_plots,
           "beta_diversity_plots":beta_diversity_plots,
           "covariate_equation":covariate_equation,
-          "format":args.format},
+          "pdf_format":True if args.format == "pdf" else False},
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file

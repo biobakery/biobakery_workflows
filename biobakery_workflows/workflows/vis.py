@@ -55,6 +55,10 @@ workflow.add_argument("metadata-categorical",desc="the categorical features", ac
 workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
 workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report (use this option if a workflow anadama.log file is not available)", action="store_true")
+workflow.add_argument("min-abundance",desc="the min abundance to use for filtering", default=0.01)
+workflow.add_argument("min-samples",desc="the min samples to use for filtering", default=10)
+workflow.add_argument("max-sets-heatmap",desc="the max sets to show for a heatmap", default=25)
+workflow.add_argument("max-sets-barplot",desc="the max sets to show for a barplot", default=15)
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("introduction-text",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
@@ -63,11 +67,7 @@ workflow.add_argument("use-template",desc="provide a report template to use inst
 # get the arguments from the command line
 args = workflow.parse_args()
 
-# if using a header image then select a different starting template
-if args.header_image:
-    templates=[utilities.get_package_file("header_image")]
-else:
-    templates=[utilities.get_package_file("header_author")]
+templates=["universal_vis"]
 
 log_file=None
 # add the template for the data processing information
@@ -88,7 +88,7 @@ else:
 
 if workflow_type == "16S" :
     # get the variables, input files, and method depending on the input files provided for the workflow
-    method_vars, method_depends, method, otu_table = utilities.set_variables_for_16s_workflow_based_on_input(args,files)
+    template_variables, template_depends, method, otu_table = utilities.set_variables_for_16s_workflow_based_on_input(args,files)
 
     # read and label the metadata
     metadata=None
@@ -99,31 +99,12 @@ if workflow_type == "16S" :
 
     # get the introduction text if not provided by the user
     if not args.introduction_text:
-        method_vars["log"]=log_file
+        template_variables["log"]=log_file
         if not log_file:
             sys.exit("When running the workflow without a log file, please provide the introduction text with the option '--introduction-text <txt>'")
-        method_vars["introduction_text"]=visualizations.Sixteen_S.compile_default_intro(method_vars)
+        template_variables["introduction_text"]=visualizations.Sixteen_S.compile_default_intro(template_variables)
     else:
-        method_vars["introduction_text"]=args.introduction_text
-
-    # add the correct QC template based on the method
-    if method_vars.get("eestats_table",None):
-            templates += [utilities.get_package_file("quality_control_usearch")]
-    elif method_vars.get("error_ratesF",None) and method_vars["error_ratesR"] and method_vars["readF_qc"] and method_vars["readR_qc"]:
-        templates += [utilities.get_package_file("quality_control_dada2")]
-
-    # if picard files are present then add to the template
-    if method_vars["picard"]:
-        templates += [utilities.get_package_file("picard")]
-
-    # add the correct read count template
-    if method_vars.get("read_count_table",None):
-        templates += [utilities.get_package_file("read_count_usearch")]
-    elif method_vars.get("counts_each_step",None):
-        templates += [utilities.get_package_file("read_count_dada2")]
-
-    # add the rest of the 16s template
-    templates += [utilities.get_package_file("16S")]
+        template_variables["introduction_text"]=args.introduction_text
 
     workflow_targets=workflow.name_output_files("16S_report."+args.format)
 else:
@@ -147,46 +128,38 @@ else:
             name_addition="_taxonomic_profile", ignore_features=args.metadata_exclude)
         metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
-    # if there is a table of qc counts, then add the template
-    if qc_counts:
-        if utilities.is_paired_table(qc_counts):
-            templates+=[utilities.get_package_file("quality_control_paired_dna")]
-        else:
-            templates+=[utilities.get_package_file("quality_control_single_dna")]
-
-    templates+=[utilities.get_package_file("taxonomy")]
-
-    # add the functional template if files are included
-    if pathabundance and read_counts and feature_counts and ecsabundance:
-        templates+=[utilities.get_package_file("functional_dna")]
-
-    method_depends=[taxonomic_profile]
+    template_depends=[taxonomic_profile]
     workflow_targets=workflow.name_output_files("wmgx_report."+args.format)
-    method_vars={"title":"Metagenome Report",
+    template_variables={"title":"Metagenome Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
           "dna_read_counts":qc_counts,
+          "is_paired":utilities.is_paired_table(qc_counts),
           "taxonomic_profile":taxonomic_profile,
           "dna_pathabundance":pathabundance,
           "dna_ecabundance": ecsabundance,
           "read_counts":read_counts,
           "feature_counts":feature_counts,
-          "format":args.format,
           "log":log_file,
           "metadata":metadata,
           "metadata_labels":metadata_labels}
 
-if not args.exclude_workflow_info:
-    templates += [utilities.get_package_file("workflow_info")]
-
 # add author and image if included
-method_vars["author"]=args.author_name
-method_vars["header_image"]=args.header_image
+template_variables["author"]=args.author_name
+template_variables["header_image"]=args.header_image
+template_variables["study_type"]=workflow_type
+
+# add formatting and plotting settings
+template_variables["pdf_format"]=True if args.format == "pdf" else False
+template_variables["min_abundance"] = float(args.min_abundance)
+template_variables["min_samples"] = int(args.min_samples)
+template_variables["max_sets_heatmap"] = int(args.max_sets_heatmap)
+template_variables["max_sets_barplot"] = int(args.max_sets_barplot)
 
 # add additional variables
-method_vars["metadata"]=metadata
-method_vars["metadata_labels"]=metadata_labels
-method_vars["log"]=log_file
+template_variables["metadata"]=metadata
+template_variables["metadata_labels"]=metadata_labels
+template_variables["log"]=log_file
 
 if args.print_template:
     # only print the template to stdout
@@ -199,9 +172,9 @@ if args.use_template:
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=method_depends, 
+    depends=template_depends, 
     targets=workflow_targets,
-    vars=method_vars,
+    vars=template_variables,
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file
