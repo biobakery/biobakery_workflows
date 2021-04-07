@@ -788,14 +788,6 @@ class Sixteen_S(Workflow):
         begin with an initial guess, for which the maximum possible error rates in this data are used \
         the error rates if only the most abundant sequence is correct and all the rest are errors." [DADA2 Tutorial]\n'
     
-    captions["dada2errorinfo"]='"The error rates for each possible transition (eg. A->T,A->G, etc) are shown. \
-        Points are the observed error rates for each consensus quality score. \
-        \n\nThe black line shows the estimated error rates after convergence. \
-         The red line shows the error rates expected under the nominal definition of the Q-value. \
-        \n\nIf the black line (the estimated rates) fits the observed rates well, \
-        and the error rates drop with increased quality as expected, then everything looks reasonable \
-        and can proceed with confidence." [DADA2 Tutorial]\n\n'
-
     captions["dada2stepsinfo"]='\n\n "Dereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
         the number of reads with that unique sequence .... DADA2 retains a summary of the quality information associated with each unique sequence." [DADA2 Tutorial]\
         \n\nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\

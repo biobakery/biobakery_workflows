@@ -67,7 +67,7 @@ def get_vis_input_description(files):
 
     # listing all expected input files
     input_files = { "required for 16S study": ["otu_table_closed_reference"] }
-    input_files["optional for 16S DADA2 study"] = ["counts_each_step", "error_ratesF", "error_ratesR", "readF_qc", "readR_qc"]
+    input_files["optional for 16S DADA2 study"] = ["counts_each_step", "readF_qc", "readR_qc"]
     input_files["optional for 16S USEARCH study"] = ["read_count_table", "eestats2"]
 
     input_desc+=files.SixteenS.list_file_description(input_files)
@@ -596,7 +596,7 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
 
     method_depends=[otu_table]
 
-    if os.path.isfile(files.SixteenS.path("error_ratesF", args.input, error_if_not_found=False)):
+    if os.path.isfile(files.SixteenS.path("readF_qc", args.input, error_if_not_found=False)):
         method = "dada2"
         if os.path.isdir(files.SixteenS.path("filtN", args.input, error_if_not_found=False)):
             method = "its"
@@ -604,8 +604,6 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
 
         # get the paths for the required files and check they are found
         counts_each_step = files.SixteenS.path("counts_each_step", args.input, none_if_not_found=True)
-        error_ratesF = files.SixteenS.path("error_ratesF", args.input, none_if_not_found=True)
-        error_ratesR = files.SixteenS.path("error_ratesR", args.input, none_if_not_found=True)
         readF_qc = files.SixteenS.path("readF_qc", args.input, none_if_not_found=True)
         readR_qc = files.SixteenS.path("readR_qc", args.input, none_if_not_found=True)
 
@@ -617,8 +615,6 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
             "outputdir": args.output,
             "otu_table": otu_table,
             "counts_each_step": counts_each_step,
-            "error_ratesF": error_ratesF,
-            "error_ratesR": error_ratesR,
             "readF_qc": readF_qc,
             "readR_qc": readR_qc,
             "picard": args.input_picard,

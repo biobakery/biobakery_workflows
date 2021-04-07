@@ -29,7 +29,7 @@ if vars.get("study_type") == "WGX":
 else:
     if vars.get("eestats_table"):
         filename="quality_control_usearch.pmd"
-    if vars.get("error_ratesF") and vars.get("error_ratesR") and vars.get("readF_qc") and vars.get("readR_qc"):
+    if vars.get("readF_qc") and vars.get("readR_qc"):
         filename="quality_control_dada2.pmd"
 ```
 
