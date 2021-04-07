@@ -4,14 +4,14 @@
 
 ```{python, echo=False}
 dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
-    document, vars["dna_pathabundance"], max_sets_heatmap)
+    document, vars["dna_pathabundance"], vars["max_sets_heatmap"])
 dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
-    document, vars["dna_ecabundance"], max_sets_heatmap)
+    document, vars["dna_ecabundance"], vars["max_sets_heatmap"])
 ```
 
 ## Pathway and ECs Abundance
 
-<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=max_sets_heatmap,type="pathways",method="Spearman", data_type="pathways") %>
+<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="pathways",method="Spearman", data_type="pathways") %>
 
 ```{python, echo=False}
 merged_data, metadata_pathways, metadata_samples=visualizations.log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data)
@@ -44,7 +44,7 @@ average_abundance_variance=visualizations.write_pathway_average_variance_table(d
 
 table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
     top_names_and_descriptions, [" Average "," Variance "], 
-    "Top "+str(max_sets_heatmap)+" pathways by average abundance", pathway_file_name, font=7)
+    "Top "+str(vars["max_sets_heatmap"])+" pathways by average abundance", pathway_file_name, font=7)
 ```
 
 <%= table_message %>

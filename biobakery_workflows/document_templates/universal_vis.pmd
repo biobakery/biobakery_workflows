@@ -51,7 +51,7 @@ if vars.get("picard"):
 # add the taxonomy templates
 if vars.get("study_type") == "WGX" and vars.get("taxonomic_profile"):
     filename="taxonomy.pmd"
-elif var.get("otu_table"):
+elif vars.get("otu_table"):
     filename="16S.pmd"
 ```
 

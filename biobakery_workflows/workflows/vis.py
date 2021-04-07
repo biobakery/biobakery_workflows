@@ -67,7 +67,7 @@ workflow.add_argument("use-template",desc="provide a report template to use inst
 # get the arguments from the command line
 args = workflow.parse_args()
 
-templates=["universal_vis"]
+templates=[utilities.get_package_file("universal_vis")]
 
 log_file=None
 # add the template for the data processing information
