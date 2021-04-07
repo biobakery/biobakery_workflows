@@ -745,78 +745,25 @@ class Sixteen_S(Workflow):
                 assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
 
         if method == "its":
-            return cls.captions["itsintro"]+"\n\n"+cls.captions["dada2stepsinfo"]+"\n\n"+dadadb_info
+            return cls.captions["itsintro"]+"\n\n"+dadadb_info
         elif method == "dada2":
-            return cls.captions["dada2intro"]+"\n\n"+cls.captions["dada2stepsinfo"]+"\n\n"+dadadb_info
+            return cls.captions["dada2intro"]+"\n\n"+dadadb_info
         else:
             return usearchintro
 
 
     captions={}
 
-    captions["itsintro"]='Implementing ITS pipeline for resolving sequence variants from ITS region\
-         of paired-end sequencing reads, adopting the tutorial from\n\n \
-         https://benjjneb.github.io/dada2/ITS_workflow.html \n \
-         https://benjjneb.github.io/dada2/tutorial.html and \n \
-         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments. \n \
-         "Unlike the 16S rRNA gene, the ITS region is highly variable in length. The commonly amplified ITS1 and ITS2 regions \
-         range from 200 - 600 bp in length. This length variation is biological, not technical, and arises from the high rates\
-         of insertions and deletions in the evolution of this less conserved gene region. The length variation of the ITS region has \
-         significant consequences for the filtering and trimming steps of the standard DADA2 workflow. First, truncation to a fixed \
-         length is no longer appropriate, as that approach remove real ITS variants with lengths shorter than the truncation length.\
-         Second, primer removal is complicated by the possibility of some, but not all, reads extending into the opposite primer when\
-         the amplified ITS region is shorter than the read length." [ITS Tutorial] \n \
-         "Critical addition to ITS workflows is the removal of primers on the forward and reverse reads, in a way that accounts\
-         for the possibility of read-through into the opposite primer." [ITS Tutorial] \n \
-         "Cutadapt" tool is used  for removal of primers from the ITS amplicon sequencing data. After initial step of primers \
-         removal, the rest of ITS workflow matches DADA2 workflow.\n \
-         Database UNITE is used for taxonomic assignment.\n\n '
+    captions["itsintro"]="The [DADA2 ITS pipeline](https://benjjneb.github.io/dada2/ITS_workflow.html) is the DADA2 pipeline, Callahan BJ, et all (2016). “DADA2: High-resolution sample inference from Illumina amplicon data.” Nature Methods, 13, 581-583., with small changes to adapt to sequencing of the ITS region.\n\n\n" 
+
+    captions["dada2intro"]="The [DADA2 pipeline](https://benjjneb.github.io/dada2/tutorial.html), Callahan BJ, et all (2016). “DADA2: High-resolution sample inference from Illumina amplicon data.” Nature Methods, 13, 581-583., resolves sequence variants from 16S rRNA to generate a amplicon sequence variant (ASV) table.\n\n\n"
+    
+    captions["dada2errorintro"]="The read quality profiles show the quality scores at each base for the forward and reverse reads. The green line shows the mean and the quartiles are shown with the orange lines.\n"
+    
+    captions["dada2countsinfo"]="This figure shows counts of reads in four categories: \n \
+        \n1) original: total count of raw reads,\n2) filtered: number of reads after filtering for length and quality,\n3) merged: number of reads where the pairs merge,\n4) nonchim: total remaining after chimera removal.\n\n"
 
 
-    captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
-        gene amplicon paired-end sequencing reads, adopting the tutorial from\n\n \
-         https://benjjneb.github.io/dada2/tutorial.html and \n \
-         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
-        \n\nThis report captures all the workflow steps necessary to reproduce the analysis. Notes and descriptions\
-         of the steps are cited from DADA2 tutorial as well.\
-        \n\nMultiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
-        which is required for calculating UniFrac beta-diversity distances between microbiome samples.\n\n\n"
-    
-    captions["dada2errorintro"]='\n\n "The DADA2 algorithm makes use of a parametric error model (err) and every amplicon dataset has a different set of error rates. \
-        \n\nThe learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
-        sample composition until they converge on a jointly consistent solution.\n\nAs in many machine-learning problems, the algorithm must \
-        begin with an initial guess, for which the maximum possible error rates in this data are used \
-        the error rates if only the most abundant sequence is correct and all the rest are errors." [DADA2 Tutorial]\n'
-    
-    captions["dada2stepsinfo"]='\n\n "Dereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
-        the number of reads with that unique sequence .... DADA2 retains a summary of the quality information associated with each unique sequence." [DADA2 Tutorial]\
-        \n\nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
-        \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2s accuracy. \
-        \n\nThe sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
-        Spurious sequence variants are further reduced by merging overlapping reads. \n\nThe core function here is mergePairs \
-        which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
-        \n\n "The core dada method removes substitution and indel errors, but chimeras remain.\
-        Fortunately, the accuracy of the sequences after denoising makes identifying chimeras simpler than it is when dealing with fuzzy OTUs\
-        all sequences which can be exactly reconstructed as a bimera (two-parent chimera) from more abundant sequence." [DADA2 Tutorial]' \
-         + '\n\n "Most of reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though).\
-        If most of your reads were removed as chimeric, upstream processing may need to be revisited.\
-        In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline." [DADA2 Tutorial]\n'
-    
-    captions["dada2countsinfo"]='This figure shows the number of reads that made it through each step in the pipeline\
-        \n\nThere should no be a step in which a majority of reads are lost, except filtering when it is stringent.\
-        \n\n "If a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
-        and make sure that the truncated reads span your amplicon." [DADA2 Tutorial]\
-        \n\nIf a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
-        as the ambiguous nucleotides in unremoved primers interfere with chimera identification.\n'
-
-    captions["dada2taxinfo"]='"The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
-        and outputs the taxonomic assignments with at least minBoot bootstrap confidence." [DADA2 Tutorial]\
-        \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007.'  \
-        + " In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
-        of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
-        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n \n"
- 
-          
     captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n \
         \n1) classified: reads that align to OTUs with known taxonomy,\n2) unclassified: reads that align to OTUs of unknown taxonomy,\n3) unmapped: reads that do not align to any OTUs.\n\n The sum of these\
         three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"

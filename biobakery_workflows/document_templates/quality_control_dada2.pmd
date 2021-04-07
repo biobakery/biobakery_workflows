@@ -1,6 +1,8 @@
 
 # Quality Control
 
+<% print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>
+
 ## Forward Reads
 <% print("![FWD Read](" + vars["readF_qc"] + ")") %>
 <% if vars["pdf_format"]: print("\clearpage") %>
@@ -8,6 +10,4 @@
 ## Reverse Reads
 <% print("![REV Read](" + vars["readR_qc"] + ")") %>
 <% if vars["pdf_format"]: print("\clearpage") %>
-
-<% print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>
 
