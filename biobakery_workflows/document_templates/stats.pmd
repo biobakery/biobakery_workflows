@@ -29,7 +29,7 @@ filename="stats_permanova.pmd"
 ```
 
 ```{import, echo=False}
-if not vars.get("bypass_maaslin):
+if not vars.get("bypass_maaslin"):
     filename="stats_maaslin.pmd"
 ```
 
