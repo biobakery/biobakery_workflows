@@ -8,17 +8,15 @@ run through [MetaPhlAn](http://huttenhower.sph.harvard.edu/metaphlan).
 Taxonomic abundances are passed through a basic filter requiring each species or genus to have at least <%= vars["min_abundance"] %> % abundance in at least <%= vars["min_samples"] %> % of all samples.
 
 ```{python, echo=False}
-samples, taxonomy, data = document.read_table(vars["taxonomic_profile"])
+samples, taxonomy, data = utilities.read_metaphlan_profile(document,vars["taxonomic_profile"])
 
-samples=[s.replace("_taxonomic_profile","") for s in samples]
-
+# get the filtered species
 species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,data)
-
 filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
 
+# get the filtered genera
 genera_taxonomy, genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,data,level=5)
-
 filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"], level=5)
 ```
@@ -28,17 +26,11 @@ A total of <%= len(species_taxonomy) %> species and <%= len(genera_taxonomy) %> 
 ## Taxonomic Count Table
 
 ```{python, echo=False}
-def count_filtered_columns(data, min):
-    data=numpy.transpose(data)
-    return [len(list(filter(None,filter(lambda x: x>min,row)))) for row in data]
 
-species_counts=count_filtered_columns(species_data, min=0)
-species_counts_after_filter=count_filtered_columns(filtered_species_data, min=0)
-genera_counts=count_filtered_columns(genera_data, min=0)
-genera_counts_after_filter=count_filtered_columns(filtered_genera_data, min=0)
+# compile the taxa counts for the table
+all_taxa_counts=utilities.compile_taxa_counts(species_data,filtered_species_data,genera_data,filtered_genera_data)
 
-all_taxa_counts=[[a,b,c,d] for a,b,c,d in zip(species_counts, species_counts_after_filter, genera_counts, genera_counts_after_filter)]
-
+# write a table as a file and also print table to the document
 taxa_counts_column_names = ["# Sample","Species","Species filtered","Genera","Genera filtered"]
 document.write_table(taxa_counts_column_names, samples, all_taxa_counts,
     files.ShotGunVis.path("taxa_counts",document.data_folder))

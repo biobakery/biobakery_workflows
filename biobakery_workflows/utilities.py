@@ -44,6 +44,30 @@ TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
 
+def compile_taxa_counts(species_data,filtered_species_data,genera_data,filtered_genera_data):
+    # compile the taxa counts for species and genus for the counts table in the vis report
+    def count_filtered_columns(data, min):
+        import numpy
+        data=numpy.transpose(data)
+        return [len(list(filter(None,filter(lambda x: x>min,row)))) for row in data]
+
+    species_counts=count_filtered_columns(species_data, min=0)
+    species_counts_after_filter=count_filtered_columns(filtered_species_data, min=0)
+    genera_counts=count_filtered_columns(genera_data, min=0)
+    genera_counts_after_filter=count_filtered_columns(filtered_genera_data, min=0)
+
+    all_taxa_counts=[[a,b,c,d] for a,b,c,d in zip(species_counts, species_counts_after_filter, genera_counts, genera_counts_after_filter)]
+
+    return all_taxa_counts
+
+def read_metaphlan_profile(document, filename):
+    # read in a metaphlan taxonomic profile and remove "_taxonomic_profile" from the sample names if included
+
+    samples, taxonomy, data = document.read_table(filename)
+    samples=[s.replace("_taxonomic_profile","") for s in samples]
+
+    return samples, taxonomy, data
+
 def print_template(templates):
     # print the templates to stdout and exit
 
