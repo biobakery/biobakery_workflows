@@ -66,6 +66,7 @@ setuptools.setup(
             'Rscripts/*'
         ]},
     data_files=[
+        ("images/", glob("images/*")),
         ("tutorial/input/", glob("examples/tutorial/input/*")),
         ("tutorial/kneaddata_demo_db/Homo_sapiens_demo/", glob("examples/tutorial/kneaddata_demo_db/Homo_sapiens_demo/*")),
         ("tutorial/kneaddata_demo_db/SILVA_demo/", glob("examples/tutorial/kneaddata_demo_db/SILVA_demo/*"))
