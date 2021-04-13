@@ -836,16 +836,22 @@ def get_package_file(basename, type="template"):
     if type == "template":
         subfolder = "document_templates"
         extension = ".pmd"
+    elif type == "image":
+        subfolder = os.path.join(os.path.pardir,"images")
     else:
         subfolder = "Rscripts"
         extension = ".R"
 
     # get all of the templates in this folder
     package_install_folder=os.path.join(os.path.dirname(os.path.realpath(__file__)), subfolder)
-    found_files=list(filter(lambda file: file.endswith(extension),os.listdir(package_install_folder)))
 
     # return the template with the name
-    matching_file=list(filter(lambda file: file.startswith(basename+extension), found_files))
+    if type != "image":
+        found_files=list(filter(lambda file: file.endswith(extension),os.listdir(package_install_folder)))
+        matching_file=list(filter(lambda file: file.startswith(basename+extension), found_files))
+    else:
+        found_files=list(filter(lambda file: os.path.isfile(os.path.join(package_install_folder,file)),os.listdir(package_install_folder)))
+        matching_file=list(filter(lambda file: basename.lower() in file.lower(), found_files))
 
     if matching_file:
         matching_file=os.path.join(package_install_folder,matching_file[0])
