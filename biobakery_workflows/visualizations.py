@@ -745,11 +745,14 @@ class Sixteen_S(Workflow):
                 assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
 
         if method == "its":
-            return cls.captions["itsintro"]+"\n\n"+dadadb_info
+            flowchart="![]({0})\n\n".format(utilities.get_package_file("dada2","image"))
+            return flowchart+cls.captions["itsintro"]+"\n\n"+dadadb_info
         elif method == "dada2":
-            return cls.captions["dada2intro"]+"\n\n"+dadadb_info
+            flowchart="![]({0})\n\n".format(utilities.get_package_file("dada2","image"))
+            return flowchart+cls.captions["dada2intro"]+"\n\n"+dadadb_info
         else:
-            return usearchintro
+            flowchart="![]({0})\n\n".format(utilities.get_package_file("16s_workflow","image"))
+            return flowchart+usearchintro
 
 
     captions={}

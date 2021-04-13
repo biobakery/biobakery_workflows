@@ -110,7 +110,7 @@ if workflow_type == "16S" :
 else:
     # set default introduction text
     if not args.introduction_text:
-        args.introduction_text = "The data was run through the standard workflow for whole metagenome shotgun sequencing."
+        args.introduction_text = "![WMS workflow flowchart]({0})\n\nThe data was run through the standard workflow for whole metagenome shotgun sequencing.".format(utilities.get_package_file("wms_workflow","image"))
 
     # get the paths for the required files and check they are found
     qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, none_if_not_found=True)
