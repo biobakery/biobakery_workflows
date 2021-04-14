@@ -1,4 +1,6 @@
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 # Quality Control
 
 <% print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>

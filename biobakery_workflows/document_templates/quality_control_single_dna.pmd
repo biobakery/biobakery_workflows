@@ -1,4 +1,6 @@
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 # Quality Control
 
 ```{python, echo=False}
