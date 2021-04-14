@@ -51,7 +51,7 @@ table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, 
         
 ### DNA Samples Plots of Filtered Reads
 
-```{python, echo=False, f_spines = False}
+```{python, echo=False, width="13cm", f_spines = False}
 # sort the samples/data by read count with the largest original read count first
 def sort_samples_reads_decreasing(read_data, read_samples):
     """ Sort the reads from largest to smallest total read count """

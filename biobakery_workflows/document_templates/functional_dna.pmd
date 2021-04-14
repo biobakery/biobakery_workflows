@@ -13,25 +13,25 @@ dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_an
 
 <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="pathways",method="Spearman", data_type="pathways") %>
 
-```{python, echo=False}
+```{python, echo=False, f_size=(8,8)}
 merged_data, metadata_pathways, metadata_samples=visualizations.log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data)
 ```
 
 <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="log10") %> 
 
-```{python, echo=False}
+```{python, echo=False, f_size=(8,8)}
 ec_merged_data, ec_pathways, ec_samples=log10_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False}
+```{python, echo=False, f_size=(8,8)}
 zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples)
 ```
 
 <%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
 
-```{python, echo=False}
+```{python, echo=False, f_size=(8,8)}
 zscore_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, ec_merged_data, ec_pathways, ec_samples, "ecs")
 ```
 
@@ -57,7 +57,7 @@ table_message=visualizations.show_table_max_rows(document, average_abundance_var
 
 <%= visualizations.ShotGun.format_caption("feature_detection",seq_type="metagenomic",seq_short_type="DNA") %>
 
-```{python, echo=False}
+```{python, echo=False, width="13cm", f_spines = False }
 total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts = visualizations.feature_counts(
     document, vars["read_counts"],vars["feature_counts"])
 
@@ -67,7 +67,7 @@ document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_re
 
 <%= visualizations.ShotGun.captions["scatter_reads_aligned"] %> 
 
-```{python, echo=False}
+```{python, echo=False, width="13cm", f_spines = False}
 document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
 
