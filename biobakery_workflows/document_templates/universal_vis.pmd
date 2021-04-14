@@ -17,8 +17,6 @@ from biobakery_workflows import visualizations, utilities, files
 
 <%= vars["introduction_text"] %>
 
-<% if vars["pdf_format"]: print("\clearpage") %>
-
 ```{import, echo=False}
 # add QC templates based on study type
 if vars.get("study_type") == "WGX":
