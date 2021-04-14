@@ -1,4 +1,6 @@
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 # Taxonomic Profiling of Metagenomic Reads
 
 This report section contains information about the taxonomy
