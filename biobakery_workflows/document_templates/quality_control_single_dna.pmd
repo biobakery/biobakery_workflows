@@ -39,7 +39,7 @@ visualizations.ShotGun.captions["microbial_ratios"]
         
 ### DNA Samples Plots of Filtered Reads
 
-```{python, echo=False}
+```{python, echo=False, f_spines = False}
 document.plot_grouped_barchart(numpy.transpose(dna_data), row_labels=dna_columns, 
     column_labels=dna_samples, title="DNA reads", ylabel="Read count (in millions)",
     legend_title="Filter", yaxis_in_millions=True)
