@@ -1,6 +1,6 @@
 # Read Count
 
-```{python, echo=False, width="13cm", f_spines = False}
+```{python, echo=False, f_spines = False}
 columns, samples, data = document.read_table(vars["counts_each_step"])
 total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)

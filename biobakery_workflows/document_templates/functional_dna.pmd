@@ -57,7 +57,7 @@ table_message=visualizations.show_table_max_rows(document, average_abundance_var
 
 <%= visualizations.ShotGun.format_caption("feature_detection",seq_type="metagenomic",seq_short_type="DNA") %>
 
-```{python, echo=False, width="13cm", f_spines = False }
+```{python, echo=False, f_spines = False }
 total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts = visualizations.feature_counts(
     document, vars["read_counts"],vars["feature_counts"])
 
@@ -67,7 +67,7 @@ document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_re
 
 <%= visualizations.ShotGun.captions["scatter_reads_aligned"] %> 
 
-```{python, echo=False, width="13cm", f_spines = False}
+```{python, echo=False, f_spines = False}
 document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
 
