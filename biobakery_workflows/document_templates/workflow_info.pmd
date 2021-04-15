@@ -1,4 +1,6 @@
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 ```{python, echo=False}
 from anadama2.reporters import LoggerReporter 
 ```
@@ -7,8 +9,8 @@ from anadama2.reporters import LoggerReporter
 
 ## Software Versions
 
-<% for version in LoggerReporter.read_log(vars["log"],"versions"): print("  * " + version+"  \n") %>
+<% for version in LoggerReporter.read_log(vars["log"],"versions"): print("* " + version+"  \n") %>
 
 ## Tasks Run
 
-<% for command in LoggerReporter.read_log(vars["log"],"commands"): print("  * " + command+"  \n") %>
+<% for command in LoggerReporter.read_log(vars["log"],"commands"): print("* " + command+"  \n") %>
