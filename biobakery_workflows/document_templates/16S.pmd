@@ -1,5 +1,22 @@
 # Taxonomy
-    
+
+```{python, echo=False}
+# search for the alpha diversity plots
+alpha_diversity_plots_folder=utilities.find_alpha_diversity_plots(vars["alpha_diversity_plots"]) 
+```
+
+<% if alpha_diversity_plots_folder['scatterplot'] or alpha_diversity_plots_folder['boxplot']: print("## Alpha Diversity") %>
+
+<% if alpha_diversity_plots_folder['scatterplot'] or alpha_diversity_plots_folder['boxplot']: print("Alpha diversity, computed with the Inverse Simpson Index, were computed on un-filtered normalized data at the species level. Boxplots were generated for categorical/discrete variables while scatterplots were generated for continuous variables.") %> 
+
+<% if alpha_diversity_plots_folder['boxplot']: print("### Categorical variables ") %>
+
+<% utilities.show_plots(alpha_diversity_plots_folder['boxplot']) %>
+
+<% if alpha_diversity_plots_folder['scatterplot']: print("### Continuous variables ") %>
+
+<% utilities.show_plots(alpha_diversity_plots_folder['scatterplot']) %>
+
 ## Genera
  
 ```{python, echo=False, f_spines = False}

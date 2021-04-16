@@ -107,6 +107,9 @@ if workflow_type == "16S" :
         template_variables["introduction_text"]=args.introduction_text
 
     workflow_targets=workflow.name_output_files("16S_report."+args.format)
+
+    # if metadata are provided then generate alpha diversity plots
+    template_variables["alpha_diversity_plots"],alpha_task=utilities.generate_alpha_diversity_plots(workflow,"16S",args.output,args.input_metadata,otu_table)
 else:
     # set default introduction text
     if not args.introduction_text:
@@ -144,6 +147,9 @@ else:
           "metadata":metadata,
           "metadata_labels":metadata_labels}
 
+    # if metadata are provided then generate alpha diversity plots
+    template_variables["alpha_diversity_plots"],alpha_task=utilities.generate_alpha_diversity_plots(workflow,"wmgx",args.output,args.input_metadata,taxonomic_profile)
+
 # add author and image if included
 template_variables["author"]=args.author_name
 template_variables["header_image"]=args.header_image
@@ -168,6 +174,10 @@ if args.print_template:
 # use the template from the user if provided
 if args.use_template:
     templates=[args.use_template]
+
+# add the alpha task if needed
+if alpha_task:
+    template_depends+=[alpha_task]
 
 # add the document to the workflow
 doc_task=workflow.add_document(

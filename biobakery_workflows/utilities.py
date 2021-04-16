@@ -290,6 +290,35 @@ def show_stratified_plots(plots):
     if no_plots_found:
         print("No significant associations for pathways with categorical metadata found.")
 
+def find_alpha_diversity_plots(plots_folder):
+    # search through the folder for the plots
+    plots={"scatterplot":[],"boxplot":[]}
+    if not plots_folder:
+        return plots
+    for filename in os.listdir(plots_folder):
+        if filename.endswith("_scatterplot.png"): 
+            plots["scatterplot"].append(os.path.join(plots_folder,filename))
+        elif filename.endswith("_boxplot.png"):
+            plots["boxplot"].append(os.path.join(plots_folder,filename))
+    return plots
+
+def generate_alpha_diversity_plots(workflow,study_type,output,input_metadata,taxonomic_profile):
+    # Calling the R script (as this method requires vegan), generate alpha diversity plots
+    if input_metadata:
+        output_folder=os.path.join(output,"alpha_diversity_plots")
+        alpha_script=get_package_file("alpha_diversity", "Rscript")
+
+        # create the reformatted normalized file
+        feature_tasks_info=create_feature_table_inputs(workflow,study_type,output,taxonomic_profile)
+        task=workflow.add_task(
+            "[vars[0]] [depends[0]] [depends[1]] [vars[1]]",
+            depends=[feature_tasks_info["taxonomy"][0],input_metadata],
+            vars=[alpha_script,output_folder],
+            name="alpha_diversity")
+        return output_folder, task
+    else:
+        return "", None
+
 def show_halla_results(halla_tasks_info):
     for run_type in halla_tasks_info:
         print("## HAllA "+run_type.replace(" "," vs. ")+"\n\n")
@@ -303,6 +332,11 @@ def show_heatmaps(heatmap, run_type):
         print("\n\n!["+run_type+" heatmap]("+heatmap+")\n\n")
     else:
         print("Not enough significant associations for a heatmap.\n\n")
+
+def show_plots(plots_list):
+    for filename in plots_list:
+        if os.path.isfile(filename):
+            print("\n\n![]("+filename+")\n\n")
 
 def show_maaslin_tile(figures, type):
     # show the top plots for each metadata
@@ -474,7 +508,7 @@ def run_maaslin_on_input_file_set(workflow,feature_tasks_info,input_metadata,tra
 
     return maaslin_tasks
 
-def create_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance,other_data_files):
+def create_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pathabundance=None,other_data_files=None):
     # For all input files based on type create feature tables for input to maaslin and other downstream tasks like halla
 
     taxon_feature=name_files("taxonomy_features.txt",output,subfolder="features",create_folder=True)
@@ -497,13 +531,14 @@ def create_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pat
         feature_tasks_info["pathways"]=(pathabundance_feature,name_files("heatmap.png", output, subfolder=os.path.join("maaslin2_pathways","figures")),
             name_files("significant_results.tsv", output, subfolder="maaslin2_pathways"))
 
-    for newfile in other_data_files:
-        newfile_type = other_data_files[newfile]
-        new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
-        new_subfolder="maaslin2_"+newfile_type
-        create_feature_table_tasks_info.append((newfile,new_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
-        feature_tasks_info[newfile_type]=(new_feature,name_files("heatmap.png", output, subfolder=os.path.join(new_subfolder,"figures")),
-            name_files("significant_results.tsv", output, subfolder=new_subfolder))
+    if other_data_files:
+        for newfile in other_data_files:
+            newfile_type = other_data_files[newfile]
+            new_feature=name_files(newfile_type+"_features.txt",output,subfolder="features",create_folder=True)
+            new_subfolder="maaslin2_"+newfile_type
+            create_feature_table_tasks_info.append((newfile,new_feature,"--sample-tag-column '_Abundance' --remove-stratified"))
+            feature_tasks_info[newfile_type]=(new_feature,name_files("heatmap.png", output, subfolder=os.path.join(new_subfolder,"figures")),
+                name_files("significant_results.tsv", output, subfolder=new_subfolder))
 
     for input_file, output_file, options in create_feature_table_tasks_info:
         workflow.add_task(
