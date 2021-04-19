@@ -61,7 +61,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
                 samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),ylabel=ylabel,sort_by_name=sort_by_name,
-                sort_by_name_inverse=sort_by_name_inverse)
+                sort_by_name_inverse=sort_by_name_inverse,feature=feature)
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
             plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature, ylabel=ylabel)
@@ -281,7 +281,7 @@ def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inve
 
 def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
     ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=2, sort_by_name=False,
-    sort_by_name_inverse=False):
+    sort_by_name_inverse=False, feature=""):
     """ Plot the grouped taxonomy with samples sorted by species abundance for each feature.
 
         Args:
@@ -330,7 +330,7 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
 
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy,
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
+            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+".png"))
 
 def zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples, data_type="pathways"):
     # if there is metadata, add it to the heatmap
