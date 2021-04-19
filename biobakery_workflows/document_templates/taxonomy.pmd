@@ -105,37 +105,25 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, 
 
 ## Heatmaps
 
-```{python, echo=False}
-visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="species and genera",method="Spearman and Bray-Curtis",data_type="taxa")
-```
+
+<% visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="species and genera",method="Spearman and Bray-Curtis",data_type="taxa") %>
+
 
 ### Species
 
-```{python, echo=False, f_size=(8,8)}
-visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,
-    vars["pdf_format"], "Top {} species by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
-```
+<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"], "heatmap_species_spearman.png", "Top {} species by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"]) %>
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False, f_size=(8,8)}
-visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,
-    vars["pdf_format"],"Top {} species by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
-```
+<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"],"heatmap_species_bray_curtis.png","Top {} species by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis") %>
 
 ### Genera
 
-```{python, echo=False, f_size=(8,8)}
-visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,
-    vars["pdf_format"], "Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
-```
+<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_spearman.png", "Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"]) %>
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False, f_size=(8,8)}
-visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,
-    vars["pdf_format"],"Top {} genera by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
-```
+<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_bray_curtis.png","Top {} genera by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis") %>
 
 ## Barplot
 

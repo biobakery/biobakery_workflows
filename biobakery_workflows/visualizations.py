@@ -368,7 +368,7 @@ def log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_avera
     return merged_data, metadata_pathways, metadata_samples
 
 
-def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=None,max_sets_heatmap=25,method="correlation"):
+def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename,title=None,max_sets_heatmap=25,method="correlation"):
     """ Generate a heatmap using the doc function. Include metadata if available. """
 
     # set the default title if not provided
@@ -383,9 +383,9 @@ def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=No
         # get the metadata row numbers
         metadata_rows=range(1,len(vars['metadata']))
         document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
-            title=title, metadata_rows=metadata_rows, method=method)
+            title=title, metadata_rows=metadata_rows, method=method,outfilename=os.path.join(document.figures_folder,filename))
     else:
-        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method)
+        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method,outfilename=os.path.join(document.figures_folder,filename))
 
 
 def plot_pcoa_top_average_abundance(document, samples, feature_names, feature_data, feature_type, scale_data=None, legend_title="% Abundance", max_sets=6):
