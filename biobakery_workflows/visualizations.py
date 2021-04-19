@@ -245,7 +245,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
         title="Top {} {} group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
-        ylabel=ylabel, legend_title=legend_title, legend_style="italic")
+        ylabel=ylabel, legend_title=legend_title, legend_style="italic", outfilename=os.path.join(document.figures_folder,legend_title+"_"+cat_metadata[0]+"_average_taxonomy.png"))
 
 def plot_stacked_barchart_taxonomy(document, samples, taxonomy, data, max_sets_barplot, taxonomy_level):
     # for the taxonomy data, organize and then plot the stacked barchart

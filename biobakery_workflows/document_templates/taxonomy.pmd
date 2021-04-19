@@ -133,9 +133,7 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, 
 
 Stacked barplot of  <%= vars["max_sets_barplot"] %> most abundant species among samples. Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order.
 
-```{python, echo=False, f_spines = False}
-categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, vars["max_sets_barplot"])
-```
+<% categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, vars["max_sets_barplot"]) %>
 
 <% if categorical_metadata: print("Stacked barplot of species average abundance grouped by metadata.") %>
 
@@ -147,9 +145,7 @@ categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy
 
 Stacked barplot of  <%= vars["max_sets_barplot"] %> most abundant genera among samples. Samples in the plot were sorted on the genera with the highest mean abundances among samples, in decreasing order.
 
-```{python, echo=False, f_spines = False}
-categorical_metadata=visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_genera, sorted_data_genera, top_taxonomy_genera, vars["max_sets_barplot"], feature="genera")
-```
+<% categorical_metadata=visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_genera, sorted_data_genera, top_taxonomy_genera, vars["max_sets_barplot"], feature="genera") %>
 
 <% if categorical_metadata: print("Stacked barplot of genera average abundance grouped by metadata.") %>
 
