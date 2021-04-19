@@ -97,7 +97,7 @@ def fill_taxonomy_other(top_taxonomy, sorted_data):
     return new_top_taxonomy, new_sorted_data
 
 
-def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
+def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title, data_type):
     """ Plot pcoa for each feature if metadata has been provided
 
         Args:
@@ -107,7 +107,7 @@ def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
             top_taxonomy (list): The full taxonomic names organized to match the data
             pcoa_data (list): The data (range 0 to 1) organized to match the samples and taxonomy
             title (string): The base string for the title for the plots
- 
+            data_type (string): The type of data (taxonomic level)
         Return: None
 
     """
@@ -122,7 +122,7 @@ def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
             metadata_type = metadata_dict[name]
             
             document.show_pcoa(samples, top_taxonomy, pcoa_data,title=title+" - "+name,
-                               metadata=metadata_mapping, metadata_type=metadata_type)
+                               metadata=metadata_mapping, metadata_type=metadata_type, outfilename=os.path.join(document.figures_folder,"pcoa_"+name+"_"+data_type+".png"))
 
 def get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa, taxa_level=5):
     """ Get the top, based on average abundance, set of taxa at the genus level
