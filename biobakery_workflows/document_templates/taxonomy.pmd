@@ -106,7 +106,7 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, 
 ## Heatmaps
 
 
-<% visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="species and genera",method="Spearman and Bray-Curtis",data_type="taxa") %>
+<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="species and genera",method="Spearman and Bray-Curtis",data_type="taxa") %>
 
 
 ### Species
@@ -129,17 +129,7 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, 
 
 ### Species
 
-```{python, echo=False, f_spines = False}
-top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, vars["max_sets_barplot"], function="average") 
-
-sorted_data, sorted_samples = visualizations.sort_data(document, top_data, samples)
-
-top_taxonomy, sorted_data = visualizations.fill_taxonomy_other(top_taxonomy, sorted_data)
-
-document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy, 
-    column_labels=sorted_samples, title="Top "+str(vars["max_sets_barplot"])+" species by average abundance",
-    ylabel="Relative abundance", legend_title="Species", legend_style="italic")
-```
+<% sorted_samples, sorted_data, top_taxonomy = visualizations.plot_stacked_barchart_taxonomy(document, samples, species_taxonomy, species_data, vars["max_sets_barplot"], "species") %>
 
 Stacked barplot of  <%= vars["max_sets_barplot"] %> most abundant species among samples. Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order.
 
@@ -152,18 +142,8 @@ categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy
 
 ### Genera
 
-```{python, echo=False, f_spines = False}
-top_taxonomy_genera, top_data_genera = utilities.top_rows(genera_taxonomy, genera_data, vars["max_sets_barplot"],
-    function="average")
+<% sorted_samples_genera, sorted_data_genera, top_taxonomy_genera = visualizations.plot_stacked_barchart_taxonomy(document, samples, genera_taxonomy, genera_data, vars["max_sets_barplot"], "genera") %>
 
-sorted_data_genera, sorted_samples_genera = visualizations.sort_data(document, top_data_genera, samples)
-
-top_taxonomy_genera, sorted_data_genera = visualizations.fill_taxonomy_other(top_taxonomy_genera, sorted_data_genera)
-
-document.plot_stacked_barchart(sorted_data_genera, row_labels=top_taxonomy_genera,
-    column_labels=sorted_samples_genera, title="Top "+str(vars["max_sets_barplot"])+" genera by average abundance",
-    ylabel="Relative abundance", legend_title="Genera", legend_style="italic")
-```
 
 Stacked barplot of  <%= vars["max_sets_barplot"] %> most abundant genera among samples. Samples in the plot were sorted on the genera with the highest mean abundances among samples, in decreasing order.
 
