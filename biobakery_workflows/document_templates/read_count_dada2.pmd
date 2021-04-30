@@ -1,6 +1,6 @@
 # Read Count
 
-```{python, echo=False, f_spines = False}
+```{python, echo=False, results="md"}
 columns, samples, data = document.read_table(vars["counts_each_step"])
 total_reads=[row[0] for row in data]
 sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
@@ -13,7 +13,7 @@ nochim_reads = [row[-1] for row in sorted_all_read_data]
 # plot the read counts
 document.plot_grouped_barchart([sorted_total_reads,filtered_reads,merged_reads,nochim_reads],
        ["Original","Filtered","Merged","Nochimera"], sorted_samples,
-       title="Read counts by Sample", xlabel="Samples", ylabel="Total Reads")
+       title="Read counts by Sample", xlabel="Samples", ylabel="Total Reads", outfilename=os.path.join(document.figures_folder, "filtered_read_counts.png"))
 
 # plot grouped taxonomy for all categorical data provided
 if visualizations.metadata_provided(vars):
