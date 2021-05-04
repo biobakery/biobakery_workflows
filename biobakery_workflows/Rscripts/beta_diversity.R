@@ -186,7 +186,7 @@ if (current_args$covariate_equation != "") {
     }
   }
 
-  results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
+  results <- adonis2(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata, by="margin")
   png(positional_args[3], res=150, height=800, width=1100)
 
   if (length(names(metadata)) > 20) {
@@ -194,7 +194,7 @@ if (current_args$covariate_equation != "") {
   } else {
     theme <- ttheme_default(base_size = 8, padding = unit(c(4, 4), "mm"))
   }
-  grid.table(as.data.frame(results$aov.tab), theme=theme)
+  grid.table(as.data.frame(results), theme=theme)
   dev.off()
 
 } else {

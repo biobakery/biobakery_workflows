@@ -10,7 +10,7 @@
 
 <% if vars["beta_diversity_plots"]["multivariate"]: print("## Multivariate") %>
 
-<% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model the following covariate equation was provided: 'bray ~ "+vars["covariate_equation"]+"' .") %>
+<% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model, applying settings so the order of the variables does not affect the results, the following covariate equation was provided: 'bray ~ "+vars["covariate_equation"]+"' .") %>
 
 <% utilities.show_all_variate_plots("multivariate",vars["beta_diversity_plots"]) %>
 
