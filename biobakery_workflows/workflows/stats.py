@@ -123,6 +123,7 @@ if not args.bypass_maaslin:
 
 ## 4. Add tasks to run halla on all sets of data files            
 
+halla_tasks_info=[]
 if not args.bypass_halla:
     halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.output,args.halla_options)
 
@@ -154,6 +155,10 @@ if args.print_template:
 # use the template from the user if provided
 if args.use_template:
     templates=[args.use_template]
+
+# update the intro text if halla is not run and the default intro is used
+if args.bypass_halla and args.introduction_text == workflow_vis.captions["intro"]:
+    args.introduction_text = workflow_vis.captions["intro_bypass_halla"]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
