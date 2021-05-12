@@ -6,6 +6,16 @@
 
 <% utilities.show_all_variate_plots("univariate",vars["beta_diversity_plots"]) %>
 
+<% if vars["beta_diversity_plots"]["pairwise"] and vars["pdf_format"]: print("\clearpage") %>
+
+<% if vars["beta_diversity_plots"]["pairwise"]: print("## Pairwise") %>
+
+<% if vars["beta_diversity_plots"]["pairwise"]: print("Each categorical variable is run against all other categorical variables in a set of pairs.") %>
+
+<% utilities.show_all_variate_plots("pairwise",vars["beta_diversity_plots"]) %>
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 <% if vars["beta_diversity_plots"]["multivariate"] and vars["pdf_format"]: print("\clearpage") %>
 
 <% if vars["beta_diversity_plots"]["multivariate"]: print("## Multivariate") %>

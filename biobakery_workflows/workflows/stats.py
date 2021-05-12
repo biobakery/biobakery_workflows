@@ -138,7 +138,7 @@ if not args.bypass_maaslin:
 
 additional_stats_tasks=[]
 permanova_plots=[]
-beta_diversity_plots={"univariate": {}, "multivariate": {}}
+beta_diversity_plots={"univariate": {}, "multivariate": {}, "pairwise": {}}
 covariate_equation=""
 
 if args.random_effects:

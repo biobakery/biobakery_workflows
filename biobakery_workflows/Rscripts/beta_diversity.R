@@ -76,6 +76,16 @@ options <- optparse::add_option(options,
     )
 )
 
+options <- optparse::add_option(options,
+    c("-p", "--pairwise"),
+    type = "logical",
+    dest = "pairwise",
+    default = FALSE,
+    help = paste0("Run pairwise comparison on all categorical features ",
+    " [ Default: FALSE ]"
+    )
+)
+
 option_not_valid_error <- function(message, valid_options) {
     print(paste(message, ": %s"), toString(valid_options))
     stop("Option not valid", call. = FALSE)
@@ -175,7 +185,28 @@ if (! exists("method")) {
 
 bray = vegdist(filtered_data, method, na.remove = TRUE)
 
-if (current_args$covariate_equation != "") {
+if (current_args$pairwise) {
+  used_col <- character()
+  tables <- list()
+  i <- 1
+  png(positional_args[3], res=150, height=800, width=1100)
+  theme <- ttheme_default(base_size = 8, padding = unit(c(4, 4), "mm"))
+  for (col in names(filtered_metadata)){
+      if (is.numeric(filtered_metadata[[col]])) {
+        for (col2 in names(filtered_metadata)) {
+            if (is.numeric(filtered_metadata[[col2]]) && !(col2 %in% used_col) && (col != col2)) {
+                results <- adonis2(as.formula(paste("bray ~", col, " + ", col2)), data = filtered_metadata, by="margin")
+                grid <- tableGrob(as.data.frame(results), theme=theme)
+                tables[[i]] <- grid
+                i <- i + 1
+            }
+        }
+       used_col <- append(used_col, col)
+    }
+  }
+  grid.arrange(grobs=tables, nrow=length(tables), ncol=1, main = "")
+  dev.off()
+} else if (current_args$covariate_equation != "") {
 
   # check for filtered covariates
   if (length(names(metadata)) != length(names(filtered_metadata)))

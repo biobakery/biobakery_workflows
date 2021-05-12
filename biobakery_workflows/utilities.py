@@ -198,7 +198,7 @@ def run_beta_diversity(workflow,feature_tasks_info,input_metadata,min_abundance,
         if len(fixed_effects) > 1:
             covariate_equation=" + ".join(fixed_effects)
 
-    beta_diversity_plots = {"univariate": {}, "multivariate": {}}
+    beta_diversity_plots = {"univariate": {}, "multivariate": {}, "pairwise": {}}
     univariate_script_path = get_package_file("beta_diversity", "Rscript")
     for filetype in feature_tasks_info.keys():
         univariate=name_files(filetype+"_univariate.png",output,subfolder="beta_diversity",create_folder=True)
@@ -224,6 +224,19 @@ def run_beta_diversity(workflow,feature_tasks_info,input_metadata,min_abundance,
                     args=[univariate_script_path,min_abundance,min_prevalence,max_missing,covariate_equation],
                     name="beta_diversity_multivariate_"+filetype))
             beta_diversity_plots["multivariate"][filetype]=multivariate
+
+    # run pairwise
+    for filetype in feature_tasks_info.keys():
+        pairwise=name_files(filetype+"_pairwise.png",output,subfolder="beta_diversity",create_folder=True)
+
+        additional_stats_tasks.append(
+            workflow.add_task(
+                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --pairwise TRUE "+optional_args,
+                depends=[feature_tasks_info[filetype][0],input_metadata],
+                targets=pairwise,
+                args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
+                name="beta_diversity_pairwise_"+filetype))
+        beta_diversity_plots["pairwise"][filetype]=pairwise
 
     return additional_stats_tasks,beta_diversity_plots,covariate_equation
 
@@ -404,8 +417,10 @@ def generate_tile_of_images(input_files, output_file):
 
 def show_all_variate_plots(runtype,variate_plots):
     for filetype, image_file in variate_plots[runtype].items():
-        if image_file and os.path.isfile(image_file):
-            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the fdr adjusted p-value",image_file))
+        if image_file and os.path.isfile(image_file) and runtype=="univariate":
+            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the fdr adjusted p-value.",image_file))
+        if image_file and os.path.isfile(image_file) and runtype!="univariate":
+            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Table of R-squared value and the fdr adjusted p-value.",image_file))
         elif not os.path.isfile(image_file):
             print("Error generating variate plots for filetype {}".format(filetype))
 
