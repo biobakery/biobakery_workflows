@@ -309,7 +309,7 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
         sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type], sort_by_name=sort_by_name, sort_by_name_inverse=sort_by_name_inverse)
 
     # print out a plot for each group of metadata
-    sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
+    sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(list(sorted_data_grouped.keys()))
    
     # split into subsets
     split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]

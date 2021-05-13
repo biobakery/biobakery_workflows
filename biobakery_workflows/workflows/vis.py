@@ -137,7 +137,7 @@ else:
           "project":args.project_name,
           "introduction_text":args.introduction_text,
           "dna_read_counts":qc_counts,
-          "is_paired":utilities.is_paired_table(qc_counts),
+          "is_paired":utilities.is_paired_table(qc_counts) if qc_counts else False,
           "taxonomic_profile":taxonomic_profile,
           "dna_pathabundance":pathabundance,
           "dna_ecabundance": ecsabundance,
