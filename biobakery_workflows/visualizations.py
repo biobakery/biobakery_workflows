@@ -33,7 +33,7 @@ import shutil
 from . import utilities
 
 def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy,
-    max_sets_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
+    max_sets_barplot, max_groups_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
     """ Plot grouped barplots and average barplots for all of the features provided.
 
         Args:
@@ -43,6 +43,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             sorted_data (list): The data organized to match the sample/taxonomy
             top_taxonomy (list): The list of full taxonomy names
             max_sets_barplot (int): The max number of features (default species) to plot
+            max_groups_barplot (int): The max number of grouped barplots to show for a metadata variable
             feature (string): The data being plotted (default species)
             sort_by_name (bool): If set, sort data by sample name instead of abundance
             sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
@@ -61,7 +62,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
                 samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),ylabel=ylabel,sort_by_name=sort_by_name,
-                sort_by_name_inverse=sort_by_name_inverse,feature=feature)
+                sort_by_name_inverse=sort_by_name_inverse,feature=feature,max_groups_barplot=max_groups_barplot)
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
             plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature, ylabel=ylabel)
@@ -281,7 +282,7 @@ def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inve
 
 def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
     ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=2, sort_by_name=False,
-    sort_by_name_inverse=False, feature=""):
+    sort_by_name_inverse=False, feature="", max_groups_barplot=5):
     """ Plot the grouped taxonomy with samples sorted by species abundance for each feature.
 
         Args:
@@ -319,6 +320,8 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
         last_set = split_sorted_metadata_subsets.pop()
         split_sorted_metadata_subsets[-1].append(last_set[0])
 
+    # set a max number of subsets
+    index=0
     for metadata_subset in split_sorted_metadata_subsets:
         subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
         subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
@@ -331,6 +334,10 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy,
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
             ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+".png"))
+        index+=1
+
+        if index>= max_groups_barplot:
+            break
 
 def zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples, data_type="pathways"):
     # if there is metadata, add it to the heatmap
@@ -382,7 +389,6 @@ def log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_avera
             title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance")
 
     return merged_data, metadata_pathways, metadata_samples
-
 
 def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename,title=None,max_sets_heatmap=25,method="correlation"):
     """ Generate a heatmap using the doc function. Include metadata if available. """

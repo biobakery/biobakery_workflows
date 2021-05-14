@@ -59,6 +59,7 @@ workflow.add_argument("min-abundance",desc="the min abundance to use for filteri
 workflow.add_argument("min-samples",desc="the min samples to use for filtering", default=10)
 workflow.add_argument("max-sets-heatmap",desc="the max sets to show for a heatmap", default=25)
 workflow.add_argument("max-sets-barplot",desc="the max sets to show for a barplot", default=15)
+workflow.add_argument("max-groups-barplot",desc="the max number of grouped barplots to show for a single metadata variable", default=5)
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("introduction-text",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
@@ -161,6 +162,7 @@ template_variables["min_abundance"] = float(args.min_abundance)
 template_variables["min_samples"] = int(args.min_samples)
 template_variables["max_sets_heatmap"] = int(args.max_sets_heatmap)
 template_variables["max_sets_barplot"] = int(args.max_sets_barplot)
+template_variables["max_groups_barplot"] = int(args.max_groups_barplot)
 
 # add additional variables
 template_variables["metadata"]=metadata
