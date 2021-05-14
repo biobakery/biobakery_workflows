@@ -152,7 +152,7 @@ def run_permanova(workflow,static_covariates,feature_tasks_info,input_metadata,s
     if static_covariates:
         optional_args=" --static_covariates "+static_covariates
     else:
-        sys.exit("ERROR: Please provide the individual covariates when running with longitudinal metadata (ie --individual-covariates='age,gender')")
+        sys.exit("ERROR: Please provide the static covariates when running with longitudinal metadata (ie --static-covariates='age,gender')")
 
     input_files=[]
     permanova_plots["all"]=name_files("permanova.png",output,subfolder="permanova",create_folder=True)
