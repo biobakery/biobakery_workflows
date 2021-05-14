@@ -13,7 +13,7 @@ dna_columns, dna_samples, dna_data = visualizations.qc_read_counts(document, var
 
 ### DNA Samples Tables of Filtered Reads
 
-```{python, echo=False}
+```{python, echo=False, results="md"}
 
 document.write_table(["# Sample"]+dna_columns, dna_samples, dna_data,
     files.ShotGunVis.path("qc_counts",document.data_folder))
@@ -24,7 +24,7 @@ table_message=visualizations.show_table_max_rows(document, dna_data, dna_samples
         
 <%= table_message %>
 
-```{python, echo=False}
+```{python, echo=False, results="md"}
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion_multiple_databases(dna_data, dna_columns)
 
 document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, 
