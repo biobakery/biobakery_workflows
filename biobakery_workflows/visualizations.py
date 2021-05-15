@@ -390,6 +390,23 @@ def log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_avera
 
     return merged_data, metadata_pathways, metadata_samples
 
+def remove_large_metadata_levels(merged_data, row_names, total_metadata_variables, max_levels):
+    new_data=[]
+    new_names=[]
+    total_metadata=0
+    for index in range(0, total_metadata_variables):
+        grouped_values = list(set(merged_data[index]))
+        if len(grouped_values) <= max_levels:
+            new_data.append(merged_data[index])
+            new_names.append(row_names[index])
+            total_metadata+=1
+
+    for index in range(total_metadata_variables, len(merged_data)):
+        new_data.append(merged_data[index])
+        new_names.append(row_names[index])
+
+    return total_metadata, new_data, new_names
+
 def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename,title=None,max_sets_heatmap=25,method="correlation"):
     """ Generate a heatmap using the doc function. Include metadata if available. """
 
@@ -402,8 +419,10 @@ def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename
         merged_data, metadata_samples=utilities.merge_metadata(vars['metadata'], samples,
             [[top_taxonomy[i]]+top_data[i] for i in range(len(top_taxonomy))])
         metadata_taxonomy=[row.pop(0) for row in merged_data]
-        # get the metadata row numbers
-        metadata_rows=range(1,len(vars['metadata']))
+        
+        total_metadata, merged_data, metadata_taxonomy=remove_large_metadata_levels(merged_data, metadata_taxonomy, len(vars['metadata']), max_sets_heatmap)
+        metadata_rows=range(1,total_metadata+1)
+
         document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
             title=title, metadata_rows=metadata_rows, method=method,outfilename=os.path.join(document.figures_folder,filename))
     else:
