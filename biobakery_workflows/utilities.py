@@ -757,10 +757,11 @@ def get_study_type(data_files):
     return types[0]
     
 
-def identify_data_files(folder,input_file_type,metadata_input):
+def identify_data_files(files,folder,input_file_type,metadata_input):
     """ For all files in the folder and subfolders, return all tab delimited files with their data type 
 
         Args:
+            files (module): The files module
             folder (string): The path to the main folder
             input_file_type (array): The user provided file types
             metadata_input (string): Full path to the user provided metadata file
@@ -802,13 +803,31 @@ def identify_data_files(folder,input_file_type,metadata_input):
 
     # get all of the files of the tab delimited type
     data_files = []
-    for root, dir, files in os.walk(folder):
-        for file_name in files:
+    for root, dir, fileslist in os.walk(folder):
+        for file_name in fileslist:
             if file_name.endswith(".tsv") or file_name.endswith(".txt") or file_name.endswith(".biom") or file_name.endswith(".gz"):
                 data_files.append(os.path.join(root,file_name))
 
-    # determine the type of each file
+
+    # look for files with known names
     data_files_types = {}
+    qc_counts=files.ShotGun.path("kneaddata_read_counts",folder, none_if_not_found=True)
+    if qc_counts:
+        data_files.remove(qc_counts)
+    taxonomic_profile=files.ShotGun.path("taxonomic_profile",folder, none_if_not_found=True)
+    if taxonomic_profile:
+        data_files.remove(taxonomic_profile)
+        data_files_types["wmgx_taxonomy"]=[taxonomic_profile]
+    pathabundance=files.ShotGun.path("pathabundance_relab",folder, none_if_not_found=True)
+    if pathabundance:
+        data_files.remove(pathabundance)
+        data_files_types["both_function_pathway"]=[pathabundance]
+    ecsabundance=files.ShotGun.path("ecs_relab",folder, none_if_not_found=True)
+    if ecsabundance:
+        data_files.remove(ecsabundance)
+        data_files_types["wmgx_function_ec"]=[ecsabundance]
+
+    # determine the type of each file
     for file in data_files:
 
         # ignore the metadata input file
@@ -868,7 +887,7 @@ def identify_data_files(folder,input_file_type,metadata_input):
                 if not file_type in data_files_types:
                     data_files_types[file_type]=[]
                 data_files_types[file_type].append(file)
-  
+
     return data_files_types
 
 def get_package_file(basename, type="template"):

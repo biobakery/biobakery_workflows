@@ -82,7 +82,7 @@ workflow.add_argument("use-template",desc="provide a report template to use inst
 args = workflow.parse_args()
 
 # get the paths for the required files from the set of all input files
-data_files=utilities.identify_data_files(args.input,args.input_file_type,args.input_metadata)
+data_files=utilities.identify_data_files(files,args.input,args.input_file_type,args.input_metadata)
 
 # error if no input files are found
 if len(data_files.keys()) < 1:
