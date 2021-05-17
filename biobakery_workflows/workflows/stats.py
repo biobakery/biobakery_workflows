@@ -114,12 +114,13 @@ mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.output,
 
 ## 3. Add tasks to run MaAsLiN2 on all input data files (feature tables)
 
-maaslin_tasks=[]
+all_maaslin_tasks=[]
 if not args.bypass_maaslin:
     maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,feature_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
     maaslin_tiles_task=workflow.add_task(
         utilities.partial_function(utilities.generate_tiles_of_maaslin_figures, feature_tasks_info=feature_tasks_info),
         depends=maaslin_tasks)
+    all_maaslin_tasks=maaslin_tasks+[maaslin_tiles_task]
 
 ## 4. Add tasks to run halla on all sets of data files            
 
@@ -163,7 +164,7 @@ if args.bypass_halla and args.introduction_text == workflow_vis.captions["intro"
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=maaslin_tasks+[maaslin_tiles_task]+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks, 
+    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks, 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistics report",
           "project":args.project_name,
