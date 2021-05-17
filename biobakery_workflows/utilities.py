@@ -654,7 +654,7 @@ def run_humann_barplot(task, number, metadata_end, categorical):
             selected_pathway = selected_pathway[1:]
 
         run_task(
-            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadatum [args[1]] --focal-metadatum [args[2]] --sort [args[3]] && echo '[args[2]]' > [targets[1]]",
+            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadata [args[1]] --focal-metadata [args[2]] --sort [args[3]] --scaling logstack && echo '[args[2]]' > [targets[1]]",
             depends=task.depends,
             targets=task.targets+[task.targets[0].name.replace(".png",".txt")],
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
