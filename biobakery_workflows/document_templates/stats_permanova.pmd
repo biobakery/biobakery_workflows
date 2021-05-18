@@ -4,6 +4,8 @@
 
 <% utilities.show_all_permanova(vars["permanova_plots"]) %>
 
+<% if not vars["beta_diversity_plots"]["univariate"]: print("The results are visualized as a heatmap of the percentage of variation explained for each metadata variable (rows) in each meta’omic matrix tested against (columns) to highlight similarities between tests. The results of each PERMANOVA are displayed in a separate barplot as well with the R-squared and p-values for each metadata variable.") %>
+
 <% utilities.show_all_variate_plots("univariate",vars["beta_diversity_plots"]) %>
 
 <% if vars["beta_diversity_plots"]["pairwise"] and vars["pdf_format"]: print("\clearpage") %>
