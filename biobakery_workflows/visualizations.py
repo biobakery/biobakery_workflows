@@ -62,7 +62,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
                 samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),ylabel=ylabel,sort_by_name=sort_by_name,
-                sort_by_name_inverse=sort_by_name_inverse,feature=feature,max_groups_barplot=max_groups_barplot)
+                sort_by_name_inverse=sort_by_name_inverse,feature=feature,max_groups_barplot=max_groups_barplot,legend_title=feature[0].upper()+feature[1:])
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
             plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature, ylabel=ylabel)
@@ -246,7 +246,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
         title="Top {} {} group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
-        ylabel=ylabel, legend_title=legend_title, legend_style="italic", outfilename=os.path.join(document.figures_folder,legend_title+"_"+cat_metadata[0]+"_average_taxonomy.png"))
+        ylabel=ylabel, legend_title=legend_title[0].upper()+legend_title[1:], legend_style="italic", outfilename=os.path.join(document.figures_folder,legend_title+"_"+cat_metadata[0]+"_average_taxonomy.png"))
 
 def plot_stacked_barchart_taxonomy(document, samples, taxonomy, data, max_sets_barplot, taxonomy_level):
     # for the taxonomy data, organize and then plot the stacked barchart
