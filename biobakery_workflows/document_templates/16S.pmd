@@ -96,7 +96,7 @@ filtered_taxonomy_all, filtered_relab_data_all = utilities.filter_taxa_abundance
 samples_genera, sorted_top_data_genera, top_data_genera, top_taxa_genera, legend_size = visualizations.get_top_taxonomy_by_level(filtered_taxonomy_all, samples, filtered_relab_data_all, vars["max_sets_heatmap"])
 
 top_filtered_data_pcoa=numpy.array(sorted_top_data_genera)/100.0
-document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera using Bray-Curtis similarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_genera.png"))
+document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera using Bray-Curtis dissimilarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_genera.png"))
 ```
 
 For the PCoA plots, relative abundances are passed through a basic filter requiring each taxon have at least <% print(vars["min_abundance"])%> % abundance in at least <% print(vars["min_samples"]) %> % of all samples.
@@ -113,7 +113,7 @@ filtered_taxonomy, filtered_data = utilities.filter_taxa_abundance(terminal_taxa
 top_filtered_taxonomy, top_filtered_data = utilities.top_rows(filtered_taxonomy, filtered_data, vars["max_sets_heatmap"], function="average")
 
 top_filtered_data_pcoa=numpy.array(top_filtered_data)/100.0
-document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCoA Ordination of top {} terminal taxa using Bray-Curtis similarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_terminaltaxa.png"))
+document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCoA Ordination of top {} terminal taxa using Bray-Curtis dissimilarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_terminaltaxa.png"))
 ```
 
 ```{python, echo=False, results="md"}
