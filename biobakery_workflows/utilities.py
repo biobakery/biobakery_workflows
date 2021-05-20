@@ -418,9 +418,9 @@ def generate_tile_of_images(input_files, output_file):
 def show_all_variate_plots(runtype,variate_plots):
     for filetype, image_file in variate_plots[runtype].items():
         if image_file and os.path.isfile(image_file) and runtype=="univariate":
-            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the fdr adjusted p-value.",image_file))
+            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the FDR adjusted p-value.",image_file))
         if image_file and os.path.isfile(image_file) and runtype!="univariate":
-            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Table of R-squared value and the fdr adjusted p-value.",image_file))
+            print("![{0} {1}]({2})\n\n\n".format(filetype[0].upper()+filetype[1:],"- Table of R-squared value and the FDR adjusted p-value.",image_file))
         elif not os.path.isfile(image_file):
             print("Error generating variate plots for filetype {}".format(filetype))
 
@@ -430,7 +430,7 @@ def show_all_permanova(permanova_plots):
         if filetype == "all":
             filetype = "Heatmap of univariable R-squared value"
         if os.path.isfile(permanova_file):
-            print("![{0}]({1})\n\n".format(filetype, permanova_file))
+            print("![{0}]({1})\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the FDR adjusted p-value.", permanova_file))
         else:
             print("Error generating permanova for filetype {}".format(filetype))
 
