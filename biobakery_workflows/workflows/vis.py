@@ -54,7 +54,6 @@ workflow.add_argument("input-picard-extension",desc="the extensions for the pica
 workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
 workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
-workflow.add_argument("exclude-workflow-info",desc="do not include data processing task info in report (use this option if a workflow anadama.log file is not available)", action="store_true")
 workflow.add_argument("min-abundance",desc="the min abundance to use for filtering", default=0.01)
 workflow.add_argument("min-samples",desc="the min samples to use for filtering", default=10)
 workflow.add_argument("max-sets-heatmap",desc="the max sets to show for a heatmap", default=25)
@@ -70,10 +69,8 @@ args = workflow.parse_args()
 
 templates=[utilities.get_package_file("universal_vis")]
 
-log_file=None
-# add the template for the data processing information
-if not args.exclude_workflow_info:
-    log_file=files.Workflow.path("log", args.input, error_if_not_found=True)
+# check for the log file
+log_file=files.Workflow.path("log", args.input, none_if_not_found=True)
 
 # check the study type by searching for the taxonomic profile (or OTU/ASV file)
 taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, none_if_not_found=True)
