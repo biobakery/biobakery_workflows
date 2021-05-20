@@ -55,7 +55,7 @@ elif vars.get("otu_table"):
 
 ```{import, echo=False}
 # add the functional data template
-if vars.get("study_type") == "MGX" and vars.get("pathabundance") and vars.get("dna_read_counts") and vars.get("feature_counts") and vars.get("ecsabundance"):
+if vars.get("study_type") == "WGX" and vars.get("dna_pathabundance"):
     filename="functional_dna.pmd"
 ```
 
