@@ -85,7 +85,7 @@ def fill_taxonomy_other(top_taxonomy, sorted_data):
 
     # add other to the taxonomy data
     # other represents the total abundance of all species not included in the top set
-    new_top_taxonomy = top_taxonomy + ["other"]
+    new_top_taxonomy = top_taxonomy + ["Other"]
     new_sorted_data = sorted_data
     other_abundances=[]
     for column in numpy.transpose(sorted_data):
@@ -246,7 +246,7 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
         title="Top {} {} group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
-        ylabel=ylabel, legend_title=legend_title[0].upper()+legend_title[1:], legend_style="italic", outfilename=os.path.join(document.figures_folder,legend_title+"_"+cat_metadata[0]+"_average_taxonomy.png"))
+        ylabel=ylabel, legend_title=legend_title[0].upper()+legend_title[1:], legend_style="italic", outfilename=os.path.join(document.figures_folder,legend_title+"_"+cat_metadata[0]+"_average_taxonomy.png"),legend_reverse=True)
 
 def plot_stacked_barchart_taxonomy(document, samples, taxonomy, data, max_sets_barplot, taxonomy_level):
     # for the taxonomy data, organize and then plot the stacked barchart
@@ -259,7 +259,7 @@ def plot_stacked_barchart_taxonomy(document, samples, taxonomy, data, max_sets_b
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
         ylabel="Relative abundance", legend_title=taxonomy_level[0].upper()+taxonomy_level[1:], legend_style="italic", 
-        outfilename=os.path.join(document.figures_folder,taxonomy_level+"_average_abundance.png"))
+        outfilename=os.path.join(document.figures_folder,taxonomy_level+"_average_abundance.png"),legend_reverse=True)
 
     return sorted_samples, sorted_data, top_taxonomy
 
@@ -333,7 +333,7 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
 
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy,
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+"_"+str(metadata_subset[0])+".png"))
+            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+"_"+str(metadata_subset[0])+".png"),legend_reverse=True)
         index+=1
 
         if index>= max_groups_barplot:
@@ -540,7 +540,7 @@ def write_pathway_average_variance_table(document, file_name, data, names_and_de
     
     return average_abundance_variance
 
-def top_average_pathways(document, file, max_sets):
+def top_average_pathways(document, file, max_sets, get_all=False):
     """ Read the pathways file and get the top average pathways """
     
     # read in the samples and get the data with out the stratification by bug
@@ -553,8 +553,11 @@ def top_average_pathways(document, file, max_sets):
     samples = [sample.replace("_Abundance","").replace("-RPKs","") for sample in samples]
     
     # get the average abundance for the pathways
-    top_pathways, top_data = utilities.top_rows(pathways,
-        data, max_sets, function="average")
+    if get_all:
+        top_pathways, top_data = pathways, data
+    else:
+        top_pathways, top_data = utilities.top_rows(pathways,
+            data, max_sets, function="average")
     
     # get the top names with descriptions
     top_names_and_descriptions = [name+":"+pathway_names[name] for name in top_pathways]

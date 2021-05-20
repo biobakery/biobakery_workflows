@@ -1868,7 +1868,7 @@ def pathway_names(pathways):
     return path_names
         
 
-def filter_taxa_abundance(taxonomy, data, min_abundance, min_samples):
+def filter_data_abundance(taxonomy, data, min_abundance, min_samples):
     """ Remove the taxons by min abundance and min samples.
     
         Args:
@@ -1885,7 +1885,7 @@ def filter_taxa_abundance(taxonomy, data, min_abundance, min_samples):
             (list): A list of lists of the data.
             
         Example:
-            filter_taxa_abundance(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]],10,2)
+            filter_data_abundance(["g__ABC","s__DEF"],[[1,2,3],[4,5,6]],10,2)
     """ 
 
     filtered_data=[]
@@ -1943,7 +1943,7 @@ def filter_taxa_level_metaphlan_format(taxonomy, data, min_abundance=None, min_s
     # if filters are provided, then filter the data by both min abundance
     # and min samples
     if min_abundance is not None and min_samples is not None:
-        species_taxonomy, species_data = filter_taxa_abundance(species_taxonomy, species_data, min_abundance, min_samples)
+        species_taxonomy, species_data = filter_data_abundance(species_taxonomy, species_data, min_abundance, min_samples)
 
     return species_taxonomy, species_data
 
