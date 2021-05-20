@@ -1,0 +1,44 @@
+% <% from anadama2 import PweaveDocument; document=PweaveDocument(); vars = document.get_vars(); document.print_title() %>
+% Author: <%= vars["author"] %>
+% Date: <% import time; print(time.strftime("%m/%d/%Y")+"\n") %>
+
+```{python, echo=False}
+import os
+import re
+import numpy
+import math
+
+from biobakery_workflows import visualizations, utilities, files
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+# Introduction
+
+<%= vars["introduction_text"] %>
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{import, echo=False}
+if vars.get("mantel_plots"):
+    filename="stats_mantel_plots.pmd"
+```
+
+```{import, echo=False}
+filename="stats_permanova.pmd"
+```
+
+```{import, echo=False}
+if not vars.get("bypass_maaslin"):
+    filename="stats_maaslin.pmd"
+```
+
+```{import, echo=False}
+if vars.get("stratified_pathways_plots"):
+    filename="stats_maaslin_stratified.pmd"
+```
+
+```{import, echo=False}
+if not vars.get("bypass_halla"):
+    filename="stats_halla.pmd"
+```

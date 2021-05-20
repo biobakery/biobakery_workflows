@@ -75,6 +75,11 @@ class Workflow(object):
         merged_keywords.update(cls.file_info[name].get_path_keywords())
         file_path=name_files(folder=main_folder, **merged_keywords)
 
+        # if the file is not found, then look in the input folder
+        if not os.path.isfile(file_path):
+            file_name = cls.filename(name)
+            file_path=os.path.join(main_folder, file_name)
+
         # if set, error if the file does not exist
         if error_if_not_found and not os.path.isfile(file_path):
             message="\nERROR: Unable to find file: "+file_path
@@ -86,7 +91,7 @@ class Workflow(object):
         # if set, check if the file exists, if not return None
         if none_if_not_found and not os.path.isfile(file_path):
                 file_path = None
-            
+           
         return file_path
     
     @classmethod
@@ -97,6 +102,15 @@ class Workflow(object):
             desc=""
             
         return desc
+
+    @classmethod
+    def filename(cls, name):
+        try: 
+            fname=cls.file_info[name].keywords["names"]
+        except (KeyError, AttributeError):
+            fname=""
+
+        return fname
     
     @classmethod
     def list_file_path_description(cls,folder,input_files):
@@ -105,6 +119,16 @@ class Workflow(object):
         desc=""
         for required in input_files:
             desc+="\n\n".join(["* "+cls.path(name,folder)+ " ( " + required + " )\n-- "+cls.description(name) for name in input_files[required]])+"\n"
+            
+        return desc
+
+    @classmethod
+    def list_file_description(cls,input_files):
+        """ List the file names and descriptions in a format to be used in an argument help description """
+        
+        desc=""
+        for required in input_files:
+            desc+="\n".join(["* "+cls.filename(name)+ " ( " + required + " )\n-- "+cls.description(name)+"\n\n" for name in input_files[required]])+"\n"
             
         return desc
 
@@ -154,7 +178,10 @@ class ShotGun(Workflow):
     
     # set the normed feature file names
     file_info["genefamilies_relab"]=FileInfo("genefamilies_relab.tsv", subfolder=os.path.join("humann","merged"))
-    file_info["ecs_relab"]=FileInfo("ecs_relab.tsv", subfolder=os.path.join("humann","merged"))
+    file_info["ecs_relab"]=FileInfo("ecs_relab.tsv", subfolder=os.path.join("humann","merged"),
+        description=("A tab-delimited file with samples as columns and ECs as rows.",
+                "This file is a merged set of EC abundances for all samples computed ",
+                "by HUMAnN. This file contains relative abundances."))
     file_info["pathabundance_relab"]=FileInfo("pathabundance_relab.tsv", subfolder=os.path.join("humann","merged"),
         description=("A tab-delimited file with samples as columns and pathways ",
                 "as rows. This file is a merged set of pathway abundances for all ",

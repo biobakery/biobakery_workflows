@@ -76,6 +76,16 @@ options <- optparse::add_option(options,
     )
 )
 
+options <- optparse::add_option(options,
+    c("-p", "--pairwise"),
+    type = "logical",
+    dest = "pairwise",
+    default = FALSE,
+    help = paste0("Run pairwise comparison on all categorical features ",
+    " [ Default: FALSE ]"
+    )
+)
+
 option_not_valid_error <- function(message, valid_options) {
     print(paste(message, ": %s"), toString(valid_options))
     stop("Option not valid", call. = FALSE)
@@ -175,7 +185,28 @@ if (! exists("method")) {
 
 bray = vegdist(filtered_data, method, na.remove = TRUE)
 
-if (current_args$covariate_equation != "") {
+if (current_args$pairwise) {
+  used_col <- character()
+  tables <- list()
+  i <- 1
+  png(positional_args[3], res=150, height=800, width=1100)
+  theme <- ttheme_default(base_size = 8, padding = unit(c(4, 4), "mm"))
+  for (col in names(filtered_metadata)){
+      if (is.numeric(filtered_metadata[[col]])) {
+        for (col2 in names(filtered_metadata)) {
+            if (is.numeric(filtered_metadata[[col2]]) && !(col2 %in% used_col) && (col != col2)) {
+                results <- adonis2(as.formula(paste("bray ~", col, " + ", col2)), data = filtered_metadata, by="margin")
+                grid <- tableGrob(as.data.frame(results), theme=theme)
+                tables[[i]] <- grid
+                i <- i + 1
+            }
+        }
+       used_col <- append(used_col, col)
+    }
+  }
+  grid.arrange(grobs=tables, nrow=length(tables), ncol=1, main = "")
+  dev.off()
+} else if (current_args$covariate_equation != "") {
 
   # check for filtered covariates
   if (length(names(metadata)) != length(names(filtered_metadata)))
@@ -186,7 +217,7 @@ if (current_args$covariate_equation != "") {
     }
   }
 
-  results <- adonis(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata)
+  results <- adonis2(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata, by="margin")
   png(positional_args[3], res=150, height=800, width=1100)
 
   if (length(names(metadata)) > 20) {
@@ -194,7 +225,7 @@ if (current_args$covariate_equation != "") {
   } else {
     theme <- ttheme_default(base_size = 8, padding = unit(c(4, 4), "mm"))
   }
-  grid.table(as.data.frame(results$aov.tab), theme=theme)
+  grid.table(as.data.frame(results), theme=theme)
   dev.off()
 
 } else {
@@ -218,7 +249,7 @@ if (current_args$covariate_equation != "") {
 
   dodge = position_dodge(width = 0.8)
 
-  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))+1) + xlab("") + labs(fill = "")
+  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univariable R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))*1.05) + xlab("") + labs(fill = "")
 
   png(positional_args[3], res = 150, height = 800, width = 1100)
   print(plot)

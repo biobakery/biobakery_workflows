@@ -1,0 +1,123 @@
+# Taxonomy
+
+```{python, echo=False}
+# search for the alpha diversity plots
+alpha_diversity_plots_folder=utilities.find_alpha_diversity_plots(vars["alpha_diversity_plots"]) 
+```
+
+<% if alpha_diversity_plots_folder['scatterplot'] or alpha_diversity_plots_folder['boxplot']: print("## Alpha Diversity") %>
+
+<% if alpha_diversity_plots_folder['scatterplot'] or alpha_diversity_plots_folder['boxplot']: print("Alpha diversity, computed with the Inverse Simpson Index, were computed on un-filtered normalized data at the species level. Boxplots were generated for categorical/discrete variables while scatterplots were generated for continuous variables.") %> 
+
+<% if alpha_diversity_plots_folder['boxplot']: print("### Categorical variables ") %>
+
+<% utilities.show_plots(alpha_diversity_plots_folder['boxplot']) %>
+
+<% if alpha_diversity_plots_folder['scatterplot']: print("### Continuous variables ") %>
+
+<% utilities.show_plots(alpha_diversity_plots_folder['scatterplot']) %>
+
+## Genera
+ 
+```{python, echo=False, results="md"}
+samples, ids, taxonomy, data = utilities.read_otu_table(vars["otu_table"])
+
+relab_data = utilities.relative_abundance(data, percent=True)
+sorted_samples, sorted_top_data, top_data, top_taxa_short_names, legend_size = visualizations.get_top_taxonomy_by_level(taxonomy, samples, relab_data, vars["max_sets_barplot"])
+top_taxa_short_names_plus_other, sorted_top_data_plus_other = visualizations.fill_taxonomy_other(top_taxa_short_names, sorted_top_data)
+
+document.plot_stacked_barchart(sorted_top_data_plus_other, row_labels=top_taxa_short_names_plus_other,
+    column_labels=sorted_samples, title="Top "+str(vars["max_sets_barplot"])+" genera by average abundance",
+    ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"genera_barchart_taxonomy.png"))
+
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_top_data_plus_other, top_taxa_short_names_plus_other, vars["max_sets_barplot"], feature="genera")
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+## Terminal Taxa
+
+```{python, echo=False, results="md"}
+terminal_taxa_relab, terminal_data_relab = utilities.terminal_taxa(taxonomy, relab_data)
+top_terminal_taxa, top_terminal_data = utilities.top_rows(terminal_taxa_relab, terminal_data_relab, vars["max_sets_barplot"], function="average")
+
+shorted_names=utilities.taxonomy_trim(top_terminal_taxa)
+sorted_samples_terminal, sorted_data_terminal = utilities.sort_data(top_terminal_data[0], samples)
+transpose_top_terminal_data = numpy.transpose(top_terminal_data)
+sorted_top_terminal_data = numpy.transpose([transpose_top_terminal_data[samples.index(sample)] for sample in sorted_samples_terminal])
+
+shorted_names_plus_other, sorted_top_terminal_data_plus_other = visualizations.fill_taxonomy_other(shorted_names, sorted_top_terminal_data)
+
+document.plot_stacked_barchart(sorted_top_terminal_data_plus_other, row_labels=shorted_names_plus_other,
+    column_labels=sorted_samples_terminal, title="Top "+str(vars["max_sets_barplot"])+" terminal taxa by average abundance",
+    ylabel="Relative abundance", legend_title="Terminal taxa", outfilename=os.path.join(document.figures_folder,"terminaltaxa_barchart_taxonomy.png"))
+
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_terminal, sorted_top_terminal_data_plus_other, shorted_names_plus_other, vars["max_sets_barplot"], feature="terminal taxa")
+```
+
+# Heatmaps
+
+<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="genera and terminal taxa",method="Spearman and Bray-Curtis", data_type="taxa") %>
+
+## Genera
+
+```{python, echo=False, results="md"}
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    vars["pdf_format"],"heatmap_genera_spearman.png","Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md"}
+visualizations.plot_heatmap(document,vars,samples,top_taxa_short_names,top_data,
+    vars["pdf_format"],"heatmap_genera_braycurtis.png","Top {} genera by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+```
+
+## Terminal Taxa
+
+```{python, echo=False, results="md"}
+visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
+    vars["pdf_format"],"heatmap_terminaltaxa_spearman.png","Top {} terminal taxa by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md"}
+visualizations.plot_heatmap(document,vars,samples,shorted_names,top_terminal_data,
+    vars["pdf_format"],"heatmap_terminaltaxa_braycurtis.png","Top {} terminal taxa by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+```
+
+# Ordination
+
+## Genera
+
+```{python, echo=False, results="md"}
+filtered_taxonomy_all, filtered_relab_data_all = utilities.filter_data_abundance(taxonomy, relab_data, vars["min_abundance"], vars["min_samples"])
+samples_genera, sorted_top_data_genera, top_data_genera, top_taxa_genera, legend_size = visualizations.get_top_taxonomy_by_level(filtered_taxonomy_all, samples, filtered_relab_data_all, vars["max_sets_heatmap"])
+
+top_filtered_data_pcoa=numpy.array(sorted_top_data_genera)/100.0
+document.show_pcoa(samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera using Bray-Curtis dissimilarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_genera.png"))
+```
+
+For the PCoA plots, relative abundances are passed through a basic filter requiring each taxon have at least <% print(vars["min_abundance"])%> % abundance in at least <% print(vars["min_samples"]) %> % of all samples.
+
+```{python, echo=False, results="md"}
+visualizations.show_pcoa_metadata(document, vars, samples_genera, top_taxa_genera, top_filtered_data_pcoa, title="PCoA Ordination of top {} genera".format(vars["max_sets_heatmap"]), data_type="genera")
+```
+
+## Terminal taxa
+
+```{python, echo=False, results="md"}
+filtered_taxonomy, filtered_data = utilities.filter_data_abundance(terminal_taxa_relab, terminal_data_relab, vars["min_abundance"], vars["min_samples"])
+
+top_filtered_taxonomy, top_filtered_data = utilities.top_rows(filtered_taxonomy, filtered_data, vars["max_sets_heatmap"], function="average")
+
+top_filtered_data_pcoa=numpy.array(top_filtered_data)/100.0
+document.show_pcoa(samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCoA Ordination of top {} terminal taxa using Bray-Curtis dissimilarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_terminaltaxa.png"))
+```
+
+```{python, echo=False, results="md"}
+visualizations.show_pcoa_metadata(document, vars, samples, top_filtered_taxonomy, top_filtered_data_pcoa, title="PCoA Ordination of top {} terminal taxa".format(vars["max_sets_heatmap"]),  data_type="terminal_taxa")
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>

@@ -75,16 +75,20 @@ workflow.add_argument("metadata-exclude",desc="the features to exclude (for the 
 workflow.add_argument("input-file-type",desc="the file type for an input file formatted as 'filename,filetype'", action="append", default=[])
 workflow.add_argument("introduction-text",desc="the text to include in the intro of the report",
     default=workflow_vis.captions["intro"])
+workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
+workflow.add_argument("use-template",desc="provide a report template to use instead of using that which is automatically generated", default="")
 
 # get the arguments from the command line
 args = workflow.parse_args()
 
 # get the paths for the required files from the set of all input files
-data_files=utilities.identify_data_files(args.input,args.input_file_type,args.input_metadata)
+data_files=utilities.identify_data_files(files,args.input,args.input_file_type,args.input_metadata)
 
+# error if no input files are found
 if len(data_files.keys()) < 1:
     sys.exit("ERROR: No data files found in the input folder.")
 
+# get the study type
 study_type=utilities.get_study_type(data_files)
 
 # get inputs based on study type
@@ -92,54 +96,75 @@ taxonomic_profile,pathabundance,other_data_files,study_type=utilities.get_input_
 
 # check for any biom files that need to be converted to txt
 taxonomic_profile,pathabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance],args.output)
+# add tasks to convert biom to tsv if needed
 other_data_files=convert_from_biom_to_tsv_list(workflow,other_data_files,args.output)
 
 # get metadata variables and check sample names
 metadata_variables=utilities.get_metadata_variables(args.input_metadata,taxonomic_profile)
 
-# create feature table files for all input files (for input to maaslin2 and other downstream stats)
-maaslin_tasks_info=utilities.create_maaslin_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
+## Add tasks to the workflow 
 
-# run mantel tests
-mantel_plots=utilities.run_mantel_tests(workflow,maaslin_tasks_info,args.output,args.permutations)
+## 1. Add tasks to create feature tables from all input files to be used. Feature tables will be used in downstream tasks                   .
 
-# run MaAsLiN2 on all input files
-maaslin_tasks=[]
+feature_tasks_info=utilities.create_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
+
+## 2. Add tasks to run mantel tests on all data file pairs
+
+mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.output,args.permutations)
+
+## 3. Add tasks to run MaAsLiN2 on all input data files (feature tables)
+
+all_maaslin_tasks=[]
 if not args.bypass_maaslin:
-    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,maaslin_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
+    maaslin_tasks=utilities.run_maaslin_on_input_file_set(workflow,feature_tasks_info,args.input_metadata,args.transform,args.fixed_effects,args.random_effects,args.maaslin_options)
     maaslin_tiles_task=workflow.add_task(
-        utilities.partial_function(utilities.generate_tiles_of_maaslin_figures, maaslin_tasks_info=maaslin_tasks_info),
+        utilities.partial_function(utilities.generate_tiles_of_maaslin_figures, feature_tasks_info=feature_tasks_info),
         depends=maaslin_tasks)
+    all_maaslin_tasks=maaslin_tasks+[maaslin_tiles_task]
 
+## 4. Add tasks to run halla on all sets of data files            
+
+halla_tasks_info=[]
 if not args.bypass_halla:
-    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,maaslin_tasks_info,args.output,args.halla_options)
+    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.output,args.halla_options)
 
-# generate stratified pathways plots if pathways are provided
+## 5. Add tasks to run stratified pathways plots, if pathways provided  
+
 stratified_plots_tasks=[]
 stratified_pathways_plots=[]
 if not args.bypass_maaslin:
-    stratified_pathways_plots,stratified_plots_tasks=utilities.create_stratified_pathways_plots(workflow,study_type,pathabundance,args.input_metadata,args.metadata_exclude,args.metadata_categorical,args.metadata_continuous,args.top_pathways,maaslin_tasks_info,args.output)
+    stratified_pathways_plots,stratified_plots_tasks=utilities.create_stratified_pathways_plots(workflow,study_type,pathabundance,args.input_metadata,args.metadata_exclude,args.metadata_categorical,args.metadata_continuous,args.top_pathways,feature_tasks_info,args.output)
 
-# run permanova on taxon data if longitudinal (if random effects are set) else run beta diversity
+## 6. Add tasks to run permanova if longitudinal (if random effects are set) and if not run beta diversity script
+
 additional_stats_tasks=[]
 permanova_plots=[]
-beta_diversity_plots={"univariate": {}, "multivariate": {}}
+beta_diversity_plots={"univariate": {}, "multivariate": {}, "pairwise": {}}
 covariate_equation=""
 
 if args.random_effects:
-    additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.static_covariates,maaslin_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
+    additional_stats_tasks,permanova_plots=utilities.run_permanova(workflow,args.static_covariates,feature_tasks_info,args.input_metadata,args.scale,args.min_abundance,args.min_prevalence,args.permutations,args.output,additional_stats_tasks)
 else:
-    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,maaslin_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
+    additional_stats_tasks,beta_diversity_plots,covariate_equation=utilities.run_beta_diversity(workflow,feature_tasks_info,args.input_metadata,args.min_abundance,args.min_prevalence,args.max_missing,[args.multivariable_fixed_effects,args.fixed_effects],args.output,additional_stats_tasks,args.random_effects,metadata_variables,args.adonis_method)
 
-if args.header_image:
-    templates=[utilities.get_package_file("header_image"),utilities.get_package_file("stats")]
-else:
-    templates=[utilities.get_package_file("header_author"),utilities.get_package_file("stats")]
+templates=[utilities.get_package_file("stats")]
+
+if args.print_template:
+    # only print the template to stdout
+    utilities.print_template(templates)
+
+# use the template from the user if provided
+if args.use_template:
+    templates=[args.use_template]
+
+# update the intro text if halla is not run and the default intro is used
+if args.bypass_halla and args.introduction_text == workflow_vis.captions["intro"]:
+    args.introduction_text = workflow_vis.captions["intro_bypass_halla"]
 
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=maaslin_tasks+[maaslin_tiles_task]+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks, 
+    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks, 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistics report",
           "project":args.project_name,
@@ -148,7 +173,7 @@ doc_task=workflow.add_document(
           "introduction_text":args.introduction_text,
           "taxonomic_profile":taxonomic_profile,
           "mantel_plots":mantel_plots,
-          "maaslin_tasks_info":maaslin_tasks_info,
+          "feature_tasks_info":feature_tasks_info,
           "halla_tasks_info":halla_tasks_info,
           "bypass_maaslin":args.bypass_maaslin,
           "bypass_halla":args.bypass_halla,
@@ -156,7 +181,7 @@ doc_task=workflow.add_document(
           "permanova_plots":permanova_plots,
           "beta_diversity_plots":beta_diversity_plots,
           "covariate_equation":covariate_equation,
-          "format":args.format},
+          "pdf_format":True if args.format == "pdf" else False},
     table_of_contents=True)
 
 # add an archive of the document and figures, removing the log file

@@ -1,0 +1,49 @@
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+# Quality Control
+
+```{python, echo=False}
+dna_columns, dna_samples, dna_data = visualizations.qc_read_counts(document, vars["dna_read_counts"])
+```
+
+<% visualizations.ShotGun.print_qc_intro_caption(len(dna_samples), dna_columns[2:]) %>
+
+## DNA Samples Quality Control
+
+### DNA Samples Tables of Filtered Reads
+
+```{python, echo=False, results="md"}
+
+document.write_table(["# Sample"]+dna_columns, dna_samples, dna_data,
+    files.ShotGunVis.path("qc_counts",document.data_folder))
+
+table_message=visualizations.show_table_max_rows(document, dna_data, dna_samples,
+    dna_columns, "DNA reads", files.ShotGunVis.path("qc_counts"), format_data_comma=True)
+```
+        
+<%= table_message %>
+
+```{python, echo=False, results="md"}
+dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion_multiple_databases(dna_data, dna_columns)
+
+document.write_table(["# Sample"]+dna_microbial_labels, dna_samples, 
+    dna_microbial_reads, files.ShotGunVis.path("microbial_counts",document.data_folder))
+
+table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, dna_samples,
+    dna_microbial_labels, "DNA microbial read proportion",
+    files.ShotGunVis.path("microbial_counts"))  
+    
+visualizations.ShotGun.captions["microbial_ratios"]
+``` 
+      
+<%= table_message %>
+        
+### DNA Samples Plots of Filtered Reads
+
+```{python, echo=False, results="md"}
+document.plot_grouped_barchart(numpy.transpose(dna_data), row_labels=dna_columns, 
+    column_labels=dna_samples, title="DNA reads", ylabel="Read count (in millions)",
+    legend_title="Filter", yaxis_in_millions=True, outfilename=os.path.join(document.figures_folder,"dna_read_count.png"))
+```
+

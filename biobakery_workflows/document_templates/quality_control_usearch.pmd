@@ -1,0 +1,11 @@
+# Quality Control
+
+```{python, echo=False}
+eestats_rows, eestats_columns, eestats_data, overall_stats = utilities.read_eestats2(vars["eestats_table"])
+document.show_table(eestats_data, eestats_rows, eestats_columns,"Expected error filter by read length",font="10")
+```
+
+<% print("The general stats for this data set are: " + str(overall_stats) + ".") %>
+<% print("This table shows the number of reads based on length for different error filters.") %>
+
+<% if vars["pdf_format"]: print("\clearpage") %>

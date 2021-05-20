@@ -1,0 +1,29 @@
+# Read Count
+
+```{python, echo=False, results="md"}
+columns, samples, data = document.read_table(vars["read_count_table"])
+
+total_reads=[row[0] for row in data]
+sorted_samples, sorted_total_reads = utilities.sort_data(total_reads, samples)
+sorted_all_read_data = [data[samples.index(sample)] for sample in sorted_samples]
+
+known_reads = [row[1] for row in sorted_all_read_data]
+unknown_reads = [row[2] for row in sorted_all_read_data]
+unmapped_reads = [row[0]-(row[1]+row[2]) for row in sorted_all_read_data]
+
+# plot the read counts
+document.plot_stacked_barchart([known_reads,unknown_reads,unmapped_reads], ["classified","unclassified","unmapped"], sorted_samples,
+    title="Read counts by Sample", ylabel="Total Reads", xlabel="Samples", outfilename=os.path.join(document.figures_folder,"filtered_read_count.png"))
+
+# plot grouped taxonomy for all categorical data provided
+if visualizations.metadata_provided(vars):
+    categorical_metadata, ordered_sorted_data, ordered_metadata, samples_found = visualizations.merge_categorical_metadata(vars, sorted_samples,
+        [known_reads,unknown_reads,unmapped_reads])
+    for cat_metadata in categorical_metadata:
+        visualizations.plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, ["classified","unclassified","unmapped"],
+            samples_found, title="Read counts by sample", ylabel="Total Reads", legend_title="")
+```
+
+<% print(visualizations.Sixteen_S.captions["usearchcountsinfo"]) %>
+
+<% if vars["pdf_format"]: print("\clearpage") %>

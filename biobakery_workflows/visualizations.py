@@ -33,7 +33,7 @@ import shutil
 from . import utilities
 
 def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy,
-    max_sets_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
+    max_sets_barplot, max_groups_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
     """ Plot grouped barplots and average barplots for all of the features provided.
 
         Args:
@@ -43,6 +43,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
             sorted_data (list): The data organized to match the sample/taxonomy
             top_taxonomy (list): The list of full taxonomy names
             max_sets_barplot (int): The max number of features (default species) to plot
+            max_groups_barplot (int): The max number of grouped barplots to show for a metadata variable
             feature (string): The data being plotted (default species)
             sort_by_name (bool): If set, sort data by sample name instead of abundance
             sort_by_name_inverse (bool): If true, sort by the inverse of the name (so the reverse of the string)
@@ -61,7 +62,7 @@ def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, s
         for cat_metadata in categorical_metadata:
             plot_grouped_taxonomy_subsets(document, ordered_sorted_data, cat_metadata, top_taxonomy,
                 samples_found,title="Top {} {} by average abundance".format(max_sets_barplot,feature),ylabel=ylabel,sort_by_name=sort_by_name,
-                sort_by_name_inverse=sort_by_name_inverse)
+                sort_by_name_inverse=sort_by_name_inverse,feature=feature,max_groups_barplot=max_groups_barplot,legend_title=feature[0].upper()+feature[1:])
         # plot average for all samples grouped by categorical metadata
         for cat_metadata in categorical_metadata:
             plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxonomy, cat_metadata, max_sets_barplot, legend_title=feature, ylabel=ylabel)
@@ -84,7 +85,7 @@ def fill_taxonomy_other(top_taxonomy, sorted_data):
 
     # add other to the taxonomy data
     # other represents the total abundance of all species not included in the top set
-    new_top_taxonomy = top_taxonomy + ["other"]
+    new_top_taxonomy = top_taxonomy + ["Other"]
     new_sorted_data = sorted_data
     other_abundances=[]
     for column in numpy.transpose(sorted_data):
@@ -97,7 +98,7 @@ def fill_taxonomy_other(top_taxonomy, sorted_data):
     return new_top_taxonomy, new_sorted_data
 
 
-def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
+def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title, data_type):
     """ Plot pcoa for each feature if metadata has been provided
 
         Args:
@@ -107,7 +108,7 @@ def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
             top_taxonomy (list): The full taxonomic names organized to match the data
             pcoa_data (list): The data (range 0 to 1) organized to match the samples and taxonomy
             title (string): The base string for the title for the plots
- 
+            data_type (string): The type of data (taxonomic level)
         Return: None
 
     """
@@ -122,7 +123,7 @@ def show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title):
             metadata_type = metadata_dict[name]
             
             document.show_pcoa(samples, top_taxonomy, pcoa_data,title=title+" - "+name,
-                               metadata=metadata_mapping, metadata_type=metadata_type)
+                               metadata=metadata_mapping, metadata_type=metadata_type, outfilename=os.path.join(document.figures_folder,"pcoa_"+name+"_"+data_type+".png"))
 
 def get_top_taxonomy_by_level(taxonomy, samples, relab_data, max_taxa, taxa_level=5):
     """ Get the top, based on average abundance, set of taxa at the genus level
@@ -245,7 +246,23 @@ def plot_average_taxonomy(document, ordered_sorted_data, samples_found, top_taxo
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
         column_labels=sorted_names, 
         title="Top {} {} group average - {}".format(max_sets_barplot, legend_title, cat_metadata[0]),
-        ylabel=ylabel, legend_title=legend_title, legend_style="italic")
+        ylabel=ylabel, legend_title=legend_title[0].upper()+legend_title[1:], legend_style="italic", outfilename=os.path.join(document.figures_folder,legend_title+"_"+cat_metadata[0]+"_average_taxonomy.png"),legend_reverse=True)
+
+def plot_stacked_barchart_taxonomy(document, samples, taxonomy, data, max_sets_barplot, taxonomy_level):
+    # for the taxonomy data, organize and then plot the stacked barchart
+
+    top_taxonomy, top_data = utilities.top_rows(taxonomy, data, max_sets_barplot, function="average")
+    sorted_data, sorted_samples = sort_data(document, top_data, samples)
+
+    top_taxonomy, sorted_data = fill_taxonomy_other(top_taxonomy, sorted_data)
+
+    document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
+        column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
+        ylabel="Relative abundance", legend_title=taxonomy_level[0].upper()+taxonomy_level[1:], legend_style="italic", 
+        outfilename=os.path.join(document.figures_folder,taxonomy_level+"_average_abundance.png"),legend_reverse=True)
+
+    return sorted_samples, sorted_data, top_taxonomy
+
 
 def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inverse=False):
     # sort the top data so it is ordered with the top sample/abundance first
@@ -265,7 +282,7 @@ def sort_data(document, top_data, samples, sort_by_name=False, sort_by_name_inve
 
 def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxonomy, samples_found, title, 
     ylabel="Relative abundance", legend_title="Species", legend_size=7, max_subsets=2, sort_by_name=False,
-    sort_by_name_inverse=False):
+    sort_by_name_inverse=False, feature="", max_groups_barplot=5):
     """ Plot the grouped taxonomy with samples sorted by species abundance for each feature.
 
         Args:
@@ -293,7 +310,7 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
         sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type] = sort_data(document, sorted_data_grouped[metadata_type], sorted_samples_grouped[metadata_type], sort_by_name=sort_by_name, sort_by_name_inverse=sort_by_name_inverse)
 
     # print out a plot for each group of metadata
-    sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(sorted_data_grouped.keys())
+    sorted_metadata_subsets=document.sorted_data_numerical_or_alphabetical(list(sorted_data_grouped.keys()))
    
     # split into subsets
     split_sorted_metadata_subsets = [sorted_metadata_subsets[x:x+max_subsets] for x in range(0, len(sorted_metadata_subsets), max_subsets)]
@@ -303,6 +320,8 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
         last_set = split_sorted_metadata_subsets.pop()
         split_sorted_metadata_subsets[-1].append(last_set[0])
 
+    # set a max number of subsets
+    index=0
     for metadata_subset in split_sorted_metadata_subsets:
         subset_sorted_data_grouped=dict((key, sorted_data_grouped[key]) for key in metadata_subset)
         subset_sorted_samples_grouped=dict((key, sorted_samples_grouped[key]) for key in metadata_subset)
@@ -314,9 +333,81 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
 
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy,
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size)
+            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+"_"+str(metadata_subset[0])+".png"),legend_reverse=True)
+        index+=1
 
-def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=None,max_sets_heatmap=25,method="correlation"):
+        if index>= max_groups_barplot:
+            break
+
+def zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples, data_type="pathways"):
+    # if there is metadata, add it to the heatmap
+    if 'metadata' in vars and vars['metadata'] and 'metadata_labels' in vars and vars['metadata_labels']:
+        # get the total number of features
+        total_features=len(vars['metadata'])-1
+        # for the zscore to be applied first all of the categorical data must be removed
+        filtered_metadata_pathways=[]
+        filtered_merged_data=[]
+        filtered_row_count=0
+        for i in range(total_features):
+            label = vars['metadata_labels'].get(metadata_pathways[i],"cat")
+            if label != "cat":
+                filtered_metadata_pathways.append(metadata_pathways[i])
+                filtered_merged_data.append(merged_data[i])
+            else:
+                filtered_row_count+=1
+        filtered_metadata_rows=range(1,total_features-filtered_row_count+1)
+
+        # add abundance data to filtered metadata
+        filtered_metadata_pathways+=metadata_pathways[total_features:]
+        filtered_merged_data+=merged_data[total_features:]
+
+        document.show_hclust2(metadata_samples, filtered_metadata_pathways, filtered_merged_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
+            log_scale=False,zscore=True,
+            metadata_rows=filtered_metadata_rows)
+    else:
+        document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
+            log_scale=False,zscore=True)
+
+
+def log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, data_type="pathways"):
+    merged_data=[]
+    metadata_pathways=[]
+    metadata_samples=[]
+    if 'metadata' in vars and vars['metadata']:
+        merged_data, metadata_samples=merge_metadata(vars['metadata'], dna_samples,
+            [[dna_top_average_pathways[i]]+dna_top_average_data[i] for i in range(len(dna_top_average_pathways))])
+        metadata_pathways=[row.pop(0) for row in merged_data]
+        # get the metadata row numbers
+        metadata_rows=range(1,len(vars['metadata']))
+        document.show_hclust2(metadata_samples, metadata_pathways, merged_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance",
+            metadata_rows=metadata_rows)
+    else:
+        document.show_hclust2(dna_samples,dna_top_average_pathways,dna_top_average_data,
+            title="Top "+str(max_sets_heatmap)+" "+data_type+" by average abundance")
+
+    return merged_data, metadata_pathways, metadata_samples
+
+def remove_large_metadata_levels(merged_data, row_names, total_metadata_variables, max_levels):
+    new_data=[]
+    new_names=[]
+    total_metadata=0
+    for index in range(0, total_metadata_variables):
+        grouped_values = list(set(merged_data[index]))
+        if len(grouped_values) <= max_levels:
+            new_data.append(merged_data[index])
+            new_names.append(row_names[index])
+            total_metadata+=1
+
+    for index in range(total_metadata_variables, len(merged_data)):
+        new_data.append(merged_data[index])
+        new_names.append(row_names[index])
+
+    return total_metadata, new_data, new_names
+
+def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename,title=None,max_sets_heatmap=25,method="correlation"):
     """ Generate a heatmap using the doc function. Include metadata if available. """
 
     # set the default title if not provided
@@ -328,12 +419,14 @@ def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,title=No
         merged_data, metadata_samples=utilities.merge_metadata(vars['metadata'], samples,
             [[top_taxonomy[i]]+top_data[i] for i in range(len(top_taxonomy))])
         metadata_taxonomy=[row.pop(0) for row in merged_data]
-        # get the metadata row numbers
-        metadata_rows=range(1,len(vars['metadata']))
+        
+        total_metadata, merged_data, metadata_taxonomy=remove_large_metadata_levels(merged_data, metadata_taxonomy, len(vars['metadata']), max_sets_heatmap)
+        metadata_rows=range(1,total_metadata+1)
+
         document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
-            title=title, metadata_rows=metadata_rows, method=method)
+            title=title, metadata_rows=metadata_rows, method=method,outfilename=os.path.join(document.figures_folder,filename))
     else:
-        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method)
+        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method,outfilename=os.path.join(document.figures_folder,filename))
 
 
 def plot_pcoa_top_average_abundance(document, samples, feature_names, feature_data, feature_type, scale_data=None, legend_title="% Abundance", max_sets=6):
@@ -447,7 +540,7 @@ def write_pathway_average_variance_table(document, file_name, data, names_and_de
     
     return average_abundance_variance
 
-def top_average_pathways(document, file, max_sets):
+def top_average_pathways(document, file, max_sets, get_all=False):
     """ Read the pathways file and get the top average pathways """
     
     # read in the samples and get the data with out the stratification by bug
@@ -460,8 +553,11 @@ def top_average_pathways(document, file, max_sets):
     samples = [sample.replace("_Abundance","").replace("-RPKs","") for sample in samples]
     
     # get the average abundance for the pathways
-    top_pathways, top_data = utilities.top_rows(pathways,
-        data, max_sets, function="average")
+    if get_all:
+        top_pathways, top_data = pathways, data
+    else:
+        top_pathways, top_data = utilities.top_rows(pathways,
+            data, max_sets, function="average")
     
     # get the top names with descriptions
     top_names_and_descriptions = [name+":"+pathway_names[name] for name in top_pathways]
@@ -643,79 +739,78 @@ class ShotGun(Workflow):
         
 
 class Sixteen_S(Workflow):
+    @classmethod
+    def compile_default_intro(cls,vars):
+        # read through the workflow log to gather information and compile the default intro for the report
+
+        # get the variable settings from the data processing workflow
+        from anadama2.reporters import LoggerReporter
+        from anadama2 import PweaveDocument
+        document=PweaveDocument()
+
+        try:
+            workflow_settings = LoggerReporter.read_log(vars["log"],"variables")
+        except AttributeError:
+            workflow_settings = []
+
+        # print a warning if the variables could not be read
+        if isinstance(workflow_settings, list):
+            print("WARNING: Unable to read workflow settings from log file.")
+            workflow_settings={}
+
+        maxee = workflow_settings.get("maxee","UNK")
+        trunc_len_max = workflow_settings.get("trunc_len_max","UNK")
+        percent_identity = workflow_settings.get("percent_identity","UNK")
+        min_cluster_size = workflow_settings.get("min_size","UNK")
+        dada_db = workflow_settings.get("dada_db", "UNK").upper()
+        usearch_db = workflow_settings.get("usearch_db", "UNK").lower()
+
+        method = vars["method"]
+        if method == "dada2" or method == "its":
+            if method == "its":
+                dada_db = "UNITE"
+            dadadb_info="\nThe " + str(dada_db) + " database was used for taxonomy prediction."
+            columns, samples, data = document.read_table(vars["counts_each_step"])
+    
+        else:
+            columns, samples, data = document.read_table(vars["read_count_table"])
+
+            if "silva" in usearch_db:
+                db_info = "SILVA database"
+            else:
+                db_info = "GreenGenes 16S RNA Gene Database version 13_8"
+
+            usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
+                follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
+                + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
+                + "\n\nThe " + db_info + " was used for taxonomy prediction.\
+                \n\nReads were filtered for quality control using a MAXEE score of " + str(maxee) + ". Filtered reads were \
+                used to generate the OTUs. Reads not passing quality control were kept and used in the step \
+                assigning reads to OTUs. First these reads were truncated to a max length of " + str(trunc_len_max) + " bases.\n"
+
+        if method == "its":
+            flowchart="![]({0})\n\n".format(utilities.get_package_file("dada2","image"))
+            return flowchart+cls.captions["itsintro"]+"\n\n"+dadadb_info
+        elif method == "dada2":
+            flowchart="![]({0})\n\n".format(utilities.get_package_file("dada2","image"))
+            return flowchart+cls.captions["dada2intro"]+"\n\n"+dadadb_info
+        else:
+            flowchart="![]({0})\n\n".format(utilities.get_package_file("16s_workflow","image"))
+            return flowchart+usearchintro
+
+
     captions={}
 
-    captions["itsintro"]='Implementing ITS pipeline for resolving sequence variants from ITS region\
-         of paired-end sequencing reads, adopting the tutorial from\n\n \
-         https://benjjneb.github.io/dada2/ITS_workflow.html \n \
-         https://benjjneb.github.io/dada2/tutorial.html and \n \
-         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments. \n \
-         "Unlike the 16S rRNA gene, the ITS region is highly variable in length. The commonly amplified ITS1 and ITS2 regions \
-         range from 200 - 600 bp in length. This length variation is biological, not technical, and arises from the high rates\
-         of insertions and deletions in the evolution of this less conserved gene region. The length variation of the ITS region has \
-         significant consequences for the filtering and trimming steps of the standard DADA2 workflow. First, truncation to a fixed \
-         length is no longer appropriate, as that approach remove real ITS variants with lengths shorter than the truncation length.\
-         Second, primer removal is complicated by the possibility of some, but not all, reads extending into the opposite primer when\
-         the amplified ITS region is shorter than the read length." [ITS Tutorial] \n \
-         "Critical addition to ITS workflows is the removal of primers on the forward and reverse reads, in a way that accounts\
-         for the possibility of read-through into the opposite primer." [ITS Tutorial] \n \
-         "Cutadapt" tool is used  for removal of primers from the ITS amplicon sequencing data. After initial step of primers \
-         removal, the rest of ITS workflow matches DADA2 workflow.\n \
-         Database UNITE is used for taxonomic assignment.\n\n '
+    captions["itsintro"]="The [DADA2 ITS pipeline](https://benjjneb.github.io/dada2/ITS_workflow.html) is the DADA2 pipeline, Callahan BJ, et all (2016). “DADA2: High-resolution sample inference from Illumina amplicon data.” Nature Methods, 13, 581-583., with small changes to adapt to sequencing of the ITS region.\n\n\n" 
 
-
-    captions["dada2intro"]="Implementing DADA2 pipeline for resolving sequence variants from 16S rRNA \
-        gene amplicon paired-end sequencing reads, adopting the tutorial from\n\n \
-         https://benjjneb.github.io/dada2/tutorial.html and \n \
-         https://benjjneb.github.io/dada2/bigdata_paired.html \n\n with minor adjustments.\
-        \n\nThis report captures all the workflow steps necessary to reproduce the analysis. Notes and descriptions\
-         of the steps are cited from DADA2 tutorial as well.\
-        \n\nMultiple sequence alignment of resolved sequence variants is used to generate a phylogenetic tree,\
-        which is required for calculating UniFrac beta-diversity distances between microbiome samples.\n\n\n"
+    captions["dada2intro"]="The [DADA2 pipeline](https://benjjneb.github.io/dada2/tutorial.html), Callahan BJ, et all (2016). “DADA2: High-resolution sample inference from Illumina amplicon data.” Nature Methods, 13, 581-583., resolves sequence variants from 16S rRNA to generate a amplicon sequence variant (ASV) table.\n\n\n"
     
-    captions["dada2errorintro"]='\n\n "The DADA2 algorithm makes use of a parametric error model (err) and every amplicon dataset has a different set of error rates. \
-        \n\nThe learnErrors method learns the error model from the data, by alternating estimation of the error rates and inference of \
-        sample composition until they converge on a jointly consistent solution.\n\nAs in many machine-learning problems, the algorithm must \
-        begin with an initial guess, for which the maximum possible error rates in this data are used \
-        the error rates if only the most abundant sequence is correct and all the rest are errors." [DADA2 Tutorial]\n'
+    captions["dada2errorintro"]="The read quality profiles show the quality scores at each base for the forward and reverse reads. The green line shows the mean and the quartiles are shown with the orange lines.\n"
     
-    captions["dada2errorinfo"]='"The error rates for each possible transition (eg. A->T,A->G, etc) are shown. \
-        Points are the observed error rates for each consensus quality score. \
-        \n\nThe black line shows the estimated error rates after convergence. \
-         The red line shows the error rates expected under the nominal definition of the Q-value. \
-        \n\nIf the black line (the estimated rates) fits the observed rates well, \
-        and the error rates drop with increased quality as expected, then everything looks reasonable \
-        and can proceed with confidence." [DADA2 Tutorial]\n\n'
+    captions["dada2countsinfo"]="This figure shows counts of reads in four categories: \n \
+        \n1) original: total count of raw reads,\n2) filtered: number of reads after filtering for length and quality,\n3) merged: number of reads where the pairs merge,\n4) nonchim: total remaining after chimera removal.\n\n"
 
-    captions["dada2stepsinfo"]='\n\n "Dereplication combines all identical sequencing reads into into unique sequences with a corresponding abundance:\
-        the number of reads with that unique sequence .... DADA2 retains a summary of the quality information associated with each unique sequence." [DADA2 Tutorial]\
-        \n\nThe consensus quality profile of a unique sequence is the average of the positional qualities from the dereplicated reads.\
-        \n\nThese quality profiles inform the error model of the subsequent denoising step, significantly increasing DADA2s accuracy. \
-        \n\nThe sample inference step performs the core sequence-variant inference algorithm to the dereplicated data. \
-        Spurious sequence variants are further reduced by merging overlapping reads. \n\nThe core function here is mergePairs \
-        which depends on the forward and reverse re.samples being in matching order at the time they were dereplicated \
-        \n\n "The core dada method removes substitution and indel errors, but chimeras remain.\
-        Fortunately, the accuracy of the sequences after denoising makes identifying chimeras simpler than it is when dealing with fuzzy OTUs\
-        all sequences which can be exactly reconstructed as a bimera (two-parent chimera) from more abundant sequence." [DADA2 Tutorial]' \
-         + '\n\n "Most of reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though).\
-        If most of your reads were removed as chimeric, upstream processing may need to be revisited.\
-        In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline." [DADA2 Tutorial]\n'
-    
-    captions["dada2countsinfo"]='This figure shows the number of reads that made it through each step in the pipeline\
-        \n\nThere should no be a step in which a majority of reads are lost, except filtering when it is stringent.\
-        \n\n "If a majority of reads failed to merge, you may need to revisit the  truncLen parameter used in the filtering step\
-        and make sure that the truncated reads span your amplicon." [DADA2 Tutorial]\
-        \n\nIf a majority of reads failed to pass the chimera check, you may need to revisit the removal of primers,\
-        as the ambiguous nucleotides in unremoved primers interfere with chimera identification.\n'
 
-    captions["dada2taxinfo"]='"The assignTaxonomy function takes a set of sequences and a training set of taxonomically classified sequences,\
-        and outputs the taxonomic assignments with at least minBoot bootstrap confidence." [DADA2 Tutorial]\
-        \n\n assignTaxonomy(... ) implements the RDP naive Bayesian classifier method described in Wang et al. 2007.'  \
-        + " In short, the kmer profile of the sequences to be classified are compared against the kmer profiles of all sequences in a training set\
-        of sequences with assigned taxonomies. The reference sequence with the most similar profile is used to assign taxonomy to the query sequence,\
-        and then a bootstrapping approach is used to assess the confidence assignment at each taxonomic level.\n \n"
- 
-          
     captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n \
         \n1) classified: reads that align to OTUs with known taxonomy,\n2) unclassified: reads that align to OTUs of unknown taxonomy,\n3) unmapped: reads that do not align to any OTUs.\n\n The sum of these\
         three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
@@ -724,8 +819,10 @@ class Sixteen_S(Workflow):
 class Stats(Workflow): 
     captions = {}
 
-    captions["intro"]='The data for this project was run through the standard stats workflow. The workflow is composed of four sections.\n\n \
-        \n\n1. All against all : A mantel test, which computes the correlation between two matrices of the same dimension, is run to compare all points of each data set provided with all points of all other data sets. \
-        \n\n2. One against all : A permanova, used to compare groups of objects, is run with two different approaches to the statistical analysis for each of the data types, eg taxonomy, provided for the study. First the permanova is run to compare a single metadata variable with the data set. Next, in a multivariate analysis, all of the metadata variables are used for the analysis against the data set. For a longitudinal study, where there are multiple time points for each individual, the metadata co-variates that do not vary for each individual are factored into the analysis.\
-        \n\n3. Each metadata against all data : MaAsLiN2 filters, transforms, and then generates a linear model to fit a single metadata variable at a time to the data. If taxonomy and pathways are provided plots for the significant pathways, stratified by species are generated.\
-        \n\n4. Each data type against all other data types : HAllA tests all possible associations of each feature in a data set against all features in a second data set. It is run to compare each of the data sets provided for the study against all others, eg taxonomy vs pathways. \n\n\n '
+    captions["sections"]=['\n\n1. All against all : A mantel test, which computes the correlation between two matrices of the same dimension, is run to compare all points of each data set provided with all points of all other data sets. ',
+        '\n\n2. One against all : A PERMANOVA, used to compare groups of objects, is run with two different approaches to the statistical analysis for each of the data types, eg taxonomy, provided for the study. First the permanova is run to compare a single metadata variable with the data set. Next, in a multivariable analysis, all of the metadata variables are used for the analysis against the data set. For a longitudinal study, where there are multiple time points for each individual, the metadata co-variates that do not vary for each individual are factored into the analysis.',
+        '\n\n3. Each metadata variable against all features individually: MaAsLin 2 filters, transforms, and then performs a linear model to fit metadata variables to feature data (e.g. taxonomy, pathways), one at a time. If both taxonomy and pathways are provided, plots for the significant pathways, stratified by species are generated. ',
+        '\n\n4. Each data type against all other data types : HAllA tests all possible associations of each feature in a data set against all features in a second data set. It is run to compare each of the data sets provided for the study against all others, eg taxonomy vs pathways. \n\n\n ']
+
+    captions["intro"]='The data for this project was run through the standard stats workflow. The workflow is composed of four sections.\n\n'+"".join(captions["sections"])
+    captions["intro_bypass_halla"]='The data for this project was run through the standard stats workflow. The workflow is composed of three sections.\n\n'+"".join(captions["sections"][0:3])
