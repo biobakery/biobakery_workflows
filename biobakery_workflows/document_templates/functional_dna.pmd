@@ -1,3 +1,6 @@
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 # Functional Profiling of Metagenomic Reads
 
 <%= visualizations.ShotGun.captions["functional_intro"] %>
@@ -5,34 +8,33 @@
 ```{python, echo=False}
 dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
     document, vars["dna_pathabundance"], vars["max_sets_heatmap"])
-dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
-    document, vars["dna_ecabundance"], vars["max_sets_heatmap"])
+if vars["dna_ecabundance"]:
+    dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
+        document, vars["dna_ecabundance"], vars["max_sets_heatmap"])
 ```
 
-## Pathway and ECs Abundance
+<%= "## Pathway and ECs Abundance" if vars["dna_ecabundance"] else "## Pathway Abundance" %>
 
 <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="pathways",method="Spearman", data_type="pathways") %>
 
-```{python, echo=False, f_size=(8,8)}
-merged_data, metadata_pathways, metadata_samples=visualizations.log10_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data)
+```{python, echo=False, f_size=(8,8), results="md"}
+visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data, vars["pdf_format"], "heatmap_pathways_spearman.png", "Top {} pathways by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
-<%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="log10") %> 
-
-```{python, echo=False, f_size=(8,8)}
-ec_merged_data, ec_pathways, ec_samples=log10_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, "ecs")
+```{python, echo=False, f_size=(8,8), results="md"}
+if vars["dna_ecabundance"]:
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, vars["pdf_format"], "heatmap_ecs_spearman.png", "Top {} ECs by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False, f_size=(8,8)}
-zscore_heatmap(document, dna_samples, dna_top_average_pathways, dna_top_average_data, merged_data, metadata_pathways, metadata_samples)
+```{python, echo=False, f_size=(8,8), results="md"}
+visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
-<%= visualizations.ShotGun.format_caption("pathway_abundance_heatmap",norm="z-score") %> 
-
-```{python, echo=False, f_size=(8,8)}
-zscore_heatmap(dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, ec_merged_data, ec_pathways, ec_samples, "ecs")
+```{python, echo=False, f_size=(8,8), results="md"}
+if vars["dna_ecabundance"]:
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
@@ -53,29 +55,31 @@ table_message=visualizations.show_table_max_rows(document, average_abundance_var
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-## Features
+<% if vars["feature_counts"]: print("## Features") %>
 
-<%= visualizations.ShotGun.format_caption("feature_detection",seq_type="metagenomic",seq_short_type="DNA") %>
+<% if vars["feature_counts"]: print(visualizations.ShotGun.format_caption("feature_detection",seq_type="metagenomic",seq_short_type="DNA")) %>
 
-```{python, echo=False, f_spines = False }
-total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts = visualizations.feature_counts(
-    document, vars["read_counts"],vars["feature_counts"])
+```{python, echo=False, f_spines = False, results="md" }
+if vars["feature_counts"]:
+    total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts = visualizations.feature_counts(
+        document, vars["read_counts"],vars["feature_counts"])
 
-document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
-                       row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
+    document.plot_scatter([[total_reads,nucleotide_reads],[total_reads,translated_reads]],title="Read alignment rate",
+        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Input reads)", ylabel="log10(Aligned reads)", trendline=True)
 ```
 
-<%= visualizations.ShotGun.captions["scatter_reads_aligned"] %> 
+<% if vars["feature_counts"]: print(visualizations.ShotGun.captions["scatter_reads_aligned"]) %> 
 
-```{python, echo=False, f_spines = False}
-document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
+```{python, echo=False, f_spines = False, results="md"}
+if vars["feature_counts"]:
+    document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)
 
-document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="Enzymes (ECs)",
+    document.plot_scatter([[nucleotide_reads,ecs_counts],[translated_reads,ecs_counts]],title="Enzymes (ECs)",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(ECs)", trendline=True)
 
-document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="Pathways",
+    document.plot_scatter([[nucleotide_reads,pathabundance_counts],[translated_reads,pathabundance_counts]],title="Pathways",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(Pathways)", trendline=True)
 ```
 
-<%= visualizations.ShotGun.captions["scatter_features"] %>
+<% if vars["feature_counts"]: print(visualizations.ShotGun.captions["scatter_features"]) %>
