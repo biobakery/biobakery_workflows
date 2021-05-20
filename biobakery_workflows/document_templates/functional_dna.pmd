@@ -22,8 +22,19 @@ print("A total of "+str(len(dna_pathways))+" pathways were identified. After bas
 dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = utilities.subset_abundances(filtered_pathways, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions)
 
 if vars["dna_ecabundance"]:
+    dna_ecs_samples, dna_ecs, dna_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
+        document, vars["dna_ecabundance"], vars["max_sets_heatmap"], get_all=True)
+
+    filtered_ecs, filtered_ecs_data = utilities.filter_data_abundance(dna_ecs,
+        dna_ecs_data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
+
     dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
         document, vars["dna_ecabundance"], vars["max_sets_heatmap"])
+
+    print("A total of "+str(len(dna_ecs))+" ECs were identified. After basic filtering "+str(len(filtered_ecs))+" ECs remained.")
+
+    dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = utilities.subset_abundances(filtered_ecs, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions)
+
 ```
 
 <%= "## Pathway and ECs Abundance" if vars["dna_ecabundance"] else "## Pathway Abundance" %>
