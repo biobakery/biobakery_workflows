@@ -5,9 +5,22 @@
 
 <%= visualizations.ShotGun.captions["functional_intro"] %>
 
-```{python, echo=False}
+```{python, echo=False, results="md"}
+dna_samples, dna_pathways, dna_data, top_names_and_descriptions = visualizations.top_average_pathways(
+    document, vars["dna_pathabundance"], vars["max_sets_heatmap"], get_all=True)
+
+filtered_pathways, filtered_pathways_data = utilities.filter_data_abundance(dna_pathways,
+    dna_data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
+
 dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
     document, vars["dna_pathabundance"], vars["max_sets_heatmap"])
+
+print("Abundances are passed through a basic filter requiring each pathway to have at least "+str(vars["min_abundance"])+" % abundance in at least "+str(vars["min_samples"])+" % of all samples.")
+
+print("A total of "+str(len(dna_pathways))+" pathways were identified. After basic filtering "+str(len(filtered_pathways))+" pathways remained.")
+
+dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = utilities.subset_abundances(filtered_pathways, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions)
+
 if vars["dna_ecabundance"]:
     dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
         document, vars["dna_ecabundance"], vars["max_sets_heatmap"])

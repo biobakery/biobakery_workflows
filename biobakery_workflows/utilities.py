@@ -44,6 +44,20 @@ TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
 
+def subset_abundances(names, names2, data, fullnames):
+    # Use the names to subset a set of abundance data
+    new_data=[]
+    new_names=[]
+    new_fullnames=[]
+    for i, current_name in enumerate(names2):
+        if current_name in names:
+            new_data.append(data[i])
+            new_names.append(names[i])
+            new_fullnames.append(fullnames[i])
+   
+    return new_names, new_data, new_fullnames
+
+
 def compile_taxa_counts(species_data,filtered_species_data,genera_data,filtered_genera_data):
     # compile the taxa counts for species and genus for the counts table in the vis report
     def count_filtered_columns(data, min):
