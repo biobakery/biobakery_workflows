@@ -444,7 +444,7 @@ def show_all_permanova(permanova_plots):
         if filetype == "all":
             filetype = "Heatmap of univariable R-squared value"
         if os.path.isfile(permanova_file):
-            print("![{0}]({1})\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the FDR adjusted p-value.", permanova_file))
+            print("![{0} {1}]({2})\n\n".format(filetype[0].upper()+filetype[1:],"- Bar plot of R-squared value, annotated with the FDR adjusted p-value.", permanova_file))
         else:
             print("Error generating permanova for filetype {}".format(filetype))
 
