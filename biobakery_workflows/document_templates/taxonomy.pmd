@@ -98,6 +98,8 @@ caption_genera=document.show_pcoa(samples,top_taxonomy_genera,pcoa_data_genera, 
 visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, pcoa_data_genera, title="PCoA Ordination of top {} genera".format(vars["max_sets_heatmap"]), data_type="genera")
 ```
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 ## Heatmaps
 
 
