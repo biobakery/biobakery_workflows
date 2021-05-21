@@ -67,16 +67,16 @@ alpha_diversity_plots_folder=utilities.find_alpha_diversity_plots(vars["alpha_di
 ### Species
 
 ```{python, echo=False, results="md"}
-top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, vars["max_sets_heatmap"], function="average") 
+top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, vars["max_sets_heatmap"], function="average")
 
-pcoa_data=numpy.array(top_data)/100.0
-caption=document.show_pcoa(samples,top_taxonomy,pcoa_data,"PCoA Ordination of top {} species using Bray-Curtis dissimilarity".format(vars["max_sets_heatmap"]),outfilename=os.path.join(document.figures_folder,"pcoa_species.png"))
+pcoa_data=numpy.array(species_data)/100.0
+caption=document.show_pcoa(samples,species_taxonomy,pcoa_data,"PCoA ordination of species abundance using Bray-Curtis dissimilarity",outfilename=os.path.join(document.figures_folder,"pcoa_species.png"))
 ```
 
 <%= caption %>
 
 ```{python, echo=False, results="md"}
-visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_data, title="PCoA Ordination of top {} species".format(vars["max_sets_heatmap"]), data_type="species")
+visualizations.show_pcoa_metadata(document, vars, samples, species_taxonomy, pcoa_data, title="PCoA ordination of species abundance using Bray-Curtis dissimilarity"), data_type="species")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
@@ -86,8 +86,8 @@ visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy, pcoa_da
 ```{python, echo=False, results="md"}
 top_taxonomy_genera, top_data_genera = utilities.top_rows(genera_taxonomy, genera_data, vars["max_sets_heatmap"], function="average")
 
-pcoa_data_genera=numpy.array(top_data_genera)/100.0
-caption_genera=document.show_pcoa(samples,top_taxonomy_genera,pcoa_data_genera, "PCoA Ordination of top {} genera using Bray-Curtis dissimilarity".format(vars["max_sets_heatmap"]),feature_types="genera",outfilename=os.path.join(document.figures_folder,"pcoa_genera.png"))
+pcoa_data_genera=numpy.array(genera_data)/100.0
+caption_genera=document.show_pcoa(samples,genera_taxonomy,pcoa_data_genera, "PCoA ordination of genera abundance using Bray-Curtis dissimilarity",feature_types="genera",outfilename=os.path.join(document.figures_folder,"pcoa_genera.png"))
 ```
 
 <%= caption_genera %>
@@ -95,7 +95,7 @@ caption_genera=document.show_pcoa(samples,top_taxonomy_genera,pcoa_data_genera, 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
 ```{python, echo=False, results="md"}
-visualizations.show_pcoa_metadata(document, vars, samples, top_taxonomy_genera, pcoa_data_genera, title="PCoA Ordination of top {} genera".format(vars["max_sets_heatmap"]), data_type="genera")
+visualizations.show_pcoa_metadata(document, vars, samples,genera_taxonomy, pcoa_data_genera, title="PCoA ordination of genera abundance using Bray-Curtis dissimilarity", data_type="genera")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
