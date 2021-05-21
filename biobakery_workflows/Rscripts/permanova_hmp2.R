@@ -553,7 +553,7 @@ for (datafile in unlist(strsplit(positional_args[1], ",", fixed = TRUE))) {
 
     dodge = position_dodge(width = 0.8)
 
-    plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univarate R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))*1.05) + xlab("") + labs(fill = "")
+    plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univariable R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))*1.05) + xlab("") + labs(fill = "")
 
     plot_file <- gsub(".png",paste("_",datatype,".png",sep=""),positional_args[3])
     print(paste("Writing to plot file",plot_file))
