@@ -76,7 +76,7 @@ caption=document.show_pcoa(samples,species_taxonomy,pcoa_data,"PCoA ordination o
 <%= caption %>
 
 ```{python, echo=False, results="md"}
-visualizations.show_pcoa_metadata(document, vars, samples, species_taxonomy, pcoa_data, title="PCoA ordination of species abundance using Bray-Curtis dissimilarity"), data_type="species")
+visualizations.show_pcoa_metadata(document, vars, samples, species_taxonomy, pcoa_data, title="PCoA ordination of species abundance using Bray-Curtis dissimilarity", data_type="species")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
