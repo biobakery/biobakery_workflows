@@ -8,6 +8,9 @@ library(ggplot2)
 library(cowplot)
 library(optparse)
 library(gridExtra)
+library(tibble)
+library(dplyr)
+library(readr)
 
 distance_method <- c(
     "Taxonomy"    = "bray",
@@ -249,3 +252,5 @@ png(positional_args[2], res = 150, height = 800, width = 1100)
 print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
 dev.off()
 
+text_file <- sub(".png",".txt", positional_args[2])
+mt_inter_doa %>% as_tibble() %>% write_tsv(text_file)
