@@ -257,7 +257,7 @@ def plot_stacked_barchart_taxonomy(document, samples, taxonomy, data, max_sets_b
     top_taxonomy, sorted_data = fill_taxonomy_other(top_taxonomy, sorted_data)
 
     document.plot_stacked_barchart(sorted_data, row_labels=top_taxonomy,
-        column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" species by average abundance",
+        column_labels=sorted_samples, title="Top "+str(max_sets_barplot)+" "+taxonomy_level+" by average abundance",
         ylabel="Relative abundance", legend_title=taxonomy_level[0].upper()+taxonomy_level[1:], legend_style="italic", 
         outfilename=os.path.join(document.figures_folder,taxonomy_level+"_average_abundance.png"),legend_reverse=True)
 
