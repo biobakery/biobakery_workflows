@@ -10,6 +10,9 @@ library(cowplot)
 library(ggplot2)
 library(plyr)
 library(optparse)
+library(tibble)
+library(dplyr)
+library(readr)
 
 # Stand-alone utility functions (from the hmp2_analysis repository file overview/src/omnibus_tests.r)
 
@@ -226,7 +229,7 @@ theme_nature <- function() list(
 #' @param FDR If \code{T}, P-values are first BH-adjusted, and significance
 #' stars are shown as *** < 0.001, ** < 0.01, * < 0.05.
 #' @return ggplot object.
-PERMANOVA_heatmap <- function(R2, P, fontsize=6, FDR=T, alpha=NA, beta=NA) {
+PERMANOVA_heatmap <- function(R2, P, fontsize=6, FDR=T, alpha=NA, beta=NA, outfile=NA) {
 
     df <- melt(R2)
     colnames(df) <- c("Feature", "Dataset", "R2")
@@ -276,6 +279,8 @@ PERMANOVA_heatmap <- function(R2, P, fontsize=6, FDR=T, alpha=NA, beta=NA) {
         theme(axis.text.x = element_text(angle=-17, hjust=0),
               panel.border=element_rect(fill=NA),
               legend.position = "left", axis.ticks.y = element_blank())
+
+    df %>% as_tibble() %>% write_tsv(outfile)
 
     return (ggp)
 }
@@ -561,6 +566,8 @@ for (datafile in unlist(strsplit(positional_args[1], ",", fixed = TRUE))) {
     print(plot)
     dev.off()
 
+    text_file <- gsub(".png",paste("_",datatype,".txt",sep=""),positional_args[3]) 
+    univar_tax %>% as_tibble() %>% write_tsv(text_file)
 }
 
 # update the column names
@@ -570,8 +577,9 @@ colnames(P) <- datatype_list
 alpha <- 1.9
 beta <- 0.1
 
-ggp_all <- PERMANOVA_heatmap(R2, P, fontsize=5, FDR=T, alpha=alpha, beta=beta)
+ggp_all <- PERMANOVA_heatmap(R2, P, fontsize=5, FDR=T, alpha=alpha, beta=beta, outfile=gsub(".png",".txt",positional_args[3]))
 png(positional_args[3], res = 150, height = 800, width = 1100)
 print(ggp_all)
 dev.off()
+
 
