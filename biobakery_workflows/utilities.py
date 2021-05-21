@@ -356,7 +356,7 @@ def show_heatmaps(heatmap, run_type):
     # display the heatmap if generated
 
     if os.path.isfile(heatmap):
-        print("\n\n!["+run_type+" heatmap]("+heatmap+")\n\n")
+        print("\n\n!["+run_type+" heatmap]("+heatmap+"){#id .class width=540px height=405px}\n\n")
     else:
         print("Not enough significant associations for a heatmap.\n\n")
 
