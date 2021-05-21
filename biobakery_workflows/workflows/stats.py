@@ -125,6 +125,7 @@ if not args.bypass_maaslin:
 ## 4. Add tasks to run halla on all sets of data files            
 
 halla_tasks_info=[]
+halla_tasks=[]
 if not args.bypass_halla:
     halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.output,args.halla_options)
 
@@ -164,7 +165,7 @@ if args.bypass_halla and args.introduction_text == workflow_vis.captions["intro"
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks, 
+    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks+halla_tasks, 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistics report",
           "project":args.project_name,
