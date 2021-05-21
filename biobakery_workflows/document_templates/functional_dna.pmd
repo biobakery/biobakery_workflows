@@ -41,6 +41,8 @@ if vars["dna_ecabundance"]:
 
 <%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="pathways",method="Spearman", data_type="pathways") %>
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 ```{python, echo=False, f_size=(8,8), results="md"}
 visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data, vars["pdf_format"], "heatmap_pathways_spearman.png", "Top {} pathways by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
