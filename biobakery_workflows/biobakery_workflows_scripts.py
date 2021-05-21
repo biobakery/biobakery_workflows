@@ -32,7 +32,7 @@ import subprocess
 
 from . import utilities
 
-VERSION = "3.0.0-alpha.7"
+VERSION = "3.0.0"
 SCRIPTS_FOLDER="Rscripts"
 VIS_SCRIPT_EXTENSION="_vis.R"
 SCRIPT_EXTENSION=".R"
