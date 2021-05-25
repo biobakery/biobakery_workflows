@@ -7,6 +7,9 @@ library(vegan)
 library(ggplot2)
 library(optparse)
 library(gridExtra)
+library(tibble)
+library(dplyr)
+library(readr)
 
 # Add command line arguments #
 options <- optparse::OptionParser(
@@ -249,10 +252,12 @@ if (current_args$pairwise) {
 
   dodge = position_dodge(width = 0.8)
 
-  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univariable R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2))*1.05) + xlab("") + labs(fill = "")
+  plot <- ggplot(data = univar_tax, aes(reorder(row.names(univar_tax), univar_tax$R2), y = R2, label = univar_tax$`P-Value`)) + geom_bar(stat = "identity", position = "identity", fill = "#800000") + geom_text(position = dodge, vjust = 0.5, hjust = -0.1, size = 3) + theme_bw(base_size = 12) + ylab("Univariable R-squared") + coord_flip() + ylim(0, as.integer(max(univar_tax$R2)+1.0)*1.05) + xlab("") + labs(fill = "")
 
   png(positional_args[3], res = 150, height = 800, width = 1100)
   print(plot)
   dev.off()
+  outfile <- gsub(".png",".txt",positional_args[3])
+  univar_tax %>% as_tibble() %>% write_tsv(outfile)
 }
 
