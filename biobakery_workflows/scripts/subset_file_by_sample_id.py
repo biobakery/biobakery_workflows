@@ -39,7 +39,7 @@ def main():
         samples_as_columns=False
     
     if samples_as_columns:
-        cmmd="COLUMNS=$(head -n 1 "+args.input+" | tr '\t' '\n' | cat -n | grep -f "+args.input_ids+" | awk -F' ' '{ print $1}' | tr '\n' ',') && cut -f '1,'${COLUMNS::-1}  "+args.input+" > "+args.output
+        cmmd="COLUMNS=$(head -n 1 "+args.input+" | tr '\\t' '\\n' | cat -n | grep -f "+args.input_ids+" | awk -F' ' '{ print $1}' | tr '\\n' ',') && cut -f '1,'${COLUMNS::-1}  "+args.input+" > "+args.output
     else:
         if args.exclude_column:
             cmmd="cut --complement -f {0} {1} | head -n 1 > {3} && cut --complement -f {0} {1} | grep -f {2} >> {3}".format(args.exclude_column,args.input,args.input_ids,args.output)
