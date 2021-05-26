@@ -200,7 +200,8 @@ def run_beta_diversity(workflow,feature_tasks_info,input_metadata,min_abundance,
     ordered_fixed_effects=list(collections.OrderedDict.fromkeys(",".join(fixed_effects).split(",")).keys())
     covariate_equation=""
     if len(ordered_fixed_effects) > 1:
-        covariate_equation=" + ".join(ordered_fixed_effects)
+        covariate_equation=ordered_fixed_effects[0]
+        covariate_equation+=" + ".join(ordered_fixed_effects[1:])
 
     # determine the covariate equation from the metadata if not provided
     if not covariate_equation and len(metadata_variables) > 1:
