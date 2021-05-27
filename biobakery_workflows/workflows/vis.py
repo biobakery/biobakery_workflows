@@ -76,7 +76,6 @@ log_file=files.Workflow.path("log", args.input, none_if_not_found=True)
 # get the paths for the required files from the set of all input files
 data_files=utilities.identify_data_files(files,args.input,args.input_file_type,args.input_metadata)
 
-print(data_files)
 # error if no input files are found
 if len(data_files.keys()) < 1:
     sys.exit("ERROR: No data files found in the input folder.")
