@@ -592,14 +592,14 @@ def get_input_files_for_study_type(data_files, study_type):
 
         # get the paths for the optional files from the set of input files
         pathabundance=find_data_file(data_files, "function_pathway", required=False)
-        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if not filename[0] in [taxonomic_profile,pathabundance]])
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if (not filename[0] in [taxonomic_profile,pathabundance] and ( filename[0].endswith(".tsv") or filename[0].endswith(".biom") or filename[0].endswith(".txt") or filename[0].endswith(".gz")) )])
 
     else:
         taxonomic_profile=find_data_file(data_files,"16s_taxonomy",required=True)
 
         # get the paths for the optional files from the set of input files
         pathabundance=find_data_file(data_files,"function_pathway", required=False)
-        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if not filename[0] in [taxonomic_profile,pathabundance]])
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if (not filename[0] in [taxonomic_profile,pathabundance] and ( filename[0].endswith(".tsv") or filename[0].endswith(".biom") or filename[0].endswith(".txt") or filename[0].endswith(".gz")) )])
 
     return taxonomic_profile,pathabundance,other_data_files,study_type
 
@@ -683,20 +683,15 @@ def run_humann_barplot(task, number, metadata_end, categorical):
 def set_variables_for_16s_workflow_based_on_input(args,files):
     """ Determine the variables, method and input files based on the data in the input folder """
 
-    otu_table = files.SixteenS.path("otu_table_closed_reference",args.input, error_if_not_found=True)
-
-    method_depends=[otu_table]
-
-    if os.path.isfile(files.SixteenS.path("readF_qc", args.input, error_if_not_found=False)):
+    if files.get("16s_taxonomy_asv"):
+        otu_table = files["16s_taxonomy_asv"]
         method = "dada2"
-        if os.path.isdir(files.SixteenS.path("filtN", args.input, error_if_not_found=False)):
-            method = "its"
         doc_title = method.upper() + " 16s Report"
 
         # get the paths for the required files and check they are found
-        counts_each_step = files.SixteenS.path("counts_each_step", args.input, none_if_not_found=True)
-        readF_qc = files.SixteenS.path("readF_qc", args.input, none_if_not_found=True)
-        readR_qc = files.SixteenS.path("readR_qc", args.input, none_if_not_found=True)
+        counts_each_step = files.get("16s_qc_counts")
+        readF_qc = files.get("readF_qc")
+        readR_qc = files.get("readR_qc")
 
         # variables
         method_vars = {
@@ -711,11 +706,12 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
             "picard": args.input_picard,
             "picard_ext": args.input_picard_extension}
     else:
+        otu_table = files["16s_taxonomy_otu"]
         method = "usearch"
   
         # get the paths for the required files and check they are found
-        read_count_table=files.SixteenS.path("read_count_table",args.input, none_if_not_found=True)
-        eestats_table=files.SixteenS.path("eestats2",args.input, none_if_not_found=True)
+        read_count_table=files.get("16s_qc_counts")
+        eestats_table=files.get("16s_eestats2")
 
         # variables
         method_vars={"title":"USEARCH 16S Report",
@@ -726,6 +722,8 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
             "eestats_table":eestats_table,
             "picard":args.input_picard,
             "picard_ext":args.input_picard_extension}
+
+    method_depends=[otu_table]
 
     return method_vars, method_depends, method, otu_table
 
@@ -827,22 +825,20 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
 
 
     # look for files with known names
+    def add_found_file(data_files, data_files_type, filetype, fileid, folder, files_class):
+        # look for the file of type and if found add to dictionary
+        filepath=files_class.path(filetype, folder, none_if_not_found=True)
+        if filepath:
+            data_files.remove(filepath)
+            data_files_types[fileid]=filepath
+
     data_files_types = {}
-    qc_counts=files.ShotGun.path("kneaddata_read_counts",folder, none_if_not_found=True)
-    if qc_counts:
-        data_files.remove(qc_counts)
-    taxonomic_profile=files.ShotGun.path("taxonomic_profile",folder, none_if_not_found=True)
-    if taxonomic_profile:
-        data_files.remove(taxonomic_profile)
-        data_files_types["wmgx_taxonomy"]=[taxonomic_profile]
-    pathabundance=files.ShotGun.path("pathabundance_relab",folder, none_if_not_found=True)
-    if pathabundance:
-        data_files.remove(pathabundance)
-        data_files_types["both_function_pathway"]=[pathabundance]
-    ecsabundance=files.ShotGun.path("ecs_relab",folder, none_if_not_found=True)
-    if ecsabundance:
-        data_files.remove(ecsabundance)
-        data_files_types["wmgx_function_ec"]=[ecsabundance]
+    for filetype in [("kneaddata_read_counts","wmgx_qc_readcounts"),("taxonomic_profile","wmgx_taxonomy"),("pathabundance_relab","both_function_pathway"),("ecs_relab","wmgx_function_ec"),("humann_read_counts","wmgx_humann_counts"),("feature_counts","wmgx_feature_counts")]:
+        add_found_file(data_files, data_files_types, filetype[0], filetype[1], folder, files.ShotGun)
+
+    for filetype in [("readF_qc","readF_qc"),("readR_qc","readR_qc"),("read_count_table","16s_qc_counts"),("eestats2","16s_eestats"),("counts_each_step","16s_qc_counts")]:
+        add_found_file(data_files, data_files_types, filetype[0], filetype[1], folder, files.SixteenS)
+
 
     # determine the type of each file
     for file in data_files:

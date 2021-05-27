@@ -48,7 +48,8 @@ workflow.add_argument("input",desc=input_desc,required=True)
 workflow.add_argument("project-name",desc="the name of the project",required=True)
 workflow.add_argument("author-name",desc="the name of the author of the report", required=True)
 workflow.add_argument("header-image",desc="the image to add to the report header", default="")
-workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)")
+workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)",default="")
+workflow.add_argument("input-file-type",desc="the file type for an input file formatted as 'filename,filetype'", action="append", default=[])
 workflow.add_argument("input-picard",desc="the folder of picard quality score files")
 workflow.add_argument("input-picard-extension",desc="the extensions for the picard quality score files", default="quality_by_cycle_metrics")
 workflow.add_argument("metadata-categorical",desc="the categorical features", action="append", default=[])
@@ -72,13 +73,18 @@ templates=[utilities.get_package_file("universal_vis")]
 # check for the log file
 log_file=files.Workflow.path("log", args.input, none_if_not_found=True)
 
-# check the study type by searching for the taxonomic profile (or OTU/ASV file)
-taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, none_if_not_found=True)
-otu_table=files.SixteenS.path("otu_table_closed_reference",args.input, none_if_not_found=True)
+# get the paths for the required files from the set of all input files
+data_files=utilities.identify_data_files(files,args.input,args.input_file_type,args.input_metadata)
 
-if taxonomic_profile:
+print(data_files)
+# error if no input files are found
+if len(data_files.keys()) < 1:
+    sys.exit("ERROR: No data files found in the input folder.")
+
+# check the required taxonomic profile is provided
+if data_files["wmgx_taxonomy"]:
     workflow_type = "WGX"
-elif otu_table: 
+elif "16s_taxonomy_asv" in data_files or "16s_taxonomy_otu" in data_files: 
     workflow_type = "16S"
 else:
     print(input_desc)
@@ -86,7 +92,7 @@ else:
 
 if workflow_type == "16S" :
     # get the variables, input files, and method depending on the input files provided for the workflow
-    template_variables, template_depends, method, otu_table = utilities.set_variables_for_16s_workflow_based_on_input(args,files)
+    template_variables, template_depends, method, otu_table = utilities.set_variables_for_16s_workflow_based_on_input(args,data_files)
 
     # read and label the metadata
     metadata=None
@@ -114,12 +120,12 @@ else:
         args.introduction_text = "![]({0})\n\nThe data was run through the standard workflow for whole metagenome shotgun sequencing.".format(utilities.get_package_file("wms_workflow","image"))
 
     # get the paths for the required files and check they are found
-    qc_counts=files.ShotGun.path("kneaddata_read_counts",args.input, none_if_not_found=True)
-    taxonomic_profile=files.ShotGun.path("taxonomic_profile",args.input, error_if_not_found=True)
-    pathabundance=files.ShotGun.path("pathabundance_relab",args.input, none_if_not_found=True)
-    ecsabundance=files.ShotGun.path("ecs_relab",args.input, none_if_not_found=True)
-    read_counts=files.ShotGun.path("humann_read_counts",args.input, none_if_not_found=True)
-    feature_counts=files.ShotGun.path("feature_counts",args.input, none_if_not_found=True)
+    qc_counts=data_files.get("wmgx_qc_readcounts")
+    taxonomic_profile=data_files.get("wmgx_taxonomy")
+    pathabundance=data_files.get("both_function_pathway")
+    ecsabundance=data_files.get("wmgx_function_ec")
+    read_counts=data_files.get("wmgx_humann_counts")
+    feature_counts=data_files.get("wmgx_feature_counts")
 
     # read and label the metadata
     metadata=None
