@@ -830,7 +830,7 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
         filepath=files_class.path(filetype, folder, none_if_not_found=True)
         if filepath:
             data_files.remove(filepath)
-            data_files_types[fileid]=filepath
+            data_files_types[fileid]=[filepath]
 
     data_files_types = {}
     for filetype in [("kneaddata_read_counts","wmgx_qc_readcounts"),("taxonomic_profile","wmgx_taxonomy"),("pathabundance_relab","both_function_pathway"),("ecs_relab","wmgx_function_ec"),("humann_read_counts","wmgx_humann_counts"),("feature_counts","wmgx_feature_counts")]:
