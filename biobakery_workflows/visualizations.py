@@ -333,7 +333,7 @@ def plot_grouped_taxonomy_subsets(document, sorted_data, cat_metadata, top_taxon
 
         document.plot_stacked_barchart_grouped(subset_sorted_data_grouped, row_labels=top_taxonomy,
             column_labels_grouped=subset_sorted_samples_grouped, title=title+" - "+str(cat_metadata[0])+title_add,
-            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+"_"+str(metadata_subset[0])+".png"),legend_reverse=True)
+            ylabel=ylabel, legend_title=legend_title, legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"grouped_taxonomy_"+feature+"_"+str(cat_metadata[0])+"_"+str(metadata_subset[0].replace("-","_"))+".png"),legend_reverse=True)
         index+=1
 
         if index>= max_groups_barplot:
