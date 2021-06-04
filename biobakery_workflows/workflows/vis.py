@@ -119,12 +119,12 @@ else:
         args.introduction_text = "![]({0})\n\nThe data was run through the standard workflow for whole metagenome shotgun sequencing.".format(utilities.get_package_file("wms_workflow","image"))
 
     # get the paths for the required files and check they are found
-    qc_counts=data_files.get("wmgx_qc_readcounts")
-    taxonomic_profile=data_files.get("wmgx_taxonomy")
-    pathabundance=data_files.get("both_function_pathway")
-    ecsabundance=data_files.get("wmgx_function_ec")
-    read_counts=data_files.get("wmgx_humann_counts")
-    feature_counts=data_files.get("wmgx_feature_counts")
+    qc_counts=utilities.find_data_file(data_files,"wmgx_qc_readcounts")
+    taxonomic_profile=utilities.find_data_file(data_files,"wmgx_taxonomy")
+    pathabundance=utilities.find_data_file(data_files,"both_function_pathway")
+    ecsabundance=utilities.find_data_file(data_files,"wmgx_function_ec")
+    read_counts=utilities.find_data_file(data_files,"wmgx_humann_counts")
+    feature_counts=utilities.find_data_file(data_files,"wmgx_feature_counts")
 
     # read and label the metadata
     metadata=None

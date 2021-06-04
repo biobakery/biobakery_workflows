@@ -689,9 +689,9 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
         doc_title = method.upper() + " 16s Report"
 
         # get the paths for the required files and check they are found
-        counts_each_step = files.get("16s_qc_counts")
-        readF_qc = files.get("readF_qc")
-        readR_qc = files.get("readR_qc")
+        counts_each_step = find_data_file(files,"16s_qc_counts")
+        readF_qc = find_data_file(files,"readF_qc")
+        readR_qc = find_data_file(files,"readR_qc")
 
         # variables
         method_vars = {
@@ -706,12 +706,12 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
             "picard": args.input_picard,
             "picard_ext": args.input_picard_extension}
     else:
-        otu_table = files["16s_taxonomy_otu"]
+        otu_table = find_data_file(files,"16s_taxonomy_otu")
         method = "usearch"
   
         # get the paths for the required files and check they are found
-        read_count_table=files.get("16s_qc_counts")
-        eestats_table=files.get("16s_eestats2")
+        read_count_table=find_data_file(files,"16s_qc_counts")
+        eestats_table=find_data_file(files,"16s_eestats2")
 
         # variables
         method_vars={"title":"USEARCH 16S Report",
