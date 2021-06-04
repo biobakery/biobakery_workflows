@@ -9,7 +9,7 @@ run through [MetaPhlAn](http://huttenhower.sph.harvard.edu/metaphlan).
 
 Taxonomic abundances are passed through a basic filter requiring each species or genus to have at least <%= vars["min_abundance"] %> % abundance in at least <%= vars["min_samples"] %> % of all samples.
 
-```{python, echo=False}
+```{python, echo=False, name="read metaphlan profile and filter"}
 samples, taxonomy, data = utilities.read_metaphlan_profile(document,vars["taxonomic_profile"])
 
 # get the filtered species
@@ -27,7 +27,7 @@ A total of <%= len(species_taxonomy) %> species and <%= len(genera_taxonomy) %> 
 
 ## Taxonomic Count Table
 
-```{python, echo=False}
+```{python, echo=False, results="md", name="compile species and genera and show table of counts"}
 
 # compile the taxa counts for the table
 all_taxa_counts=utilities.compile_taxa_counts(species_data,filtered_species_data,genera_data,filtered_genera_data)
@@ -45,7 +45,7 @@ table_message=visualizations.show_table_max_rows(document, all_taxa_counts, samp
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False}
+```{python, echo=False, results="md", name="find alpha diversity plots"}
 # search for the alpha diversity plots
 alpha_diversity_plots_folder=utilities.find_alpha_diversity_plots(vars["alpha_diversity_plots"]) 
 ```
@@ -56,17 +56,21 @@ alpha_diversity_plots_folder=utilities.find_alpha_diversity_plots(vars["alpha_di
 
 <% if alpha_diversity_plots_folder['boxplot']: print("### Categorical variables ") %>
 
-<% utilities.show_plots(alpha_diversity_plots_folder['boxplot']) %>
+```{python, echo=False, results="md", name="show alpha diversity boxplots"}
+utilities.show_plots(alpha_diversity_plots_folder['boxplot'])
+```
 
 <% if alpha_diversity_plots_folder['scatterplot']: print("### Continuous variables ") %>
 
-<% utilities.show_plots(alpha_diversity_plots_folder['scatterplot']) %>
+```{python, echo=False, results="md", name="show alpha diversity scatterplots"}
+utilities.show_plots(alpha_diversity_plots_folder['scatterplot'])
+```
 
 ## Ordination
 
 ### Species
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="show pcoa species"}
 top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, vars["max_sets_heatmap"], function="average")
 
 pcoa_data=numpy.array(species_data)/100.0
@@ -75,7 +79,7 @@ caption=document.show_pcoa(samples,species_taxonomy,pcoa_data,"PCoA ordination o
 
 <%= caption %>
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="show pcoa with metadata species"}
 visualizations.show_pcoa_metadata(document, vars, samples, species_taxonomy, pcoa_data, title="PCoA ordination of species abundance using Bray-Curtis dissimilarity", data_type="species")
 ```
 
@@ -83,7 +87,7 @@ visualizations.show_pcoa_metadata(document, vars, samples, species_taxonomy, pco
 
 ### Genera
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="show pcoa genera"}
 top_taxonomy_genera, top_data_genera = utilities.top_rows(genera_taxonomy, genera_data, vars["max_sets_heatmap"], function="average")
 
 pcoa_data_genera=numpy.array(genera_data)/100.0
@@ -94,7 +98,7 @@ caption_genera=document.show_pcoa(samples,genera_taxonomy,pcoa_data_genera, "PCo
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="show pcoa metadata genera"}
 visualizations.show_pcoa_metadata(document, vars, samples,genera_taxonomy, pcoa_data_genera, title="PCoA ordination of genera abundance using Bray-Curtis dissimilarity", data_type="genera")
 ```
 
@@ -108,41 +112,57 @@ visualizations.show_pcoa_metadata(document, vars, samples,genera_taxonomy, pcoa_
 
 ### Species
 
-<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"], "heatmap_species_spearman.png", "Top {} species by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"]) %>
+```{python, echo=False, results="md", name="plot heatmap species spearman"}
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"], "heatmap_species_spearman.png", "Top {} species by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"],"heatmap_species_bray_curtis.png","Top {} species by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis") %>
+```{python, echo=False, results="md", name="plot heatmap species bray curtis"}
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"],"heatmap_species_bray_curtis.png","Top {} species by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+```
 
 ### Genera
 
-<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_spearman.png", "Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"]) %>
+```{python, echo=False, results="md", name="plot heatmap genera spearman"}
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_spearman.png", "Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])\
+```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-<% visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_bray_curtis.png","Top {} genera by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis") %>
+```{python, echo=False, results="md", name="plot heatmap genera bray curtis"}
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_bray_curtis.png","Top {} genera by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+```
 
 
 ## Barplot
 
 ### Species
 
-<% sorted_samples, sorted_data, top_taxonomy = visualizations.plot_stacked_barchart_taxonomy(document, samples, species_taxonomy, species_data, vars["max_sets_barplot"], "species") %>
+```{python, echo=False, results="md", name="plot stacked barchart species"}
+sorted_samples, sorted_data, top_taxonomy = visualizations.plot_stacked_barchart_taxonomy(document, samples, species_taxonomy, species_data, vars["max_sets_barplot"], "species")
+```
 
 Stacked barplot of <%= vars["max_sets_barplot"] %> most abundant species among samples. Samples in the plot were sorted on the species with the highest mean abundances among samples, in decreasing order.
 
-<% categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, vars["max_sets_barplot"], vars["max_groups_barplot"]) %>
+```{python, echo=False, results="md", name="plot grouped and average barplots species"}
+categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy, vars["max_sets_barplot"], vars["max_groups_barplot"])
+```
 
 <% if categorical_metadata: print("Stacked barplot of species abundance grouped by metadata and species average abundance grouped by metadata. For cases where a metadata variable has many levels only the first "+str(vars["max_groups_barplot"])+" grouped barplots will be shown.") %>
 
 
 ### Genera
 
-<% sorted_samples_genera, sorted_data_genera, top_taxonomy_genera = visualizations.plot_stacked_barchart_taxonomy(document, samples, genera_taxonomy, genera_data, vars["max_sets_barplot"], "genera") %>
+```{python, echo=False, results="md", name="plot stacked barchart genera"}
+sorted_samples_genera, sorted_data_genera, top_taxonomy_genera = visualizations.plot_stacked_barchart_taxonomy(document, samples, genera_taxonomy, genera_data, vars["max_sets_barplot"], "genera")
+```
 
 Stacked barplot of <%= vars["max_sets_barplot"] %> most abundant genera among samples. Samples in the plot were sorted on the genera with the highest mean abundances among samples, in decreasing order.
 
-<% categorical_metadata=visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_genera, sorted_data_genera, top_taxonomy_genera, vars["max_sets_barplot"], vars["max_groups_barplot"], feature="genera") %>
+```{python, echo=False, results="md", name="plot grouped and average barplots genera"}
+categorical_metadata=visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_genera, sorted_data_genera, top_taxonomy_genera, vars["max_sets_barplot"], vars["max_groups_barplot"], feature="genera")
+```
 
 <% if categorical_metadata: print("Stacked barplot of genera abundance grouped by metadata and genera average abundance grouped by metadata. For cases where a metadata variable has many levels only the first "+str(vars["max_groups_barplot"])+" grouped barplots will be shown.") %>
 

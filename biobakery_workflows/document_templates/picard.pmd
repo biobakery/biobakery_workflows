@@ -1,5 +1,5 @@
 
-```{python, echo=False}
+```{python, echo=False, name="picard"}
 picard_text = ""
 picard_min_threshold=20
 data_below_threshold={}

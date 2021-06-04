@@ -6,10 +6,14 @@
 <% print(visualizations.Sixteen_S.captions["dada2errorintro"]) %>
 
 ## Forward Reads
-<% print("![FWD Read](" + vars["readF_qc"] + ")") %>
-<% if vars["pdf_format"]: print("\clearpage") %>
+```{python, echo=False, name="show forward reads qc plot"}
+print("![FWD Read](" + vars["readF_qc"] + ")")
+if vars["pdf_format"]: print("\clearpage")
+```
 
 ## Reverse Reads
-<% print("![REV Read](" + vars["readR_qc"] + ")") %>
-<% if vars["pdf_format"]: print("\clearpage") %>
+```{python, echo=False, name="show reverse reads qc plot"}
+print("![REV Read](" + vars["readR_qc"] + ")")
+if vars["pdf_format"]: print("\clearpage")
+```
 

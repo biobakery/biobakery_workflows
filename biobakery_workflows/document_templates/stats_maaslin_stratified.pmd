@@ -2,7 +2,9 @@
 
 The abundance for each of the <%= len(vars["stratified_pathways_plots"]) %> most significant associations, for categorical features only, are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.
 
-<% utilities.show_stratified_plots(vars["stratified_pathways_plots"]) %>
+```{python, echo=False, results="md", name="show stratified pathways plots"}
+utilities.show_stratified_plots(vars["stratified_pathways_plots"])
+```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 

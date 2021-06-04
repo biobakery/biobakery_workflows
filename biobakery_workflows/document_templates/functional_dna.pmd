@@ -5,7 +5,7 @@
 
 <%= visualizations.ShotGun.captions["functional_intro"] %>
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="get top average pathways with filter"}
 dna_samples, dna_pathways, dna_data, top_names_and_descriptions = visualizations.top_average_pathways(
     document, vars["dna_pathabundance"], vars["max_sets_heatmap"], get_all=True)
 
@@ -43,22 +43,22 @@ if vars["dna_ecabundance"]:
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False, f_size=(8,8), results="md"}
+```{python, echo=False, results="md", name="plot heatmap pathways"}
 visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data, vars["pdf_format"], "heatmap_pathways_spearman.png", "Top {} pathways by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
-```{python, echo=False, f_size=(8,8), results="md"}
+```{python, echo=False, results="md", name="plot heatmap ecs"}
 if vars["dna_ecabundance"]:
     visualizations.plot_heatmap(document,vars,dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, vars["pdf_format"], "heatmap_ecs_spearman.png", "Top {} ECs by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
-```{python, echo=False, f_size=(8,8), results="md"}
+```{python, echo=False, results="md", name="plot heatmap pathways bray curtis"}
 visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
-```{python, echo=False, f_size=(8,8), results="md"}
+```{python, echo=False, results="md", name="plot heatmap ecs bray curtis"}
 if vars["dna_ecabundance"]:
     visualizations.plot_heatmap(document,vars,dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
@@ -66,7 +66,7 @@ if vars["dna_ecabundance"]:
 <% if vars["pdf_format"]: print("\clearpage") %>
 
 
-```{python, echo=False}
+```{python, echo=False, results="md", name="show table top pathways"}
 pathway_file_name="top_average_pathways_names.tsv"
 average_abundance_variance=visualizations.write_pathway_average_variance_table(document, pathway_file_name, dna_top_average_data, top_names_and_descriptions)
 
@@ -85,7 +85,7 @@ table_message=visualizations.show_table_max_rows(document, average_abundance_var
 
 <% if vars["feature_counts"]: print(visualizations.ShotGun.format_caption("feature_detection",seq_type="metagenomic",seq_short_type="DNA")) %>
 
-```{python, echo=False, f_spines = False, results="md" }
+```{python, echo=False, results="md", name="plot total reads by alignment method"}
 if vars["feature_counts"]:
     total_reads, nucleotide_reads, translated_reads, genefamilies_counts, ecs_counts, pathabundance_counts = visualizations.feature_counts(
         document, vars["read_counts"],vars["feature_counts"])
@@ -96,7 +96,7 @@ if vars["feature_counts"]:
 
 <% if vars["feature_counts"]: print(visualizations.ShotGun.captions["scatter_reads_aligned"]) %> 
 
-```{python, echo=False, f_spines = False, results="md"}
+```{python, echo=False, f_spines = False, results="md", name="plot reads by alignment method and function"}
 if vars["feature_counts"]:
     document.plot_scatter([[nucleotide_reads,genefamilies_counts],[translated_reads,genefamilies_counts]],title="UniRef90 gene families",
                        row_labels=["Nucleotide search","Nucleotide + translated search"],xlabel="log10(Aligned reads)", ylabel="log10(gene families)", trendline=True)

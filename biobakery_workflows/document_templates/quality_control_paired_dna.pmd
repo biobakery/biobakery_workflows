@@ -3,7 +3,7 @@
 
 # Quality Control
 
-```{python, echo=False}
+```{python, echo=False, name="read qc counts"}
 (dna_paired_columns, dna_orphan_columns), dna_samples, (dna_paired_data, dna_orphan_data) = visualizations.qc_read_counts(document, vars["dna_read_counts"])
 ```
 
@@ -13,7 +13,7 @@
 
 ### DNA Samples Tables of Filtered Reads
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="write qc table paired"}
 document.write_table(["# Sample"]+dna_paired_columns, dna_samples, dna_paired_data,
     files.ShotGunVis.path("qc_counts_paired",document.data_folder))
 
@@ -24,7 +24,7 @@ table_message=visualizations.show_table_max_rows(document, dna_paired_data, dna_
 
 <%= table_message %>
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="write qc table orphan"}
 document.write_table(["# Sample"]+dna_orphan_columns, dna_samples, dna_orphan_data,
     files.ShotGunVis.path("qc_counts_orphan",document.data_folder))
 
@@ -35,7 +35,7 @@ table_message=visualizations.show_table_max_rows(document, dna_orphan_data, dna_
 
 <%= table_message %>  
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="compute read ratios and show table"}
 dna_microbial_reads, dna_microbial_labels = utilities.microbial_read_proportion_multiple_databases(
     dna_paired_data, dna_paired_columns, dna_orphan_data)
 
@@ -53,7 +53,7 @@ table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, 
         
 ### DNA Samples Plots of Filtered Reads
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="plot filtered read counts"}
 # sort the samples/data by read count with the largest original read count first
 def sort_samples_reads_decreasing(read_data, read_samples):
     """ Sort the reads from largest to smallest total read count """

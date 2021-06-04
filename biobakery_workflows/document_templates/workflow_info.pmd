@@ -8,9 +8,12 @@ from anadama2.reporters import LoggerReporter
 # Data Processing Workflow Information
 
 ## Software Versions
-
-<% for version in LoggerReporter.read_log(vars["log"],"versions"): print("* " + version+"  \n") %>
+```{python, echo=False, name="print workflow software versions"}
+for version in LoggerReporter.read_log(vars["log"],"versions"): print("* " + version+"  \n")
+```
 
 ## Tasks Run
 
-<% for command in sorted(LoggerReporter.read_log(vars["log"],"commands"), key= lambda x: x.split(" ")[0]): print("* " + command+"  \n") %>
+```{python, echo=False, name="print workflow tasks run"}
+for command in sorted(LoggerReporter.read_log(vars["log"],"commands"), key= lambda x: x.split(" ")[0]): print("* " + command+"  \n")
+```

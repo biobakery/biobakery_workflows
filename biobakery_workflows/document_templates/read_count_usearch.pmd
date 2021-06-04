@@ -1,6 +1,6 @@
 # Read Count
 
-```{python, echo=False, results="md"}
+```{python, echo=False, results="md", name="plot overall read count"}
 columns, samples, data = document.read_table(vars["read_count_table"])
 
 total_reads=[row[0] for row in data]
