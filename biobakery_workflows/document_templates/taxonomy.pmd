@@ -38,7 +38,7 @@ document.write_table(taxa_counts_column_names, samples, all_taxa_counts,
     files.ShotGunVis.path("taxa_counts",document.data_folder))
 
 table_message=visualizations.show_table_max_rows(document, all_taxa_counts, samples,
-    taxa_counts_column_names[1:],"Total taxa per sample",files.ShotGunVis.path("taxa_counts"))
+    taxa_counts_column_names[1:],"Total taxa per sample",files.ShotGunVis.path("taxa_counts"),outfilename=os.path.join(document.figures_folder,"taxa_table.png"))
 ```
 
 <%= table_message %>

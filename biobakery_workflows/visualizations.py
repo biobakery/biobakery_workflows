@@ -565,7 +565,7 @@ def top_average_pathways(document, file, max_sets, get_all=False):
     return samples, top_pathways, top_data, top_names_and_descriptions
 
 def show_table_max_rows(document, data, row_labels, column_labels, title, table_file,
-    max_rows=20, format_data_comma=None, location="center", font=None, max_columns=7):
+    max_rows=20, format_data_comma=None, location="center", font=None, max_columns=7, outfilename=None):
     """ For large numbers of samples, only show a reduced table """
     
     table_message="A data file exists of this table: "
@@ -599,7 +599,7 @@ def show_table_max_rows(document, data, row_labels, column_labels, title, table_
         
     # render the table
     document.show_table(data, row_labels, column_labels, 
-        title, format_data_comma=format_data_comma, location=location, font=font)
+        title, format_data_comma=format_data_comma, location=location, font=font, outfilename=outfilename)
     
     message+="[{file}](data/{file})".format(file=os.path.basename(table_file))
         

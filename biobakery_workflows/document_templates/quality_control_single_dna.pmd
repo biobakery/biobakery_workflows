@@ -19,7 +19,7 @@ document.write_table(["# Sample"]+dna_columns, dna_samples, dna_data,
     files.ShotGunVis.path("qc_counts",document.data_folder))
 
 table_message=visualizations.show_table_max_rows(document, dna_data, dna_samples,
-    dna_columns, "DNA reads", files.ShotGunVis.path("qc_counts"), format_data_comma=True)
+    dna_columns, "DNA reads", files.ShotGunVis.path("qc_counts"), format_data_comma=True, outfilename=os.path.join(document.figures_folder,"reads_table.png"))
 ```
         
 <%= table_message %>
@@ -32,7 +32,7 @@ document.write_table(["# Sample"]+dna_microbial_labels, dna_samples,
 
 table_message=visualizations.show_table_max_rows(document, dna_microbial_reads, dna_samples,
     dna_microbial_labels, "DNA microbial read proportion",
-    files.ShotGunVis.path("microbial_counts"))  
+    files.ShotGunVis.path("microbial_counts"), outfilename=os.path.join(document.figures_folder,"ratio_table.png"))  
     
 visualizations.ShotGun.captions["microbial_ratios"]
 ``` 

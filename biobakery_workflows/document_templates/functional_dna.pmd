@@ -72,7 +72,7 @@ average_abundance_variance=visualizations.write_pathway_average_variance_table(d
 
 table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
     top_names_and_descriptions, [" Average "," Variance "], 
-    "Top "+str(vars["max_sets_heatmap"])+" pathways by average abundance", pathway_file_name, font=7)
+    "Top "+str(vars["max_sets_heatmap"])+" pathways by average abundance", pathway_file_name, font=7, outfilename=os.path.join(document.figures_folder,"pathways_table.png"))
 ```
 
 <%= table_message %>
