@@ -39,7 +39,7 @@ if vars["dna_ecabundance"]:
 
 <%= "## Pathway and ECs Abundance" if vars["dna_ecabundance"] else "## Pathway Abundance" %>
 
-<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="pathways",method="Spearman", data_type="pathways") %>
+<%= visualizations.ShotGun.format_caption("heatmap_intro",max_sets=vars["max_sets_heatmap"],type="pathways",method="Spearman and Bray-Curtis", data_type="pathways") %>
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
@@ -72,10 +72,10 @@ average_abundance_variance=visualizations.write_pathway_average_variance_table(d
 
 table_message=visualizations.show_table_max_rows(document, average_abundance_variance, 
     top_names_and_descriptions, [" Average "," Variance "], 
-    "Top "+str(vars["max_sets_heatmap"])+" pathways by average abundance", pathway_file_name, font=7, outfilename=os.path.join(document.figures_folder,"pathways_table.png"))
-```
+    "Top "+str(vars["max_sets_heatmap"])+" pathways by average abundance", pathway_file_name, font=5, outfilename=os.path.join(document.figures_folder,"pathways_table.png"))
 
-<%= table_message %>
+print(table_message)
+```
 
 <% visualizations.print_pathways_urls(dna_top_average_pathways,top_names_and_descriptions,3) %>
 
