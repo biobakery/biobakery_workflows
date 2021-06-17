@@ -92,7 +92,7 @@ if len(data_files.keys()) < 1:
 study_type=utilities.get_study_type(data_files)
 
 # get inputs based on study type
-taxonomic_profile,pathabundance,other_data_files,study_type=utilities.get_input_files_for_study_type(data_files,study_type)
+taxonomic_profile,pathabundance,other_data_files,study_type=utilities.get_input_files_for_study_type(data_files,study_type,workflow="stats")
 
 # check for any biom files that need to be converted to txt
 taxonomic_profile,pathabundance=convert_from_biom_to_tsv_list(workflow,[taxonomic_profile,pathabundance],args.output)
@@ -127,7 +127,7 @@ if not args.bypass_maaslin:
 halla_tasks_info=[]
 halla_tasks=[]
 if not args.bypass_halla:
-    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.output,args.halla_options)
+    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.input_metadata,args.output,args.halla_options)
 
 ## 5. Add tasks to run stratified pathways plots, if pathways provided  
 

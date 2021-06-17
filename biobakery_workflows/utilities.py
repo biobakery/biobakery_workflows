@@ -490,26 +490,25 @@ def generate_tiles_of_maaslin_figures(task, feature_tasks_info):
                 targets=maaslin_tiles[datatype][metadata_name],
                 args=",".join(metadata_images[datatype][metadata_name]))
 
-def run_halla_on_input_file_set(workflow,feature_tasks_info,output,halla_options=""):
+def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,halla_options=""):
     # Run maaslin on all files in input set
     
     halla_tasks=[]
     halla_tasks_info={}
     for run_type, infiles in feature_tasks_info.items():
-        for run_type2, infiles2 in feature_tasks_info.items():
-            if run_type == run_type2 or run_type2+" "+run_type in halla_tasks_info or "gene" in run_type or "gene" in run_type2:
+            if "gene" in run_type:
                 continue
 
-            current_target=os.path.join(os.path.abspath(output),"halla_"+run_type+"_"+run_type2,"hallagram.png")
+            current_target=os.path.join(os.path.abspath(output),"halla_"+run_type,"hallagram.png")
             halla_tasks.append(
                 workflow.add_task(
                     "halla -x [depends[0]] -y [depends[1]] -o [args[0]]",
-                    depends=[infiles[0], infiles2[0]],
+                    depends=[infiles[0], metadata],
                     targets=current_target,
                     args=os.path.dirname(current_target),
-                    name="HAllA_{0}_{1}".format(run_type,run_type2)))
+                    name="HAllA_{0}".format(run_type)))
 
-            halla_tasks_info[run_type+" "+run_type2]=current_target
+            halla_tasks_info[run_type]=current_target
 
     return halla_tasks, halla_tasks_info
 
@@ -536,7 +535,7 @@ def run_maaslin_on_input_file_set(workflow,feature_tasks_info,input_metadata,tra
                 depends=[maaslin_input_file, input_metadata],
                 targets=maaslin_results_table,
                 args=os.path.dirname(maaslin_results_table),
-                name="R_Maaslin2_{}".format(run_type)))
+                name="Maaslin2_{}".format(run_type)))
 
     return maaslin_tasks
 
@@ -581,8 +580,13 @@ def create_feature_table_inputs(workflow,study_type,output,taxonomic_profile,pat
 
     return feature_tasks_info
 
-def get_input_files_for_study_type(data_files, study_type):
+def get_input_files_for_study_type(data_files, study_type, workflow="vis"):
     # based on the type of study, find the input files in the input folder
+
+    # get the excluded list of file types based on workflow
+    exclude_types=set([""])
+    if workflow == "stats":
+        exclude_types=set(["wmgx_qc_readcounts"])
 
     # if study is of type "both" then first look for wmgx taxonomy file
     taxonomic_profile=find_data_file(data_files,"wmgx_taxonomy",required=False)
@@ -592,7 +596,7 @@ def get_input_files_for_study_type(data_files, study_type):
 
         # get the paths for the optional files from the set of input files
         pathabundance=find_data_file(data_files, "function_pathway", required=False)
-        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if (not filename[0] in [taxonomic_profile,pathabundance] and ( filename[0].endswith(".tsv") or filename[0].endswith(".biom") or filename[0].endswith(".txt") or filename[0].endswith(".gz")) )])
+        other_data_files=dict([(filename[0], type.split("_")[-1]) for type, filename in data_files.items() if (not filename[0] in [taxonomic_profile,pathabundance] and ( filename[0].endswith(".tsv") or filename[0].endswith(".biom") or filename[0].endswith(".txt") or filename[0].endswith(".gz")) and ( not type in exclude_types) )])
 
     else:
         taxonomic_profile=find_data_file(data_files,"16s_taxonomy",required=True)
