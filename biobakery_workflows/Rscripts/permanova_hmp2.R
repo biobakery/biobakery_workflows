@@ -495,7 +495,7 @@ for (datafile in unlist(strsplit(positional_args[1], ",", fixed = TRUE))) {
     # check for samples as columns or rows
     samples_rows <- intersect(rownames(metadata),rownames(data))
     if (length(samples_rows) < 1) {
-        metadata <- as.data.frame(t(metadata))
+        metadata <- type.convert(as.data.frame(t(metadata)))
     }
 
     covariates <- as.list(colnames(metadata))

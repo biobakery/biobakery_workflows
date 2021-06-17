@@ -88,7 +88,7 @@ if (length(samples_rows) < 1) {
         if (length(samples_col) < 1){
             rownames(metadata) <- original_metadata_rownames
             sample <- colnames(metadata)
-            metadata <- as.data.frame(t(metadata))
+            metadata <- type.convert(as.data.frame(t(metadata)))
         } else {
             sample <- colnames(data)
             data <- as.data.frame(t(data))
