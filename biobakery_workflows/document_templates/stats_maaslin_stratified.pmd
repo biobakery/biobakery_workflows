@@ -1,6 +1,6 @@
 ## MaAsLiN2 stratified pathways plots
 
-The abundance for the <%= len(vars["stratified_pathways_plots"]) %> most significant associations for each of the categorical features are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.
+The abundance for the <%= vars["top_pathways"] %> most significant associations for each of the categorical features are plotted stratified by species. These plots were generated with the utility script included with HUMAnN named humann_barplot.
 
 ```{python, echo=False, results="md", name="show stratified pathways plots"}
 utilities.show_stratified_plots(vars["stratified_pathways_plots"])

@@ -179,6 +179,7 @@ doc_task=workflow.add_document(
           "bypass_maaslin":args.bypass_maaslin,
           "bypass_halla":args.bypass_halla,
           "stratified_pathways_plots":stratified_pathways_plots,
+          "top_pathways":args.top_pathways,
           "permanova_plots":permanova_plots,
           "beta_diversity_plots":beta_diversity_plots,
           "covariate_equation":covariate_equation,
