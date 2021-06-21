@@ -288,32 +288,29 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
         metadata_row_names=[row[0] for row in metadata[1:] if row[0] in metadata_labels.keys()]
         metadata_end=metadata_row_names[-1]
         for i in range(top_pathways):
-
-            new_pathways_plot=name_files("stratified_pathways_{0}.png".format(i), output, subfolder="stratified_pathways")
-            stratified_plots_tasks.append(workflow.add_task(
-                partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, categorical=list(metadata_labels.keys())),
-                depends=[feature_tasks_info["pathways"][2],humann_barplot_input],
-                targets=new_pathways_plot,
-                name="run_humann_barplot_pathway_{0}".format(i)))
-            stratified_pathways_plots.append(new_pathways_plot)
+            for current_metadata_variable in metadata_labels.keys():
+                new_pathways_plot=name_files("stratified_pathways_{0}_{1}.png".format(i, current_metadata_variable), output, subfolder="stratified_pathways")
+                stratified_plots_tasks.append(workflow.add_task(
+                    partial_function(run_humann_barplot, number=i, metadata_end=metadata_end, variable_name=current_metadata_variable, categorical=list(metadata_labels.keys())),
+                    depends=[feature_tasks_info["pathways"][2],humann_barplot_input],
+                    targets=new_pathways_plot,
+                    name="run_humann_barplot_pathway_{0}_{1}".format(i, current_metadata_variable)))
+                stratified_pathways_plots.append(new_pathways_plot)
 
     return stratified_pathways_plots,stratified_plots_tasks
 
 def show_stratified_plots(plots):
     # Display each of the plots in the report
     no_plots_found = True
-    for image_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-1])):
+    for image_file in sorted(plots, key=lambda x: int(x.replace(".png","").split("_")[-2])):
         # get the pathway number and metadata name
         info = image_file.replace(".png","").split("_")
-        pathway_number = info[-1]
-        try:
-            metadata_focus = open(image_file.replace(".png",".txt")).readline().rstrip()
-        except EnvironmentError:
-            metadata_focus = "Unknown"
+        pathway_number = info[-2]
+        metadata_focus = info[-1]
 
         if os.path.isfile(image_file) and os.path.getsize(image_file) > 0:
             no_plots_found = False
-            print("![Pathway #{0} sorted by significance from most to least for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
+            print("![Significant association pathway #{0} for metadata focus {1}]({2})\n\n".format(int(pathway_number)+1, metadata_focus, image_file))
 
     if no_plots_found:
         print("No significant associations for pathways with categorical metadata found.")
@@ -628,28 +625,33 @@ def create_merged_data_file(task, metadata, name_addition):
 
 # gather the top pathways to plot from maaslin2 outputs
 # only gather categorical metadata features
-def gather_top_N_associations_maaslin2_results(filename, N, categorical):
-    associations=[]
+def gather_top_N_associations_maaslin2_results(filename, N, variable_name):
+    associations={}
+    header=""
     with open(filename) as file_handle:
         for line in file_handle:
             data = line.rstrip().split("\t")
-            associations.append([data[0], data[1]])
+            if not header:
+                header=data
+            else:
+                if data[1] in associations:
+                    if not data[0] in associations[data[1]]:
+                        associations[data[1]].append(data[0])
+                else:
+                    associations[data[1]] = [data[0]]
 
-    # use N+1 to allow for the header value
     try:
-        selected_pathway, metadata_focus = associations[N+1]
-        while not metadata_focus in categorical:
-            N=N+1
-            selected_pathway, metadata_focus = associations[N+1]
-    except IndexError:
+        metadata_focus = variable_name
+        selected_pathway = associations[metadata_focus][N]
+    except ( IndexError, KeyError ):
         selected_pathway, metadata_focus = "", ""
 
     return selected_pathway, metadata_focus
 
-def run_humann_barplot(task, number, metadata_end, categorical):
+def run_humann_barplot(task, number, metadata_end, variable_name, categorical):
     # determine the pathway name
     try:
-        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number, categorical)
+        original_selected_pathway, metadata_focus = gather_top_N_associations_maaslin2_results(task.depends[0].name, number, variable_name)
     except IndexError:
         original_selected_pathway, metadata_focus = None
 
@@ -675,14 +677,14 @@ def run_humann_barplot(task, number, metadata_end, categorical):
             selected_pathway = selected_pathway[1:]
 
         run_task(
-            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadata [args[1]] --focal-metadata [args[2]] --sort [args[3]] --scaling logstack && echo '[args[2]]' > [targets[1]]",
+            "humann_barplot --input [depends[1]] --focal-feature [args[0]] --output [targets[0]] --last-metadata [args[1]] --focal-metadata [args[2]] --sort [args[3]] --scaling logstack",
             depends=task.depends,
-            targets=task.targets+[task.targets[0].name.replace(".png",".txt")],
+            targets=task.targets,
             args=[selected_pathway, metadata_end, metadata_focus, "metadata"])
     else:
-        run_task("touch [targets[0]] && touch [targets[1]]",
+        run_task("touch [targets[0]]",
             depends=task.depends,
-            targets=task.targets+[task.targets[0].name.replace(".png",".txt")])
+            targets=task.targets)
 
 def set_variables_for_16s_workflow_based_on_input(args,files):
     """ Determine the variables, method and input files based on the data in the input folder """
