@@ -112,15 +112,15 @@ def get_vis_input_description(files):
 
     return input_desc
 
-def run_mantel_tests(workflow,feature_tasks_info,output,nperm):
+def run_mantel_tests(workflow,feature_tasks_info,metadata,output,nperm):
 
     # name the output file and folder
     mantel_plots=[name_files("mantel_plot.png",output,subfolder="mantel_test",create_folder=True)]
 
     input_files=[data[1][0] for data in feature_tasks_info.items()]
     workflow.add_task(
-        "[args[0]] '[args[1]]' [targets[0]] --permutations [args[2]]",
-        depends=input_files,
+        "[args[0]] [depends[0]] '[args[1]]' [targets[0]] --permutations [args[2]]",
+        depends=[metadata]+input_files,
         targets=mantel_plots,
         name="mantel_test",
         args=[get_package_file("mantel_test", "Rscript"),",".join(input_files),nperm])

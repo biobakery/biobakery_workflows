@@ -58,7 +58,7 @@ theme_nature <- function() list(
 
 # Add command line arguments #
 options <- optparse::OptionParser(
-    usage = paste("%prog [options]", " <data.tsv> ", " <output_file.png> ")
+    usage = paste("%prog [options]"," <metadata.tsv> ", " <data.tsv> ", " <output_file.png> ")
 )
 
 options <- optparse::add_option(options,
@@ -103,16 +103,18 @@ current_args <- parsed_arguments[["options"]]
 positional_args <- parsed_arguments[["args"]]
 
 # check three positional arguments are provided
-if (length(positional_args) != 2) {
+if (length(positional_args) != 3) {
     optparse::print_help(options)
-    stop(paste("Please provide the required","positional arguments","<data1.tsv> <output_file.png>"))
+    stop(paste("Please provide the required","positional arguments","<metadata.tsv> <data1.tsv> <output_file.png>"))
 }
 
-datafiles <- unlist(strsplit(positional_args[1], ",", fixed = TRUE))
+metadata_file <- positional_args[1]
+datafiles <- unlist(strsplit(positional_args[2], ",", fixed = TRUE))
 
 M <- matrix(NA, nrow=length(datafiles), ncol=length(datafiles))
 
 mt_intra <- list(C=M, Cil=M, Ciu=M, P=M)
+mt_inter_aod <- mt_intra
 mt_inter_doa <- mt_intra
 
 datatype_list <- c()
@@ -157,6 +159,110 @@ colnames(M) <- datatype_list
 ##############################################################
 
 # function from mantel_test.R from hmp2_analysis repository
+intraindividual_mantel_test <- function(pcl1, method1, pcl2, method2, metadata, Nperms=999, Nbs=Nperms) {
+
+    library(vegan)
+    D1 <- vegdist(pcl1, method=method1, binary=method1=="jaccard")
+    D2 <- vegdist(pcl2, method=method2, binary=method2=="jaccard")
+
+    # Code based on ade4:::mantel.rtest
+
+    library(permute)
+    library(ade4)
+
+    permhow <- how(blocks=metadata$subject)
+    intrasubjectD <- unclass(as.dist(outer(
+        as.character(metadata$subject),
+        as.character(metadata$subject), FUN="=="))) > 0
+
+    if (sum(intrasubjectD) < 100) {
+        return (list(obs = NA, pvalue = NA, bootstraps = NA))
+    }
+
+    nsamples <- nrow(metadata)
+    permutedist <- function(m, i) {
+        w0 <- permute(i, nsamples, permhow)
+        m <- as.matrix(m)
+        return(as.dist(m[w0, w0]))
+    }
+    mantelnoneuclid <- function(m1, m2, nrepet) {
+        obs <- cor(unclass(m1)[intrasubjectD], unclass(m2)[intrasubjectD])
+        if (nrepet == 0)
+            return(obs)
+        permi <- matrix(1:nrepet, nrow = nrepet, ncol = 1)
+        perm <- apply(permi, 1, function(i)
+            cor(unclass(m1)[intrasubjectD],
+                unclass(permutedist(m2, i))[intrasubjectD]))
+        w <- as.randtest(obs = obs, sim = perm, call = match.call(),
+                         subclass = "mantelrtest")
+        return(w)
+    }
+
+    mantelbootstrap <- function(m1, m2, nrepet) {
+        s1 <- unclass(m1)[intrasubjectD]
+        s2 <- unclass(m2)[intrasubjectD]
+        permi <- matrix(1:nrepet, nrow = nrepet, ncol = 1)
+        bss <- apply(permi, 1, function(i) {
+            bsi <- sample(seq_along(s1), length(s1), replace=T)
+            return (cor(s1[bsi], s2[bsi]))
+        })
+        return (bss)
+    }
+    mt <- mantelnoneuclid(D1, D2, nrepet=Nperms)
+    mt$bootstraps <- mantelbootstrap(D1, D2, nrepet=Nbs)
+    return (mt)
+}
+
+
+# function from mantel_test.R from hmp2_analysis repository
+interindividual_mantel_test_aod <- function(pcl1, method1, pcl2, method2, Nperms, Nbs=Nperms) {
+
+    library(ade4)
+    library(vegan)
+    D1 <- vegdist(pcl1, method=method1, binary=method1=="jaccard")
+    D2 <- vegdist(pcl2, method=method2, binary=method2=="jaccard")
+
+    # Build matrices of the averages-of-dissimilarities
+    subject <- pcl1$subject
+    unqSubj <- unique(subject)
+    Da1 <- matrix(0, length(unqSubj), length(unqSubj))
+    rownames(Da1) <- unqSubj
+    colnames(Da1) <- unqSubj
+    Da2 <- Da1
+    D1 <- as.matrix(D1)
+    D2 <- as.matrix(D2)
+    for (i in seq_along(unqSubj)) {
+        for (j in seq_along(unqSubj)) {
+            if (i > j) {
+                mu1 <- mean(D1[subject==unqSubj[i], subject==unqSubj[j]])
+                Da1[i,j] <- mu1
+                Da1[j,i] <- mu1
+                mu2 <- mean(D2[subject==unqSubj[i], subject==unqSubj[j]])
+                Da2[i,j] <- mu2
+                Da2[j,i] <- mu2
+            }
+        }
+    }
+    Da1 <- as.dist(Da1)
+    Da2 <- as.dist(Da2)
+
+    mantelbootstrap <- function(m1, m2, nrepet) {
+        s1 <- unclass(m1)
+        s2 <- unclass(m2)
+        permi <- matrix(1:nrepet, nrow = nrepet, ncol = 1)
+        bss <- apply(permi, 1, function(i) {
+            bsi <- sample(seq_along(s1), length(s1), replace=T)
+            return (cor(s1[bsi], s2[bsi]))
+        })
+        return (bss)
+    }
+
+    mt <- mantel.rtest(Da1, Da2, nrepet=Nperms)
+    mt$bootstraps <- mantelbootstrap(Da1, Da2, nrepet=Nbs)
+    return (mt)
+}
+
+# function from mantel_test.R from hmp2_analysis repository
 interindividual_mantel_test_doa <- function(pcl1, method1, pcl2, method2, Nperms, Nbs=Nperms) {
 
     library(ade4)
@@ -180,6 +286,13 @@ interindividual_mantel_test_doa <- function(pcl1, method1, pcl2, method2, Nperms
     return (mt)
 }
 
+metadata <- data.frame(read.table(positional_args[1], header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+
+samples_rows <- intersect(rownames(metadata),rownames(input_list[[1]]))
+if (length(samples_rows) < 1) {
+    metadata <- type.convert(as.data.frame(t(metadata)))
+}
+
 for (i in seq_along(datafiles)) {
     for (j in seq_along(datafiles)) {
         if ( i != j && is.na(mt_inter_doa$C[i,j]) && is.na(mt_inter_doa$C[j,i])){
@@ -189,16 +302,32 @@ for (i in seq_along(datafiles)) {
 
             filtered_data <- input_list[[i]][sorted_samples, , drop = FALSE]
             filtered_data2 <- input_list[[j]][sorted_samples, , drop = FALSE]
+            metadata_sorted <- metadata[sorted_samples, , drop = FALSE]
 
-            mt <- interindividual_mantel_test_doa(
+            if ("subject" %in% colnames(metadata)) {
+
+              mt <- intraindividual_mantel_test(
                   filtered_data, distance_method["Taxonomy"],
                   filtered_data2, distance_method["Taxonomy"],
+                  metadata_sorted,
                   Nperms=current_args$nperms)
 
-            mt_inter_doa$C[i,j] <- mt$obs
-            mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
-            mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
-            mt_inter_doa$P[i,j] <- mt$pvalue
+              mt_intra$C[i,j] <- mt$obs
+              mt_intra$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
+              mt_intra$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
+              mt_intra$P[i,j] <- mt$pvalue
+            } else {
+
+              mt <- interindividual_mantel_test_doa(
+                    filtered_data, distance_method["Taxonomy"],
+                    filtered_data2, distance_method["Taxonomy"],
+                    Nperms=current_args$nperms)
+
+              mt_inter_doa$C[i,j] <- mt$obs
+              mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
+              mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
+              mt_inter_doa$P[i,j] <- mt$pvalue
+          }
         }
     }
 }
@@ -248,9 +377,16 @@ manteltest_plot <- function(O, P, Ocil, Ociu, datatype_list, title) {
     return (ggp)
 }
 
-png(positional_args[2], res = 150, height = 800, width = 1100)
-print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
+text_file <- sub(".png",".txt", positional_args[3])
+png(positional_args[3], res = 150, height = 800, width = 1100)
+
+if ("subject" %in% colnames(metadata)) {
+  print(manteltest_plot(mt_intra$C, t(mt_intra$P), mt_intra$Cil, mt_intra$Ciu, datatype_list, title="Intra-individual"))
+  mt_intra %>% as_tibble() %>% write_tsv(text_file)
+} else {
+  print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
+  mt_inter_doa %>% as_tibble() %>% write_tsv(text_file)
+}
+
 dev.off()
 
-text_file <- sub(".png",".txt", positional_args[2])
-mt_inter_doa %>% as_tibble() %>% write_tsv(text_file)

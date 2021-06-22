@@ -110,7 +110,7 @@ feature_tasks_info=utilities.create_feature_table_inputs(workflow,study_type,arg
 
 ## 2. Add tasks to run mantel tests on all data file pairs
 
-mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.output,args.permutations)
+mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.input_metadata,args.output,args.permutations)
 
 ## 3. Add tasks to run MaAsLiN2 on all input data files (feature tables)
 
