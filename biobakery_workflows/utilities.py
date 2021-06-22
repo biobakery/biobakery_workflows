@@ -496,16 +496,17 @@ def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,hall
             if "gene" in run_type:
                 continue
 
-            current_target=os.path.join(os.path.abspath(output),"halla_"+run_type,"hallagram.png")
+            optional_target=os.path.join(os.path.abspath(output),"halla_"+run_type,"hallagram.png")
+            always_target=os.path.join(os.path.abspath(output),"halla_"+run_type,"all_associations.txt")
             halla_tasks.append(
                 workflow.add_task(
                     "halla -x [depends[0]] -y [depends[1]] -o [args[0]]",
                     depends=[infiles[0], metadata],
-                    targets=current_target,
-                    args=os.path.dirname(current_target),
+                    targets=always_target,
+                    args=os.path.dirname(always_target),
                     name="HAllA_{0}".format(run_type)))
 
-            halla_tasks_info[run_type]=current_target
+            halla_tasks_info[run_type]=optional_target
 
     return halla_tasks, halla_tasks_info
 
