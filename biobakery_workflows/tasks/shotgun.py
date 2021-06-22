@@ -806,8 +806,8 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
             depends=sam,
             targets=markers,
             args=[os.path.dirname(markers),threads],
-            time=3*60, # 3 hours
-            mem=5*1024, # 5 GB
+            time=6*60, # 6 hours
+            mem=32*1024, # 32 GB
             cores=threads,
             name=utilities.name_task(sample_name,"strainphlan_sample2markers"))
 
