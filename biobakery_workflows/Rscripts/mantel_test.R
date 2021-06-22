@@ -304,29 +304,29 @@ for (i in seq_along(datafiles)) {
             filtered_data2 <- input_list[[j]][sorted_samples, , drop = FALSE]
             metadata_sorted <- metadata[sorted_samples, , drop = FALSE]
 
-            if ("subject" %in% colnames(metadata)) {
+            #if ("subject" %in% colnames(metadata)) {
 
-              mt <- intraindividual_mantel_test(
+            # mt <- intraindividual_mantel_test(
+            #      filtered_data, distance_method["Taxonomy"],
+            #      filtered_data2, distance_method["Taxonomy"],
+            #      metadata_sorted,
+            #      Nperms=current_args$nperms)
+
+            #  mt_intra$C[i,j] <- mt$obs
+            #  mt_intra$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
+            #  mt_intra$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
+            #  mt_intra$P[i,j] <- mt$pvalue
+            # }
+
+            mtd <- interindividual_mantel_test_doa(
                   filtered_data, distance_method["Taxonomy"],
                   filtered_data2, distance_method["Taxonomy"],
-                  metadata_sorted,
                   Nperms=current_args$nperms)
 
-              mt_intra$C[i,j] <- mt$obs
-              mt_intra$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
-              mt_intra$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
-              mt_intra$P[i,j] <- mt$pvalue
-            }
-
-            mt <- interindividual_mantel_test_doa(
-                  filtered_data, distance_method["Taxonomy"],
-                  filtered_data2, distance_method["Taxonomy"],
-                  Nperms=current_args$nperms)
-
-            mt_inter_doa$C[i,j] <- mt$obs
-            mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
-            mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
-            mt_inter_doa$P[i,j] <- mt$pvalue
+            mt_inter_doa$C[i,j] <- mtd$obs
+            mt_inter_doa$Cil[i,j] <- quantile(mtd$bootstraps, 0.025, na.rm=T)
+            mt_inter_doa$Ciu[i,j] <- quantile(mtd$bootstraps, 0.975, na.rm=T)
+            mt_inter_doa$P[i,j] <- mtd$pvalue
         }
     }
 }
