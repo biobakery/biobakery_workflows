@@ -84,7 +84,7 @@ if (length(samples_rows) < 1) {
     rownames(metadata) <- make.names(rownames(metadata))
     samples_rows <- intersect(rownames(metadata),rownames(data))
     if (length(samples_rows) < 1) {
-        samples_col <- intersect(rownames(metadata,colnames(data)))
+        samples_col <- intersect(rownames(metadata),colnames(data))
         if (length(samples_col) < 1){
             rownames(metadata) <- original_metadata_rownames
             sample <- colnames(metadata)
