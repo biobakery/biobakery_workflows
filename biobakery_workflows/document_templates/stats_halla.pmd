@@ -1,6 +1,6 @@
-# Each data type against all other data types: HAllA
+# Each data type against all metadata variables: HAllA
 
-HAllA (Hierarchical All-against-All Association Testing) discovers densely-associated blocks of features between two high-dimensional 'omics datasets. HAllA was run on each possible set of pairs from the data sets provided. The heatmaps for each run type are shown. For more information from each HAllA run, check out the HAllA results folders for a complete set of output files.
+HAllA (Hierarchical All-against-All Association Testing) discovers densely-associated blocks of features between two high-dimensional 'omics datasets. HAllA was run on each of the data sets provided. The heatmaps for each run type are shown. For more information from each HAllA run, check out the HAllA results folders for a complete set of output files.
 
 ```{python, echo=False, results="md", name="show halla plots"}
 utilities.show_halla_results(vars["halla_tasks_info"])
