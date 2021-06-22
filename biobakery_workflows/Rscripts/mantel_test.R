@@ -381,8 +381,10 @@ text_file <- sub(".png",".txt", positional_args[3])
 png(positional_args[3], res = 150, height = 800, width = 1100)
 
 if ("subject" %in% colnames(metadata)) {
-  print(manteltest_plot(mt_intra$C, t(mt_intra$P), mt_intra$Cil, mt_intra$Ciu, datatype_list, title="Intra-individual"))
-  mt_intra %>% as_tibble() %>% write_tsv(text_file)
+  #print(manteltest_plot(mt_intra$C, t(mt_intra$P), mt_intra$Cil, mt_intra$Ciu, datatype_list, title="Intra-individual"))
+  #mt_intra %>% as_tibble() %>% write_tsv(text_file)
+  print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
+  mt_inter_doa %>% as_tibble() %>% write_tsv(text_file)
 } else {
   print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
   mt_inter_doa %>% as_tibble() %>% write_tsv(text_file)
