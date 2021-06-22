@@ -316,18 +316,17 @@ for (i in seq_along(datafiles)) {
               mt_intra$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
               mt_intra$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
               mt_intra$P[i,j] <- mt$pvalue
-            } else {
+            }
 
-              mt <- interindividual_mantel_test_doa(
-                    filtered_data, distance_method["Taxonomy"],
-                    filtered_data2, distance_method["Taxonomy"],
-                    Nperms=current_args$nperms)
+            mt <- interindividual_mantel_test_doa(
+                  filtered_data, distance_method["Taxonomy"],
+                  filtered_data2, distance_method["Taxonomy"],
+                  Nperms=current_args$nperms)
 
-              mt_inter_doa$C[i,j] <- mt$obs
-              mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
-              mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
-              mt_inter_doa$P[i,j] <- mt$pvalue
-          }
+            mt_inter_doa$C[i,j] <- mt$obs
+            mt_inter_doa$Cil[i,j] <- quantile(mt$bootstraps, 0.025, na.rm=T)
+            mt_inter_doa$Ciu[i,j] <- quantile(mt$bootstraps, 0.975, na.rm=T)
+            mt_inter_doa$P[i,j] <- mt$pvalue
         }
     }
 }
