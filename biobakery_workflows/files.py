@@ -70,13 +70,13 @@ class Workflow(object):
         description="The AnADAMA2 workflow log.")
     
     @classmethod
-    def path(cls, name, main_folder="", none_if_not_found=None, error_if_not_found=None, **keywords):
+    def path(cls, name, main_folder="", none_if_not_found=None, error_if_not_found=None, search_for_file=False, **keywords):
         merged_keywords = copy.copy(keywords)
         merged_keywords.update(cls.file_info[name].get_path_keywords())
         file_path=name_files(folder=main_folder, **merged_keywords)
 
         # if the file is not found, then look in the input folder
-        if not os.path.isfile(file_path):
+        if not os.path.isfile(file_path) and search_for_file:
             file_name = cls.filename(name)
             file_path=os.path.join(main_folder, file_name)
 

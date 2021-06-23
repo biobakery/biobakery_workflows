@@ -834,7 +834,7 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
     # look for files with known names
     def add_found_file(data_files, data_files_type, filetype, fileid, folder, files_class):
         # look for the file of type and if found add to dictionary
-        filepath=files_class.path(filetype, folder, none_if_not_found=True)
+        filepath=files_class.path(filetype, folder, none_if_not_found=True, search_for_file=True)
         if filepath:
             data_files.remove(filepath)
             data_files_types[fileid]=[filepath]

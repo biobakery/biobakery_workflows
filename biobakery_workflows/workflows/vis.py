@@ -71,7 +71,7 @@ args = workflow.parse_args()
 templates=[utilities.get_package_file("universal_vis")]
 
 # check for the log file
-log_file=files.Workflow.path("log", args.input, none_if_not_found=True)
+log_file=files.Workflow.path("log", args.input, none_if_not_found=True, search_for_file=True)
 
 # get the paths for the required files from the set of all input files
 data_files=utilities.identify_data_files(files,args.input,args.input_file_type,args.input_metadata)
