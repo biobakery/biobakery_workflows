@@ -44,23 +44,23 @@ if vars["dna_ecabundance"]:
 <% if vars["pdf_format"]: print("\clearpage") %>
 
 ```{python, echo=False, results="md", name="plot heatmap pathways"}
-visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data, vars["pdf_format"], "heatmap_pathways_spearman.png", "Top {} pathways by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_descriptions, dna_top_average_data, vars["pdf_format"], "heatmap_pathways_spearman.png", "Top {} pathways by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
 ```{python, echo=False, results="md", name="plot heatmap ecs"}
 if vars["dna_ecabundance"]:
-    visualizations.plot_heatmap(document,vars,dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, vars["pdf_format"], "heatmap_ecs_spearman.png", "Top {} ECs by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data, vars["pdf_format"], "heatmap_ecs_spearman.png", "Top {} ECs by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
 ```{python, echo=False, results="md", name="plot heatmap pathways bray curtis"}
-visualizations.plot_heatmap(document,vars,dna_samples, dna_top_average_pathways, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_descriptions, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
 ```{python, echo=False, results="md", name="plot heatmap ecs bray curtis"}
 if vars["dna_ecabundance"]:
-    visualizations.plot_heatmap(document,vars,dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
