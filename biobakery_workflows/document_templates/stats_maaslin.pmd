@@ -2,7 +2,7 @@
 
 MaAsLin2 is comprehensive R package for efficiently determining multivariable association between clinical metadata and microbial meta'omic features. MaAsLin2 relies on general linear models to accommodate most modern epidemiological study designs, including cross-sectional and longitudinal, and offers a variety of data exploration, normalization, and transformation methods. More detailed information may be found in the [MaAsLin2 User Manual](https://bitbucket.org/biobakery/maaslin2).
 
-See the stats workflow log for the MaAsLiN2 commands run. Also note these are a subset of the outputs. Check out the MaAsLin2 results folder for the complete set.
+Please check the log file for the exact MaAsLiN2 model and commands run to generate these outputs. Also note these are a subset of the outputs. Check out the MaAsLin2 results folder for the complete set.
 
 ```{python, echo=False, results="md", name="show maaslin plots"}
 utilities.show_all_maaslin_run_types(vars["feature_tasks_info"])
