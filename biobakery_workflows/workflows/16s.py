@@ -77,6 +77,9 @@ index_files = utilities.find_files(args.input, extension=args.index_identifier+"
 # remove the index files, if found, from the set of input files
 input_files = list(filter(lambda file: not file in index_files, input_files))
 
+# check for empty files in the input folder
+utilities.check_for_empty_files(args.input, args.input_extension)
+
 # if a dual index file is provided, then demultiplex dual indexing
 if args.dual_barcode_file:
     barcode_files = fnmatch.filter(os.listdir(args.input), '*barcode*.fastq*')

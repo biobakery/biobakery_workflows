@@ -44,6 +44,27 @@ TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
 
+def get_line_count(filename):
+
+    if filename.endswith(".gz"):
+        import gzip
+        return sum(1 for line in gzip.open(filename))
+    else:
+        return sum(1 for line in open(filename))
+
+def check_for_empty_files(folder, extension):
+    empty_found=False
+    for filename in os.listdir(folder):
+        if filename.endswith(extension):
+            line_count = get_line_count(os.path.join(folder,filename))
+
+            if line_count == 0:
+                empty_found = True
+                print("WARNING: Empty file included in input folder: "+filename)
+
+    if empty_found:
+        sys.exit("ERROR: Empty files found in the input folder. Please remove them prior to running the workflow.")
+
 def subset_abundances(names, names2, data, fullnames):
     # Use the names to subset a set of abundance data
     new_data=[]
