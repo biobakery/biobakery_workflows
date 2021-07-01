@@ -349,8 +349,8 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
              refdb_path = config.SixteenS().greengenes_dada2
              refdb_species_path = "None"
 
-         script_path = utilities.get_package_file("assign_taxonomy", "Rscript")
-             
+         script_path = utilities.get_package_file("assign_taxonomy", "Rscript")             
+
          workflow.add_task(
             "[vars[2]] \
               --output_dir=[args[0]]\
@@ -359,7 +359,8 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
               --seqtab_file_path=[depends[0]]\
               --otu_closed_ref_path=[targets[0]]\
               --threads=[vars[3]]\
-              --tryRC=[vars[4]]",
+              --tryRC=[vars[4]] &&\
+              check_for_reverse_reads.py --input [targets[0]]",
             depends = [seqtab_file_path],
             targets = [otu_closed_ref_path],                              
             args = [output_folder],
