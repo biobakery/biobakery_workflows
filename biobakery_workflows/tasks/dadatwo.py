@@ -315,7 +315,7 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
          return seqtab_file_path, read_counts_steps_path, seqs_fasta_path
 
 
-def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads):
+def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads, tryRC):
     
          """ Assigns taxonomy using green genes, silva, or rdp database, creates closed reference file
             
@@ -358,11 +358,12 @@ def assign_taxonomy(workflow, output_folder, seqtab_file_path, ref_path, threads
               --refdb_species_path=[vars[1]]\
               --seqtab_file_path=[depends[0]]\
               --otu_closed_ref_path=[targets[0]]\
-              --threads=[vars[3]]",
+              --threads=[vars[3]]\
+              --tryRC=[vars[4]]",
             depends = [seqtab_file_path],
             targets = [otu_closed_ref_path],                              
             args = [output_folder],
-            vars =[refdb_path, refdb_species_path, script_path, threads],
+            vars =[refdb_path, refdb_species_path, script_path, threads, tryRC],
             name = "assign_taxonomy"
             )         
      

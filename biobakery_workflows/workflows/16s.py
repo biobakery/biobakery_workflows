@@ -58,6 +58,7 @@ workflow.add_argument("fwd-primer", desc="forward primer, required for its workf
 workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow")
 workflow.add_argument("minoverlap", desc="the min overlap required to merge pairs for the dada2 workflow", default=20)
 workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pairs for the dada2 workflow", default=0)
+workflow.add_argument("tryRC", desc="try the reverse complement of the reads for the dada2 workflow", default="FALSE")
 workflow.add_argument("percent-identity", desc="the percent identity to use for alignments", default=0.97)
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
 workflow.add_argument("picrust-version", desc="the picrust version to use", default="2")
@@ -144,7 +145,7 @@ if args.method == "dada2" or args.method == "its":
 
     # assign taxonomy
     closed_reference_tsv = dadatwo.assign_taxonomy(
-            workflow, args.output, seqtab_file_path, args.dada_db, args.threads)
+            workflow, args.output, seqtab_file_path, args.dada_db, args.threads, args.tryRC)
     
     # functional profiling
     # check for picrust1 as not an option with this workflow

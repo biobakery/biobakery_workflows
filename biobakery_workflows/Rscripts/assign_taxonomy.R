@@ -55,6 +55,12 @@ for( i in names(args.list) ) {
   cat( i, "\t", args.list[[i]], "\n")
 }
 
+if (args.list$tryRC == "TRUE") {
+  tryRC_option=TRUE
+} else {
+  tryRC_option=FALSE
+}
+
 # These variables are passed to the workflow
 output.path <- normalizePath( args.list$output_dir )
 refdb.path <- normalizePath( args.list$refdb_path )
@@ -64,7 +70,7 @@ seqtab.nochim <- readRDS(args.list$seqtab_file_path)
 seqtab.nochim.seqnames <- colnames(seqtab.nochim)
 
 ## Asign GreenGenes, SILVA or  RDP taxonomies and merge with OTU table
-taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = as.numeric(args.list$threads))
+taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = as.numeric(args.list$threads), tryRC=tryRC_option)
 
 if (!identical(args.list$refdb_species_path,"None")) {
  refdb.species.path <- normalizePath( args.list$refdb_species_path )
