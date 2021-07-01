@@ -71,10 +71,10 @@ def run_command(command,shell=False):
     
     try:
         id=subprocess.check_call(command, shell=shell)
-    except subprocess.CalledProcessError:
+    except ( subprocess.CalledProcessError, EnvironmentError):
         if isinstance(command, list):
             command = " ".join(command)
-        sys.exit("Unable to install database. Error running command: "+command)
+        print("WARNING: Unable to install database. Error running command: "+command)
         
 def create_strainphlan_db(location):
     """ Create the strainphlan fasta file from the bowtie2 indexes """
