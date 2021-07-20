@@ -1,6 +1,6 @@
 % <% from anadama2 import PweaveDocument; document=PweaveDocument(); vars = document.get_vars(); document.print_title() %>
-% Author: <%= vars["author"] %>
 % Date: <% import time; print(time.strftime("%m/%d/%Y")+"\n") %>
+% <%if vars["author"]: print("Author: "+vars["author"]) %>
 
 ```{python, echo=False}
 import os

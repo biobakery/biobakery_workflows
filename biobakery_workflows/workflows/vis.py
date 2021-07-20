@@ -45,8 +45,8 @@ input_desc=utilities.get_vis_input_description(files)
 workflow.add_argument("input",desc=input_desc,required=True)
 
 # add the custom arguments to the workflow
-workflow.add_argument("project-name",desc="the name of the project",required=True)
-workflow.add_argument("author-name",desc="the name of the author of the report", required=True)
+workflow.add_argument("project-name",desc="the name of the project", default="")
+workflow.add_argument("author-name",desc="the name of the author of the report", default="")
 workflow.add_argument("header-image",desc="the image to add to the report header", default="")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)",default="")
 workflow.add_argument("input-file-type",desc="the file type for an input file formatted as 'filename,filetype'", action="append", default=[])

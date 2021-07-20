@@ -48,8 +48,8 @@ workflow.add_argument("input",desc="the folder containing taxonomy and functiona
 
 # add the custom arguments to the workflow
 workflow_vis = visualizations.Stats()
-workflow.add_argument("project-name",desc="the name of the project", required=True)
-workflow.add_argument("author-name",desc="the name of the author of the report", required=True)
+workflow.add_argument("project-name",desc="the name of the project", default="")
+workflow.add_argument("author-name",desc="the name of the author of the report", default="")
 workflow.add_argument("header-image",desc="the image to add to the report header", default="")
 workflow.add_argument("input-metadata",desc="the metadata file (samples as columns or rows)", required=True)
 workflow.add_argument("transform",desc="the transform to apply to the data with MaAsLin2 (default is the MaAsLin2 default transform)", default="")
