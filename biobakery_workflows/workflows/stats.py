@@ -102,6 +102,9 @@ other_data_files=convert_from_biom_to_tsv_list(workflow,other_data_files,args.ou
 # get metadata variables and check sample names
 metadata_variables=utilities.get_metadata_variables(args.input_metadata,taxonomic_profile)
 
+# check the options include valid variables
+utilities.check_effects_are_included_in_metadata(args.fixed_effects, args.random_effects, metadata_variables)
+
 ## Add tasks to the workflow 
 
 ## 1. Add tasks to create feature tables from all input files to be used. Feature tables will be used in downstream tasks                   .

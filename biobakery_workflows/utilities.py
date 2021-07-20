@@ -180,6 +180,14 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
 
     return metadata_variables
 
+def check_effects_are_included_in_metadata(fixed_effects, random_effects, metadata_variables):
+    # check the fixed and random effects to make sure they match with the metadata variables
+
+    for effect_string, type in [(fixed_effects,"fixed effect"),(random_effects,"random effect")]:
+        for effect in effect_string.split(","):
+            if effect and not effect in metadata_variables:
+                sys.exit("ERROR: {0} variable {1} is not included in the metadata variables.".format(type, effect))
+
 def run_permanova(workflow,static_covariates,feature_tasks_info,input_metadata,scale,min_abundance,min_prevalence,permutations,output,additional_stats_tasks):
     # if longitudinal run the permanova
 
