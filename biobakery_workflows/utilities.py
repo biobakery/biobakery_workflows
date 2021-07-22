@@ -43,6 +43,39 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def get_average_read_length_fastq(file):
+    """ Get the average read length for a fastq file """
+
+    try:
+        if file.endswith(".gz"):
+            import gzip
+            file_handle=gzip.open(file)
+        else:
+            file_handle=open(file)
+    except EnvironmentError:
+        sys.exit("Unable to read file: " + file)
+    
+    sequence_total=0
+    nt_count=0
+
+    line_set=[]
+    for line in file_handle:
+        if len(line_set) == 4:
+            nt_count+=len(line_set[1].rstrip())
+            sequence_total+=1
+            line_set=[]
+        line_set.append(line)
+    
+    if len(line_set) == 4:
+        nt_count+=len(line_set[1].rstrip())
+        sequence_total+=1
+
+    file_handle.close()
+
+    average_read_length=nt_count/sequence_total
+
+    return average_read_length
+
 
 def get_read_length_fastq(file):
     """ Get the read length from a fastq file """
