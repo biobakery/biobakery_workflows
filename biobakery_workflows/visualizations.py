@@ -773,7 +773,10 @@ class Sixteen_S(Workflow):
             columns, samples, data = document.read_table(vars["counts_each_step"])
     
         else:
-            columns, samples, data = document.read_table(vars["read_count_table"])
+            try:
+                columns, samples, data = document.read_table(vars["read_count_table"])
+            except IOError:
+                columns, samples, data = "", [], []
 
             if "silva" in usearch_db:
                 db_info = "SILVA database"
