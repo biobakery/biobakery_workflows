@@ -81,7 +81,7 @@ if len(data_files.keys()) < 1:
     sys.exit("ERROR: No data files found in the input folder.")
 
 # check the required taxonomic profile is provided
-if data_files["wmgx_taxonomy"]:
+if data_files.get("wmgx_taxonomy",""):
     workflow_type = "WGX"
 elif "16s_taxonomy_asv" in data_files or "16s_taxonomy_otu" in data_files: 
     workflow_type = "16S"
@@ -97,7 +97,7 @@ if workflow_type == "16S" :
     metadata=None
     metadata_labels=None
     if args.input_metadata:
-        metadata=utilities.read_metadata(args.input_metadata, otu_table, ignore_features=args.metadata_exclude, otu_table=True)
+        metadata, samples_missing_metadata=utilities.read_metadata(args.input_metadata, otu_table, ignore_features=args.metadata_exclude, otu_table=True)
         metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
     # get the introduction text if not provided by the user
@@ -130,7 +130,7 @@ else:
     metadata=None
     metadata_labels=None
     if args.input_metadata:
-        metadata=utilities.read_metadata(args.input_metadata, taxonomic_profile,
+        metadata, samples_missing_metadata=utilities.read_metadata(args.input_metadata, taxonomic_profile,
             name_addition="_taxonomic_profile", ignore_features=args.metadata_exclude)
         metadata_labels, metadata=utilities.label_metadata(metadata, categorical=args.metadata_categorical, continuous=args.metadata_continuous)
 
