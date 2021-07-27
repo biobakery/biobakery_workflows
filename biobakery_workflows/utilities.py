@@ -345,7 +345,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
 
     if pathabundance and study_type=="wmgx":
         # read in the metadata to merge with the data for the barplot script
-        metadata=read_metadata(input_metadata, pathabundance,
+        metadata, samples_missing_metadata=read_metadata(input_metadata, pathabundance,
             name_addition="_Abundance", ignore_features=metadata_exclude)
 
         metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
@@ -355,7 +355,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
             if len(list(set(metadata_row[1:]))) > MAX_METADATA_CATEGORIES:
                 metadata_exclude+=[metadata_row[0]]
         metadata_exclude=list(set(metadata_exclude))
-        metadata=read_metadata(input_metadata, pathabundance,
+        metadata, samples_missing_metadata=read_metadata(input_metadata, pathabundance,
             name_addition="_Abundance", ignore_features=metadata_exclude)
         metadata_labels, metadata=label_metadata(metadata, categorical=metadata_categorical, continuous=metadata_continuous)
 
@@ -909,7 +909,7 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
     for root, dir, fileslist in os.walk(folder):
         for file_name in fileslist:
             if file_name.endswith(".tsv") or file_name.endswith(".txt") or file_name.endswith(".biom") or file_name.endswith(".gz"):
-                data_files.append(os.path.join(root,file_name))
+                data_files.append(os.path.join(os.path.abspath(root),file_name))
 
 
     # look for files with known names
@@ -1155,10 +1155,12 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
         overlap=samples.intersection(possible_samples)
     
     # check for samples not included in metadata
+    samples_missing_metadata=""
     if len(list(overlap)) < len(list(samples)):
+        samples_missing_metadata=",".join(list(samples.difference(possible_samples)))
         sys.exit("ERROR: Not all of the samples in the data set have"+
             " metadata. Please review the metadata file. The following samples"+
-            " were not found: "+",".join(list(samples.difference(possible_samples))))
+            " were not found: " + samples_missing_metadata)
 
     # remove any features that should be ignored
     new_data=[]
@@ -1186,7 +1188,7 @@ def read_metadata(metadata_file, taxonomy_file, name_addition="", ignore_feature
         sys.exit("ERROR: Unable to find features that should be ignored: "+
             ",".join(ignore_features))
         
-    return new_data
+    return new_data, samples_missing_metadata
 
 def label_metadata(data, categorical=[], continuous=[]):
     """ Label the metadata type. All numerical is continous.
