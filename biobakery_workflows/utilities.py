@@ -799,7 +799,7 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
   
         # get the paths for the required files and check they are found
         read_count_table=find_data_file(files,"16s_qc_counts")
-        eestats_table=find_data_file(files,"16s_eestats2")
+        eestats_table=find_data_file(files,"16s_eestats")
 
         # variables
         method_vars={"title":"USEARCH 16S Report",
