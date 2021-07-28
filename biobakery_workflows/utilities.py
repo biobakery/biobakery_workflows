@@ -188,15 +188,19 @@ def get_vis_input_description(files):
 def run_mantel_tests(workflow,feature_tasks_info,metadata,output,nperm):
 
     # name the output file and folder
-    mantel_plots=[name_files("mantel_plot.png",output,subfolder="mantel_test",create_folder=True)]
-
+    mantel_plots=[]
     input_files=[data[1][0] for data in feature_tasks_info.items()]
-    workflow.add_task(
-        "[args[0]] [depends[0]] '[args[1]]' [targets[0]] --permutations [args[2]]",
-        depends=[metadata]+input_files,
-        targets=mantel_plots,
-        name="mantel_test",
-        args=[get_package_file("mantel_test", "Rscript"),",".join(input_files),nperm])
+
+    # only run the test if there is more then one data file
+    if len(input_files) > 1:
+        mantel_plots=[name_files("mantel_plot.png",output,subfolder="mantel_test",create_folder=True)]
+
+        workflow.add_task(
+            "[args[0]] [depends[0]] '[args[1]]' [targets[0]] --permutations [args[2]]",
+            depends=[metadata]+input_files,
+            targets=mantel_plots,
+            name="mantel_test",
+            args=[get_package_file("mantel_test", "Rscript"),",".join(input_files),nperm])
 
     return mantel_plots
 
@@ -490,14 +494,15 @@ def generate_tile_of_images(input_files, output_file):
     columns=3
 
     figure = pyplot.figure(figsize=(8,8),dpi=300)
-    for index in range(1, columns*rows+1):
+    max_range=min(columns*rows+1,len(input_files))
+    for index in range(0, max_range):
         try:
             new_file=input_files[index]
         except IndexError:
             break
 
         image = pyplot.imread(new_file)
-        subplot=figure.add_subplot(rows, columns, index, frame_on=False)
+        subplot=figure.add_subplot(rows, columns, index+1, frame_on=False)
         subplot.xaxis.set_visible(False)
         subplot.yaxis.set_visible(False)
 
