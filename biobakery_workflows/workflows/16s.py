@@ -106,7 +106,7 @@ else:
     # check the max trunc len is not larger then the read length
     input_read_length_average = utilities.get_average_read_length_fastq(demultiplexed_files[0])
     if input_read_length_average < int(args.trunc_len_max):
-        sys.exit("ERROR: The average input file read length ( {0} ) is less then the max trunc length provided ( {1} ). Please modify the max trunc length using the option '--trunc-len-max <200>'.".format(int(input_read_length_average), args.trunc_len_max))
+        print("WARNING: The average input file read length ( {0} ) is less then the max trunc length provided ( {1} ). Please modify the max trunc length using the option '--trunc-len-max <200>'.".format(int(input_read_length_average), args.trunc_len_max))
 
 if args.method == "dada2" or args.method == "its":
 
