@@ -34,7 +34,7 @@ document.plot_stacked_barchart(sorted_top_data_plus_other, row_labels=top_taxa_s
     column_labels=sorted_samples, title="Top "+str(vars["max_sets_barplot"])+" genera by average abundance",
     ylabel="Relative abundance", legend_title="Genera", legend_style="italic", legend_size=legend_size, outfilename=os.path.join(document.figures_folder,"genera_barchart_taxonomy.png"))
 
-visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_top_data_plus_other, top_taxa_short_names_plus_other, vars["max_sets_barplot"], feature="genera")
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_top_data_plus_other, top_taxa_short_names_plus_other, vars["max_sets_barplot"], vars["max_groups_barplot"], feature="genera")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
@@ -56,7 +56,7 @@ document.plot_stacked_barchart(sorted_top_terminal_data_plus_other, row_labels=s
     column_labels=sorted_samples_terminal, title="Top "+str(vars["max_sets_barplot"])+" terminal taxa by average abundance",
     ylabel="Relative abundance", legend_title="Terminal taxa", outfilename=os.path.join(document.figures_folder,"terminaltaxa_barchart_taxonomy.png"))
 
-visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_terminal, sorted_top_terminal_data_plus_other, shorted_names_plus_other, vars["max_sets_barplot"], feature="terminal taxa")
+visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples_terminal, sorted_top_terminal_data_plus_other, shorted_names_plus_other, vars["max_sets_barplot"], vars["max_groups_barplot"], feature="terminal taxa")
 ```
 
 # Heatmaps
