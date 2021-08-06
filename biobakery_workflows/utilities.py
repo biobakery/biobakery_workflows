@@ -922,6 +922,7 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
         # look for the file of type and if found add to dictionary
         filepath=files_class.path(filetype, folder, none_if_not_found=True, search_for_file=True)
         if filepath:
+            filepath=os.path.abspath(filepath)
             data_files.remove(filepath)
             data_files_types[fileid]=[filepath]
 
