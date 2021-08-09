@@ -207,6 +207,9 @@ def run_mantel_tests(workflow,feature_tasks_info,metadata,output,nperm):
 def get_metadata_variables(input_metadata, taxonomic_profile):
     # get the metadata variables (might be columns or rows)
 
+    # set the max number of sample names to check to determine file orientation
+    MAX_CHECK=10
+
     with open(taxonomic_profile) as file_handle:
         samples = file_handle.readline().rstrip().split("\t")[1:-1]
 
@@ -222,7 +225,17 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
     if set(samples).intersection(set(col_names)):
         metadata_variables = row_names
     else:
-        metadata_variables = col_names
+        # try to see if the sample names have additional information included (like "_relab" or "_taxonomic_profile")
+        # test this for the first N samples
+        total_matches=0
+        for sample_name in samples[:MAX_CHECK]:
+            for c_name in col_names:
+                if sample_name.startswith(c_name):
+                    total_matches+=1
+        if total_matches >= MAX_CHECK / 2:
+            metadata_variables = row_names
+        else:
+            metadata_variables = col_names
 
     # check if samples start with numbers
     start_number = [x for x in samples if x[0].isdigit()]
