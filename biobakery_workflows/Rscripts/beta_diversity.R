@@ -245,6 +245,10 @@ if (current_args$pairwise) {
   grid.table(as.data.frame(results), theme=theme)
   dev.off()
 
+  # write the equation to a file
+  equation_file <- sub(".png","_equation.txt",positional_args[3],fixed=TRUE)
+  write(current_args$covariate_equation,equation_file)
+
 } else {
   adonis_pval = vector()
   adonis_rsq = vector()

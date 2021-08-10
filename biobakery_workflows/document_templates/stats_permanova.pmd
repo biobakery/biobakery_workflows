@@ -28,6 +28,10 @@ utilities.show_all_variate_plots("pairwise",vars["beta_diversity_plots"])
 
 <% if vars["beta_diversity_plots"]["multivariate"]: print("## Multivariate") %>
 
+```{python, echo=False, results="md"}
+vars["covariate_equation"]=utilities.get_covariate_equation("multivariate",vars["beta_diversity_plots"],vars["covariate_equation"])
+```
+
 <% if vars["beta_diversity_plots"]["multivariate"]: print("For the multivariate model, applying settings so the order of the variables does not affect the results, the following covariate equation was provided: 'bray ~ "+vars["covariate_equation"]+"' .") %>
 
 ```{python, echo=False, results="md", name="show multivariate plots"}

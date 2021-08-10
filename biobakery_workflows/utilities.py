@@ -525,6 +525,17 @@ def generate_tile_of_images(input_files, output_file):
 
     pyplot.savefig(output_file, dpi=300)
 
+def get_covariate_equation(runtype,variate_plots,covariate_equation):
+    # Read the output from the plot script to get the equation if any metadata are removed after filtering
+    variate_keys = list(variate_plots[runtype].keys())
+    image_file = variate_plots[runtype][variate_keys[0]]
+    try:
+        with open(image_file.replace(".png","_equation.txt")) as file_handle:
+            covariate_equation=file_handle.readline().rstrip()
+    except EnvironmentError:
+        pass
+
+    return covariate_equation
 
 def show_all_variate_plots(runtype,variate_plots):
     for filetype, image_file in variate_plots[runtype].items():
