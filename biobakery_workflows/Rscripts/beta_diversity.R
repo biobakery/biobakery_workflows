@@ -218,6 +218,20 @@ if (current_args$pairwise) {
     if (! length(diff) == 1 && diff[1] == "subject") {
       stop("Metadata covariates have been filtered from the data set that are included in the covariate equation: ", paste(diff, collapse=" , "))
     }
+    # remove any metadata variables from the equation that might have been filtered
+    for (col in names(metadata)) {
+      if (! (col %in% names(filtered_metadata))) {
+        check_pattern <- paste(col,"+ ")
+        if (grepl(check_pattern,current_args$covariate_equation,fixed=TRUE)) {
+          current_args$covariate_equation <- sub(check_pattern,"",current_args$covariate_equation,fixed=TRUE)
+        }
+        check_pattern <- paste0(col,";")
+        check_equation <- paste0(current_args$covariate_equation,";")
+        if (grepl(check_pattern,check_equation,fixed=TRUE)) {
+          current_args$covariate_equation <- sub(check_pattern,"",check_equation,fixed=TRUE)
+        }
+      }
+    }
   }
 
   results <- adonis2(as.formula(paste("bray ~ ", current_args$covariate_equation)), data = filtered_metadata, by="margin")
