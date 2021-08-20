@@ -131,7 +131,7 @@ if not args.bypass_taxonomic_profiling:
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         qc_output_files,args.output,args.threads,args.input_extension, options=args.taxonomic_profiling_options)
 
-elif not args.bypass_functional_profiling or not args.bypass_strain_profiling:
+elif not args.bypass_functional_profiling or not args.bypass_strain_profiling or not args.run_strain_gene_profiling:
     # get the names of the taxonomic profiling files allowing for pairs
     input_pair1, input_pair2 = utilities.paired_files(demultiplexed_files, original_extension, args.pair_identifier)
     sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
@@ -159,16 +159,12 @@ if not args.bypass_functional_profiling:
 ### STEP #4: Run strain profiling
 # Provide taxonomic profiling output so top strains by abundance will be selected
 if not args.bypass_strain_profiling:
-    if args.bypass_taxonomic_profiling:
-        sys.exit("ERROR: Taxonomic profiling must be run to also run strain profiling")
     shotgun.strain_profile(workflow,taxonomy_sam_files,args.output,args.threads,
         workflow_config.strainphlan_db_reference,workflow_config.strainphlan_db_markers,merged_taxonomic_profile,
         args.strain_profiling_options,args.max_strains,args.strain_list)
 
 ### STEP #5: Run gene-based strain profiling (optional)
 if args.run_strain_gene_profiling:
-    if args.bypass_taxonomic_profiling and not args.strain_list:
-        sys.exit("ERROR: Taxonomic profiling must be run to also run gene-based strain profiling")
     if args.strain_list:
         merged_taxonomic_profile=args.strain_list
     shotgun.strain_gene_profile(workflow,qc_output_files,merged_taxonomic_profile,args.output,args.threads,workflow_config.panphlan_db,
