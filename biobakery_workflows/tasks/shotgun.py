@@ -802,7 +802,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
     for sam, markers in zip(sam_files, strainphlan_markers):
         sample_name=os.path.basename(sam).replace("_bowtie2.sam","")
         workflow.add_task_gridable(
-            "mkdir -p [args[0]] && sample2markers.py --input [depends[0]] --input_format sam --output_dir [args[0]] --nprocs [args[1]]",
+            "remove_if_exists.py [args[0]] --is-folder && mkdir -p [args[0]] && sample2markers.py --input [depends[0]] --input_format sam --output_dir [args[0]] --nprocs [args[1]]",
             depends=sam,
             targets=markers,
             args=[os.path.dirname(markers),threads],
