@@ -35,7 +35,7 @@ def main():
             os.unlink(args.file)
         except EnvironmentError:
             sys.exit("ERROR: Unable to remove file: " + args.file)
-    if args.is_folder:
+    if os.path.isdir(args.file) and args.is_folder:
         try:
             shutil.rmtree(args.file)    
         except EnvironmentError:
