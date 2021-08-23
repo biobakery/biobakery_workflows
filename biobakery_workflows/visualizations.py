@@ -32,6 +32,17 @@ import shutil
 
 from . import utilities
 
+# sort the samples/data by read count with the largest original read count first
+def sort_samples_reads_decreasing(read_data, read_samples):
+    """ Sort the reads from largest to smallest total read count """
+
+    sorted_samples, sorted_total_reads = utilities.sort_data(read_data[0], read_samples)
+    sorted_all_read_data = []
+    for data_set in read_data:
+        sorted_all_read_data.append([data_set[read_samples.index(sample)] for sample in sorted_samples])
+
+    return sorted_samples, sorted_all_read_data
+
 def plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_data, top_taxonomy,
     max_sets_barplot, max_groups_barplot, feature="species", sort_by_name=False, sort_by_name_inverse=False, ylabel="Relative abundance"):
     """ Plot grouped barplots and average barplots for all of the features provided.
