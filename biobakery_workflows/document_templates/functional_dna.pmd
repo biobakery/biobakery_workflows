@@ -60,7 +60,7 @@ visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_description
 
 ```{python, echo=False, results="md", name="plot heatmap ecs bray curtis"}
 if vars["dna_ecabundance"]:
-    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_ecs_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
