@@ -9,8 +9,9 @@
 dna_samples, dna_pathways, dna_data, top_names_and_descriptions = visualizations.top_average_pathways(
     document, vars["dna_pathabundance"], vars["max_sets_heatmap"], get_all=True)
 
+dna_data_sum100 = [list(map(lambda x: x*100, i)) for i in dna_data]
 filtered_pathways, filtered_pathways_data = utilities.filter_data_abundance(dna_pathways,
-    dna_data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
+    dna_data_sum100, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
 
 dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
     document, vars["dna_pathabundance"], vars["max_sets_heatmap"])
@@ -25,8 +26,9 @@ if vars["dna_ecabundance"]:
     dna_ecs_samples, dna_ecs, dna_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
         document, vars["dna_ecabundance"], vars["max_sets_heatmap"], get_all=True)
 
+    dna_ecs_data_sum100 = [list(map(lambda x: x*100, i)) for i in dna_ecs_data]
     filtered_ecs, filtered_ecs_data = utilities.filter_data_abundance(dna_ecs,
-        dna_ecs_data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
+        dna_ecs_data_sum100, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
 
     dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
         document, vars["dna_ecabundance"], vars["max_sets_heatmap"])
@@ -86,8 +88,7 @@ print(table_message)
 ### Barcharts
 
 ```{python, echo=False, results="md", name="plot stacked barchart pathways"}
-filtered_pathways_data_sum100 = [list(map(lambda x: x*100, i)) for i in filtered_pathways_data]
-sorted_samples, sorted_pathways_data, top_pathways = visualizations.plot_stacked_barchart_taxonomy(document, samples, filtered_pathways, filtered_pathways_data_sum100, vars["max_sets_barplot"], "pathways")
+sorted_samples, sorted_pathways_data, top_pathways = visualizations.plot_stacked_barchart_taxonomy(document, samples, filtered_pathways, filtered_pathways_data, vars["max_sets_barplot"], "pathways")
 ```
 
 Stacked barplot of <%= vars["max_sets_barplot"] %> most abundant pathways among samples. Samples in the plot were sorted on the pathways with the highest mean abundances among samples, in decreasing order.
@@ -100,8 +101,7 @@ categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy
 
 ```{python, echo=False, results="md", name="plot stacked barchart ecs"}
 if vars["dna_ecabundance"]:
-    filtered_ecs_data_sum100 = [list(map(lambda x: x*100, i)) for i in filtered_ecs_data]
-    sorted_samples, sorted_ecs_data, top_ecs = visualizations.plot_stacked_barchart_taxonomy(document, samples, filtered_ecs, filtered_ecs_data_sum100, vars["max_sets_barplot"], "ecs")
+    sorted_samples, sorted_ecs_data, top_ecs = visualizations.plot_stacked_barchart_taxonomy(document, samples, filtered_ecs, filtered_ecs_data, vars["max_sets_barplot"], "ecs")
 ```
 
 <% if vars["dna_ecabundance"]: print("Stacked barplot of "+str(vars["max_sets_barplot"])+" most abundant ECs among samples. Samples in the plot were sorted on the ECs with the highest mean abundances among samples, in decreasing order.") %>
