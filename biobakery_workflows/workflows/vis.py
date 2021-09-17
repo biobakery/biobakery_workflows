@@ -58,6 +58,7 @@ workflow.add_argument("metadata-exclude",desc="the features to exclude", action=
 workflow.add_argument("min-abundance",desc="the min abundance to use for filtering", default=0.01)
 workflow.add_argument("min-samples",desc="the min samples to use for filtering", default=10)
 workflow.add_argument("max-sets-heatmap",desc="the max sets to show for a heatmap", default=25)
+workflow.add_argument("max-missing",desc="the max percentage of missing values for a metadata to not be filtered", default="20.0")
 workflow.add_argument("max-sets-barplot",desc="the max sets to show for a barplot", default=15)
 workflow.add_argument("max-groups-barplot",desc="the max number of grouped barplots to show for a single metadata variable", default=5)
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
@@ -112,7 +113,7 @@ if workflow_type == "16S" :
     workflow_targets=workflow.name_output_files("16S_report."+args.format)
 
     # if metadata are provided then generate alpha diversity plots
-    template_variables["alpha_diversity_plots"],alpha_task=utilities.generate_alpha_diversity_plots(workflow,"16S",args.output,args.input_metadata,otu_table)
+    template_variables["alpha_diversity_plots"],alpha_task=utilities.generate_alpha_diversity_plots(workflow,"16S",args.output,args.input_metadata,otu_table,args.max_missing)
 else:
     # set default introduction text
     if not args.introduction_text:
@@ -151,7 +152,7 @@ else:
           "metadata_labels":metadata_labels}
 
     # if metadata are provided then generate alpha diversity plots
-    template_variables["alpha_diversity_plots"],alpha_task=utilities.generate_alpha_diversity_plots(workflow,"wmgx",args.output,args.input_metadata,taxonomic_profile)
+    template_variables["alpha_diversity_plots"],alpha_task=utilities.generate_alpha_diversity_plots(workflow,"wmgx",args.output,args.input_metadata,taxonomic_profile,args.max_missing)
 
 # add author and image if included
 template_variables["author"]=args.author_name

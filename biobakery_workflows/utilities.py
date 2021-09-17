@@ -425,7 +425,7 @@ def find_alpha_diversity_plots(plots_folder):
             plots["boxplot"].append(os.path.join(plots_folder,filename))
     return plots
 
-def generate_alpha_diversity_plots(workflow,study_type,output,input_metadata,taxonomic_profile):
+def generate_alpha_diversity_plots(workflow,study_type,output,input_metadata,taxonomic_profile,max_missing):
     # Calling the R script (as this method requires vegan), generate alpha diversity plots
     if input_metadata:
         output_folder=os.path.join(output,"alpha_diversity_plots")
@@ -434,9 +434,9 @@ def generate_alpha_diversity_plots(workflow,study_type,output,input_metadata,tax
         # create the reformatted normalized file
         feature_tasks_info=create_feature_table_inputs(workflow,study_type,output,taxonomic_profile)
         task=workflow.add_task(
-            "[vars[0]] [depends[0]] [depends[1]] [vars[1]]",
+            "[vars[0]] [depends[0]] [depends[1]] [vars[1]] --max_missing [vars[2]]",
             depends=[feature_tasks_info["taxonomy"][0],input_metadata],
-            vars=[alpha_script,output_folder],
+            vars=[alpha_script,output_folder,max_missing],
             name="alpha_diversity")
         return output_folder, task
     else:
