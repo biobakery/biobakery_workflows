@@ -507,7 +507,7 @@ def generate_tile_of_images(input_files, output_file):
     columns=3
 
     figure = pyplot.figure(figsize=(8,8),dpi=300)
-    max_range=min(columns*rows+1,len(input_files))
+    max_range=min(columns*rows,len(input_files))
     for index in range(0, max_range):
         try:
             new_file=input_files[index]
