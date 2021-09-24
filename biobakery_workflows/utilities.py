@@ -801,7 +801,7 @@ def set_variables_for_16s_workflow_based_on_input(args,files):
     """ Determine the variables, method and input files based on the data in the input folder """
 
     if files.get("16s_taxonomy_asv"):
-        otu_table = files["16s_taxonomy_asv"]
+        otu_table = find_data_file(files,"16s_taxonomy_asv")
         method = "dada2"
         doc_title = method.upper() + " 16s Report"
 
