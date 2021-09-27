@@ -432,7 +432,7 @@ def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename
         metadata_taxonomy=[row.pop(0) for row in merged_data]
         
         total_metadata, merged_data, metadata_taxonomy=remove_large_metadata_levels(merged_data, metadata_taxonomy, len(vars['metadata']), max_sets_heatmap)
-        metadata_rows=range(1,total_metadata+1)
+        metadata_rows=range(1,total_metadata)
 
         document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
             title=title, metadata_rows=metadata_rows, method=method,outfilename=os.path.join(document.figures_folder,filename))
