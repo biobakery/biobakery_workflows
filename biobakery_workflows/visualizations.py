@@ -32,6 +32,33 @@ import shutil
 
 from . import utilities
 
+# if there are not names with the ecs, add them to the file for the plots generated
+def add_ec_names(workflow, ecsabundance, output, template_depends):
+
+    # allow for optional ec file
+    if not ecsabundance:
+        return ecsabundance
+
+    # check for names in the ec file
+    with open(ecsabundance) as file_handle:
+        header = file_handle.readline()
+        top_ec = file_handle.readline()
+        if ":" in top_ec:
+            return ecsabundance
+
+    ecsabundance_withnames=os.path.join(output,"ecs",os.path.basename(ecsabundance))
+    rename_task=workflow.add_task(
+        "mkdir -p [args[0]] && humann_rename_table --input [depends[0]] --output [targets[0]] --names ec",
+        depends=ecsabundance,
+        targets=ecsabundance_withnames,
+        args=os.path.dirname(ecsabundance_withnames),
+        name="humann_rename_table_ecs")
+
+    # add the task as a dependency of the template task
+    template_depends+=[rename_task]
+
+    return ecsabundance_withnames
+
 # sort the samples/data by read count with the largest original read count first
 def sort_samples_reads_decreasing(read_data, read_samples):
     """ Sort the reads from largest to smallest total read count """

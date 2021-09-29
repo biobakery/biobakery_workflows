@@ -137,6 +137,10 @@ else:
 
     template_depends=[taxonomic_profile]
     workflow_targets=workflow.name_output_files("wmgx_report."+args.format)
+
+    # if the ecs do not include the names then add them
+    ecsabundance=visualizations.add_ec_names(workflow,ecsabundance,args.output,template_depends)
+
     template_variables={"title":"Metagenome Report",
           "project":args.project_name,
           "introduction_text":args.introduction_text,
