@@ -113,7 +113,7 @@ feature_tasks_info=utilities.create_feature_table_inputs(workflow,study_type,arg
 
 ## 2. Add tasks to run mantel tests on all data file pairs
 
-mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.input_metadata,args.output,args.permutations)
+mantel_tasks,mantel_plots=utilities.run_mantel_tests(workflow,feature_tasks_info,args.input_metadata,args.output,args.permutations)
 
 ## 3. Add tasks to run MaAsLiN2 on all input data files (feature tables)
 
@@ -168,7 +168,7 @@ if args.bypass_halla and args.introduction_text == workflow_vis.captions["intro"
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks+halla_tasks, 
+    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks+halla_tasks+mantel_tasks, 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistics report",
           "project":args.project_name,

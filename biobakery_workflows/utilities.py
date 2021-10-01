@@ -192,17 +192,19 @@ def run_mantel_tests(workflow,feature_tasks_info,metadata,output,nperm):
     input_files=[data[1][0] for data in feature_tasks_info.items()]
 
     # only run the test if there is more then one data file
+    new_tasks=[]
     if len(input_files) > 1:
         mantel_plots=[name_files("mantel_plot.png",output,subfolder="mantel_test",create_folder=True)]
 
-        workflow.add_task(
+        mantel_task=workflow.add_task(
             "[args[0]] [depends[0]] '[args[1]]' [targets[0]] --permutations [args[2]]",
             depends=[metadata]+input_files,
             targets=mantel_plots,
             name="mantel_test",
             args=[get_package_file("mantel_test", "Rscript"),",".join(input_files),nperm])
+        new_tasks+=[mantel_task]
 
-    return mantel_plots
+    return new_tasks,mantel_plots
 
 def get_metadata_variables(input_metadata, taxonomic_profile):
     # get the metadata variables (might be columns or rows)
