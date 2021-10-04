@@ -107,6 +107,14 @@ utilities.check_effects_are_included_in_metadata(args.fixed_effects, args.random
 
 ## Add tasks to the workflow 
 
+## 0. See if names need to be added to ecs
+template_depends=[]
+other_data_files_ecs=list(filter(lambda x: x[1] == "ec", other_data_files.items()))[0]
+if other_data_files_ecs:
+    new_ecs_file=visualizations.add_ec_names(workflow,other_data_files_ecs[0],args.output,template_depends)
+    del other_data_files[other_data_files_ecs[0]]
+    other_data_files[new_ecs_file]="ec"
+
 ## 1. Add tasks to create feature tables from all input files to be used. Feature tables will be used in downstream tasks                   .
 
 feature_tasks_info=utilities.create_feature_table_inputs(workflow,study_type,args.output,taxonomic_profile,pathabundance,other_data_files)
@@ -168,7 +176,7 @@ if args.bypass_halla and args.introduction_text == workflow_vis.captions["intro"
 # add the document to the workflow
 doc_task=workflow.add_document(
     templates=templates,
-    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks+halla_tasks+mantel_tasks, 
+    depends=all_maaslin_tasks+stratified_plots_tasks+[taxonomic_profile]+additional_stats_tasks+halla_tasks+mantel_tasks+template_depends, 
     targets=workflow.name_output_files("stats_report."+args.format),
     vars={"title":"Statistics report",
           "project":args.project_name,
