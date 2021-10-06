@@ -100,7 +100,7 @@ taxonomic_profile,pathabundance=convert_from_biom_to_tsv_list(workflow,[taxonomi
 other_data_files=convert_from_biom_to_tsv_list(workflow,other_data_files,args.output)
 
 # get metadata variables and check sample names
-metadata_variables=utilities.get_metadata_variables(args.input_metadata,taxonomic_profile)
+metadata_variables, samples_as_columns=utilities.get_metadata_variables(args.input_metadata,taxonomic_profile)
 
 # check the options include valid variables
 utilities.check_effects_are_included_in_metadata(args.fixed_effects, args.random_effects, metadata_variables)
@@ -138,7 +138,7 @@ if not args.bypass_maaslin:
 halla_tasks_info=[]
 halla_tasks=[]
 if not args.bypass_halla:
-    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.input_metadata,args.output,args.halla_options)
+    halla_tasks,halla_tasks_info=utilities.run_halla_on_input_file_set(workflow,feature_tasks_info,args.input_metadata,args.output,args.halla_options, samples_as_columns)
 
 ## 5. Add tasks to run stratified pathways plots, if pathways provided  
 

@@ -217,6 +217,7 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
 
     row_names = []
     col_names = []
+    samples_as_columns=False
     with open(input_metadata) as file_handle:
         for line in file_handle:
             if not col_names:
@@ -226,6 +227,7 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
 
     if set(samples).intersection(set(col_names)):
         metadata_variables = row_names
+        samples_as_columns = True
     else:
         # try to see if the sample names have additional information included (like "_relab" or "_taxonomic_profile")
         # test this for the first N samples
@@ -236,8 +238,10 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
                     total_matches+=1
         if total_matches >= MAX_CHECK / 2:
             metadata_variables = row_names
+            samples_as_columns = True
         else:
             metadata_variables = col_names
+            samples_as_columns = False
 
     # check if samples start with numbers
     start_number = [x for x in samples if x[0].isdigit()]
@@ -249,7 +253,7 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
         duplicate=[x for x, count in collections.Counter(samples).items() if count > 1]
         sys.exit("ERROR: Duplicate samples in the taxonomic profile: "+",".join(duplicate)+".")
 
-    return metadata_variables
+    return metadata_variables, samples_as_columns
 
 def check_effects_are_included_in_metadata(fixed_effects, random_effects, metadata_variables):
     # check the fixed and random effects to make sure they match with the metadata variables
@@ -599,9 +603,32 @@ def generate_tiles_of_maaslin_figures(task, feature_tasks_info):
                 targets=maaslin_tiles[datatype][metadata_name],
                 args=",".join(metadata_images[datatype][metadata_name]))
 
-def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,halla_options=""):
+def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,halla_options="",samples_as_columns=False):
     # Run maaslin on all files in input set
-    
+    def transpose(task):
+        data=[]
+        import numpy
+      
+        output_folder=os.path.dirname(task.targets[0].name)
+        if not os.path.isdir(output_folder):
+            os.mkdir(output_folder)
+
+        with open(task.depends[0].name) as file_handle:
+            for line in file_handle:
+                data.append(line.rstrip().split("\t"))
+        with open(task.targets[0].name,"w") as file_handle:
+            for line in numpy.transpose(data):
+                file_handle.write("\t".join(line)+"\n")
+
+    # First transpose metadata file if needed
+    if not samples_as_columns:
+        new_metadata=os.path.join(output,"halla_metadata",os.path.basename(metadata))
+        workflow.add_task(
+            transpose,
+            depends=metadata,
+            targets=new_metadata)
+        metadata=new_metadata
+
     halla_tasks=[]
     halla_tasks_info={}
     for run_type, infiles in feature_tasks_info.items():
