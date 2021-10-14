@@ -345,17 +345,18 @@ def run_beta_diversity(workflow,feature_tasks_info,input_metadata,min_abundance,
             beta_diversity_plots["multivariate"][filetype]=multivariate
 
     # run pairwise
-    for filetype in feature_tasks_info.keys():
-        pairwise=name_files(filetype+"_pairwise.png",output,subfolder="beta_diversity",create_folder=True)
+    if len(ordered_fixed_effects) > 1:
+        for filetype in feature_tasks_info.keys():
+            pairwise=name_files(filetype+"_pairwise.png",output,subfolder="beta_diversity",create_folder=True)
 
-        additional_stats_tasks.append(
-            workflow.add_task(
-                "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --pairwise TRUE "+optional_args,
-                depends=[feature_tasks_info[filetype][0],input_metadata],
-                targets=pairwise,
-                args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
-                name="beta_diversity_pairwise_"+filetype))
-        beta_diversity_plots["pairwise"][filetype]=pairwise
+            additional_stats_tasks.append(
+                workflow.add_task(
+                    "[args[0]] [depends[0]] [depends[1]] [targets[0]] --min_abundance [args[1]] --min_prevalence [args[2]] --max_missing [args[3]] --pairwise TRUE "+optional_args,
+                    depends=[feature_tasks_info[filetype][0],input_metadata],
+                    targets=pairwise,
+                    args=[univariate_script_path,min_abundance,min_prevalence,max_missing],
+                    name="beta_diversity_pairwise_"+filetype))
+            beta_diversity_plots["pairwise"][filetype]=pairwise
 
     return additional_stats_tasks,beta_diversity_plots,covariate_equation
 
@@ -639,10 +640,10 @@ def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,hall
             always_target=os.path.join(os.path.abspath(output),"halla_"+run_type,"all_associations.txt")
             halla_tasks.append(
                 workflow.add_task(
-                    "halla -x [depends[0]] -y [depends[1]] -o [args[0]]",
+                    "remove_if_exists.py [args[0]] --is-folder && halla -x [depends[0]] -y [depends[1]] -o [args[0]] --plot_file_type='png'",
                     depends=[infiles[0], metadata],
                     targets=always_target,
-                    args=os.path.dirname(always_target),
+                    args=[os.path.dirname(always_target),os.path.basename(optional_target)],
                     name="HAllA_{0}".format(run_type)))
 
             halla_tasks_info[run_type]=optional_target
