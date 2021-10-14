@@ -461,7 +461,7 @@ def show_heatmaps(heatmap, run_type):
     if os.path.isfile(heatmap):
         print("\n\n!["+run_type+" heatmap]("+heatmap+"){#id .class width=540px height=405px}\n\n")
     else:
-        print("Not enough significant associations for a heatmap.\n\n")
+        print("\n")
 
 def show_plots(plots_list):
     for filename in plots_list:
