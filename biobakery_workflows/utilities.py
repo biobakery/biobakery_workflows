@@ -392,7 +392,7 @@ def create_stratified_pathways_plots(workflow,study_type,pathabundance,input_met
         # only include the categorical metadata
         metadata_row_names=[row[0] for row in metadata[1:] if row[0] in metadata_labels.keys()]
         metadata_end=metadata_row_names[-1]
-        for i in range(top_pathways):
+        for i in range(int(top_pathways)):
             for current_metadata_variable in metadata_labels.keys():
                 new_pathways_plot=name_files("stratified_pathways_{0}_{1}.png".format(i, current_metadata_variable), output, subfolder="stratified_pathways")
                 stratified_plots_tasks.append(workflow.add_task(
@@ -460,6 +460,7 @@ def show_heatmaps(heatmap, run_type):
 
     if os.path.isfile(heatmap):
         print("\n\n!["+run_type+" heatmap]("+heatmap+"){#id .class width=540px height=405px}\n\n")
+        print("\clearpage \n\n")
     else:
         print("\n")
 
@@ -497,7 +498,6 @@ def show_all_maaslin_run_types(feature_tasks_info):
         print("This report section contains the results from running the {} data through MaAsLin2.\n\n".format(newtype))
 
         show_heatmaps(maaslin_heatmap, newtype)
-        print("\clearpage \n\n")
 
         print("### MaAsLin2 Plots\n\n")
         print("The most significant association for each metadata are shown. For a complete set of plots, check out the MaAsLin2 results folders.\n\n\n")
@@ -534,13 +534,15 @@ def generate_tile_of_images(input_files, output_file):
 
 def get_covariate_equation(runtype,variate_plots,covariate_equation):
     # Read the output from the plot script to get the equation if any metadata are removed after filtering
+    covariate_equation = ""
     variate_keys = list(variate_plots[runtype].keys())
-    image_file = variate_plots[runtype][variate_keys[0]]
-    try:
-        with open(image_file.replace(".png","_equation.txt")) as file_handle:
-            covariate_equation=file_handle.readline().rstrip()
-    except EnvironmentError:
-        pass
+    if variate_keys:
+        image_file = variate_plots[runtype][variate_keys[0]]
+        try:
+            with open(image_file.replace(".png","_equation.txt")) as file_handle:
+                covariate_equation=file_handle.readline().rstrip()
+        except EnvironmentError:
+            pass
 
     return covariate_equation
 
