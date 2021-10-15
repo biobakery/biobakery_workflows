@@ -14,6 +14,7 @@ def parse_arguments(args):
     parser.add_argument('--input',help="The input file to subset",required=True)
     parser.add_argument('--input-ids',help="The file of sample ids to use",required=True)
     parser.add_argument('--output',help="The output subset file",required=True)
+    parser.add_argument('--exclude-id',help="The ids to exclude (only for samples as columns)",default="")
     parser.add_argument('--exclude-column',help="The columns to exclude (only for input files with samples as rows)",default="")
     parser.add_argument('--exclude-row-name',help="The rows to exclude (only for input files with samples as columns)",default="")
     
@@ -44,8 +45,12 @@ def main():
     if args.exclude_row_name:
         exclude_row="grep -v '{0}' | "
 
+    exclude_id_grep=""
+    if args.exclude_id:
+        exclude_id_grep=" | grep -v "+args.exclude_id+" "
+
     if samples_as_columns:
-        cmmd="COLUMNS=$(head -n 1 "+args.input+" | " + exclude_row + "tr '\\t' '\\n' | cat -n | grep -f "+args.input_ids+" | awk -F' ' '{ print $1}' | tr '\\n' ',' | sed 's/,$//' ) && cut -f '1,'$COLUMNS  "+args.input+" > "+args.output
+        cmmd="COLUMNS=$(head -n 1 "+args.input+" | " + exclude_row + "tr '\\t' '\\n' | cat -n | grep -f "+args.input_ids+exclude_id_grep+" | awk -F' ' '{ print $1}' | tr '\\n' ',' | sed 's/,$//' ) && cut -f '1,'$COLUMNS  "+args.input+" > "+args.output
     else:
         if args.exclude_column:
             cmmd="cut --complement -f {0} {1} | head -n 1 > {3} && cut --complement -f {0} {1} | grep -f {2} >> {3}".format(args.exclude_column,args.input,args.input_ids,args.output)
