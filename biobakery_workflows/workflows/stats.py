@@ -109,7 +109,11 @@ utilities.check_effects_are_included_in_metadata(args.fixed_effects, args.random
 
 ## 0. See if names need to be added to ecs
 template_depends=[]
-other_data_files_ecs=list(filter(lambda x: x[1] == "ec", other_data_files.items()))[0]
+try:
+    other_data_files_ecs=list(filter(lambda x: x[1] == "ec", other_data_files.items()))[0]
+except IndexError:
+    other_data_files_ecs=[]
+
 if other_data_files_ecs:
     new_ecs_file=visualizations.add_ec_names(workflow,other_data_files_ecs[0],args.output,template_depends)
     del other_data_files[other_data_files_ecs[0]]
