@@ -756,7 +756,7 @@ def run_picrust2(task, threads, otus=False, method="16s"):
 
         db_changes = " --custom_trait_tables {0} --min_reads 1 -r {1} --marker_gene_table {2} --pathway_map {3} --reaction_func {0} ".format(trait_table,reference_folder,gene_table,pathway_map)
 
-    utilities.run_task("remove_if_exists.py [args[0]] --is-folder ; picrust2_pipeline.py -s [args[1]] -i [args[2]] -o [args[0]] -p [args[3]] "+db_changes,
+    utilities.run_task("remove_if_exists.py [args[0]] --is-folder ; picrust2_pipeline.py -s [args[1]] -i [args[2]] -o [args[0]] -p [args[3]] --stratified "+db_changes,
         depends=task.depends,
         targets=task.depends,
         args=[picrust2_output_dir, reformat_input_fasta, reformat_input_tsv, threads])
