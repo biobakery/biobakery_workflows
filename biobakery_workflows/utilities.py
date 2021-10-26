@@ -452,7 +452,9 @@ def generate_alpha_diversity_plots(workflow,study_type,output,input_metadata,tax
 def show_halla_results(halla_tasks_info):
     for run_type in halla_tasks_info:
         print("## HAllA "+run_type.replace(" "," vs. ")+"\n\n")
-        show_heatmaps(halla_tasks_info[run_type], run_type)
+        shown=show_heatmaps(halla_tasks_info[run_type], run_type)
+        if not shown:
+            print("Not enough associations for a heatmap.")
         print("\clearpage \n\n")
 
 def show_heatmaps(heatmap, run_type):
@@ -461,8 +463,10 @@ def show_heatmaps(heatmap, run_type):
     if os.path.isfile(heatmap):
         print("\n\n!["+run_type+" heatmap]("+heatmap+"){#id .class width=540px height=405px}\n\n")
         print("\clearpage \n\n")
+        return True
     else:
         print("\n")
+        return False
 
 def show_plots(plots_list):
     for filename in plots_list:
