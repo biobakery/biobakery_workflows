@@ -33,9 +33,9 @@ def read_file_n_lines(file,n):
     if len(line_set) == n:
         yield line_set
 
-def get_species_genome_size():
+def get_species_genome_size(pkl_database):
     genome_sizes={}
-    db = pickle.load(bz2.BZ2File(args.pkl_database, 'r'))
+    db = pickle.load(bz2.BZ2File(pkl_database, 'r'))
     for info in db['taxonomy'].items():
         species="|".join(info[0].split("|")[0:-1])
         length=int(info[1][1])
@@ -75,6 +75,12 @@ workflow.add_argument("unknown-estimate",desc="the estimate of unknown reads (de
 args = workflow.parse_args()
 
 def get_strains(task):
+    # get all strain genome sizes
+    species_genome_sizes=get_species_genome_size(task.depends[2].name)
+
+    # get taxonomy by sample
+    taxonomy_by_sample=get_taxonomy_by_sample(task.depends[1].name)
+
     # compute the coverage for each strain that meets the min abundance plus factor in the unknown read estimate
     total_sample_nt=count_nt(task.depends[0].name)*(1-float(args.unknown_estimate))
 
@@ -116,19 +122,13 @@ def compute_final_strains(task):
             if count > min_samples:
                 file_handle.write("\t".join([name,str(count)])+"\n")
 
-# get all strain genome sizes
-species_genome_sizes=get_species_genome_size()
-
-# get taxonomy by sample
-taxonomy_by_sample=get_taxonomy_by_sample(args.taxonomic_profile)
-
 # for each of the input files get a list of strains of interest
 all_strain_files=[]
 for infile in workflow.get_input_files(extension=args.input_extension):
     outfile = workflow.name_output_files(infile).replace(args.input_extension,"_strains_of_interest.tsv")
     workflow.add_task(
         get_strains,
-        depends=[infile,args.taxonomic_profile],
+        depends=[infile,args.taxonomic_profile,args.pkl_database],
         targets=outfile)
     all_strain_files.append(outfile)
 
