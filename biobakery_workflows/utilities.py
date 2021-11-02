@@ -614,7 +614,6 @@ def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,hall
     # Run maaslin on all files in input set
     def transpose(task):
         data=[]
-        import numpy
       
         output_folder=os.path.dirname(task.targets[0].name)
         if not os.path.isdir(output_folder):
@@ -624,7 +623,7 @@ def run_halla_on_input_file_set(workflow,feature_tasks_info,metadata,output,hall
             for line in file_handle:
                 data.append(line.rstrip().split("\t"))
         with open(task.targets[0].name,"w") as file_handle:
-            for line in numpy.transpose(data):
+            for line in list(map(list, zip(*data))):
                 file_handle.write("\t".join(line)+"\n")
 
     # First transpose metadata file if needed
