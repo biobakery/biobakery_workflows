@@ -146,12 +146,11 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # create a task for each set of input and output files to run kneaddata
     # rename file with repeats in name to only sample name
     for sample, depends, targets, intermediate_file in zip(sample_names, input_files, kneaddata_output_files, kneaddata_output_repeats_removed_fastq):
-        kneaddata_target=targets.pop(0)
         workflow.add_task_gridable(
             "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output+" && gzip [args[4]] ",
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
-            targets=targets,
-            args=[kneaddata_output_folder, threads, sample, intermediate_file, kneaddata_target],
+            targets=targets[1:3],
+            args=[kneaddata_output_folder, threads, sample, intermediate_file, targets[0]],
             time=time_equation, # 6 hours or more depending on file size
             mem=mem_equation, # 12 GB or more depending on file size
             cores=threads, # time/mem based on 8 cores
