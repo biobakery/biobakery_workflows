@@ -131,7 +131,7 @@ if not args.bypass_taxonomic_profiling:
     merged_taxonomic_profile, taxonomy_tsv_files, taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
         qc_output_files,args.output,args.threads,args.input_extension, options=args.taxonomic_profiling_options)
 
-elif not args.bypass_functional_profiling or not args.bypass_strain_profiling or not args.run_strain_gene_profiling:
+elif not args.bypass_functional_profiling or not args.bypass_strain_profiling or args.run_strain_gene_profiling:
     # get the names of the taxonomic profiling files allowing for pairs
     input_pair1, input_pair2 = utilities.paired_files(demultiplexed_files, original_extension, args.pair_identifier)
     sample_names = utilities.sample_names(input_pair1 if input_pair1 else input_files,original_extension,args.pair_identifier)
