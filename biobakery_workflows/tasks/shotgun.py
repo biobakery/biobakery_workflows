@@ -90,9 +90,9 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # get the kneaddata final output files
     main_folder=os.path.join("kneaddata","main")
     kneaddata_output_repeats_removed_fastq = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="repeats.removed.fastq", create_folder=True)
-    kneaddata_output_fastq = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="fastq", create_folder=True)
+    kneaddata_output_fastq = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="fastq.gz", create_folder=True)
     kneaddata_output_logs = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="log")
-    kneaddata_output_files = list(zip(kneaddata_output_fastq, kneaddata_output_logs))
+    kneaddata_output_files = list(zip([filename.replace(".gz","") for filename in kneaddata_output_fastq], kneaddata_output_fastq, kneaddata_output_logs))
 
     # get the output folder
     kneaddata_output_folder = os.path.dirname(kneaddata_output_files[0][0])
@@ -114,7 +114,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
         mem_equation="3*12*1024 if file_size('[depends[0]]') < 10 else 6*12*1024"
         # need to rename the final output file here to the sample name
-        rename_final_output = " && mv [args[3]] [targets[0]]"
+        rename_final_output = " && mv [args[3]] [args[4]]"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -146,11 +146,12 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # create a task for each set of input and output files to run kneaddata
     # rename file with repeats in name to only sample name
     for sample, depends, targets, intermediate_file in zip(sample_names, input_files, kneaddata_output_files, kneaddata_output_repeats_removed_fastq):
+        kneaddata_target=targets.pop(0)
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output,
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+rename_final_output+" && gzip [args[4]] ",
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets,
-            args=[kneaddata_output_folder, threads, sample, intermediate_file],
+            args=[kneaddata_output_folder, threads, sample, intermediate_file, kneaddata_target],
             time=time_equation, # 6 hours or more depending on file size
             mem=mem_equation, # 12 GB or more depending on file size
             cores=threads, # time/mem based on 8 cores
