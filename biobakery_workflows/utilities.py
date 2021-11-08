@@ -578,7 +578,7 @@ def get_maaslin_image_files(feature_tasks_info):
     for datatype in feature_tasks_info:
         # get all the available images and sort by rank
         figures_folder = os.path.dirname(feature_tasks_info[datatype][1])
-        ranked_files = [ (filename, re.findall(r'\d+', filename)[0]) for filename in os.listdir(figures_folder) if re.search(r'_\d+.png$',filename)]
+        ranked_files = [ (filename, re.findall(r'\d+', filename)[-1]) for filename in os.listdir(figures_folder) if re.search(r'_\d+.png$',filename)]
         ordered_files = sorted( ranked_files, key=lambda x: int(x[1]))
 
         # group images by metadata type
