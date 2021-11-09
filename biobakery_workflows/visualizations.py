@@ -24,6 +24,7 @@ THE SOFTWARE.
 """
 
 import os
+import re
 import copy
 import sys
 import subprocess
@@ -606,6 +607,9 @@ def top_average_pathways(document, file, max_sets, get_all=False):
     
     return samples, top_pathways, top_data, top_names_and_descriptions
 
+def remove_unexpected_chars(value_list):
+    return [re.sub("[^0-9a-zA-Z.\-]+", "_",val) for val in value_list]
+
 def show_table_max_rows(document, data, row_labels, column_labels, title, table_file,
     max_rows=20, format_data_comma=None, location="center", font=None, max_columns=7, outfilename=None):
     """ For large numbers of samples, only show a reduced table """
@@ -640,7 +644,7 @@ def show_table_max_rows(document, data, row_labels, column_labels, title, table_
         message=table_message
         
     # render the table
-    document.show_table(data, row_labels, column_labels, 
+    document.show_table(data, remove_unexpected_chars(row_labels), remove_unexpected_chars(column_labels), 
         title, format_data_comma=format_data_comma, location=location, font=font, outfilename=outfilename)
     
     message+="[{file}](data/{file})".format(file=os.path.basename(table_file))
@@ -653,7 +657,7 @@ def print_pathways_urls(names, descriptions, total):
     print("Detailed functions of the top {} pathways can be found on the following MetaCyc pages:  ".format(total))
     
     print("")
-    for pathway, desc in zip(names[:total], descriptions[:total]):
+    for pathway, desc in zip(remove_unexpected_chars(names[:total]), remove_unexpected_chars(descriptions[:total])):
         print(" * ["+desc+"]("+utilities.metacyc_url(pathway)+")  ")
         
     print("")
