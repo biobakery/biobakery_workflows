@@ -1033,9 +1033,9 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
                     file_type = "16s_function_pathway"
                 elif data_info[0].startswith("M0"):
                     file_type = "16s_function_module"
-                elif data_info[0].startswith("ASV") and data_info[-1].lower().startswith("k__"):
+                elif data_info[0].startswith("ASV") and (data_info[-1].lower().startswith("k__") or data_info[-1].lower().startswith("s__") or data_info[-1].lower().startswith("g__")):
                     file_type = "16s_taxonomy_asv"
-                elif data_info[-1].lower().startswith("k__"):
+                elif data_info[-1].lower().startswith("k__") or data_info[-1].lower().startswith("s__") or data_info[-1].lower().startswith("g__"):
                     file_type = "16s_taxonomy_otu"
 
                 # replace with user provided type, if set
@@ -1053,7 +1053,7 @@ def identify_data_files(files,folder,input_file_type,metadata_input):
                 if not file_type in data_files_types:
                     data_files_types[file_type]=[]
                 data_files_types[file_type].append(file)
-
+    
     return data_files_types
 
 def get_package_file(basename, type="template"):
@@ -2105,7 +2105,11 @@ def filter_taxa_level_metaphlan_format(taxonomy, data, min_abundance=None, min_s
     # filter out those with species and strain information
     for taxon, data_row in zip(taxonomy, data):
         if search_taxa in taxon and not remove_taxa in taxon:
-            species_taxonomy.append(taxon.split("|")[-1].replace(search_taxa[1:],"").replace("_"," "))
+            if "|" in taxon:
+                species_taxonomy.append(taxon.split("|")[-1].replace(search_taxa[1:],"").replace("_"," "))
+                species_data.append(data_row)
+        elif taxon.startswith(search_taxa[1:]):
+            species_taxonomy.append(taxon)
             species_data.append(data_row)
 
     # if filters are provided, then filter the data by both min abundance
@@ -2361,8 +2365,10 @@ def taxonomy_trim(taxa):
         # return the genus and species level
         if taxon_full == taxon_reduced:
             data = taxon_full.split(delimiter)
-            trimmed_taxa.append(data[-2]+"."+data[-1])
-            
+            try:
+                trimmed_taxa.append(data[-2]+"."+data[-1])
+            except IndexError:
+                trimmed_taxa.append(taxon_full)
         else:
             most_specific_clade = taxon_reduced.split(delimiter)[-1]
             if not most_specific_clade:
