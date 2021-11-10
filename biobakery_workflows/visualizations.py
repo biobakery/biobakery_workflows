@@ -816,7 +816,6 @@ class Sixteen_S(Workflow):
             if method == "its":
                 dada_db = "UNITE"
             dadadb_info="\nThe " + str(dada_db) + " database was used for taxonomy prediction."
-            columns, samples, data = document.read_table(vars["counts_each_step"])
     
         else:
             try:
