@@ -81,7 +81,7 @@ def main():
             if args.taxonomy_column is None:
                 # try to figure out which column has the taxonomy data
                 try:
-                    args.taxonomy_column=[index for index, value in enumerate(data) if "k__" in value][0]
+                    args.taxonomy_column=[index for index, value in enumerate(data) if "k__" in value or "s__" in value or "g__" in value][0]
                 except IndexError:
                     sys.exit("Error unable to find the taxonomy column. Please provide it with the option --taxonomy-column <0>.")
             if args.end_taxonomy_column is None:
