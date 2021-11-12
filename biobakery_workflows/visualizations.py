@@ -828,7 +828,8 @@ class Sixteen_S(Workflow):
             else:
                 db_info = "GreenGenes 16S RNA Gene Database version 13_8"
 
-            usearchintro="The " + str(len(samples)) + "  samples from this project were run through the standard 16S workflow.  \
+            samples_text=str(len(samples))+" " if samples else ""
+            usearchintro="The " + samples_text + "  samples from this project were run through the standard 16S workflow.  \
                 follows the UPARSE OTU analysis pipeline for OTU calling and taxonomy prediction with percent identity " \
                 + str(percent_identity) + " and minimum cluster size of " + str(min_cluster_size) + "." \
                 + "\n\nThe " + db_info + " was used for taxonomy prediction.\
