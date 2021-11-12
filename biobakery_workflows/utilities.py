@@ -1923,9 +1923,12 @@ def taxa_shorten_name(taxa, level, remove_identifier=None):
 
     new_names=[]
     for taxon in taxa:
-        name=taxon.split(";")[level]
-        if remove_identifier:
-            name=name.split("__")[-1]
+        try:
+            name=taxon.split(";")[level]
+            if remove_identifier:
+                name=name.split("__")[-1]
+        except IndexError:
+            name=taxon
         new_names.append(name)
         
     return new_names
@@ -2449,6 +2452,8 @@ def taxa_by_level(taxa, data, level, keep_unclassified=None):
             (list of lists): The data after summing to the taxa level specified.
     """    
 
+    level_chars=dict([(1,"k__"),(2,"p__"),(3,"c__"),(4,"f__"),(5,"g__"),(6,"s__")])
+
     # first remove any unclassified levels
     if not keep_unclassified:
         taxa=taxa_remove_unclassified(taxa)
@@ -2459,7 +2464,10 @@ def taxa_by_level(taxa, data, level, keep_unclassified=None):
         split_taxon=taxon.split(";")
         if len(split_taxon) < (level+1):
             # do not include those taxa that are not specified to the level requested
-            continue
+            if taxon.startswith(level_chars[level]):
+                new_taxon_level=taxon
+            else:
+                continue
         new_taxon_level=";".join(split_taxon[:(level+1)])
         if new_taxon_level in data_sum:
             data_sum[new_taxon_level]=[a+b for a,b in zip(data_sum[new_taxon_level],taxon_data)]
