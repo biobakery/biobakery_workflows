@@ -31,7 +31,7 @@ from anadama2 import Workflow
 from biobakery_workflows import document_templates, utilities, visualizations
 
 # import the files for descriptions and paths
-from biobakery_workflows import files
+from biobakery_workflows import files, data
 import os
 import sys
 
@@ -117,7 +117,9 @@ if workflow_type == "16S" :
 else:
     # set default introduction text
     if not args.introduction_text:
-        args.introduction_text = "![]({0})\n\nThe data was run through the standard workflow for whole metagenome shotgun sequencing.".format(utilities.get_package_file("wms_workflow","image"))
+        with open(data.get_file("wmgx_methods.txt")) as file_handle:
+            intro_methods=file_handle.readlines()[0]
+        args.introduction_text = "![]({0})\n\n{1}".format(utilities.get_package_file("wms_workflow","image"),intro_methods)
 
     # get the paths for the required files and check they are found
     qc_counts=utilities.find_data_file(data_files,"wmgx_qc_readcounts")
