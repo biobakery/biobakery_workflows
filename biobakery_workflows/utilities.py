@@ -248,6 +248,11 @@ def get_metadata_variables(input_metadata, taxonomic_profile):
     if start_number:
         sys.exit("ERROR: Sample names start with a number: "+",".join(start_number)+".")
 
+    # check if metadata variables have spaces
+    spaces_in_variables = [x for x in metadata_variables if " " in x]
+    if spaces_in_variables:
+        sys.exit("ERROR: Metadata variables have spaces in the names. Please remove the spaces.")
+
     # check for duplicate samples
     if len(list(set(samples))) != len(samples):
         duplicate=[x for x, count in collections.Counter(samples).items() if count > 1]
