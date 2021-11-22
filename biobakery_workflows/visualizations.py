@@ -496,7 +496,7 @@ def qc_read_counts(document, file):
     
     # shorten known database names
     columns=[name.replace("SILVA_128_LSUParc_SSUParc_ribosomal_RNA","rRNA") for name in columns]
-    columns=[name.replace("Homo_sapiens","hg38") for name in columns]
+    columns=[name.replace("Homo_sapiens_hg38","hg38") for name in columns]
     columns=[name.replace("human_hg38_refMrna","mRNA") for name in columns]
     
     # change the names of the raw and trimmed columns (to include case)
