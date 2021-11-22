@@ -2300,8 +2300,16 @@ def microbial_read_proportion(paired_data, orphan_data=None, rna=None, database_
     proportion_decontaminated = []
     for paired_row, orphan_row in zip(paired_data, orphan_data):
         decontaminated_sum = 2.0 * paired_row[-1] + orphan_row[-1] + orphan_row[-2]
-        decon_trim = decontaminated_sum / (2.0 * paired_row[1] + orphan_row[0] + orphan_row[1])
-        decon_raw = decontaminated_sum / (2.0 * paired_row[0])
+
+        try:
+            decon_trim = decontaminated_sum / (2.0 * paired_row[1] + orphan_row[0] + orphan_row[1])
+        except ZeroDivisionError:
+            decon_trim = 0
+        try:
+            decon_raw = decontaminated_sum / (2.0 * paired_row[0])
+        except ZeroDivisionError:
+            decon_raw = 0
+        
         if rna:
             decon_ratio = decontaminated_sum / (2.0 * paired_row[-2] + orphan_row[-3] + orphan_row[-4])
             proportion_decontaminated.append(["{0:.5f}".format(i) for i in [decon_trim, decon_ratio, decon_raw]])
