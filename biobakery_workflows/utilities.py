@@ -2255,7 +2255,10 @@ def microbial_read_proportion_multiple_databases(data, columns, orphan_data=None
         # create subset of orphan data if provided
         orphan_subset=None
         if orphan_data and len(orphan_data[0]) > 2:
-            orphan_subset=[row[:2]+[row[index+2]] for row in orphan_data]
+            try:
+                orphan_subset=[row[:2]+[row[index+2]]+[row[index+3]] for row in orphan_data]
+            except IndexError:
+                orphan_subset=[row[:2]+[row[index+2]] for row in orphan_data]
         else:
             orphan_subset=orphan_data
         
