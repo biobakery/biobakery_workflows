@@ -908,7 +908,7 @@ def panphlan_profile(task,species_number,panphlan_db):
         gene_target=os.path.join(output_folder,selected_species+"_gene_presence_absence.tsv")
         # run the task
         return_code = utilities.run_task(
-            "panphlan_profile.py -p [args[0]] -i [args[1]] --o_matrix [targets[0]] --verbose > [targets[1]]",
+            "panphlan_profiling.py -p [args[0]] -i [args[1]] --o_matrix [targets[0]] --verbose > [targets[1]]",
             depends=task.depends+[species_db], targets=[gene_target]+task.targets,
             args=[os.path.join(panphlan_db,selected_species+"_pangenome.tsv"),output_folder,panphlan_db])
     else:
