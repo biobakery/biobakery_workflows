@@ -56,7 +56,7 @@ table(nchar(getSequences(seqtab)))
 # The sequence table is a matrix with rows corresponding to (and named by) the samples, and columns corresponding to (and named by) the sequence variants.
 
 # Remove chimeric sequences:
-seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=as.numeric(args.list$threads), verbose=TRUE)
+seqtab.nochim <- dada2::removeBimeraDenovo(seqtab, method="consensus", multithread=as.numeric(args.list$threads), verbose=TRUE, minFoldParentOverAbundance=as.numeric(args.list$min_fold_parent_over_abundance))
 dim(seqtab.nochim)
 
 # Ratio of chimeric sequence reads

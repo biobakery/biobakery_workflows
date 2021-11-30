@@ -263,7 +263,7 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
         return mergers_file_path
     
 
-def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, threads):
+def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, threads, min_fold_parent_over_abundance):
     
          """ Builds ASV table, removes chimeras, creates read counts at each step, and fasta file with all sequences
             
@@ -305,11 +305,12 @@ def const_seq_table(workflow, output_folder, filtered_dir,  mergers_file_path, t
               --asv_tsv=[vars[3]]\
               --seqtab_file_path=[targets[1]]\
               --seqs_fasta_path=[targets[2]]\
-              --threads=[vars[1]]",
+              --threads=[vars[1]]\
+              --min_fold_parent_over_abundance=[vars[4]]",
             depends = [mergers_file_path,TrackedExecutable("R", version_command="echo '" +  version_script + "' `" + version_script + "`")],
             targets = [read_counts_steps_path, seqtab_file_path, seqs_fasta_path],
             args = [output_folder, filtered_dir],
-            vars = [script_path, threads, readcounts_rds, asv_tsv ],
+            vars = [script_path, threads, readcounts_rds, asv_tsv, min_fold_parent_over_abundance ],
             name = "construct_sequence_table"
             )
          return seqtab_file_path, read_counts_steps_path, seqs_fasta_path

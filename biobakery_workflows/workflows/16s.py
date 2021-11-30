@@ -52,6 +52,7 @@ workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to 
 workflow.add_argument("maxee", desc="the maxee value to use for quality control filtering", default=1)
 workflow.add_argument("trunc-len-max", desc="the max length for truncating reads", default=200)
 workflow.add_argument("trunc-len-rev-offset", desc="the offset (use negative number to subtract) to max length for truncating reads on the reverse strand (for dada2 only)", default=40)
+workflow.add_argument("min-fold-parent-over-abundance", desc="the min fold difference between child and parent to call a sequence as chimeric (for dada2 only)", default=1)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
 workflow.add_argument("bypass-primers-removal", desc="do not run remove primers tasks", action="store_true")
 workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow")
@@ -140,7 +141,7 @@ if args.method == "dada2" or args.method == "its":
 
     # construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(
-            workflow, args.output, filtered_dir, mergers_file_path, args.threads)
+            workflow, args.output, filtered_dir, mergers_file_path, args.threads, args.min_fold_parent_over_abundance)
 
     # centroid alignment
     centroid_fasta = files.SixteenS.path("msa_nonchimera", args.output)
