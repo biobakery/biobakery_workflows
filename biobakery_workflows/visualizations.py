@@ -856,11 +856,11 @@ class Sixteen_S(Workflow):
     
     captions["dada2errorintro"]="The read quality profiles show the quality scores at each base for the forward and reverse reads. The green line shows the mean and the quartiles are shown with the orange lines.\n"
     
-    captions["dada2countsinfo"]="This figure shows counts of reads in four categories: \n \
-        \n1) original: total count of raw reads,\n2) filtered: number of reads after filtering for length and quality,\n3) merged: number of reads where the pairs merge,\n4) nonchim: total remaining after chimera removal.\n\n"
+    captions["dada2countsinfo"]="This figure shows stacked counts of reads in four categories: \n \
+        \n1) Original: total count of raw reads,\n2) Filtered: number of reads after filtering for length and quality,\n3) Merged: number of reads where the pairs merge,\n4) NonChimera: total remaining after chimera removal.\n\n"
 
 
-    captions["usearchcountsinfo"]="This figure shows counts of reads in three categories: \n \
+    captions["usearchcountsinfo"]="This figure shows stacked counts of reads in three categories: \n \
         \n1) classified: reads that align to OTUs with known taxonomy,\n2) unclassified: reads that align to OTUs of unknown taxonomy,\n3) unmapped: reads that do not align to any OTUs.\n\n The sum of these\
         three read counts for each sample is the total original read count not including filtering prior to OTU clustering.\n"
     
