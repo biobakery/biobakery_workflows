@@ -113,8 +113,6 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         # determine time/memory equations based on the single input file
         time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
         mem_equation="3*12*1024 if file_size('[depends[0]]') < 10 else 6*12*1024"
-        # need to rename the final output file here to the sample name
-        rename_final_output = " && mv [args[3]] [args[4]]"
         
     # set additional options to empty string if not provided
     if additional_options is None:
