@@ -227,7 +227,7 @@ to optimize the workflow run based on your computing resources.
 
 **Requirements**
 
-1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.10.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
 2.  [MetaPhlAn](https://github.com/biobakery/metaphlan)
@@ -306,7 +306,7 @@ The workflow by default expects input files with the extension
 
 **Requirements**
 
-1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.10.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
 2.  [MetaPhlAn](https://github.com/biobakery/metaphlan)
@@ -476,7 +476,7 @@ assessment, and then creates a final annotated contig file.
 
 **Requirements**
 
-1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.7.0+)
+1.  [KneadData](https://github.com/biobakery/kneaddata) (v0.10.0+)
     1.  Install with: `$ conda install -c biobakery kneaddata` OR
         `$ pip install kneaddata`
 2.  [SPAdes](http://cab.spbu.ru/software/spades/)
