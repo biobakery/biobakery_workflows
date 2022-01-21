@@ -1551,12 +1551,22 @@ def paired_files(files, extension, pair_identifier=None):
     # check for the one in the pair identifier
     if not "1" in pair_identifier:
         sys.exit("Please provide the identifier for the first pair set (ie R1).")
-    
-    pair_identifier2=pair_identifier.replace("1","2",1)
-
+   
+    # search for all possible identifiers
     input_pair1 = list(filter(lambda file: os.path.basename(file).replace(extension,"").endswith(pair_identifier), files))
-    input_pair2 = list(filter(lambda file: os.path.basename(file).replace(extension,"").endswith(pair_identifier2), files))
-    
+    input_pair2 = []
+    pair_identifier2  = ""
+    for ind_index in range(pair_identifier.count("1")): 
+        pair_identifier2_try=pair_identifier.replace("1","2",ind_index+1)
+
+        input_pair2_temp = list(filter(lambda file: os.path.basename(file).replace(extension,"").endswith(pair_identifier2_try), files))
+        if len(input_pair2_temp) > len(input_pair2):
+            pair_identifier2 = pair_identifier2_try
+            input_pair2 = input_pair2_temp 
+  
+    if len(input_pair1) != len(input_pair2):
+        sys.exit("ERROR: Unmatched pairs with: "+pair_identifier1+" "+pair_identifier2)
+ 
     # only return matching pairs of files in the same order
     paired_file_set = [[],[]]
     for file1 in sorted(input_pair1):

@@ -48,7 +48,7 @@ workflow.add_argument("dual-barcode-file", desc="the string to identify the dual
 workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
 workflow.add_argument("min-pred-qc-score", desc="the min phred quality score to use for demultiplexing", default=2)
 workflow.add_argument("threads", desc="number of threads/cores for each task to use", default=1)
-workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
+workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair, must proceed the file extension (ie R1_001.fastq.gz)", default=".R1")
 workflow.add_argument("interleaved", desc="indicates whether or not sequence files are interleaved", default=False, action="store_true")
 workflow.add_argument("bypass-quality-control", desc="do not run the quality control tasks", action="store_true")
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
