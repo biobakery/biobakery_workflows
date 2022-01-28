@@ -204,7 +204,7 @@ doc_task=workflow.add_document(
 # add an archive of the document and figures, removing the log file
 # the archive will have the same name and location as the output folder
 workflow.add_archive(
-    depends=[args.output,doc_task],
+    depends=[args.output,doc_task,args.input_metadata],
     targets=args.output+".zip",
     remove_log=True)
 
