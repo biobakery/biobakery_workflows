@@ -476,7 +476,7 @@ def show_heatmaps(heatmap, run_type):
 def show_plots(plots_list):
     for filename in plots_list:
         if os.path.isfile(filename):
-            print("\n\n![]("+filename+")\n\n")
+            print("\n\n![]("+filename+"){#id .class width=540px height=405px}\n\n")
 
 def show_maaslin_tile(figures, type):
     # show the top plots for each metadata
@@ -1395,9 +1395,6 @@ def merge_metadata(metadata, samples, values, values_without_names=None):
     if len(sample_index) == 0:
         print("Warning: Metadata does not match samples.")
         return values, samples
-    
-    if len(samples) > len(metadata[0][1:]):
-        print("Warning: Metadata only provided for a subset of samples.")
     
     # add metadata to the new data
     new_data=[]
