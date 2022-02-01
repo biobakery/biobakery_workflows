@@ -119,7 +119,7 @@ else:
     if not args.introduction_text:
         with open(data.get_file("wmgx_methods.txt")) as file_handle:
             intro_methods=file_handle.readlines()[0]
-        args.introduction_text = "![]({0})\n\n{1}".format(utilities.get_package_file("wms_workflow","image"),intro_methods)
+        args.introduction_text = "![]("+utilities.get_package_file("wms_workflow","image")+"){#id .class width=675px height=505px}\n\n"+intro_methods
 
     # get the paths for the required files and check they are found
     qc_counts=utilities.find_data_file(data_files,"wmgx_qc_readcounts")
