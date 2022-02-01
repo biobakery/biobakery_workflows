@@ -100,7 +100,7 @@ top_pathways_names = [top_names_and_descriptions[dna_pathways.index(pwy)] if pwy
 categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_pathways_data, top_pathways_names, vars["max_sets_barplot"], vars["max_groups_barplot"], feature="pathways")
 ```
 
-<% if categorical_metadata: print("Stacked barplot of pathways abundance grouped by metadata and pathways average abundance grouped by metadata. For cases where a metadata variable has many levels only the first "+str(vars["max_groups_barplot"])+" grouped barplots will be shown.") %>
+<% if categorical_metadata: print("Stacked barplot of pathways abundance grouped by metadata and pathways average abundance grouped by metadata. For cases where a variable has many levels only the first "+str(vars["max_groups_barplot"])+" grouped barplots will be shown.") %>
 
 ```{python, echo=False, results="md", name="plot stacked barchart ecs"}
 if vars["dna_ecabundance"]:
@@ -115,7 +115,7 @@ if vars["dna_ecabundance"]:
     categorical_metadata = visualizations.plot_grouped_and_average_barplots_taxonomy(document, vars, sorted_samples, sorted_ecs_data, top_ecs_names, vars["max_sets_barplot"], vars["max_groups_barplot"], feature="ECs")
 ```
 
-<% if categorical_metadata and vars["dna_ecabundance"]: print("Stacked barplot of ECs abundance grouped by metadata and ECs average abundance grouped by metadata. For cases where a metadata variable has many levels only the first "+str(vars["max_groups_barplot"])+" grouped barplots will be shown.") %>
+<% if categorical_metadata and vars["dna_ecabundance"]: print("Stacked barplot of ECs abundance grouped by metadata and ECs average abundance grouped by metadata. For cases where a variable has many levels only the first "+str(vars["max_groups_barplot"])+" grouped barplots will be shown.") %>
 
 
 <% if vars["feature_counts"]: print("## Features") %>
