@@ -446,7 +446,7 @@ def remove_large_metadata_levels(merged_data, row_names, total_metadata_variable
 
     return total_metadata, new_data, new_names
 
-def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename,title=None,max_sets_heatmap=25,method="correlation"):
+def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename,title=None,max_sets_heatmap=25,method="correlation",zscore=False):
     """ Generate a heatmap using the doc function. Include metadata if available. """
 
     # set the default title if not provided
@@ -467,9 +467,9 @@ def plot_heatmap(document,vars,samples,top_taxonomy,top_data,pdf_format,filename
         metadata_rows=range(1,total_metadata)
 
         document.show_hclust2(metadata_samples, metadata_taxonomy, merged_data,
-            title=title, metadata_rows=metadata_rows, method=method,outfilename=os.path.join(document.figures_folder,filename))
+            title=title, metadata_rows=metadata_rows, method=method,outfilename=os.path.join(document.figures_folder,filename),zscore=zscore)
     else:
-        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method,outfilename=os.path.join(document.figures_folder,filename))
+        document.show_hclust2(samples,top_taxonomy,top_data,title=title,method=method,outfilename=os.path.join(document.figures_folder,filename),zscore=zscore)
 
 
 def plot_pcoa_top_average_abundance(document, samples, feature_names, feature_data, feature_type, scale_data=None, legend_title="% Abundance", max_sets=6):

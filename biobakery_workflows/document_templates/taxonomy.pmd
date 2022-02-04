@@ -122,6 +122,11 @@ visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pd
 visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"],"heatmap_species_bray_curtis.png","Top {} species by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap species zscore"}
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"],"heatmap_species_zscore.png","Top {} species by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
+```
 ### Genera
 
 ```{python, echo=False, results="md", name="plot heatmap genera spearman"}
@@ -132,6 +137,12 @@ visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_g
 
 ```{python, echo=False, results="md", name="plot heatmap genera bray curtis"}
 visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_bray_curtis.png","Top {} genera by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap genera zscore"}
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_zscore.png","Top {} genera by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
 ```
 
 

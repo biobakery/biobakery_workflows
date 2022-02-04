@@ -71,6 +71,17 @@ if vars["dna_ecabundance"]:
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
+```{python, echo=False, results="md", name="plot heatmap pathways zscore"}
+visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_descriptions, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_zscore.png","Top {} pathways by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
+```
+
+```{python, echo=False, results="md", name="plot heatmap ecs zscore"}
+if vars["dna_ecabundance"]:
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_ecs_zscore.png","Top {} pathways by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
 
 ```{python, echo=False, results="md", name="show table top pathways"}
 pathway_file_name="top_average_pathways_names.tsv"
