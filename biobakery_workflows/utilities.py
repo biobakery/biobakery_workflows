@@ -43,6 +43,64 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def sort_decreasing_average_abundance(taxonomy,data):
+    """ Sort the taxonomy data in the order of highest average abundance first """
+    import numpy
+
+    # compute all averages
+    all_averages=[]
+    for taxa, row in zip(taxonomy,data):
+        all_averages.append(sum(row)/(len(row)*1.0))
+
+    # sort to new lists using reverse averages
+    sorted_taxonomy, sorted_data = [], []
+    for index in numpy.argsort(all_averages)[::-1]:
+        sorted_taxonomy.append(taxonomy[index])
+        sorted_data.append(data[index])
+
+    return sorted_taxonomy, sorted_data
+
+
+def filter_correlation(taxonomy,data,threshold=0.7):
+    """ Identify features that correlate past threshold and remove all but one from each group,
+        not allowing duplicate features across groups. """
+    from scipy import stats
+
+    # first sort the data so we end up removing features with smaller averages
+    sorted_taxonomy, sorted_data = sort_decreasing_average_abundance(taxonomy,data)
+
+    taxa_keep=set()
+    taxa_rm=set()
+    # identify features that correlate
+    for taxa1, data1 in zip(sorted_taxonomy, sorted_data):
+        cluster=[]
+        for taxa2, data2 in zip(sorted_taxonomy, sorted_data):
+            coef, p = stats.spearmanr(data1, data2)
+            if coef >= threshold:
+                cluster+=[taxa2]
+
+        if cluster:
+            if not taxa1 in taxa_rm:
+                taxa_keep.add(taxa1)
+            else:
+                for clade in cluster:
+                    if (not clade in taxa_rm) and (not clade in taxa_keep):
+                        taxa_keep.add(clade)
+                        break
+            taxa_rm.update(cluster)
+        else:
+            taxa_keep.add(taxa1)
+
+    # create filtered lists
+    filtered_taxonomy, filtered_data = [], []
+    for taxa, data1 in zip(sorted_taxonomy, sorted_data):
+        if taxa in taxa_keep:
+            filtered_taxonomy.append(taxa)
+            filtered_data.append(data1)
+
+    return filtered_taxonomy, filtered_data
+
+
 def get_average_read_length_fastq(file):
     """ Get the average read length for a fastq file """
 
