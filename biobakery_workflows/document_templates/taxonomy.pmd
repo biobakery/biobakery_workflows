@@ -17,10 +17,14 @@ species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan_format(ta
 filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
 
+species_clustered_taxonomy, species_clustered_data = utilities.filter_correlation(species_taxonomy, species_data,vars["correlation_threshold"])
+
 # get the filtered genera
 genera_taxonomy, genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,data,level=5)
 filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"], level=5)
+
+genera_clustered_taxonomy, genera_clustered_data = utilities.filter_correlation(genera_taxonomy, genera_data,vars["correlation_threshold"])
 ```
 
 A total of <%= len(species_taxonomy) %> species and <%= len(genera_taxonomy) %> genera were identified. After basic filtering <%= len(filtered_species_taxonomy) %> species and <%= len(filtered_genera_taxonomy) %> genera remained.
@@ -72,6 +76,7 @@ utilities.show_plots(alpha_diversity_plots_folder['scatterplot'])
 
 ```{python, echo=False, results="md", name="show pcoa species"}
 top_taxonomy, top_data = utilities.top_rows(species_taxonomy, species_data, vars["max_sets_heatmap"], function="average")
+top_clustered_taxonomy, top_clustered_data = utilities.top_rows(species_clustered_taxonomy, species_clustered_data, vars["max_sets_heatmap"], function="average")
 
 pcoa_data=numpy.array(species_data)/100.0
 caption=document.show_pcoa(samples,species_taxonomy,pcoa_data,"PCoA ordination of species abundance using Bray-Curtis dissimilarity",outfilename=os.path.join(document.figures_folder,"pcoa_species.png"))
@@ -89,6 +94,7 @@ visualizations.show_pcoa_metadata(document, vars, samples, species_taxonomy, pco
 
 ```{python, echo=False, results="md", name="show pcoa genera"}
 top_taxonomy_genera, top_data_genera = utilities.top_rows(genera_taxonomy, genera_data, vars["max_sets_heatmap"], function="average")
+top_clustered_taxonomy_genera, top_clustered_data_genera = utilities.top_rows(genera_clustered_taxonomy, genera_clustered_data, vars["max_sets_heatmap"], function="average")
 
 pcoa_data_genera=numpy.array(genera_data)/100.0
 caption_genera=document.show_pcoa(samples,genera_taxonomy,pcoa_data_genera, "PCoA ordination of genera abundance using Bray-Curtis dissimilarity",feature_types="genera",outfilename=os.path.join(document.figures_folder,"pcoa_genera.png"))
@@ -127,10 +133,16 @@ visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pd
 ```{python, echo=False, results="md", name="plot heatmap species zscore"}
 visualizations.plot_heatmap(document,vars,samples,top_taxonomy,top_data,vars["pdf_format"],"heatmap_species_zscore.png","Top {} species by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
 ```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap species correlation"}
+visualizations.plot_heatmap(document,vars,samples,top_clustered_taxonomy,top_clustered_data,vars["pdf_format"],"heatmap_species_filtered_spearman.png","Top {} species by average abundance (Filtered Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
 ### Genera
 
 ```{python, echo=False, results="md", name="plot heatmap genera spearman"}
-visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_spearman.png", "Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])\
+visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_spearman.png", "Top {} genera by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
@@ -145,6 +157,11 @@ visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_g
 visualizations.plot_heatmap(document,vars,samples,top_taxonomy_genera,top_data_genera,vars["pdf_format"],"heatmap_genus_zscore.png","Top {} genera by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
 ```
 
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap genera correlation"}
+visualizations.plot_heatmap(document,vars,samples,top_clustered_taxonomy_genera,top_clustered_data_genera,vars["pdf_format"],"heatmap_genus_filtered_spearman.png","Top {} species by average abundance (Filtered Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
 
 ## Barplot
 
