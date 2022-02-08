@@ -17,6 +17,9 @@ filtered_pathways_names = [top_names_and_descriptions[dna_pathways.index(pwy)] i
 dna_samples, dna_top_average_pathways, dna_top_average_data, top_names_and_descriptions = visualizations.top_average_pathways(
     document, vars["dna_pathabundance"], vars["max_sets_heatmap"])
 
+dna_samples_clustered, dna_top_average_pathways_clustered, dna_top_average_data_clustered, top_names_and_descriptions_clustered = visualizations.top_average_pathways(
+    document, vars["dna_pathabundance"], vars["max_sets_heatmap"], filter_correlation=True, correlation_threshold=vars["correlation_threshold"])
+
 print("Abundances are passed through a basic filter requiring each pathway to have at least "+str(vars["min_abundance"])+" % abundance in at least "+str(vars["min_samples"])+" % of all samples.")
 
 print("A total of "+str(len(dna_pathways))+" pathways were identified. After basic filtering "+str(len(filtered_pathways))+" pathways remained.")
@@ -34,6 +37,8 @@ if vars["dna_ecabundance"]:
 
     dna_ecs_samples, dna_top_average_ecs, dna_top_average_ecs_data, top_ecs_names_and_descriptions = visualizations.top_average_pathways(
         document, vars["dna_ecabundance"], vars["max_sets_heatmap"])
+    dna_ecs_samples_clustered, dna_top_average_ecs_clustered, dna_top_average_ecs_data_clustered, top_ecs_names_and_descriptions_clustered = visualizations.top_average_pathways(
+        document, vars["dna_ecabundance"], vars["max_sets_heatmap"], filter_correlation=True, correlation_threshold=vars["correlation_threshold"])
 
     print("A total of "+str(len(dna_ecs))+" ECs were identified. After basic filtering "+str(len(filtered_ecs))+" ECs remained.")
 
@@ -49,24 +54,17 @@ if vars["dna_ecabundance"]:
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
+<% print("#### Pathways\n") %>
+
 ```{python, echo=False, results="md", name="plot heatmap pathways"}
 visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_descriptions, dna_top_average_data, vars["pdf_format"], "heatmap_pathways_spearman.png", "Top {} pathways by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
-```{python, echo=False, results="md", name="plot heatmap ecs"}
-if vars["dna_ecabundance"]:
-    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data, vars["pdf_format"], "heatmap_ecs_spearman.png", "Top {} ECs by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
-```
-
 <% if vars["pdf_format"]: print("\clearpage") %>
+
 
 ```{python, echo=False, results="md", name="plot heatmap pathways bray curtis"}
 visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_descriptions, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
-```
-
-```{python, echo=False, results="md", name="plot heatmap ecs bray curtis"}
-if vars["dna_ecabundance"]:
-    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_ecs_bray_curtis.png","Top {} pathways by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
@@ -75,13 +73,42 @@ if vars["dna_ecabundance"]:
 visualizations.plot_heatmap(document,vars,dna_samples, top_names_and_descriptions, dna_top_average_data,vars["pdf_format"],"heatmap_pathways_zscore.png","Top {} pathways by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
 ```
 
-```{python, echo=False, results="md", name="plot heatmap ecs zscore"}
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap pathways filtered spearman"}
+visualizations.plot_heatmap(document,vars,dna_samples_clustered, top_names_and_descriptions_clustered, dna_top_average_data_clustered,vars["pdf_format"],"heatmap_pathways_filtered_spearman.png","Top {} pathways by average abundance (Filtered Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+<% if vars["dna_ecabundance"]: print("#### ECs\n") %>
+
+```{python, echo=False, results="md", name="plot heatmap ecs"}
 if vars["dna_ecabundance"]:
-    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_ecs_zscore.png","Top {} pathways by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data, vars["pdf_format"], "heatmap_ecs_spearman.png", "Top {} ECs by average abundance (Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
 ```
 
 <% if vars["pdf_format"]: print("\clearpage") %>
 
+```{python, echo=False, results="md", name="plot heatmap ecs bray curtis"}
+if vars["dna_ecabundance"]:
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_ecs_bray_curtis.png","Top {} ECs by average abundance (Bray-Curtis)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],method="lbraycurtis")
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap ecs zscore"}
+if vars["dna_ecabundance"]:
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples, top_ecs_names_and_descriptions, dna_top_average_ecs_data,vars["pdf_format"],"heatmap_ecs_zscore.png","Top {} ECs by average abundance (Z-score)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"],zscore=True)
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
+
+```{python, echo=False, results="md", name="plot heatmap ecs filtered spearman"}
+if vars["dna_ecabundance"]:
+    visualizations.plot_heatmap(document,vars,dna_ecs_samples_clustered, top_ecs_names_and_descriptions_clustered, dna_top_average_ecs_data_clustered,vars["pdf_format"],"heatmap_ecs_filtered_spearman.png","Top {} ECs by average abundance (Filtered Spearman)".format(vars["max_sets_heatmap"]),vars["max_sets_heatmap"])
+```
+
+<% if vars["pdf_format"]: print("\clearpage") %>
 
 ```{python, echo=False, results="md", name="show table top pathways"}
 pathway_file_name="top_average_pathways_names.tsv"

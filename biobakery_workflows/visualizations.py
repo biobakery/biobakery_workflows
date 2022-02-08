@@ -583,7 +583,7 @@ def write_pathway_average_variance_table(document, file_name, data, names_and_de
     
     return average_abundance_variance
 
-def top_average_pathways(document, file, max_sets, get_all=False):
+def top_average_pathways(document, file, max_sets, get_all=False, filter_correlation=False, correlation_threshold=0.7):
     """ Read the pathways file and get the top average pathways """
     
     # read in the samples and get the data with out the stratification by bug
@@ -599,6 +599,9 @@ def top_average_pathways(document, file, max_sets, get_all=False):
     if get_all:
         top_pathways, top_data = pathways, data
     else:
+        if filter_correlation:
+            pathways, data = utilities.filter_correlation(pathways, data, correlation_threshold)
+
         top_pathways, top_data = utilities.top_rows(pathways,
             data, max_sets, function="average")
     
