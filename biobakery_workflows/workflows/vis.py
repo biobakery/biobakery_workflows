@@ -61,6 +61,7 @@ workflow.add_argument("max-sets-heatmap",desc="the max sets to show for a heatma
 workflow.add_argument("max-missing",desc="the max percentage of missing values for a metadata to not be filtered", default="20.0")
 workflow.add_argument("max-sets-barplot",desc="the max sets to show for a barplot", default=15)
 workflow.add_argument("max-groups-barplot",desc="the max number of grouped barplots to show for a single metadata variable", default=5)
+workflow.add_argument("correlation-threshold",desc="the min value to use with the spearman correlation for filtering features on heatmap", default=0.7)
 workflow.add_argument("format",desc="the format for the report", default="pdf", choices=["pdf","html"])
 workflow.add_argument("introduction-text",desc="the introduction to be included in the report [DEFAULT: intro includes information from workflow log]", default="")
 workflow.add_argument("print-template",desc="only print the template for the visualization workflow, do not run the workflow", action="store_true")
@@ -177,6 +178,8 @@ template_variables["max_groups_barplot"] = int(args.max_groups_barplot)
 template_variables["metadata"]=metadata
 template_variables["metadata_labels"]=metadata_labels
 template_variables["log"]=log_file
+
+template_variables["correlation_threshold"]=float(args.correlation_threshold)
 
 if args.print_template:
     # only print the template to stdout
