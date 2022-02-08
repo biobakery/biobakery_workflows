@@ -64,7 +64,11 @@ def sort_decreasing_average_abundance(taxonomy,data):
 def filter_correlation(taxonomy,data,threshold=0.7):
     """ Identify features that correlate past threshold and remove all but one from each group,
         not allowing duplicate features across groups. """
+    import numpy
     from scipy import stats
+
+    # set all warnings to error
+    numpy.seterr(all="raise")
 
     # first sort the data so we end up removing features with smaller averages
     sorted_taxonomy, sorted_data = sort_decreasing_average_abundance(taxonomy,data)
@@ -75,7 +79,11 @@ def filter_correlation(taxonomy,data,threshold=0.7):
     for taxa1, data1 in zip(sorted_taxonomy, sorted_data):
         cluster=[]
         for taxa2, data2 in zip(sorted_taxonomy, sorted_data):
-            coef, p = stats.spearmanr(data1, data2)
+            try:
+                coef, p = stats.spearmanr(data1, data2)
+            except FloatingPointError:
+                pass
+ 
             if coef >= threshold:
                 cluster+=[taxa2]
 
@@ -90,6 +98,9 @@ def filter_correlation(taxonomy,data,threshold=0.7):
             taxa_rm.update(cluster)
         else:
             taxa_keep.add(taxa1)
+
+    # reset back to warn
+    numpy.seterr(all="warn")
 
     # create filtered lists
     filtered_taxonomy, filtered_data = [], []
