@@ -61,7 +61,7 @@ def sort_decreasing_average_abundance(taxonomy,data):
     return sorted_taxonomy, sorted_data
 
 
-def filter_correlation(taxonomy,data,threshold=0.7):
+def filter_correlation(taxonomy,data,threshold=0.7,max_return=30):
     """ Identify features that correlate past threshold and remove all but one from each group,
         not allowing duplicate features across groups. """
     import numpy
@@ -77,6 +77,14 @@ def filter_correlation(taxonomy,data,threshold=0.7):
     taxa_rm=set()
     # identify features that correlate
     for taxa1, data1 in zip(sorted_taxonomy, sorted_data):
+        # stop once we have the max needed
+        if len(taxa_keep) >= max_return:
+            break
+
+        # pass those taxa that have already clustered
+        if taxa1 in taxa_rm or taxa1 in taxa_keep:
+            continue
+
         cluster=[]
         for taxa2, data2 in zip(sorted_taxonomy, sorted_data):
             try:

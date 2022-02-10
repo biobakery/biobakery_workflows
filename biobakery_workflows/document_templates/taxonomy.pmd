@@ -17,14 +17,14 @@ species_taxonomy, species_data = utilities.filter_taxa_level_metaphlan_format(ta
 filtered_species_taxonomy, filtered_species_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"])
 
-species_clustered_taxonomy, species_clustered_data = utilities.filter_correlation(species_taxonomy, species_data,vars["correlation_threshold"])
+species_clustered_taxonomy, species_clustered_data = utilities.filter_correlation(species_taxonomy, species_data,vars["correlation_threshold"],max_return=vars["max_sets_heatmap"]*2)
 
 # get the filtered genera
 genera_taxonomy, genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,data,level=5)
 filtered_genera_taxonomy, filtered_genera_data = utilities.filter_taxa_level_metaphlan_format(taxonomy,
     data, min_abundance=vars["min_abundance"], min_samples=vars["min_samples"], level=5)
 
-genera_clustered_taxonomy, genera_clustered_data = utilities.filter_correlation(genera_taxonomy, genera_data,vars["correlation_threshold"])
+genera_clustered_taxonomy, genera_clustered_data = utilities.filter_correlation(genera_taxonomy, genera_data,vars["correlation_threshold"],max_return=vars["max_sets_heatmap"]*2)
 ```
 
 A total of <%= len(species_taxonomy) %> species and <%= len(genera_taxonomy) %> genera were identified. After basic filtering <%= len(filtered_species_taxonomy) %> species and <%= len(filtered_genera_taxonomy) %> genera remained.

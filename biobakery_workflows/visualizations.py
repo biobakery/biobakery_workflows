@@ -600,7 +600,7 @@ def top_average_pathways(document, file, max_sets, get_all=False, filter_correla
         top_pathways, top_data = pathways, data
     else:
         if filter_correlation:
-            pathways, data = utilities.filter_correlation(pathways, data, correlation_threshold)
+            pathways, data = utilities.filter_correlation(pathways, data, correlation_threshold, max_return=max_sets*2)
 
         top_pathways, top_data = utilities.top_rows(pathways,
             data, max_sets, function="average")
