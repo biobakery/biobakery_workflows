@@ -142,7 +142,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # create a task for each set of input and output files to run kneaddata
     for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && gzip [args[3]] ",
+            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && gzip -f [args[3]] ",
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets[1:3],
             args=[kneaddata_output_folder, threads, sample, targets[0]],
