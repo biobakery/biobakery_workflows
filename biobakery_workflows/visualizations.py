@@ -611,7 +611,7 @@ def top_average_pathways(document, file, max_sets, get_all=False, filter_correla
     return samples, top_pathways, top_data, top_names_and_descriptions
 
 def remove_unexpected_chars(value_list):
-    return [re.sub("[^0-9a-zA-Z.\-]+", "_",val) for val in value_list]
+    return [re.sub(r"[^0-9a-zA-Z.\-\s/]+", "_",val) for val in value_list]
 
 def show_table_max_rows(document, data, row_labels, column_labels, title, table_file,
     max_rows=20, format_data_comma=None, location="center", font=None, max_columns=7, outfilename=None):
