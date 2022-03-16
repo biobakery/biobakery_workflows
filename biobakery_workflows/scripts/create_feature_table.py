@@ -43,7 +43,7 @@ def parse_arguments(args):
     parser.add_argument(
         "--max-length-feature-name",
         help="the max length for each feature name",
-        default=75)
+        default=100)
 
     return parser.parse_args()
 
