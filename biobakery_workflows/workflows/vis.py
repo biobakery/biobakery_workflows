@@ -56,7 +56,7 @@ workflow.add_argument("metadata-categorical",desc="the categorical features", ac
 workflow.add_argument("metadata-continuous",desc="the continuous features", action="append", default=[])
 workflow.add_argument("metadata-exclude",desc="the features to exclude", action="append", default=[])
 workflow.add_argument("min-abundance",desc="the min abundance to use for filtering", default=0.01)
-workflow.add_argument("min-samples",desc="the min samples to use for filtering", default=10)
+workflow.add_argument("min-samples",desc="the min samples to use for filtering (as a percentage)", default=3)
 workflow.add_argument("max-sets-heatmap",desc="the max sets to show for a heatmap", default=25)
 workflow.add_argument("max-missing",desc="the max percentage of missing values for a metadata to not be filtered", default="20.0")
 workflow.add_argument("max-sets-barplot",desc="the max sets to show for a barplot", default=15)
