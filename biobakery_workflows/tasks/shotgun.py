@@ -342,7 +342,7 @@ def taxonomic_profile(workflow,input_files,output_folder,threads,input_extension
                 targets=[target_profile,target_sam],
                 args=[threads,metaphlan_output_folder,input_type],
                 time="2*4*60 if file_size('[depends[0]]') < 25 else 5*3*60", # 3 hours or more depending on input file size
-                mem="12*1024 if file_size('[depends[0]]') < 25 else 4*12*1024", # 12 GB or more depending on input file size
+                mem="2*12*1024 if file_size('[depends[0]]') < 25 else 5*12*1024", # 12 GB or more depending on input file size
                 cores=threads, # time/mem based on 8 cores
                 name=utilities.name_task(sample,"metaphlan"))
     else:
