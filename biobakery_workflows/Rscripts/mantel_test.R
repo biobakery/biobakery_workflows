@@ -127,7 +127,7 @@ for (datafile in datafiles) {
     datatype <- unlist(strsplit(basename(datafile),"_features.txt"))[1]
     datatype_list <- append(datatype_list, datatype)
 
-    data <- t(read.table(datafile, header = TRUE, row.names = 1, sep="\t", comment.char = ""))
+    data <- t(read.table(datafile, header = TRUE, row.names = 1, sep="\t", comment.char = "", quote = ""))
     samples <- row.names(data)
 
     # Filter by abundance using zero as value for NAs
@@ -379,14 +379,15 @@ manteltest_plot <- function(O, P, Ocil, Ociu, datatype_list, title) {
 text_file <- sub(".png",".txt", positional_args[3])
 png(positional_args[3], res = 150, height = 800, width = 1100)
 
+mt_inter_doa_chars <- data.frame(lapply(mt_inter_doa, as.character))
 if ("subject" %in% colnames(metadata)) {
   #print(manteltest_plot(mt_intra$C, t(mt_intra$P), mt_intra$Cil, mt_intra$Ciu, datatype_list, title="Intra-individual"))
   #mt_intra %>% as_tibble() %>% write_tsv(text_file)
   print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
-  try({ mt_inter_doa %>% as_tibble() %>% write_tsv(text_file) }, silent = TRUE)
+  try({ write_tsv(mt_inter_doa_chars,text_file) }, silent = TRUE)
 } else {
   print(manteltest_plot(mt_inter_doa$C, t(mt_inter_doa$P), mt_inter_doa$Cil, mt_inter_doa$Ciu, datatype_list, title="Inter-individual (DOA)"))
-  try({ mt_inter_doa %>% as_tibble() %>% write_tsv(text_file) }, silent = TRUE)
+  try({ write_tsv(mt_inter_doa_chars,text_file) }, silent = TRUE)
 }
 
 dev.off()
