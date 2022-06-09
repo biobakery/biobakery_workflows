@@ -1,6 +1,9 @@
 
 # bioBakery workflows History #
 
+## v3.0.1 TBD ###
+* Updated to work with the latest version of kneaddata (v0.11.0).
+
 ## v3.0.0-alpha.7 02-19-2021 ##
 
 * Add initial (alpha) stats workflow.

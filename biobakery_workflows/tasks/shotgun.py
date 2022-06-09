@@ -60,7 +60,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         remove_intermediate_output (bool): Remove intermediate output files.
         
     Requires:
-        kneaddata v0.6.1+: A tool to perform quality control on metagenomic and
+        kneaddata v0.11.0: A tool to perform quality control on metagenomic and
             metatranscriptomic sequencing data
         
     Returns:
@@ -101,12 +101,14 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         input_files=list(zip(input_files[0],input_files[1]))
         # add the second input file to the kneaddata arguments
         # also add the option to cat the final output files into a single file
-        second_input_option=" --input [depends[1]] --cat-final-output "
+        first_input_option=" --input1 [depends[0]] "
+        second_input_option=" --input2 [depends[1]] --cat-final-output "
         # determine time/memory equations based on the two input files
         time_equation="5*6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 7*6*60"
         mem_equation="3*12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 6*12*1024"
     else:
         # the second input option is not used since these are single-end input files
+        first_input_option=" --unpaired [depends[0]] "
         second_input_option=" "
         # determine time/memory equations based on the single input file
         time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
@@ -142,7 +144,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # create a task for each set of input and output files to run kneaddata
     for sample, depends, targets in zip(sample_names, input_files, kneaddata_output_files):
         workflow.add_task_gridable(
-            "kneaddata --input [depends[0]] --output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && gzip -f [args[3]] ",
+            "kneaddata"+first_input_option+"--output [args[0]] --threads [args[1]] --output-prefix [args[2]] "+second_input_option+optional_arguments+" "+additional_options+" && gzip -f [args[3]] ",
             depends=utilities.add_to_list(depends,TrackedExecutable("kneaddata")),
             targets=targets[1:3],
             args=[kneaddata_output_folder, threads, sample, targets[0]],
