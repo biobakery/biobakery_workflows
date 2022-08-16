@@ -124,6 +124,10 @@ if args.method == "dada2" or args.method == "its":
             else:
                 print("ITS workflow primers rmoval task requires fwd_primer and rev_primer arguments.")
                 exit()
+    elif args.fwd_primer and args.rev_primer:
+            cutadapt_folder=dadatwo.remove_primers(
+                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
+            demultiplex_output_folder=cutadapt_folder
 
     # call dada2 workflow tasks
     # filter reads and trim
