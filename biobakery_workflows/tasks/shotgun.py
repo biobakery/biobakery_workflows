@@ -38,7 +38,7 @@ from biobakery_workflows import data
 BOWTIE2_EXTENSION=".1.bt2"
 
 def kneaddata(workflow, input_files, extension, output_folder, threads, paired=None, 
-    databases=None, pair_identifier=None, additional_options=None, remove_intermediate_output=None):
+    databases=None, pair_identifier=None, additional_options=None, remove_intermediate_output=None, scratch_dir=None):
     """Run kneaddata
     
     This set of tasks will run kneaddata on the input files provided. It will run with
@@ -58,6 +58,7 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
             the first pair in the set (optional).
         additional_options (string): Additional options when running kneaddata (optional).
         remove_intermediate_output (bool): Remove intermediate output files.
+        scratch_dir (string): Folder to write scratch files.
         
     Requires:
         kneaddata v0.11.0: A tool to perform quality control on metagenomic and
@@ -108,8 +109,9 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         mem_equation="3*12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 6*12*1024"
     else:
         # the second input option is not used since these are single-end input files
+        # always cat the final output (which could be more then one file for the case of a bam input file with paired-end reads)
         first_input_option=" --unpaired [depends[0]] "
-        second_input_option=" "
+        second_input_option=" --cat-final-output "
         # determine time/memory equations based on the single input file
         time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
         mem_equation="3*12*1024 if file_size('[depends[0]]') < 10 else 6*12*1024"
@@ -122,6 +124,10 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
     # by the visualization workflows (in serial filtering in the order of the databases provided)
     # also run tandem repeat filtering
     additional_options+=" --serial --run-trf "
+
+    # add scratch folder if provided
+    if scratch_dir:
+        additional_options+=" --scratch '{}' ".format(scratch_dir)
 
     # create the database command option string to provide zero or more databases to kneaddata
     if databases is None or databases=="":
@@ -206,7 +212,7 @@ def kneaddata_read_count_table(workflow, input_files, output_folder):
 
 
 def quality_control(workflow, input_files, extension, output_folder, threads, databases=None, 
-    pair_identifier=None, additional_options=None, remove_intermediate_output=None):
+    pair_identifier=None, additional_options=None, remove_intermediate_output=None, scratch_dir=None):
     """Quality control tasks for whole genome shotgun sequences
     
     This set of tasks performs quality control on whole genome shotgun
@@ -224,6 +230,7 @@ def quality_control(workflow, input_files, extension, output_folder, threads, da
             the first pair in the set (optional).
         additional_options (string): Additional options when running kneaddata (optional).
         remove_intermediate_output (bool): Remove intermediate output files.
+        scratch_dir (string): Folder to write scratch files.
         
     Requires:
         kneaddata v0.6.1+: A tool to perform quality control on metagenomic and
@@ -264,7 +271,7 @@ def quality_control(workflow, input_files, extension, output_folder, threads, da
     # create a task for each set of input and output files to run kneaddata
     kneaddata_output_fastq, kneaddata_output_logs=kneaddata(workflow, input_files, extension,
         output_folder, threads, paired, databases, pair_identifier, additional_options,
-        remove_intermediate_output)
+        remove_intermediate_output, scratch_dir)
     
     # create the read count table
     kneaddata_read_count_file=kneaddata_read_count_table(workflow, kneaddata_output_logs, output_folder)

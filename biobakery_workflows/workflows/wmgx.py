@@ -42,7 +42,7 @@ workflow = Workflow(version="0.1", description="A workflow for whole metagenome 
 
 # add the custom arguments to the workflow
 workflow_config = config.ShotGun()
-workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz","fastq.bz2","fq.bz2"])
+workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz", choices=["fastq.gz","fastq","fq.gz","fq","fasta","fasta.gz","fastq.bz2","fq.bz2","bam"])
 workflow.add_argument("barcode-file", desc="the barcode file", default="")
 workflow.add_argument("dual-barcode-file", desc="the string to identify the dual barcode file", default="")
 workflow.add_argument("index-identifier", desc="the string to identify the index files", default="_I1_001")
@@ -54,6 +54,7 @@ workflow.add_argument("bypass-quality-control", desc="do not run the quality con
 workflow.add_argument("contaminate-databases", desc="the path (or comma-delimited paths) to the contaminate\nreference databases for QC", 
     default=",".join([workflow_config.kneaddata_db_human_genome]))
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
+workflow.add_argument("qc-scratch", desc="scratch space to be used when running the QC step", default="")
 workflow.add_argument("functional-profiling-options", desc="additional options when running the functional profiling step", default="")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-functional-profiling", desc="do not run the functional profiling tasks", action="store_true")
@@ -118,7 +119,7 @@ if args.bypass_quality_control:
 elif not "fasta" in args.input_extension:
     qc_output_files, filtered_read_counts = shotgun.quality_control(workflow,
         demultiplexed_files, args.input_extension, args.output, args.threads, args.contaminate_databases,
-        args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+        args.pair_identifier, args.qc_options, args.remove_intermediate_output, args.qc_scratch)
     # get the new extension, if the original files were gzipped they will not be after quality control
     args.input_extension = args.input_extension.replace(".gz","")
     args.input_extension = args.input_extension.replace(".bz2","")
