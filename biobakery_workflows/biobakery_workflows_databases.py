@@ -36,6 +36,7 @@ import os
 import subprocess
 import shutil
 import zipfile
+import glob
 
 def check_dependencies(depends):
     """ Check the required software is installed """
@@ -90,8 +91,9 @@ def create_strainphlan_db(location):
     # find the strainphlan db folder and index files
     try:
         import metaphlan
-        strainphlan_db=os.path.join(os.path.dirname(metaphlan.__file__),"metaphlan_databases","mpa_v30_CHOCOPhlAn_201901")
-    except subprocess.CalledProcessError:
+        strainphlan_db_folder=os.path.join(os.path.dirname(metaphlan.__file__),"metaphlan_databases")
+        strainphlan_db=glob.glob(strainphlan_db_folder+"/mpa_*.pkl")[0].replace(".pkl","")
+    except ( subprocess.CalledProcessError, IndexError ):
         sys.exit("Unable to find strainphlan install.")
         
     # generate the fasta marker files
