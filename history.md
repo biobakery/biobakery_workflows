@@ -1,8 +1,60 @@
 
 # bioBakery workflows History #
 
-## v3.0.1 TBD ###
-* Updated to work with the latest version of kneaddata (v0.11.0).
+## v3.1 TBD ###
+* Make the search for the strainphlan database folder version agnostic
+* Allow for bam extension in the wmgx workflow plus add qc-scratch option (requires kneaddata v0.12.0)
+* Allow for primers to be removed in the DADA2 method
+* Updates for the new kneaddata with options to specify read pairs (v0.11.0)
+* Update MetaPhlAn grid time to sync with newer version
+* Increase kneaddata run time to allow for new gzip addition of final target
+* Add a utility script to compute species of interest from raw reads and taxonomic profile
+* Allow for kneaddata final target to exist and then overwrite
+* Add DADA2 option to increase min folder to make chimera calling more strict
+* Update to support the latest panphlan version
+* Resolve issue with QC ratios GT 1 and add exceptions
+* Add option to exclude a subset of reads in the subset data file script
+* Allow for bypass of taxonomic profiling for the running on strain based profiling methods
+* Add check to 16s workflow for max trunc len based on average read length
+* Add check to make sure the fixed and random effect variables provided are include in the metadata
+* For 16s, add check for many unclassified ASVs, check for empty input files, and option to allow reverse complement strands
+* Allow for database installs to fail with a warning
+* Visualization changes (includes changes to merge vis to a single "universal vis")
+  - Update to allow for search of inputs files in input folder instead of requiring exact paths
+  - Allow for quotes in the data passed to the Mantel test function
+  - Allow for larger feature names
+  - Decrease the min samples used for filtering
+  - Allow for spaces and forward slack in chars in table headers
+  - Only filter the top subset of the top features to reduce runtime
+  - Fix floating point error in correlation function
+  - Add filtered heatmaps to functional templates
+  - Add correlation threshold option
+  - Add filtered heatmaps to taxonomy template
+  - Add functions to filter based on spearman correlation
+  - Add heatmaps with zscores
+  - Reduce margins and legends to display larger plots
+  - Add metadata file to the final zip archive
+  - Allow for multiple 1s in the pair identifiers
+  - Update the qc counts figures to sync the names and text
+  - Shorten reference database names for plots
+  - Add check for spaces in metadata variables to prevent issues downstream
+  - Add more detailed methods to the wmgx vis intro
+  - Update the default usearch intro to include sample number
+  - Allow for taxa without the full taxonomy to be used in the filter taxa function
+  - Update the 16s taxa plots to sort the legend in reverse
+  - Allow for taxa without the fill taxonomy to be included
+  - Remove unexpected chars from tables and pathways bullet list
+  - Update maaslin2 tile generation to allow for numbers
+  - Make halla output heatmaps optional if not enough associations are found
+  - Add option to always generate stratified outputs from picrust2 task
+  - Remove pairwise comparision if there is just a single metadata variable
+  - Convert metadata samples as columns in stats workflow if needed
+  - If an ec file is provided without the names, add the names
+  - Add max missing option
+  - Add the covariate equation to the vis to match that used for the script
+  - Track samples missing metadata
+  - Add barcharts for pathways and ecs
+  - Make author and project name optional  
 
 ## v3.0.0-alpha.7 02-19-2021 ##
 
