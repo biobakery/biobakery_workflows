@@ -30,9 +30,8 @@ Table of contents
     + [Whole Metagenome and Metatranscriptome Shotgun (wmgx\_wmtx)](#whole-metagenome-and-metatranscriptome-shotgun-wmgx_wmtx)
     + [16S rRNA (16s)](#16s-rrna-16s)
     + [Isolate Assembly (isolate_assembly)](#isolate-assembly-isolate_assembly)
-  * [Visualization Workflows](#visualization-workflows-1)
-    + [Visualization for Whole Metagenome Shotgun (wmgx_vis)](#visualization-for-whole-metagenome-shotgun-wmgx_vis)
-    + [Visualization for Whole Metagenome and Metatranscriptome Shotgun (wmgx_wmtx_vis)](#visualization-for-whole-metagenome-and-metatranscriptome-shotgun-wmgx_wmtx_vis)
+  * [Visualization Workflow](#visualization-workflow-1)
+    + [Visualization for Whole Metagenome Shotgun and 16S (vis)](#visualization-for-whole-metagenome-shotgun-and-16S-vis)
     + [Visualization for 16S (16s_vis)](#visualization-for-16s-16s_vis)
   * [Stats Workflow](#stats-workflow)
   * [WDL Workflow](#wdl-workflow)
@@ -161,7 +160,7 @@ fastq files). It will write files to the output folder
 (`$DATA_OUTPUT_DIR` to be replaced with the folder to write output
 files).
 
-#### Visualization Workflows
+#### Visualization Workflow
 
 A visualization workflow exists corresponding to each data processing
 workflow. The basic command to run a visualization workflow, replacing
@@ -523,23 +522,23 @@ provide the identifier string for the first file in the set of pairs.
 Visualization Workflows
 -----------------------
 
-bioBakery workflows includes a collection of visualization workflows for
-shotgun sequences and 16s data. Most workflows can be run on the command
+bioBakery workflows includes a single universal visualization workflow for
+shotgun sequences and 16s data. The workflow can be run on the command
 line with the following syntax:
 
-`$ biobakery_workflows $WORKFLOW --input $INPUT --project-name $PROJECT --output $OUTPUT`
+`$ biobakery_workflows vis --input $INPUT --project-name $PROJECT --output $OUTPUT`
 
 The `$OUTPUT` folder of a data processing workflow can be used as the
 `$INPUT` folder to the corresponding visualization workflow. For
-detailed information on the input files required for each visualization
+detailed information on the input files required for the visualization
 workflow, see the help message for the workflow by running the command:
 
 `$ biobakery_workflows $WORKFLOW --help`
 
-### Visualization for Whole Metagenome Shotgun (wmgx_vis)
+### Visualization for Whole Metagenome Shotgun and 16S (vis)
 
 This workflow generates a document of tables, bar plots, a PCoA plot,
-scatter plots, and heatmaps using the output of the wmgx workflow as
+scatter plots, and heatmaps using the output of the wmgx or 16S workflows as
 input.
 
 **Requirements**
@@ -560,16 +559,19 @@ input.
 
 **Inputs**
 
-1.  An input folder containing the final products from the wmgx data
+1.  An input folder containing the final products from the wmgx or 16S data
     workflow.
-    1.  A file of the KneadData read counts for the wmgx samples (single
+    1.  OPTIONAL: A file of the KneadData read counts for the wmgx samples (single
         or paired end).
-    2.  A file of the merged taxonomic profile.
-    3.  A file of the merged pathway abundances (normalized).
-    4.  A file of the HUMAnN alignment counts.
-    5.  A file of the HUMAnN feature counts.
-    6.  The log file from the corresponding data processing workflow.
-2.  The project name.
+    2.  A file of the merged taxonomic profile or closed reference OTU table or ASV table.
+    3.  OPTIONAL: A file of the merged pathway abundances (normalized).
+    4.  OPTIONAL: A file of the HUMAnN alignment counts.
+    5.  OPTIONAL: A file of the HUMAnN feature counts.
+    6.  OPTIONAL: A file of the read counts per sample (including total reads,
+        classified, and unclassified).
+    7.  OPTIONAL: A file of the eestats for all samples.
+    8.  The log file from the corresponding data processing workflow.
+2.  The project name (Optional).
 3.  Introduction text (Optional).
 4.  The report format (Options: pdf/html, pdf is default).
 
@@ -602,142 +604,9 @@ input.
 
 **To run the workflow**
 
--   `$ biobakery_workflows wmgx_vis --input $INPUT --project-name $PROJECT --output $OUTPUT `
+-   `$ biobakery_workflows vis --input $INPUT --project-name $PROJECT --output $OUTPUT `
 -   In the command replace `$INPUT` with the output folder created by
-    running the wmgx data processing workflow, `$PROJECT` with the name
-    of the project, and `$OUTPUT` with the path to the folder to write
-    output files.
-
-### Visualization for Whole Metagenome and Metatranscriptome Shotgun (wmgx_wmtx_vis)
-
-This workflow generates a document of tables, bar plots, a PCoA plot,
-and heatmaps using the output of the wmgx\_wmtx workflow as input.
-
-**Requirements**
-
-1.  [Pweave](http://mpastell.com/pweave) (installed automatically)
-2.  [NumPy and SciPy](https://docs.scipy.org)
-    1.  Install with: `$ pip install numpy ` AND `$ pip install scipy `
-3.  [Matplotlib](http://matplotlib.org/)
-    1.  Install with: `$ pip install matplotlib `
-4.  [LaTeX](https://www.latex-project.org/)
-5.  [Pandoc](http://pandoc.org/) (&lt;version2 required)
-    1.  Install with: `$ conda install pandoc `
-6.  [Hclust2](https://bitbucket.org/nsegata/hclust2)
-    1.  Install with: `$ conda install -c biobakery hclust2 `
-7.  [R](https://www.r-project.org/) with the
-    [vegan](https://cran.r-project.org/web/packages/vegan/index.html)
-    package
-
-**Inputs**
-
-Please note this workflow is currently only for paired end reads.
-
-1.  An input folder containing the final products from the wmgx\_wmtx
-    data workflow.
-    1.  A file of the KneadData read counts for the wmgx samples (paired
-        end).
-    2.  A file of the KneadData read counts for the wmtx samples (paired
-        end).
-    3.  A file of the merged taxonomic profile for the wmgx samples.
-    4.  A file of the merged pathway abundances for the wmgx samples
-        (normalized).
-    5.  The log file from the corresponding data processing workflow.
-    6.  A file of the HUMAnN alignment counts for the wmgx samples
-        (Optional).
-    7.  A file of the HUMAnN feature counts for the wmgx samples
-        (Optional).
-    8.  A file of the HUMAnN alignment counts for the wmtx samples
-        (Optional).
-    9.  A file of the HUMAnN feature counts for the wmtx samples
-        (Optional).
-    10. A file of the gene families RNA/DNA normalized (Optional).
-    11. A file of the ECs RNA/DNA normalized (Optional).
-    12. A file of the pathway abundances RNA/DNA normalized (Optional).
-2.  The project name.
-3.  Introduction text (Optional).
-4.  The report format (Options: pdf/html, pdf is default).
-
-**Outputs**
-
-1.  A pdf (or html) report.
-2.  A directory of figures included in the report.
-    1.  Quality control section
-        1.  Paired end read count table and barchart (for DNA and RNA)
-        2.  Orphan read count table and barchart (for DNA and RNA)
-        3.  Microbial read proportion table (for DNA and RNA)
-    2.  Taxonomy section
-        1.  Species count table
-        2.  Ordination (PCoA)
-        3.  Heatmap of top species abundances
-        4.  Stacked barplot of top species abundances
-    3.  Functional profiling section
-        1.  Pathway abundance
-            1.  Top pathways by abundance (heatmap and table)
-            2.  Top pathways by variance (heatmap and table)
-        2.  Feature counts section (for DNA and RNA, optional)
-            1.  Scatter plot of the aligned reads
-                (nucleotide/translated)
-            2.  Scatter plot of the gene families counts
-                (nucleotide/translated)
-            3.  Scatter plot of the ECs counts (nucleotide/translated)
-            4.  Scatter plot of the pathway counts
-                (nucleotide/translated)
-3.  A zip archive containing the pdf (or html) report, figures, and data
-    files
-
-### Visualization for 16S (16s_vis)
-
-This workflow generates a document of bar plots and a PCoA plot using
-the output of the 16S workflow as input.
-
-**Requirements**
-
-1.  [Pweave](http://mpastell.com/pweave) (installed automatically)
-2.  [NumPy and SciPy](https://docs.scipy.org)
-    1.  Install with: `$ pip install numpy ` AND `$ pip install scipy `
-3.  [Matplotlib](http://matplotlib.org/)
-    1.  Install with: `$ pip install matplotlib `
-4.  [LaTeX](https://www.latex-project.org/)
-5.  [Pandoc](http://pandoc.org/) (&lt;version2 required)
-    1.  Install with: `$ conda install pandoc `
-6.  [Hclust2](https://bitbucket.org/nsegata/hclust2)
-    1.  Install with: `$ conda install -c biobakery hclust2 `
-7.  [R](https://www.r-project.org/) with the
-    [vegan](https://cran.r-project.org/web/packages/vegan/index.html)
-    package
-
-**Inputs**
-
-1.  An input folder containing the final products from the 16s data
-    workflow.
-    1.  A file of the closed reference OTU table.
-    2.  A file of the read counts per sample (including total reads,
-        classified, and unclassified).
-    3.  A file of the eestats for all samples.
-    4.  The log file from the corresponding data processing workflow.
-2.  The project name.
-3.  Introduction text (Optional).
-4.  The report format (Options: pdf/html, pdf is default)
-
-**Outputs**
-
-1.  A pdf (or html) report.
-2.  A directory of figures included in the report.
-    1.  Read counts per sample barchart
-    2.  OTU counts per sample barchart
-    3.  Stacked barchart of the top 15 genera by average abundance
-    4.  Stacked barchart of the top 15 terminal taxa by average
-        abundance
-    5.  Ordination (PCoA) of terminal taxa
-3.  A zip archive containing the pdf (or html) report, figures, and data
-    files
-
-**To run the workflow**
-
--   `$ biobakery_workflows 16s_vis --input $INPUT --project-name $PROJECT --output $OUTPUT `
--   In the command replace `$INPUT` with the output folder created by
-    running the 16s data processing workflow, `$PROJECT` with the name
+    running the wmgx or 16S data processing workflow, `$PROJECT` with the name
     of the project, and `$OUTPUT` with the path to the folder to write
     output files.
 
