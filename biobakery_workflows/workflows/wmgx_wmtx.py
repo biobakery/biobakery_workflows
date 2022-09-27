@@ -37,7 +37,7 @@ from biobakery_workflows import utilities, config, files
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with two input folder options
-workflow = Workflow(version="0.1", remove_options=["input"],
+workflow = Workflow(version="3.1", remove_options=["input"],
                     description="A workflow for whole metagenome and metatranscriptome shotgun sequences")
 
 # add the custom arguments to the workflow

@@ -40,7 +40,7 @@ from biobakery_workflows.tasks.sixteen_s import convert_from_biom_to_tsv_list
 from biobakery_workflows import files, visualizations
 
 # create a workflow instance, providing the version number and description
-workflow = Workflow(version="0.1", remove_options=["input"],
+workflow = Workflow(version="3.1", remove_options=["input"],
                     description="A workflow for stats on wmgx and 16s data sets")
 
 # add the custom arguments to the workflow                          

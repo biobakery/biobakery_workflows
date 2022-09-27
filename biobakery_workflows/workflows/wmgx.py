@@ -38,7 +38,7 @@ from biobakery_workflows import utilities, config
 # create a workflow instance, providing the version number and description
 # the version number will appear when running this script with the "--version" option
 # the description will appear when running this script with the "--help" option
-workflow = Workflow(version="0.1", description="A workflow for whole metagenome shotgun sequences")
+workflow = Workflow(version="3.1", description="A workflow for whole metagenome shotgun sequences")
 
 # add the custom arguments to the workflow
 workflow_config = config.ShotGun()

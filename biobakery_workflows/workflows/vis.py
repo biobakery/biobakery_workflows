@@ -37,7 +37,7 @@ import sys
 
 # create a workflow instance, providing the version number and description
 # remove the input folder option as it will be replaced with multiple input files
-workflow = Workflow(version="0.1", remove_options=["input"],
+workflow = Workflow(version="3.1", remove_options=["input"],
                     description="A workflow for visualization")
                     
 # add the custom arguments to the workflow 
