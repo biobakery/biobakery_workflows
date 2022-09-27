@@ -32,7 +32,6 @@ Table of contents
     + [Isolate Assembly (isolate_assembly)](#isolate-assembly-isolate_assembly)
   * [Visualization Workflow](#visualization-workflow-1)
     + [Visualization for Whole Metagenome Shotgun and 16S (vis)](#visualization-for-whole-metagenome-shotgun-and-16S-vis)
-    + [Visualization for 16S (16s_vis)](#visualization-for-16s-16s_vis)
   * [Stats Workflow](#stats-workflow)
   * [WDL Workflow](#wdl-workflow)
 
@@ -162,15 +161,16 @@ files).
 
 #### Visualization Workflow
 
-A visualization workflow exists corresponding to each data processing
+A single visualization workflow exists that can be used for any data processing
 workflow. The basic command to run a visualization workflow, replacing
 `$WORKFLOW_VIS` with the visualization workflow name, is:
 
 `$ biobakery_workflows $WORKFLOW_VIS --input $DATA_OUTPUT_DIR --project-name $PROJECT --output $OUTPUT_DIR `
 
 The input folder (`$DATA_OUTPUT_DIR` to be replaced with the path to the
-folder) in this command is the output folder from the data processing
-workflow. The folder (`$OUTPUT_DIR` to be replaced with the path to the
+folder) in this command this is a subset of the output folder from the data processing
+workflow; Run the workflow with the option `--help` to determine which files are required
+and which are optional to run the workflow. The folder (`$OUTPUT_DIR` to be replaced with the path to the
 output folder) will contain the output files from the visualization
 workflow. The project name should replace `$PROJECT` in the command so
 the report can include the name.
@@ -528,12 +528,12 @@ line with the following syntax:
 
 `$ biobakery_workflows vis --input $INPUT --project-name $PROJECT --output $OUTPUT`
 
-The `$OUTPUT` folder of a data processing workflow can be used as the
-`$INPUT` folder to the corresponding visualization workflow. For
+A subset of files from the `$OUTPUT` folder of a data processing workflow can be used in the
+`$INPUT` folder to the visualization workflow. For
 detailed information on the input files required for the visualization
 workflow, see the help message for the workflow by running the command:
 
-`$ biobakery_workflows $WORKFLOW --help`
+`$ biobakery_workflows vis --help`
 
 ### Visualization for Whole Metagenome Shotgun and 16S (vis)
 
@@ -605,7 +605,7 @@ input.
 **To run the workflow**
 
 -   `$ biobakery_workflows vis --input $INPUT --project-name $PROJECT --output $OUTPUT `
--   In the command replace `$INPUT` with the output folder created by
+-   In the command replace `$INPUT` with a folder containing files from the output folder created by
     running the wmgx or 16S data processing workflow, `$PROJECT` with the name
     of the project, and `$OUTPUT` with the path to the folder to write
     output files.
