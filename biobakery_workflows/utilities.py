@@ -2688,7 +2688,7 @@ def read_picard(file, threshold=20):
         
     return data, below_threshold
 
-def rank_species_average_abundance(file, id_index=-1, only_species=True):
+def rank_species_average_abundance(file, id_index=-1, only_species=True, taxa_level="s__"):
     """ Read in a taxonomy file, and sort species by average abundance 
     
     Args:
@@ -2726,7 +2726,7 @@ def rank_species_average_abundance(file, id_index=-1, only_species=True):
                 average=0
             # only store values for species
             if only_species:
-                if taxonomy.startswith("s__"):
+                if taxonomy.startswith(taxa_level):
                     species[taxonomy]=average
             else:
                 species[taxonomy]=average
@@ -2756,13 +2756,13 @@ def order_clade_list(task,clade_list,abundance_file,output_file):
     """
     
     # get the species listed by average abundance
-    species_ranked = rank_species_average_abundance(abundance_file)
+    species_ranked = rank_species_average_abundance(abundance_file,taxa_level="t__")
     
     # read in the clade list
     clades=set()
     with open(clade_list) as file_handle:
         for line in file_handle:
-            if "s__" in line:
+            if "s__" in line or "t__" in line:
                 clades.add(line.strip().split("\t")[1].split(": in ")[0])
         
     # write out ordered species also included in clade list

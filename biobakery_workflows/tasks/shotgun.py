@@ -696,7 +696,7 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
     
     # find the name of the clade in the list
     with open(clade_list) as file_handle:
-        clades=[line.strip().split(" ")[0] for line in filter(lambda line: line.startswith("s__") or line.startswith("g__"), file_handle.readlines())]
+        clades=[line.strip().split(" ")[0] for line in filter(lambda line: line.startswith("s__") or line.startswith("g__") or line.startswith("t__"), file_handle.readlines())]
         try:
             profile_clade=clades[clade_number]
         except IndexError:
