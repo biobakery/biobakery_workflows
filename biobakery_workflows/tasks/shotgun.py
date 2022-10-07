@@ -27,6 +27,7 @@ import sys
 import os
 import subprocess
 import itertools
+import glob
 
 from anadama2.tracked import TrackedExecutable, TrackedDirectory
 
