@@ -498,6 +498,7 @@ def qc_read_counts(document, file):
     columns=[name.replace("SILVA_128_LSUParc_SSUParc_ribosomal_RNA","rRNA") for name in columns]
     columns=[name.replace("Homo_sapiens_hg38","hg38") for name in columns]
     columns=[name.replace("human_hg38_refMrna","mRNA") for name in columns]
+    columns=[name.replace("hg37_and_human_contamination","hg37") for name in columns]
     
     # change the names of the raw and trimmed columns (to include case)
     columns=[name.replace("raw","Raw").replace("trimmed","Trim").replace("decontaminated","") for name in columns]
