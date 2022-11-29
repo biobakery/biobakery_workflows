@@ -50,6 +50,7 @@ workflow.add_argument("threads", desc="number of threads/cores for each task to 
 workflow.add_argument("pair-identifier", desc="the string to identify the first file in a pair", default=".R1")
 workflow.add_argument("bypass-norm-ratio", desc="bypass the rna/dna normalization computation", action="store_true")
 workflow.add_argument("qc-options", desc="additional options when running the QC step", default="")
+workflow.add_argument("bypass-quality-control", desc="do not run the quality control tasks", action="store_true")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
 
@@ -63,17 +64,19 @@ input_files_metatranscriptome = utilities.find_files(args.input_metatranscriptom
 ### STEP #1: Run quality control on all input files ###
 wms_output_folder = os.path.join(args.output,files.ShotGun.wmgx_folder_name)
 wts_output_folder = os.path.join(args.output,files.ShotGun.wmtx_folder_name)
-wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, 
-    input_files_metagenome, args.input_extension, wms_output_folder, args.threads, 
-    [workflow_config.kneaddata_db_human_genome], 
-    args.pair_identifier, args.qc_options, args.remove_intermediate_output)
-wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, 
-    input_files_metatranscriptome, args.input_extension, wts_output_folder, args.threads, 
-    [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_human_metatranscriptome,workflow_config.kneaddata_db_rrna], 
-    args.pair_identifier, args.qc_options, args.remove_intermediate_output)
 
-# if the original files were gzipped they will not be compressed after qc
-args.input_extension = args.input_extension.replace(".gz","")
+if not args.bypass_quality_control:
+    wms_qc_output_files, wms_filtered_read_count = shotgun.quality_control(workflow, 
+        input_files_metagenome, args.input_extension, wms_output_folder, args.threads, 
+        [workflow_config.kneaddata_db_human_genome], 
+        args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+    wts_qc_output_files, wts_filtered_read_count = shotgun.quality_control(workflow, 
+        input_files_metatranscriptome, args.input_extension, wts_output_folder, args.threads, 
+        [workflow_config.kneaddata_db_human_genome,workflow_config.kneaddata_db_human_metatranscriptome,workflow_config.kneaddata_db_rrna], 
+        args.pair_identifier, args.qc_options, args.remove_intermediate_output)
+else:
+    wms_qc_output_files=input_files_metagenome
+    wts_qc_output_files=input_files_metatranscriptome
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
 wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
