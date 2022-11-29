@@ -1875,9 +1875,9 @@ def match_files(files1,files2,mapping):
             pair1.append(file1[0])
             pair2.append(file2[0])
         elif len(file1) == 0:
-            print("Warning: Unable to find file with key, " + item1 + " in folder " + os.path.dirname(files1))
+            print("Warning: Unable to find file with key, " + item1 + " in folder " + os.path.dirname(files1[0]))
         elif len(file2) == 0:
-            print("Warning: Unable to find file with key, " + item2 + " in folder " + os.path.dirname(files2))
+            print("Warning: Unable to find file with key, " + item2 + " in folder " + os.path.dirname(files2[0]))
         else:
             print("Warning: Duplicate files found for mapping keys: " + item1 + " " + item2)
 
