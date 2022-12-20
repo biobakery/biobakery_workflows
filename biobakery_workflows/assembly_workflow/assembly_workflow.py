@@ -9,18 +9,15 @@ from anadama2.tracked import TrackedDirectory
 from pathlib import Path
 
 # Parse arguments
-workflow = Workflow(version="0.4", description="MAG and SGB workflow")
+workflow = Workflow(version="0.1", description="MAG and SGB workflow")
 workflow.add_argument("cores", desc="The number of CPU cores allocated to the job", type=int, default=4)
 workflow.add_argument("mem", desc="The maximum memory in megabytes allocated to run any individual command", type=int, default=180000)
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("time", desc="The maximum time in minutes allocated to run any individual command", type=int, default=10000)
 workflow.add_argument("paired", desc="Whether the inputs are \"unpaired\", \"paired\", or \"concatenated\"", default="paired")
-workflow.add_argument("phylophlan-database", desc="Database name", default="SGB.Jul20")
-workflow.add_argument("phylophlan-database-folder", desc="Folder with the phylophlan database files such as SGB.Jul20/, SGB.Jul20.txt.bz2, etc.")
-workflow.add_argument("checkm-data-path", desc='CHECKM_DATA_PATH with selected_marker_sets.tsv, taxon_marker_sets.tsv, etc. if not already set')
-workflow.add_argument("checkm-path", desc='path to checkm2 directory with bin/')
-workflow.add_argument("checkm-predict-options", desc='checkm2 predict options as a text string with quotes', default="")
-workflow.add_argument("skip-contigs", desc="Whether to skip MEGAHIT, contigs should be in $OUTPUT_DIRECTORY/assembly/main/$SAMPLE_NAME/$SAMPLE_NAME.final.contigs.fa")
+workflow.add_argument("skip-contigs", desc="Whether to skip MEGAHIT, contigs should be in $OUTPUT_DIRECTORY/assembly/main/$SAMPLE_NAME/$SAMPLE_NAME.final.contigs.fa or $OUTPUT_DIRECTORY/assembly/main/$SAMPLE_NAME/$SAMPLE_NAME.contigs.fa")
+workflow.add_argument("skip-placement", desc="Whether to stop after checkm steps")
+workflow.add_argument("remove-intermediate-files", desc="Remove intermediate files")
 workflow.add_argument("min-contig-length", desc='MEGAHIT --min-contig-length and MetaBAT -m parameter', default=1500)
 workflow.add_argument("megahit-options", desc='MEGAHIT options as a text string with quotes', default="")
 workflow.add_argument("metabat-options", desc='MetaBAT options as a text string with quotes', default="")
@@ -29,6 +26,7 @@ workflow.add_argument("checkm-predict-options", desc='checkm2 predict options as
 workflow.add_argument("abundance-type", desc='by_sample or by_dataset', default="by_sample")
 workflow.add_argument("completeness", desc='completeness threshold for retaining bins', default=50)
 workflow.add_argument("contamination", desc='contamination threshold for retaining bins', default=10)
+workflow.add_argument("checkm-predict-options", desc='checkm2 predict options as a text string with quotes', default="")
 workflow.add_argument("phylophlan-metagenomic-options", desc='PhyloPhlAn metagenomic options as a text string with quotes', default="")
 workflow.add_argument("gc-length-stats", desc='calculate GC and length stats for each bin')
 workflow.add_argument("mash-sketch-options", desc='Mash sketch options as a text string with quotes', default="")
@@ -36,20 +34,20 @@ args = workflow.parse_args()
 
 this_folder = os.path.realpath(__file__).rsplit("/", 1)[0] + "/"
 
-# Set CHECKM_DATA_PATH
-if args.checkm_data_path:
-	os.environ["CHECKM_DATA_PATH"] = args.checkm_data_path
+assembly_tasks_folder = this_folder + "assembly_tasks/"
 
 try:
 	os.environ["CHECKM_DATA_PATH"]
 except:
 	raise ValueError("CHECKM_DATA_PATH not provided or set")
 
-if not args.checkm_path:
-	raise ValueError("No checkm_path provided")
-
-database = args.phylophlan_database
-database_folder = args.phylophlan_database_folder
+if not args.skip_placement:
+	try:
+		database_folder = os.environ["PHYLOPHLAN_PATH"]
+		database_files = os.listdir(os.environ["PHYLOPHLAN_PATH"])
+		database = [file for file in database_files if file.count('.') == 1][0]
+	except:
+		raise ValueError("PHYLOPHLAN_PATH not provided or set")
 
 # Check valid input extension
 input_extension = args.input_extension
@@ -70,28 +68,28 @@ try:
 except:
 	raise ValueError("--abundance must be by_sample or by_dataset")
 
-# output
-output = "/" + args.output.strip("/") + "/"
-if not os.path.isdir(output):
-	os.makedirs(output)
-
 # make necessary directories
 def make_directory(path):
 	if not os.path.isdir(path):
 		os.makedirs(path)
 
+# output
+output = "/" + args.output.strip("/") + "/"
+make_directory(output)
+
 # scratch directory
 scratch = "/" + args.grid_scratch.strip("/") + "/"
 make_directory(scratch)
 
-scratch_searched = scratch + "searched/"
-make_directory(scratch_searched)
-
-scratch_deconcatenated = scratch + "deconcatenated/"
-make_directory(scratch_deconcatenated)
-
 deconcatenated_dir = output + "deconcatenated/"
-make_directory(deconcatenated_dir)
+if paired == "concatenated":
+	scratch_searched = scratch + "searched/"
+	make_directory(scratch_searched)
+
+	scratch_deconcatenated = scratch + "deconcatenated/"
+	make_directory(scratch_deconcatenated)
+
+	make_directory(deconcatenated_dir)
 
 assembly_dir = output + "assembly/"
 make_directory(assembly_dir)
@@ -123,31 +121,50 @@ make_directory(abundance_dir)
 checkm_dir = output + "checkm/"
 make_directory(checkm_dir)
 
+checkm_scratch = scratch + "checkm/"
+make_directory(checkm_scratch)
+
+checkm_qa_scratch = checkm_scratch + "qa_unmerged/"
+make_directory(checkm_qa_scratch)
+
+checkm_bins_dir_scratch = checkm_scratch + "bins/"
+make_directory(checkm_bins_dir_scratch)
+
 checkm_n50_dir = checkm_dir + "n50/"
 make_directory(checkm_n50_dir)
+
+qa_unmerged_dir = checkm_dir + "qa_unmerged/"
+make_directory(qa_unmerged_dir)
 
 qa_dir = checkm_dir + "qa/"
 make_directory(qa_dir)
 
-phylophlan_dir = output + "phylophlan/"
-make_directory(phylophlan_dir)
+if not args.skip_placement:
+	phylophlan_scratch = scratch + "phylophlan/"
+	make_directory(phylophlan_scratch)
 
-#phylophlan_dir_scratch = scratch + "phylophlan/"
+	phylophlan_dir = output + "phylophlan/"
+	make_directory(phylophlan_dir)
 
-sgb_dir = output + "sgbs/"
-make_directory(sgb_dir)
+	phylophlan_unmerged_dir = phylophlan_dir + "unmerged/"
+	make_directory(phylophlan_unmerged_dir)
 
-mash_dir = sgb_dir + "mash/"
-make_directory(mash_dir)
+	phylophlan_unmerged_scratch = phylophlan_scratch + "unmerged/"
+	make_directory(phylophlan_unmerged_scratch)
 
-sgbs_scratch = scratch + "sgbs/"
-make_directory(sgbs_scratch)
+	sgb_dir = output + "sgbs/"
+	make_directory(sgb_dir)
 
-sgbs = sgb_dir + "sgbs/"
+	mash_dir = sgb_dir + "mash/"
+	make_directory(mash_dir)
 
-map_out = sgbs_scratch + "abundances/"
-if not os.path.isdir(map_out):
-	os.makedirs(map_out)
+	sgbs_scratch = scratch + "sgbs/"
+	make_directory(sgbs_scratch)
+
+	sgbs = sgb_dir + "sgbs/"
+
+	map_out = sgbs_scratch + "abundances/"
+	make_directory(map_out)
 
 # grid
 memory = args.mem
@@ -167,6 +184,9 @@ else:
 	paths = glob.glob("/" + in_dir.strip("/") + "/" + '*.' + input_extension)
 	names = set(file.split("." + input_extension)[0] for file in paths)
 
+if len(names) == 0:
+	raise ValueError("No input files")
+
 #######################################
 # function to calculate tool runtimes #
 #######################################
@@ -183,29 +203,41 @@ def calculate_time(name, step, paired):
 		elif step == "align":
 			time = 60 * n_gigabytes + 3
 		elif step == "metabat":
-			time = 30 * n_gigabytes + 3
+			time = 60 * n_gigabytes + 3
 		elif step == "abundance":
 			time = 20 * n_gigabytes + 3
+		elif step == "checkm":
+			time = 30 * n_gigabytes + 3
+		elif step == "phylophlan":
+			time = 30 * n_gigabytes + 20
 	elif paired == "unpaired":
 		n_gigabytes = math.ceil(os.path.getsize(name + "." + input_extension) / (1024 * 1024 * 1024.0))
 		if step == "megahit":
 			time = 105 * n_gigabytes + 3
 		elif step == "align":
 			time = 30 * n_gigabytes + 3
-		if step == "metabat":
-			time = 15 * n_gigabytes + 3
-		if step == "abundance":
+		elif step == "metabat":
+			time = 30 * n_gigabytes + 3
+		elif step == "abundance":
 			time = 10 * n_gigabytes + 3
+		elif step == "checkm":
+			time = 15 * n_gigabytes + 3
+		elif step == "phylophlan":
+			time = 15 * n_gigabytes + 20
 	elif paired == "concatenated":
 		n_gigabytes = math.ceil(os.path.getsize(name + "." + input_extension) / (1024 * 1024 * 1024.0))
 		if step == "megahit":
-			time = 210 * n_gigabytes + 3
+			time = 105 * n_gigabytes + 3
 		elif step == "align":
-			time = 60 * n_gigabytes + 3
-		if step == "metabat":
 			time = 30 * n_gigabytes + 3
-		if step == "abundance":
-			time = 20 * n_gigabytes + 3
+		elif step == "metabat":
+			time = 30 * n_gigabytes + 3
+		elif step == "abundance":
+			time = 10 * n_gigabytes + 3
+		elif step == "checkm":
+			time = 15 * n_gigabytes + 3
+		elif step == "phylophlan":
+			time = 15 * n_gigabytes + 20
 	if 'gz' in input_extension:
 		time = time * 6
 	if time > max_time:
@@ -218,7 +250,9 @@ def calculate_time(name, step, paired):
 
 def list_depends(name, step, paired):
 	if step == "deconcatenate":
-		return [name + "." + input_extension].extend([scratch_searched + name.split("/")[-1] + "_searched.log" for name in names])
+		depends_list = [name + "." + input_extension]
+		depends_list.extend([scratch_searched + name.split("/")[-1] + "_searched.log" for name in names])
+		return depends_list
 	elif step == "megahit":
 		if paired == "paired":
 			return [str(name + "_paired_1." + input_extension), str(name + "_paired_2." + input_extension), str(name + "_unmatched_1." + input_extension), str(name + "_unmatched_2." + input_extension)]
@@ -227,14 +261,37 @@ def list_depends(name, step, paired):
 		else:
 			return [str(name + "." + input_extension)]
 	elif step == "align":
-		return [str(contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".final.contigs.fa")]
+		depends_list = [str(contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".final.contigs.fa")]
+		if args.skip_contigs:
+			depends_list.append(contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".done")
+			depends_list.append(str(deconcatenated_dir + name.split("/")[-1] + ".done"))
+		return depends_list
 	elif step == "metabat":
-		return [str(depths_dir + name.split("/")[-1] + ".contig_depths.txt")]
+		depends_list = [str(depths_dir + name.split("/")[-1] + ".contig_depths.txt")]
+		if args.skip_contigs:
+			depends_list.append(str(deconcatenated_dir + name.split("/")[-1] + ".done"))
+		return depends_list
 	elif step == "abundance_sample":
 		if paired == "paired":
-			return [str(bins_dir + name.split("/")[-1] + ".done"), str(name + "_paired_1." + input_extension), str(name + "_paired_2." + input_extension), str(name + "_unmatched_1." + input_extension), str(name + "_unmatched_2." + input_extension)]
+			depends_list = [str(name + "_paired_1." + input_extension), str(name + "_paired_2." + input_extension), str(name + "_unmatched_1." + input_extension), str(name + "_unmatched_2." + input_extension)]
+			if os.path.isfile(output + "remove_complete0.done"):
+				depends_list.append(output + "remove_complete0.done")
+			else:
+				depends_list.append(str(bins_dir + name.split("/")[-1] + ".done"))
+			return depends_list
 		else:
-			return [str(bins_dir + name.split("/")[-1] + ".done"), str(name + "." + input_extension)]
+			depends_list = [str(name + "." + input_extension)]
+			if os.path.isfile(output + "remove_complete0.done"):
+				depends_list.append(output + "remove_complete0.done")
+			else:
+				depends_list.append(str(bins_dir + name.split("/")[-1] + ".done"))
+			return depends_list
+	elif step == "copy_bins":
+		if os.path.isfile(output + "remove_complete0.done"):
+			return [output + "remove_complete0.done"]
+		else:
+			return [str(bins_dir + name.split("/")[-1] + ".done")]
+
 
 ############################
 # function to list targets #
@@ -254,6 +311,8 @@ def list_targets(name, step, paired):
 		targets1 = abundance_dir + name.split("/")[-1] + ".abundance.tsv"
 		targets2 = abundance_dir + name.split("/")[-1] + ".mapped_read_num.txt"
 		return [str(targets0), str(targets1), str(targets2)]
+	elif step == "copy_bins":
+		return[str(checkm_bins_dir_scratch + name.split("/")[-1] + "/bins/" + name.split("/")[-1] + ".done")]
 
 #######################################################################
 # function to detect paired concatenated files and deconcatenate them #
@@ -264,7 +323,7 @@ def deconcatenate(name):
 		unzipped_name = scratch_deconcatenated + name.split("/")[-1] + ".fastq"
 		command = '''{a} && {b} && {c} && {d} && {e} && {f} && {g} && {h} && {i} && {j} && {k}'''.format(
 			a = "if grep -q -m 1 " + name + " " + list_paired + "; then  gunzip -c " + name + "." + input_extension + " > " + unzipped_name,
-			b = "python " + this_folder + "deconcatenate.py " + unzipped_name + " " + scratch_deconcatenated + name.split("/")[-1],
+			b = "python " + assembly_tasks_folder + "deconcatenate.py " + unzipped_name + " " + scratch_deconcatenated + name.split("/")[-1],
 			c = "rm " + unzipped_name,
 			d = "gzip -f " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_1.fastq",
 			e = "gzip -f " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq",
@@ -277,7 +336,7 @@ def deconcatenate(name):
 			)
 	else:
 		command = '''{a} && {b} && {c} && {d} && {e} && {f} && {g} && {h} && {i}'''.format(
-			a = "if grep -q -m 1 " + name + " " + list_paired + "; then  python " + this_folder + "deconcatenate.py " + name + "." + input_extension + " " + scratch_deconcatenated + name.split("/")[-1],
+			a = "if grep -q -m 1 " + name + " " + list_paired + "; then  python " + assembly_tasks_folder + "deconcatenate.py " + name + "." + input_extension + " " + scratch_deconcatenated + name.split("/")[-1],
 			b = "gzip -f " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_1.fastq",
 			c = "gzip -f " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq",
 			d = "cat " + scratch_deconcatenated + name.split("/")[-1] + "_paired_1.fastq | paste - - - - | sort -k1,1 -S 3G | tr '\t' '\n' | gzip -f > " + scratch_deconcatenated + name.split("/")[-1] + "_1_sorted.fastq.gz",
@@ -300,14 +359,15 @@ if paired == "concatenated":
 			workflow.add_task(command, depends=[name + "." + input_extension], targets = [scratch_searched + name.split("/")[-1] + "_searched.log", list_paired])
 
 	for name in names:
-		workflow.add_task_gridable(deconcatenate(name),
-			depends=list_depends(name=name, step="deconcatenate", paired="concatenated"),
-			targets=list_targets(name=name, step="deconcatenate", paired="concatenated"),
-			time=calculate_time(name=name, step="deconcatenate", paired="concatenated"),
-			mem=memory,
-			cores=cores,
-			partition=partition
-			)
+		if not os.path.isfile(list_targets(name=name, step="deconcatenate", paired="concatenated")[0]) and not os.path.isfile(output + "remove_complete1.done"):
+			workflow.add_task_gridable(deconcatenate(name),
+				depends=list_depends(name=name, step="deconcatenate", paired="concatenated"),
+				targets=list_targets(name=name, step="deconcatenate", paired="concatenated"),
+				time=calculate_time(name=name, step="deconcatenate", paired="concatenated"),
+				mem=memory,
+				cores=cores,
+				partition=partition
+				)
 
 ###################################################
 # function to call MEGAHIT and calculate coverage #
@@ -348,6 +408,17 @@ if not args.skip_contigs:
 				partition=partition
 				)
 
+if args.skip_contigs:
+	for name in names:
+		if not os.path.isfile(list_targets(name=name, step="megahit", paired=paired)[0]) and os.path.isfile((list_targets(name=name, step="megahit", paired=paired)[0]).strip(".final.contigs.fa") + ".contigs.fa"):
+			workflow.add_task(actions="mv " + (list_targets(name=name, step="megahit", paired=paired)[0]).strip(".final.contigs.fa") + ".contigs.fa " + list_targets(name=name, step="megahit", paired=paired)[0],
+			depends=[(list_targets(name=name, step="megahit", paired=paired)[0]).strip(".final.contigs.fa") + ".contigs.fa"],
+			targets=list_targets(name=name, step="megahit", paired=paired)[0])
+		make_directory(scratch + "assembly/main/" + name.split("/")[-1] + "/")
+		workflow.add_task(actions="cp " + list_targets(name=name, step="megahit", paired=paired)[0] + " " + scratch + "assembly/main/" + name.split("/")[-1] + "/ && touch " + contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".done",
+		depends=list_targets(name=name, step="megahit", paired=paired)[0],
+		targets=[contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".done"])
+
 ###############################################
 # function to align reads and calculate depth #
 ###############################################
@@ -383,7 +454,7 @@ def align(name, paired):
 			a = "mkdir -p " + bowtie2_dir,
 			b = "if [ ! -s " + contigs + " ]; then touch " + bam_sorted + "; else bowtie2-build " + contigs + " " + index,
 			c = "if grep -q -m 1 " + name + " " + list_paired + "; then bowtie2 -x " + index + " -1 " + scratch_deconcatenated + name.split("/")[-1] + "_paired_1.fastq.gz" + " -2 " + scratch_deconcatenated + name.split("/")[-1] + "_paired_2.fastq.gz" + " -U " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_1.fastq.gz" +
-				"," + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq" + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; else bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " +
+				"," + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq.gz" + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; else bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " +
 				sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; fi",
 			d = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 			e = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
@@ -420,16 +491,17 @@ def metabat(name):
 		)
 	return str(command)
 
-for name in names:
-	if not os.path.isfile(list_targets(name=name, step="metabat", paired=paired)[0]):
-		workflow.add_task_gridable(actions=metabat(name),
-			depends=list_depends(name=name, step="metabat", paired=paired),
-			targets=list_targets(name=name, step="metabat", paired=paired),
-			time=calculate_time(name=name, step="metabat", paired=paired),
-			mem=memory,
-			cores=cores,
-			partition=partition
-			)
+if not os.path.isfile(output + "remove_complete0.done") and not os.path.isfile(output + "remove_complete.done"):
+	for name in names:
+		if not os.path.isfile(list_targets(name=name, step="metabat", paired=paired)[0]):
+			workflow.add_task_gridable(actions=metabat(name),
+				depends=list_depends(name=name, step="metabat", paired=paired),
+				targets=list_targets(name=name, step="metabat", paired=paired),
+				time=calculate_time(name=name, step="metabat", paired=paired),
+				mem=memory,
+				cores=cores,
+				partition=partition
+				)
 
 ###################################
 # function to calculate abundance #
@@ -449,8 +521,8 @@ def abundance_sample(name, paired):
 		if input_extension in ["fastq.gz", "fq.gz"]:
 			command = '''{a} && {b} && {c} && {d} && {e} && {f} && {g} && {h} && {i} && {j}'''.format(
 				a = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				b = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				c = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				b = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				c = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				d = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				e = "paired1=$(echo $(zcat " + name + "_paired_1." + input_extension + "|wc -l)/4|bc)",
 				f = "paired2=$(echo $(zcat " + name + "_paired_2." + input_extension + "|wc -l)/4|bc)",
@@ -462,8 +534,8 @@ def abundance_sample(name, paired):
 		elif input_extension in ["fastq", "fq"]:
 			command = '''{a} && {b} && {c} && {d} && {e} && {f} && {g} && {h} && {i} && {j}'''.format(
 				a = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				b = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				c = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				b = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				c = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				d = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				e = "paired1=$(echo $(cat " + name + "_paired_1." + input_extension + "|wc -l)/4|bc)",
 				f = "paired2=$(echo $(cat " + name + "_paired_2." + input_extension + "|wc -l)/4|bc)",
@@ -476,8 +548,8 @@ def abundance_sample(name, paired):
 		if input_extension in ["fastq.gz", "fq.gz"]:
 			command = '''{a} && {b} && {c} && {d} && {e} && {f} '''.format(
 				a = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				b = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				c = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				b = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				c = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				d = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				e = "echo $(zcat " + name + "." + input_extension + "|wc -l)/4|bc &>> [targets[2]]",
 				f = "rm -r " + bowtie2_dir
@@ -485,8 +557,8 @@ def abundance_sample(name, paired):
 		elif input_extension in ["fastq", "fq"]:
 			command = '''{a} && {b} && {c} && {d} && {e} && {f} '''.format(
 				a = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				b = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				c = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				b = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				c = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				d = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				e = "echo $(cat " + name + "." + input_extension + "|wc -l)/4|bc &>> [targets[2]]",
 				f = "rm -r " + bowtie2_dir
@@ -497,7 +569,7 @@ def rebuild_bowtie2_db():
 	command = '''{a} && {b} && {c} && {d}'''.format(
 		a = "rm -r " + bowtie2_global_dir,
 		b = "mkdir -p " + bowtie2_global_dir,
-		c = "python " + this_folder + "by_dataset_db.py --mag_dir " + bins_dir + " --out_dir " + bowtie2_global_dir,
+		c = "python " + assembly_tasks_folder + "by_dataset_db.py --mag_dir " + bins_dir + " --out_dir " + bowtie2_global_dir,
 		d = "touch " + abundance_dir + "built.done"
 		)
 	return str(command)
@@ -520,8 +592,8 @@ def abundance_dataset(name, paired):
 				c = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				d = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
 				e = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				f = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				g = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				f = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				g = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				h = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				i = "paired1=$(echo $(zcat " + name + "_paired_1." + input_extension + "|wc -l)/4|bc)",
 				j = "paired2=$(echo $(zcat " + name + "_paired_2." + input_extension + "|wc -l)/4|bc)",
@@ -536,8 +608,8 @@ def abundance_dataset(name, paired):
 				c = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				d = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
 				e = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				f = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				g = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				f = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				g = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				h = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				i = "paired1=$(echo $(cat " + name + "_paired_1." + input_extension + "|wc -l)/4|bc)",
 				j = "paired2=$(echo $(cat " + name + "_paired_2." + input_extension + "|wc -l)/4|bc)",
@@ -553,8 +625,8 @@ def abundance_dataset(name, paired):
 				c = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				d = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi " + args.checkm_coverage_options,
 				e = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				f = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				g = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				f = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				g = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				h = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				i = "echo $(zcat " + name + "." + input_extension + "|wc -l)/4|bc &>> [targets[2]]",
 				j = "echo $((paired1+paired2+unpaired1+unpaired2)) &>> [targets[2]]",
@@ -566,8 +638,8 @@ def abundance_dataset(name, paired):
 				c = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				d = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
 				e = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				f = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
-				g = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				f = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r " + args.checkm_coverage_options,
+				g = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				h = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				i = "echo $(cat " + name + "." + input_extension + "|wc -l)/4|bc &>> [targets[2]]",
 				j = "echo $((paired1+paired2+unpaired1+unpaired2)) &>> [targets[2]]",
@@ -578,13 +650,13 @@ def abundance_dataset(name, paired):
 			command = '''{a} && {b} && {c} && {d} && {e} && {f} && {g} && {h} && {i} && {j}'''.format(
 				a = "mkdir -p " + bowtie2_dir,
 				b = "if [ ! -s " + contigs + " ]; then touch " + bam_sorted + "; else if grep -q -m 1 " + name + " " + list_paired + "; then bowtie2 -x " + index + " -1 " + scratch_deconcatenated + name.split("/")[-1] + "_paired_1.fastq.gz" + " -2 " + scratch_deconcatenated + name.split("/")[-1] + "_paired_2.fastq.gz" + " -U " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_1.fastq.gz" +
-					"," + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq" + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; else bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " +
+					"," + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq.gz" + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; else bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " +
 					sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; fi",
 				c = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				d = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
 				e = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				f = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r",
-				g = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				f = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r",
+				g = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				h = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				i = "echo $(zcat " + name + "." + input_extension + "|wc -l)/4|bc &>> [targets[2]]",
 				j = "echo $((paired1+paired2+unpaired1+unpaired2)) &>> [targets[2]]",
@@ -593,13 +665,13 @@ def abundance_dataset(name, paired):
 			command = '''{a} && {b} && {c} && {d} && {e} && {f} && {g} && {h} && {i} && {j}'''.format(
 				a = "mkdir -p " + bowtie2_dir,
 				b = "if [ ! -s " + contigs + " ]; then touch " + bam_sorted + "; else if grep -q -m 1 " + name + " " + list_paired + "; then bowtie2 -x " + index + " -1 " + scratch_deconcatenated + name.split("/")[-1] + "_paired_1.fastq.gz" + " -2 " + scratch_deconcatenated + name.split("/")[-1] + "_paired_2.fastq.gz" + " -U " + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_1.fastq.gz" +
-					"," + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq" + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; else bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " +
+					"," + scratch_deconcatenated + name.split("/")[-1] + "_unmatched_2.fastq.gz" + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; else bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " +
 					sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; fi",
 				c = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				d = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
 				e = "if [ ! -s " + contigs + " ]; then echo -e \"Sequence Id\tBin Id\tSequence length (bp)\tBam Id\tCoverage\tMapped reads\" > [targets[0]] && echo -e \"Bin Id\tBin size (Mbp)\t" + name.split("/")[-1] + ".sorted: mapped reads\t" + name.split("/")[-1] + ".sorted: % mapped reads\t" + name.split("/")[-1] + ".sorted: % binned populations\t" + name.split("/")[-1] + ".sorted: % community\" > [targets[1]] && echo 0 > [targets[2]]; else samtools index " + bam_sorted + " -@ " + str(cores) + " " + bam_index,
-				f = "checkm coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r",
-				g = "checkm profile [targets[0]] --tab_table -f [targets[1]]",
+				f = "python " + assembly_tasks_folder + "checkm.py coverage " + bin + " [targets[0]] " + bam_sorted + " -x fa -t " + str(cores) + " -r",
+				g = "python " + assembly_tasks_folder + "checkm.py profile [targets[0]] --tab_table -f [targets[1]]",
 				h = "samtools view -c -F 260 " + bam_sorted + " -o [targets[2]]; fi",
 				i = "echo $(cat " + name + "." + input_extension + "|wc -l)/4|bc &>> [targets[2]]",
 				j = "echo $((paired1+paired2+unpaired1+unpaired2)) &>> [targets[2]]",
@@ -642,89 +714,189 @@ else:
 ################
 
 if args.gc_length_stats and not os.path.isdir(qa_dir + "GC_content.tsv"):
-	command = "python " + this_folder + "calculateGC.py --in-dir " + bins_dir + " --out-file " + qa_dir + "GC_content.tsv" + " --threads " + str(local_jobs)
+	command = "python " + assembly_tasks_folder + "calculateGC.py --in-dir " + bins_dir + " --out-file " + qa_dir + "GC_content.tsv" + " --threads " + str(local_jobs)
 	workflow.add_task(command, targets=qa_dir + "GC_content.tsv", depends=[item for name in names for item in list_targets(name=name, step="abundance", paired=paired)])
 
 ######################################
 # run checkm and phylophlan workflow #
 ######################################
 
-if not os.path.isfile(qa_dir + "checkm_qa_and_n50.tsv") or not os.path.isfile(phylophlan_dir + "phylophlan_out.tsv"):
-	add_string = ""
-	if args.checkm_predict_options != "":
-		add_string = add_string + " --checkm-predict-options \"" + args.checkm_predict_options + "\""
-	if args.phylophlan_metagenomic_options != "":
-		add_string = add_string + " --phylophlan-metagenomic-options \"" + args.phylophlan_metagenomic_options + "\""
-	if args.checkm_data_path:
-		add_string = add_string + " --checkm-data-path " + args.checkm_data_path
-	if args.grid_options:
-		add_string = add_string + " --grid-options=\"" + " ".join(args.grid_options) + "\""
-	command = "python " + this_folder + "checkm_phylophlan_workflow.py -o " + output + "checkm_phylophlan_steps/" + " --n 300 --grid-scratch " + scratch + "checkm_phylophlan_steps/" + " --grid-jobs " + str(args.grid_jobs) + " --grid-partition " + partition + " --cores " + str(cores) + " --mem " + str(memory) + " --completeness " + str(args.completeness) + " --contamination " + str(args.contamination) + " --phylophlan-database " + database + " --phylophlan-database-folder " + database_folder + " --checkm-path " + args.checkm_path + add_string
-	workflow.add_task(actions=command,
-		depends=[str(bins_dir + name.split("/")[-1] + ".done") for name in names],
-		targets=[qa_dir + "checkm_qa_and_n50.tsv", phylophlan_dir + "phylophlan_out.tsv"])
+def copy_bins(name):
+	metabat_out = bins_dir + name.split("/")[-1] + "/bins/"
+	checkm_bin_name = checkm_bins_dir_scratch + name.split("/")[-1] + "/bins/"
+	make_directory(checkm_bin_name)
+	command = '''{a} && {b}'''.format(
+		a = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then cp " + metabat_out + "*.bin.[0-9]*.fa " + checkm_bin_name + "; fi",
+		b = "touch [targets[0]]"
+		)
+	return str(command)
 
-if not os.path.isfile(phylophlan_dir + "phylophlan_relab.tsv"):
-	workflow.add_task("python " + this_folder + "phylophlan_add_tax_assignment.py --table " + phylophlan_dir + "phylophlan_out.tsv" + " --output " + phylophlan_dir + "phylophlan_relab.tsv",
+for name in names:
+	if not os.path.isfile(list_targets(name=name, step="copy_bins", paired=paired)[0]):
+		workflow.add_task(actions=copy_bins(name),
+			depends=list_depends(name=name, step="copy_bins", paired=paired),
+			targets=list_targets(name=name, step="copy_bins", paired=paired)
+			)
+
+# Calculate n50 of MAGs
+if not os.path.isfile(checkm_n50_dir + "mags_n50.tsv"):
+	n50 = "python " + assembly_tasks_folder + "mag_n50_calc.py -i " + checkm_bins_dir_scratch + " -o " + checkm_n50_dir + " -t " + str(cores)
+	workflow.add_task(n50, targets=checkm_n50_dir + "mags_n50.tsv", depends=[list_targets(name=name, step="copy_bins", paired=paired)[0] for name in names])
+
+# Run CheckM
+if not os.path.isfile(qa_dir + "quality_report.tsv"):
+	for name in names:
+		checkm_bin_name = checkm_bins_dir_scratch + name.split("/")[-1] + "/bins/"
+		metabat_out = bins_dir + name.split("/")[-1] + "/bins/"
+		make_directory(checkm_qa_scratch + name.split("/")[-1] + "/")
+		make_directory(qa_unmerged_dir + name.split("/")[-1] + "/")
+		command = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then " + this_folder + "checkm2/bin/checkm2 predict -x fa --input " + checkm_bin_name + " --output-directory " + checkm_qa_scratch + name.split("/")[-1] + "/" + " --threads " + str(args.cores) + " " + args.checkm_predict_options + "; " + \
+			"else echo -e \"Name\tCompleteness\tContamination\tCompleteness_Model_Used\tTranslation_Table_Used\tCoding_Density\tContig_N50\tAverage_Gene_Length\tGenome_Size\tGC_Content\tTotal_Coding_Sequences\tAdditional_Notes\" > " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv; fi"
+		workflow.add_task_gridable(actions=command,
+		depends=list_targets(name=name, step="copy_bins", paired=paired),
+		targets=qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv",
+		time=calculate_time(name, "checkm", paired),
+		mem=memory,
+		cores=args.cores,
+		partition=partition)
+
+	for count, name in enumerate(names):
+		if count == 0:
+			workflow.add_task("cat " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv > " + qa_dir + "quality_report_tmp_0.tsv",
+			depends = qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv",
+			targets = qa_dir + "quality_report_tmp_0.tsv"
+			)
+		else:
+			workflow.add_task("cat " + qa_dir + "quality_report_tmp_" + str(count - 1) + ".tsv > " + qa_dir + "quality_report_tmp_" + str(count) + ".tsv && tail -n +2 " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv >> " + qa_dir + "quality_report_tmp_" + str(count) + ".tsv && rm " + qa_dir + "quality_report_tmp_" + str(count - 1) + ".tsv",
+			depends = [qa_dir + "quality_report_tmp_" + str(count - 1) + ".tsv", qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv"],
+			targets = qa_dir + "quality_report_tmp_" + str(count) + ".tsv",
+			)
+	workflow.add_task("mv " + qa_dir + "quality_report_tmp_" + str(len(names) - 1) + ".tsv " + qa_dir + "quality_report.tsv",
+	depends = qa_dir + "quality_report_tmp_" + str(len(names) - 1) + ".tsv",
+	targets = qa_dir + "quality_report.tsv"
+	)
+
+if not os.path.isfile(qa_dir + "checkm_qa_and_n50.tsv"):
+	workflow.add_task("python " + assembly_tasks_folder + "checkm_wrangling.py --checkm-qa " + qa_dir + "quality_report.tsv" + " --n50 " + checkm_n50_dir + "mags_n50.tsv" + " --out_file " + qa_dir + "checkm_qa_and_n50.tsv" + " --completeness " + str(args.completeness) + " --contamination " + str(args.contamination),
+		depends = [checkm_n50_dir + "mags_n50.tsv", qa_dir + "quality_report.tsv"],
+		targets = qa_dir + "checkm_qa_and_n50.tsv",
+		)
+
+if not args.skip_placement:
+
+	##################
+	# run PhyloPhlAn #
+	##################
+	if not os.path.isfile(phylophlan_dir + "phylophlan_out.tsv"):
+		for name in names:
+			if not os.path.isfile(phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv"):
+				make_directory(phylophlan_unmerged_scratch + name.split("/")[-1] + "/")
+				make_directory(phylophlan_unmerged_dir + name.split("/")[-1] + "/")
+				metabat_out = bins_dir + name.split("/")[-1] + "/bins/"
+				checkm_bin_name = checkm_bins_dir_scratch + name.split("/")[-1] + "/bins/"
+				command = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then phylophlan_metagenomic -i " + checkm_bin_name + " -n 1 --add_ggb --add_fgb -d " + database + " -o " + phylophlan_unmerged_scratch + name.split("/")[-1] + "/" + "phylophlan_out --nproc " + str(cores) + " --verbose -e fa --database_folder " + database_folder + " " + args.phylophlan_metagenomic_options + "; " + \
+					"else echo -e \"line1\nline2\nline3\n#mag\tsgb\tggb\tfgb\tref\" > " + phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv; fi"
+				workflow.add_task_gridable(actions=command,
+				depends=list_targets(name=name, step="copy_bins", paired=paired),
+				targets=phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv",
+				time=calculate_time(name, "phylophlan", paired),
+				mem=args.mem,
+				cores=args.cores,
+				partition=partition)
+
+		for count, name in enumerate(names):
+			if count == 0:
+				workflow.add_task("cat " + phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv > " + phylophlan_dir + "phylophlan_out_tmp_0.tsv",
+				depends = phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv",
+				targets = phylophlan_dir + "phylophlan_out_tmp_0.tsv"
+				)
+			else:
+				workflow.add_task("cat " + phylophlan_dir + "phylophlan_out_tmp_" + str(count - 1) + ".tsv > " + phylophlan_dir + "phylophlan_out_tmp_" + str(count) + ".tsv && tail -n +5 " + phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv >> " + phylophlan_dir + "phylophlan_out_tmp_" + str(count) + ".tsv && rm " + phylophlan_dir + "phylophlan_out_tmp_" + str(count - 1) + ".tsv",
+				depends = [phylophlan_dir + "phylophlan_out_tmp_" + str(count - 1) + ".tsv", phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv"],
+				targets = phylophlan_dir + "phylophlan_out_tmp_" + str(count) + ".tsv"
+				)
+		workflow.add_task("mv " + phylophlan_dir + "phylophlan_out_tmp_" + str(len(names) - 1) + ".tsv " + phylophlan_dir + "phylophlan_out.tsv",
+		depends = phylophlan_dir + "phylophlan_out_tmp_" + str(len(names) - 1) + ".tsv",
+		targets = phylophlan_dir + "phylophlan_out.tsv"
+		)
+
+	if not os.path.isfile(phylophlan_dir + "phylophlan_relab.tsv"):
+		workflow.add_task("python " + assembly_tasks_folder + "phylophlan_add_tax_assignment.py --table " + phylophlan_dir + "phylophlan_out.tsv" + " --output " + phylophlan_dir + "phylophlan_relab.tsv",
 		depends=phylophlan_dir + "phylophlan_out.tsv",
 		targets=phylophlan_dir + "phylophlan_relab.tsv")
 
-########
-# SGBs #
-########
+	########
+	# SGBs #
+	########
 
-############################
-# list MAGs to run Mash on #
-############################
+	############################
+	# list MAGs to run Mash on #
+	############################
 
-if not os.path.isfile(mash_dir + "mags_filepaths.txt"):
-	list_inputs = "python " + this_folder + "mash_list_inputs.py --checkm " + qa_dir + "checkm_qa_and_n50.tsv --phylophlan " + phylophlan_dir + "phylophlan_relab.tsv" + " --bins " + bins_dir + " --mash " + mash_dir + " --threads " + str(local_jobs)
-	workflow.add_task(list_inputs, depends=[phylophlan_dir + "phylophlan_relab.tsv", qa_dir + "checkm_qa_and_n50.tsv"], targets=mash_dir + "mags_filepaths.txt")
+	if not os.path.isfile(mash_dir + "mags_filepaths.txt"):
+		list_inputs = "python " + assembly_tasks_folder + "mash_list_inputs.py --checkm " + qa_dir + "checkm_qa_and_n50.tsv --phylophlan " + phylophlan_dir + "phylophlan_relab.tsv" + " --bins " + bins_dir + " --mash " + mash_dir + " --threads " + str(local_jobs)
+		workflow.add_task(list_inputs, depends=[phylophlan_dir + "phylophlan_relab.tsv", qa_dir + "checkm_qa_and_n50.tsv"], targets=mash_dir + "mags_filepaths.txt")
 
-###############
-# mash sketch #
-###############
+	###############
+	# mash sketch #
+	###############
 
-if not os.path.isfile(mash_dir + "sketches.msh"):
-	sketch = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then touch " + mash_dir + "sketches.msh" + "; else mash sketch -p " + str(local_jobs) + " -l " + mash_dir + "mags_filepaths.txt" + " -o " + mash_dir + "sketches " + args.mash_sketch_options + "; fi"
-	workflow.add_task(sketch, depends=mash_dir + "mags_filepaths.txt", targets=mash_dir + "sketches.msh")
+	if not os.path.isfile(mash_dir + "sketches.msh"):
+		sketch = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then touch " + mash_dir + "sketches.msh" + "; else mash sketch -p " + str(local_jobs) + " -l " + mash_dir + "mags_filepaths.txt" + " -o " + mash_dir + "sketches " + args.mash_sketch_options + "; fi"
+		workflow.add_task(sketch, depends=mash_dir + "mags_filepaths.txt", targets=mash_dir + "sketches.msh")
 
-##############
-# mash paste #
-##############
+	##############
+	# mash paste #
+	##############
 
-if not os.path.isfile(mash_dir + "references.msh"):
-	paste = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then touch " + mash_dir + "references.msh" + "; else mash paste " + mash_dir + "references " + mash_dir + "sketches.msh; fi"
-	workflow.add_task(paste, depends=mash_dir + "sketches.msh", targets=mash_dir + "references.msh")
+	if not os.path.isfile(mash_dir + "references.msh"):
+		paste = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then touch " + mash_dir + "references.msh" + "; else mash paste " + mash_dir + "references " + mash_dir + "sketches.msh; fi"
+		workflow.add_task(paste, depends=mash_dir + "sketches.msh", targets=mash_dir + "references.msh")
 
-#############
-# mash dist #
-#############
+	#############
+	# mash dist #
+	#############
 
-if not os.path.isfile(mash_dir + "mash_dist_out.tsv"):
-	dist = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then touch " + mash_dir + "mash_dist_out.tsv" + "; else mash dist -p " + str(local_jobs) + " -t " + mash_dir + "references.msh " + mash_dir + "sketches.msh > " + mash_dir + "mash_dist_out.tsv; fi"
-	workflow.add_task(dist, depends=mash_dir + "references.msh", targets=mash_dir + "mash_dist_out.tsv")
+	if not os.path.isfile(mash_dir + "mash_dist_out.tsv"):
+		dist = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then touch " + mash_dir + "mash_dist_out.tsv" + "; else mash dist -p " + str(local_jobs) + " -t " + mash_dir + "references.msh " + mash_dir + "sketches.msh > " + mash_dir + "mash_dist_out.tsv; fi"
+		workflow.add_task(dist, depends=mash_dir + "references.msh", targets=mash_dir + "mash_dist_out.tsv")
 
-#################
-# identify SGBS #
-#################
+	#################
+	# identify SGBS #
+	#################
 
-depends_list = [item for name in names for item in list_targets(name=name, step="abundance", paired=paired)]
-depends_list.extend([phylophlan_dir + "phylophlan_relab.tsv", qa_dir + "checkm_qa_and_n50.tsv", sgb_dir + "sgbs/SGB_info.tsv"])
+	depends_list = [item for name in names for item in list_targets(name=name, step="abundance", paired=paired)]
+	depends_list.extend([phylophlan_dir + "phylophlan_relab.tsv", qa_dir + "checkm_qa_and_n50.tsv", sgb_dir + "sgbs/SGB_info.tsv"])
 
-# groups MAGs into SGBs using (1) Mash and (2) fastANI
-if not os.path.isfile(sgb_dir + "fastANI/SGB_list.txt") or not os.path.isfile(sgb_dir + "sgbs/SGB_info.tsv"):
-	cluster = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then mkdir -p " + sgb_dir + "fastANI/" + " && touch " + sgb_dir + "fastANI/SGB_list.txt && mkdir -p " + sgb_dir + "sgbs/" + " && echo -e \"cluster\tgenome\tcluster_members\tn_genomes\tcompleteness\tcontamination\tstrain_heterogeneity\tn50\tquality\tkeep\tcluster_name\tsgb\" > " + sgb_dir + "sgbs/SGB_info.tsv; else Rscript " + this_folder + "mash_clusters.R --mash " + mash_dir + "mash_dist_out.tsv --checkm " + qa_dir + "checkm_qa_and_n50.tsv" + " --phylo " + phylophlan_dir + "phylophlan_relab.tsv --out_dir " + sgb_dir + " --threads " + str(local_jobs) + " --mag_dir " + bins_dir + "qc_bins/; fi"
-	workflow.add_task(cluster, depends=[mash_dir + "mash_dist_out.tsv", phylophlan_dir + "phylophlan_relab.tsv"], targets=[sgb_dir + "sgbs/SGB_info.tsv"])
+	# groups MAGs into SGBs using (1) Mash and (2) fastANI
+	if not os.path.isfile(sgb_dir + "fastANI/SGB_list.txt") or not os.path.isfile(sgb_dir + "sgbs/SGB_info.tsv"):
+		cluster = "if [ ! -s " + mash_dir + "mags_filepaths.txt" + " ]; then mkdir -p " + sgb_dir + "fastANI/" + " && touch " + sgb_dir + "fastANI/SGB_list.txt && mkdir -p " + sgb_dir + "sgbs/" + " && echo -e \"cluster\tgenome\tcluster_members\tn_genomes\tcompleteness\tcontamination\tstrain_heterogeneity\tn50\tquality\tkeep\tcluster_name\tsgb\" > " + sgb_dir + "sgbs/SGB_info.tsv; else Rscript " + assembly_tasks_folder + "mash_clusters.R --mash " + mash_dir + "mash_dist_out.tsv --checkm " + qa_dir + "checkm_qa_and_n50.tsv" + " --phylo " + phylophlan_dir + "phylophlan_relab.tsv --out_dir " + sgb_dir + " --threads " + str(local_jobs) + " --mag_dir " + bins_dir + "qc_bins/; fi"
+		workflow.add_task(cluster, depends=[mash_dir + "mash_dist_out.tsv", phylophlan_dir + "phylophlan_relab.tsv"], targets=[sgb_dir + "sgbs/SGB_info.tsv"])
 
-if not os.path.isfile(output + "final_profile.tsv"):
-	merge = "Rscript " + this_folder + "merge_tax_and_abundance.R" + " -i " + abundance_dir + " --tax " + phylophlan_dir + "phylophlan_relab.tsv" + " --qa " + qa_dir + "checkm_qa_and_n50.tsv --sgbs " + sgb_dir + "sgbs/SGB_info.tsv" + " -o " + output + "final_profile_" + abundance_type + ".tsv"
-	workflow.add_task(merge, depends=depends_list, targets = output + "final_profile_" + abundance_type + ".tsv")
+	if not os.path.isfile(output + "final_profile.tsv"):
+		merge = "Rscript " + assembly_tasks_folder + "merge_tax_and_abundance.R" + " -i " + abundance_dir + " --tax " + phylophlan_dir + "phylophlan_relab.tsv" + " --qa " + qa_dir + "checkm_qa_and_n50.tsv --sgbs " + sgb_dir + "sgbs/SGB_info.tsv" + " -o " + output + "final_profile_" + abundance_type + ".tsv"
+		workflow.add_task(merge, depends=depends_list, targets = output + "final_profile_" + abundance_type + ".tsv")
+
+if not os.path.isfile(output + "remove_complete0.done"):
+	rm_command = "rm " + bins_dir + "*.done && touch " + output + "remove_complete0.done"
+	workflow.add_task(rm_command, depends=[list_targets(name=name, step="copy_bins", paired=paired)[0] for name in names], targets=output + "remove_complete0.done")
+
+if args.remove_intermediate_files:
+	if paired == "concatenated":
+		rm_command = "rm -r " + deconcatenated_dir + " && touch " + output + "remove_complete1.done"
+		workflow.add_task(rm_command, depends=[list_targets(name=name, step="abundance", paired=paired)[0] for name in names], targets=output + "remove_complete1.done")
+	rm_command = "rm -r " + scratch + " && touch " + output + "remove_complete2.done"
+	depends_list = [qa_dir + "checkm_qa_and_n50.tsv"]
+	if not args.skip_placement:
+		depends_list.append(output + "final_profile_" + abundance_type + ".tsv")
+	workflow.add_task(rm_command, depends=depends_list, targets=output + "remove_complete2.done")
+	remove_depends = [output + "remove_complete" + str(i) + ".done" for i in range(3)]
+	if not paired == "concatenated":
+		remove_depends = [remove_depends[0], remove_depends[2]]
+	workflow.add_task("rm " + output + "remove_complete*.done && touch " + output + "remove_complete.done", depends=remove_depends, targets=output + "remove_complete.done")
 
 ####################
 # run the workflow #
 ####################
 
 workflow.go()
-
-#
