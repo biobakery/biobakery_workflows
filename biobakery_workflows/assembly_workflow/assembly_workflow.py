@@ -269,7 +269,7 @@ def list_depends(name, step, paired):
 		return depends_list
 	elif step == "metabat":
 		depends_list = [str(depths_dir + name.split("/")[-1] + ".contig_depths.txt")]
-		if args.skip_contigs:
+		if args.skip_contigs and paired == "concatenated":
 			depends_list.append(str(deconcatenated_dir + name.split("/")[-1] + ".done"))
 		return depends_list
 	elif step == "abundance_sample":
@@ -691,8 +691,9 @@ if abundance_type == "by_sample":
 				partition=partition
 				)
 else:
+	depends_list = [list_depends(name, "abundance_sample", paired) for name in names]
 	workflow.add_task_gridable(actions=rebuild_bowtie2_db(),
-		depends=[str(bins_dir + name.split("/")[-1] + ".done") for name in names],
+		depends=[item for sublist in depends_list for item in sublist],
 		targets=abundance_dir + "built.done",
 		time=30 + 10 * len(names),
 		mem=memory,
