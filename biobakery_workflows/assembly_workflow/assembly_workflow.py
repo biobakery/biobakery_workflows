@@ -695,7 +695,7 @@ else:
 	workflow.add_task_gridable(actions=rebuild_bowtie2_db(),
 		depends=[item for sublist in depends_list for item in sublist],
 		targets=abundance_dir + "built.done",
-		time=30 + 15 * sum([math.ceil(os.path.getsize(name + "_paired_1." + input_extension) / (1024 * 1024 * 1024.0)) for name in names]),
+		time=min(max_time, 30 + 15 * sum([math.ceil(os.path.getsize(name + "_paired_1." + input_extension) / (1024 * 1024 * 1024.0)) for name in names])),
 		mem=memory,
 		cores=1,
 		partition=partition
