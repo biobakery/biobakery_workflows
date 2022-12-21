@@ -264,7 +264,8 @@ def list_depends(name, step, paired):
 		depends_list = [str(contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".final.contigs.fa")]
 		if args.skip_contigs:
 			depends_list.append(contigs_dir + name.split("/")[-1] + "/" + name.split("/")[-1] + ".done")
-			depends_list.append(str(deconcatenated_dir + name.split("/")[-1] + ".done"))
+			if paired == "concatenated":
+				depends_list.append(str(deconcatenated_dir + name.split("/")[-1] + ".done"))
 		return depends_list
 	elif step == "metabat":
 		depends_list = [str(depths_dir + name.split("/")[-1] + ".contig_depths.txt")]
