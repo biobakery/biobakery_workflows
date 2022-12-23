@@ -4,7 +4,7 @@
 
 # Installation
 
-The workflow can be installed with the following commands.  The PhyloPhlAn run will intentionally fail in order to download the database.
+The workflow can be installed with the following commands.  It is okay if the Checkm2 database install throws an error starting with `File "checkm2/bin/checkm2", line 244, in <module>...`.  The PhyloPhlAn run will intentionally fail in order to download the database but will take a while to download the database.
 ```
 git clone https://github.com/WillNickols/assembly_workflow
 cd assembly_workflow
@@ -33,17 +33,48 @@ export PHYLOPHLAN_PATH=$(pwd)/databases/phylophlan/
 
 # Example runs
 
+This runs the workflow on a set of paired-end files that have already been cleaned with Kneaddata.  The `by_sample` flag specifies that abundance estimates of the sample's taxa should come from aligning that sample's reads only to its contigs.  Alternatively, the `by_dataset` flag can be used to align a sample's reads against all contigs generated from the input folder when the samples likely share the same taxa.
+```
+python assembly_workflow.py \
+  -i example/input/sample_1/ \
+  -o example/output/sample_1/ \
+  --abundance-type by_sample \
+  --input-extension fastq.gz \
+  --paired paired \
+  --pair-identifier _R1 \
+  --cores 8 \
+  --local-jobs 12 \
+  --remove-intermediate-output
+```
+
+The output, `example/output/sample_1/final_profile_by_sample.tsv` is a MetaPhlAn-like output with the abundance of each taxonomic group identified in the sample.  The output shows that Pseudoalteromonas marina is present in the sample along with a species, `sgb_01` that represents a new species genome bin not within a Mash distance of 0.05 of any known SGB, 0.15 of any known GGB, or 0.3 of any known FGB.
+
+This runs the workflow on a concatenated file with pre-created contigs in `example/output/sample_2/assembly/main/sample_2/sample_2.contigs.fa`.  Such a file could be created from the `biobakery_workflows wmgx` workflow with `--run-assembly`.  Note that the original reads are still required for the abundance calculation.  Additionally, grid options and scratch space information can be provided as seen below.
+```
+python assembly_workflow.py \
+  -i example/input/sample_2/ \
+  -o example/output/sample_2/ \
+  --abundance-type by_sample \
+  --input-extension fastq.gz \
+  --paired concatenated \
+  --skip-contigs \
+  --cores 8 \
+  --local-jobs 12 \
+  --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/assembly/example/sample_2/ \
+  --grid-partition 'shared' --grid-jobs 8 --cores 8 --mem 20000
+```
+
+# Extra checks
+
 This command runs the workflow without taxonomically placing the MAGs (it runs only assembly, binning, and quality checking).
 ```
 python assembly_workflow.py \
   -i /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_inputs/single_end/ \
   -o /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_outputs/single_end/ \
   --abundance-type by_sample --input-extension fastq.gz --paired unpaired \
-  --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/mags_and_sgbs_pipeline_testing/single_end/ \
-  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 10000 --mem 40000 \
   --local-jobs 12 \
-  --grid-options="--account=nguyen_lab" \
-  --skip-placement y
+  --skip-placement \
+  --remove-intermediate-output
 ```
 
 This command runs a single-end `fastq.gz` file.
@@ -52,37 +83,32 @@ python assembly_workflow.py \
   -i /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_inputs/single_end/ \
   -o /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_outputs/single_end/ \
   --abundance-type by_sample --input-extension fastq.gz --paired unpaired \
-  --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/mags_and_sgbs_pipeline_testing/single_end/ \
-  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 10000 --mem 40000 \
   --local-jobs 12 \
-  --remove-intermediate-files y \
-  --grid-options="--account=nguyen_lab"
+  --remove-intermediate-output
 ```
 
-This command runs a paired-end `fastq` file.
+This command runs a paired-end `fastq` file.  Read headers should end with "/1" or "/2" if the files are paired (e.g. `@read_57/1` and `@read_57/2`).
 ```
 python assembly_workflow.py \
   -i /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_inputs/paired_end/ \
   -o /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_outputs/paired_end/ \
   --abundance-type by_sample --input-extension fastq --paired paired \
-  --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/mags_and_sgbs_pipeline_testing/paired_end/ \
-  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 10000 --mem 40000 \
   --local-jobs 12 \
-  --remove-intermediate-files y \
-  --grid-options="--account=nguyen_lab"
+  --remove-intermediate-output \
+  --cores 8
 ```
 
-This command runs two concatenated `fastq.gz` files, one of which is single-end and one of which is paired-end.
+This command runs two concatenated `fastq.gz` files, one of which is single-end and one of which is paired-end.  These read headers should also end with "/1" and "/2" to indicate pairing.  Files from Kneaddata automatically satisfy this requirement.
 ```
 python assembly_workflow.py \
   -i /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_inputs/concat/ \
   -o /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_outputs/concat/ \
-  --abundance-type by_sample --input-extension fastq.gz --paired concatenated \
-  --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/mags_and_sgbs_pipeline_testing/concat/ \
-  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 10000 --mem 40000 \
+  --abundance-type by_sample \
+  --input-extension fastq.gz \
+  --paired concatenated \
+  --cores 8 \
   --local-jobs 12 \
-  --remove-intermediate-files y \
-  --grid-options="--account=nguyen_lab"
+  --remove-intermediate-output
 ```
 
 These commands run the `biobakery wmgx` assembly and then this pipeline from the assembled contigs.  The `biobakery_workflows wmgx` command with `--run-assembly` fails in the Prokka step (unrelated to this workflow), but enough of the assembly happens beforehand that the assembly workflow can proceed afterwards.
@@ -113,10 +139,8 @@ python assembly_workflow.py \
   -o /n/holylfs05/LABS/nguyen_lab/Everyone/wnickols/mags_and_sgbs_pipeline_testing/test_outputs/contigs_int/ \
   --abundance-type by_sample --input-extension fastq --paired concatenated \
   --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/mags_and_sgbs_pipeline_testing/contigs_int/ \
-  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 10000 --mem 40000 \
+  --grid-partition 'shared' --grid-jobs 96 --cores 8 --time 10000 --mem 20000 \
   --local-jobs 12 \
-  --skip-contigs y \
-  --remove-intermediate-files y \
-  --grid-options="--account=nguyen_lab"
-  
+  --skip-contigs \
+  --remove-intermediate-output
 ```
