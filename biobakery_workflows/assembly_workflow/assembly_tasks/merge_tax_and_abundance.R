@@ -130,10 +130,6 @@ mapped_props <- as.data.frame(mapped_props)
 mapped_props$prop <- as.numeric(as.character(mapped_props$prop))
 
 for (ID in mapped_props$ID) {
-  if (mapped_props$prop[mapped_props$ID==ID] == 0 ) {
-    total_profile[,'new'] <- rep(0, nrow(total_profile))
-    colnames(total_profile)[colnames(total_profile)=="new"] <- ID
-  }
   total_profile[,ID] <- total_profile[,ID] * mapped_props$prop[mapped_props$ID==ID]
   total_profile[total_profile$Taxonomy=="UNKNOWN", ID] <- total_profile[total_profile$Taxonomy=="UNKNOWN", ID] + 
     100 * (1-mapped_props$prop[mapped_props$ID==ID])
