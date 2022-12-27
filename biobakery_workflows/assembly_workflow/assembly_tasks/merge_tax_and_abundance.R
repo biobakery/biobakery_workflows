@@ -34,6 +34,7 @@ colnames(abundances) <- c("ID", (str_split(abundance_files[1], "/")[[1]] %>% tai
                              str_split(pattern = "\\.abundance"))[[1]][1])
 
 for (abundance_file in abundance_files[-1]) {
+  abundances$ID = as.character(abundances$ID)
   data <- fread(abundance_file)[,c(1,6)]
   colnames(data) <- c("ID", (str_split(abundance_file, "/")[[1]] %>% tail(1) %>%
                         str_split(pattern = "\\.abundance"))[[1]][1])
