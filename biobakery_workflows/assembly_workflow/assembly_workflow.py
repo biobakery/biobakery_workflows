@@ -302,13 +302,11 @@ def list_depends(name, step, paired):
 				depends_list = [str(name + "_paired_1." + input_extension), str(name + "_paired_2." + input_extension), str(name + "_unmatched_1." + input_extension), str(name + "_unmatched_2." + input_extension)]
 			else:
 				depends_list = [str(name + pair_identifier + "." + input_extension), str(name + pair_identifier_2 + "." + input_extension)]
-			else:
-				depends_list.append(str(bins_dir + name.split("/")[-1] + ".done"))
+			depends_list.append(str(bins_dir + name.split("/")[-1] + ".done"))
 			return depends_list
 		else:
 			depends_list = [str(name + "." + input_extension)]
-			else:
-				depends_list.append(str(bins_dir + name.split("/")[-1] + ".done"))
+			depends_list.append(str(bins_dir + name.split("/")[-1] + ".done"))
 			return depends_list
 	elif step == "copy_bins":
 		return [str(bins_dir + name.split("/")[-1] + ".done")]
