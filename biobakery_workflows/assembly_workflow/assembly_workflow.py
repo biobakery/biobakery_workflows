@@ -19,7 +19,7 @@ workflow.add_argument("pair-identifier", desc="extension to identify the first f
 workflow.add_argument("skip-contigs", desc="Whether to skip MEGAHIT, contigs should be in $OUTPUT_DIRECTORY/assembly/main/$SAMPLE_NAME/$SAMPLE_NAME.contigs.fa", action="store_true")
 workflow.add_argument("skip-placement", desc="Whether to stop after checkm steps", action="store_true")
 workflow.add_argument("remove-intermediate-output", desc="Remove intermediate files", action="store_true")
-workflow.add_argument("min-contig-length", desc='MEGAHIT --min-contig-length and MetaBAT -m parameter', default=1500)
+workflow.add_argument("min-contig-length", desc='MEGAHIT --min-contig-length and MetaBAT -m parameter', default=2500)
 workflow.add_argument("megahit-options", desc='MEGAHIT options as a text string with quotes', default="")
 workflow.add_argument("metabat-options", desc='MetaBAT options as a text string with quotes', default="")
 workflow.add_argument("checkm-coverage-options", desc='checkm coverage options as a text string with quotes', default="")
@@ -104,11 +104,13 @@ os.makedirs(scratch, exist_ok=True)
 
 deconcatenated_dir = output + "deconcatenated/"
 if paired == "concatenated":
-	scratch_searched = scratch + "searched/"
-	os.makedirs(scratch_searched, exist_ok=True)
+	searched_dir = output + "searched/"
+	os.makedirs(searched_dir, exist_ok=True)
 
 	scratch_deconcatenated = scratch + "deconcatenated/"
 	os.makedirs(scratch_deconcatenated, exist_ok=True)
+
+	list_paired = searched_dir + "paired_list.txt"
 
 	os.makedirs(deconcatenated_dir, exist_ok=True)
 
@@ -141,6 +143,9 @@ os.makedirs(abundance_dir, exist_ok=True)
 
 checkm_dir = output + "checkm/"
 os.makedirs(checkm_dir, exist_ok=True)
+
+checkm_bins_dir = checkm_dir + "bins_copied/"
+os.makedirs(checkm_bins_dir, exist_ok=True)
 
 checkm_scratch = scratch + "checkm/"
 os.makedirs(checkm_scratch, exist_ok=True)
@@ -272,7 +277,7 @@ def calculate_time(name, step, paired):
 def list_depends(name, step, paired):
 	if step == "deconcatenate":
 		depends_list = [name + "." + input_extension]
-		depends_list.extend([scratch_searched + name.split("/")[-1] + "_searched.log" for name in names])
+		depends_list.extend([searched_dir + name.split("/")[-1] + "_searched.log" for name in names])
 		return depends_list
 	elif step == "megahit":
 		if paired == "paired":
@@ -331,7 +336,7 @@ def list_targets(name, step, paired):
 		targets2 = abundance_dir + name.split("/")[-1] + ".mapped_read_num.txt"
 		return [str(targets0), str(targets1), str(targets2)]
 	elif step == "copy_bins":
-		return[str(checkm_bins_dir_scratch + name.split("/")[-1] + "/bins/" + name.split("/")[-1] + ".done")]
+		return[str(checkm_bins_dir + name.split("/")[-1] + "/bins/" + name.split("/")[-1] + ".done")]
 
 #######################################################################
 # function to detect paired concatenated files and deconcatenate them #
@@ -368,14 +373,13 @@ def deconcatenate(name):
 	return command
 
 if paired == "concatenated":
-	list_paired = scratch + "paired_list.txt"
 	for name in names:
 		if input_extension in ["fastq.gz", "fq.gz"]:
-			command = "if zgrep -q -m 1 /2$ " + name + "." + input_extension + "; then echo " + name + "." + input_extension + " >> " + list_paired + "; fi && touch " + scratch_searched + name.split("/")[-1] + "_searched.log"
-			workflow.add_task(command, depends=[name + "." + input_extension], targets = [scratch_searched + name.split("/")[-1] + "_searched.log", list_paired], name="Create paired/unpaired list")
+			command = "if zgrep -q -m 1 /2$ " + name + "." + input_extension + "; then echo " + name + "." + input_extension + " >> " + list_paired + "; fi && touch " + searched_dir + name.split("/")[-1] + "_searched.log"
+			workflow.add_task(command, depends=[name + "." + input_extension], targets = [searched_dir + name.split("/")[-1] + "_searched.log", list_paired], name="Create paired/unpaired list")
 		else:
-			command = "if grep -q -m 1 /2$ " + name + "." + input_extension + "; then echo " + name + "." + input_extension + " >> " + list_paired + "; fi && touch " + scratch_searched + name.split("/")[-1] + "_searched.log"
-			workflow.add_task(command, depends=[name + "." + input_extension], targets = [scratch_searched + name.split("/")[-1] + "_searched.log", list_paired], name="Create paired/unpaired list")
+			command = "if grep -q -m 1 /2$ " + name + "." + input_extension + "; then echo " + name + "." + input_extension + " >> " + list_paired + "; fi && touch " + searched_dir + name.split("/")[-1] + "_searched.log"
+			workflow.add_task(command, depends=[name + "." + input_extension], targets = [searched_dir + name.split("/")[-1] + "_searched.log", list_paired], name="Create paired/unpaired list")
 
 	for name in names:
 		workflow.add_task_gridable(deconcatenate(name),
@@ -525,7 +529,7 @@ def metabat(name):
 	metabat_tmp = mags_scratch + name.split("/")[-1] + "/bins/" + name.split("/")[-1]
 	metabat_out = bins_dir + name.split("/")[-1] + "/bins/"
 	command = '''{a} && {b} && {c} && {d}'''.format(
-		a = "if [ ! -s " + contigs + " ]; then mkdir -p " + metabat_tmp + " && touch " + metabat_tmp + ".bin.lowDepth.fa && touch " + metabat_tmp + ".bin.tooShort.fa && touch " + metabat_tmp + ".bin.unbinned.fa; else metabat2 -i " + contigs + " -a " + depth + " -o " + metabat_tmp + ".bin --unbinned -m 1500 -t " + str(cores) + " " + args.metabat_options + "; fi",
+		a = "if [ ! -s " + contigs + " ]; then mkdir -p " + metabat_tmp + " && touch " + metabat_tmp + ".bin.lowDepth.fa && touch " + metabat_tmp + ".bin.tooShort.fa && touch " + metabat_tmp + ".bin.unbinned.fa; else metabat2 -i " + contigs + " -a " + depth + " -o " + metabat_tmp + ".bin --unbinned -m " + str(args.min_contig_length) + " -t " + str(cores) + " " + args.metabat_options + "; fi",
 		b = "mkdir -p " + metabat_out,
 		c = "cp " + metabat_tmp + "*.fa " + metabat_out,
 		d = "touch [targets[0]]"
@@ -821,9 +825,10 @@ def copy_bins(name):
 	metabat_out = bins_dir + name.split("/")[-1] + "/bins/"
 	checkm_bin_name = checkm_bins_dir_scratch + name.split("/")[-1] + "/bins/"
 	os.makedirs(checkm_bin_name, exist_ok=True)
-	command = '''{a} && {b}'''.format(
+	command = '''{a} && {b} && {c}'''.format(
 		a = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then cp " + metabat_out + "*.bin.[0-9]*.fa " + checkm_bin_name + "; fi",
-		b = "touch [targets[0]]"
+		b = "mkdir -p " + checkm_bins_dir + name.split("/")[-1] + "/bins/",
+		c = "touch [targets[0]]"
 		)
 	return str(command)
 
@@ -971,9 +976,6 @@ if not args.skip_placement:
 	workflow.add_task(merge, depends=depends_list, targets = original_output + "final_profile_" + abundance_type + ".tsv", name="Merge abundance and taxonomy for final output")
 
 if args.remove_intermediate_output:
-	if paired == "concatenated":
-		rm_command = "rm -r " + deconcatenated_dir + " && touch " + output + "remove_deconcatenated.done"
-		workflow.add_task(rm_command, depends=[list_targets(name=name, step="abundance", paired=paired)[0] for name in names], targets=output + "remove_deconcatenated.done", name="Remove deconcatenated files")
 	rm_command = "rm -r " + scratch + " && touch " + output + "remove_scratch.done"
 	depends_list = [qa_dir + "checkm_qa_and_n50.tsv"]
 	if not args.skip_placement:

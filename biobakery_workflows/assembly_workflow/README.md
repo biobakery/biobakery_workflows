@@ -33,6 +33,12 @@ export PHYLOPHLAN_PATH=$(pwd)/databases/phylophlan/
 
 # Example runs
 
+The example files can be downloaded and unzipped using the following commands:
+```
+wget http://huttenhower.sph.harvard.edu/biobakery_demo/biobakery_workflows/assembly/example.tar.gz
+tar -xf example.tar.gz
+```
+
 This runs the workflow on a set of paired-end files that have already been cleaned with Kneaddata.  The `by_sample` flag specifies that abundance estimates of the sample's taxa should come from aligning that sample's reads only to its contigs.  Alternatively, the `by_dataset` flag can be used to align a sample's reads against all contigs generated from the input folder when the samples likely share the same taxa.
 ```
 python assembly_workflow.py \
@@ -60,6 +66,5 @@ python assembly_workflow.py \
   --skip-contigs \
   --cores 8 \
   --local-jobs 12 \
-  --grid-scratch /n/holyscratch01/nguyen_lab/wnickols/assembly/example/sample_2/ \
-  --grid-partition 'shared' --grid-jobs 8 --cores 8 --mem 20000
+  --remove-intermediate-output
 ```
