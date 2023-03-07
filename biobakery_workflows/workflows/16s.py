@@ -78,6 +78,10 @@ index_files = utilities.find_files(args.input, extension=args.index_identifier+"
 # remove the index files, if found, from the set of input files
 input_files = list(filter(lambda file: not file in index_files, input_files))
 
+# check for valid number for percent identity
+if float(args.percent_identity) > 1:
+    sys.exit("ERROR: Please set a percent identity that is less than 1")
+
 # check for empty files in the input folder
 utilities.check_for_empty_files(args.input, args.input_extension)
 
