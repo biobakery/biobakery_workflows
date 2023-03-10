@@ -30,6 +30,45 @@ from anadama2.tracked import TrackedExecutable, TrackedDirectory
 
 from biobakery_workflows import utilities
 
+def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder, pair_identifier, threads, extension, input_files, options):
+    """ Using cutadapt remove primers from the set of input files """
+
+    # create output folder
+    cutadapt_folder=os.path.join(output_folder,"cutadapt")
+    if not os.path.isdir(cutadapt_folder):
+        os.makedirs(cutadapt_folder)
+
+    # check for pairs
+    pair1, pair2=utilities.paired_files(input_files, extension, pair_identifier)
+
+    output_files=[]
+    if pair1 and pair2:
+        for file_pair1, file_pair2 in zip(pair1, pair2):
+            output_file1=os.path.join(cutadapt_folder,file_pair1)
+            output_file2=os.path.join(cutadapt_folder,file_pair2)
+            addition=""
+            if rev_primer:
+                addition="-a [rev_primer]"
+            workflow.add_task(
+                "cutadapt -g [fwd_primer] -n 2 -o [targets[0]] -p [targets[1]] [depends[0]] [depends[1]]--minimum-length 10 "+addition+" "+options,
+                depends=[file_pair1, file_pair2],
+                targets=[output_file1, output_file2],
+                fwd_primer=fwd_primer,
+                rev_primer=rev_primer)
+            output_files+=[output_file1,output_file2]
+    else:
+        output_files=[os.path.join(cutadapt_folder,os.path.basename(filename)) for filename in input_files]
+        addition=""
+        if rev_primer:
+            addition="-a [rev_primer]"
+        workflow.add_task_group(
+            "cutadapt -g [fwd_primer] [depends[0]] -o [targets[0]] "+addition+" "+options,
+            depends=input_files,
+            targets=output_files,
+            fwd_primer=fwd_primer,
+            rev_primer=rev_primer)
+
+    return output_files
 
 def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)

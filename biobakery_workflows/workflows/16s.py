@@ -55,8 +55,9 @@ workflow.add_argument("trunc-len-rev-offset", desc="the offset (use negative num
 workflow.add_argument("min-fold-parent-over-abundance", desc="the min fold difference between child and parent to call a sequence as chimeric (for dada2 only)", default=1)
 workflow.add_argument("min-size", desc="the min size to use for clustering", default=2)
 workflow.add_argument("bypass-primers-removal", desc="do not run remove primers tasks", action="store_true")
-workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow")
-workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow")
+workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow",default="")
+workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow",default="")
+workflow.add_argument("cutadapt-options", desc="additional options when running cutadapt",default="")
 workflow.add_argument("minoverlap", desc="the min overlap required to merge pairs for the dada2 workflow", default=20)
 workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pairs for the dada2 workflow", default=0)
 workflow.add_argument("tryRC", desc="try the reverse complement of the reads for the dada2 workflow", default="FALSE")
@@ -173,10 +174,17 @@ if args.method == "dada2" or args.method == "its":
                 args.picrust_version, args.threads, args.output, otus=False, method=args.method)
 
 else:
+    cutadapt_files=demultiplexed_files
+    if not args.bypass_primers_removal:
+        if args.fwd_primer:
+            cutadapt_files=general.remove_primers(
+                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads,args.input_extension,demultiplexed_files,args.cutadapt_options)
+            args.input_extension=args.input_extension.replace(".gz","")
+
     # call vsearch or usearch workflow tasks
     #  merge pairs, if paired-end, then rename so sequence id matches sample name then merge to single fastq file
     all_samples_fastq = sixteen_s.merge_samples_and_rename(
-    	       workflow, args.method, demultiplexed_files, args.input_extension, args.output, args.pair_identifier, args.threads, args.fastq_ascii)
+    	       workflow, args.method, cutadapt_files, args.input_extension, args.output, args.pair_identifier, args.threads, args.fastq_ascii)
 
 	# add quality control tasks: generate qc report, filter by maxee, and truncate
     filtered_truncated_fasta, truncated_fasta, original_fasta = sixteen_s.quality_control(
