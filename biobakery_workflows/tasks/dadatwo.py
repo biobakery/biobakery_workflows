@@ -125,7 +125,7 @@ def cutadapt_do(task):
     utilities.run_task(command, depends=task.depends, targets=task.targets)
 
 
-def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads,trunc_len_rev_offset):
+def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads,trunc_len_rev_offset,min_len):
     
          """ Filters samples by maxee and trims them, renders quality control plots
          of forward and reverse reads for each sample, creates read counts tsv and rds files.
@@ -138,6 +138,7 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                 trunc_len_max (string): max length for truncating reads
                 pair_id (string): pair identifier
                 threads (int): number of threads
+                min_len (int): min length to keep reads
                 
             Requires:
                dada2, gridExtra,tools r packages
@@ -166,10 +167,11 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                --reads_plotR=[args[7]]\
                --pair_id=[args[4]]\
                --threads=[args[5]]\
+               --min_len=[args[8]]\
                --trunc_len_rev_offset='[args[6]]'",
              depends =[TrackedDirectory(input_folder)],
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png],
-             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png],
+             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png, min_len],
              vars = [script_path,filtered_dir],
              name ="filter_and_trim"
              )
@@ -221,7 +223,7 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
          return error_ratesF_path, error_ratesR_path
      
 
-def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads, minoverlap, maxmismatch):
+def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, error_ratesR_path, threads, minoverlap, maxmismatch, pooling):
     
         """ Dereplicates and merges paired reads
             
@@ -234,6 +236,7 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
                 threads (int): number of threads
                 minoverlap (int): the min number of pairs for overlap for the merge step
                 maxmismatch (int): the max number of mismatch for pairs to merge
+                pooling (string): the type of pooling to apply
             Requires:
                 dada2, tools r packages
                 
@@ -253,10 +256,11 @@ def merge_paired_ends(workflow, output_dir, filtered_dir, error_ratesF_path, err
               --mergers_file_path=[targets[0]]\
               --threads=[vars[1]]\
               --minoverlap=[args[2]]\
+              --pooling=[args[5]]\
               --maxmismatch=[args[3]]",
             depends = [error_ratesF_path],
             targets = [mergers_file_path],                       
-            args = [output_dir, filtered_dir, minoverlap, maxmismatch, error_ratesR_path],
+            args = [output_dir, filtered_dir, minoverlap, maxmismatch, error_ratesR_path, pooling],
             vars = [script_path, threads],
             name = "dereplicate_and_merge"
             )

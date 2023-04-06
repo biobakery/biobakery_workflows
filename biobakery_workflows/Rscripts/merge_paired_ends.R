@@ -85,16 +85,16 @@ for(sam in sample.names) {
   cat("Processing:", sam, "\n")
   print(filtFs[[sam]])
   derepF <- dada2::derepFastq(filtFs[[sam]])
-  ddF <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads))
+  ddF <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads), pooling=args.list$pooling)
 
   if(paired) {
     derepR <- dada2::derepFastq(filtRs[[sam]])
-    ddR <- dada2::dada(derepR, err=errR, multithread=as.numeric(args.list$threads))
+    ddR <- dada2::dada(derepR, err=errR, multithread=as.numeric(args.list$threads), pooling=args.list$pooling)
     merger <- dada2::mergePairs(ddF, derepF, ddR, derepR, minOverlap=as.numeric(args.list$minoverlap), maxMismatch=as.numeric(args.list$maxmismatch))
     mergers[[sam]] <- merger
   } else {
     # method from dada2 qiime2 plugin
-    mergers[[sam]] <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads),verbose=FALSE)
+    mergers[[sam]] <- dada2::dada(derepF, err=errF, multithread=as.numeric(args.list$threads),verbose=FALSE, pooling=args.list$pooling)
   }
 
 }

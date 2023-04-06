@@ -65,6 +65,8 @@ workflow.add_argument("percent-identity", desc="the percent identity to use for 
 workflow.add_argument("bypass-msa", desc="bypass running multiple sequence alignment and tree generation", action="store_true")
 workflow.add_argument("picrust-version", desc="the picrust version to use", default="2")
 workflow.add_argument("fastq-ascii", desc="the coding of Q scores", default="33", choices=["33","64"])
+workflow.add_argument("min-len", desc="remove reads less then this length for DADA2", default="50")
+workflow.add_argument("pooling", desc="how to pool samples for DADA2", default="FALSE", choices=["FALSE","TRUE","pseudo")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -138,7 +140,7 @@ if args.method == "dada2" or args.method == "its":
     # filter reads and trim
     read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
-            args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset)
+            args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset,args.min_len)
     
     # learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
@@ -146,7 +148,7 @@ if args.method == "dada2" or args.method == "its":
     
     # merge pairs
     mergers_file_path = dadatwo.merge_paired_ends(
-            workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads, args.minoverlap, args.maxmismatch)
+            workflow, args.output, filtered_dir, error_ratesF_path, error_ratesR_path, args.threads, args.minoverlap, args.maxmismatch, args.pooling)
 
     # construct otu
     seqtab_file_path,read_counts_steps_path, seqs_fasta_path = dadatwo.const_seq_table(

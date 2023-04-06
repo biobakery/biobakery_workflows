@@ -127,13 +127,13 @@ maxee2 <- maxee1 * 2
 if (paired) {
   rd.counts <- as.data.frame(
     dada2::filterAndTrim(fnFs, filtFs, fnRs, filtRs, truncLen=c(trunc_len_max1,trunc_len_max2),
-                         minLen = 50, maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
+                         minLen = as.numeric(args.list$min_len), maxN=0, maxEE=c(maxee1,maxee2), truncQ=2, rm.phix=TRUE,
                   compress=TRUE, multithread=as.numeric(args.list$threads)) 
   ) 
   } else {
   rd.counts <- as.data.frame(
     dada2::filterAndTrim(fnFs, filtFs, truncLen=trunc_len_max2,
-                         minLen = 50, maxN=0, maxEE=maxee1, truncQ=2, rm.phix=TRUE,
+                         minLen = as.numeric(args.list$min_len), maxN=0, maxEE=maxee1, truncQ=2, rm.phix=TRUE,
                   compress=TRUE, multithread=as.numeric(args.list$threads)) 
   )
 }
