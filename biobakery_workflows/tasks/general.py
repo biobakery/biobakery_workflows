@@ -44,13 +44,13 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
     output_files=[]
     if pair1 and pair2:
         for file_pair1, file_pair2 in zip(pair1, pair2):
-            output_file1=os.path.join(cutadapt_folder,file_pair1)
-            output_file2=os.path.join(cutadapt_folder,file_pair2)
+            output_file1=os.path.join(cutadapt_folder,os.path.basename(file_pair1))
+            output_file2=os.path.join(cutadapt_folder,os.path.basename(file_pair2))
             addition=""
             if rev_primer:
                 addition="-a [rev_primer]"
             workflow.add_task(
-                "cutadapt -g [fwd_primer] -n 2 -o [targets[0]] -p [targets[1]] [depends[0]] [depends[1]]--minimum-length 10 "+addition+" "+options,
+                "cutadapt -g [fwd_primer] -n 2 -o [targets[0]] -p [targets[1]] [depends[0]] [depends[1]] --minimum-length 10 "+addition+" "+options,
                 depends=[file_pair1, file_pair2],
                 targets=[output_file1, output_file2],
                 fwd_primer=fwd_primer,
