@@ -66,7 +66,7 @@ workflow.add_argument("bypass-msa", desc="bypass running multiple sequence align
 workflow.add_argument("picrust-version", desc="the picrust version to use", default="2")
 workflow.add_argument("fastq-ascii", desc="the coding of Q scores", default="33", choices=["33","64"])
 workflow.add_argument("min-len", desc="remove reads less then this length for DADA2", default="50")
-workflow.add_argument("pooling", desc="how to pool samples for DADA2", default="FALSE", choices=["FALSE","TRUE","pseudo")
+workflow.add_argument("pooling", desc="how to pool samples for DADA2", default="FALSE", choices=["FALSE","TRUE","pseudo"])
 
 # get the arguments from the command line
 args = workflow.parse_args()
