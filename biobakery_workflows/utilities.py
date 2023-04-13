@@ -1639,7 +1639,7 @@ def paired_files(files, extension, pair_identifier=None):
             input_pair2 = input_pair2_temp 
   
     if len(input_pair1) != len(input_pair2):
-        sys.exit("ERROR: Unmatched pairs with: "+pair_identifier1+" "+pair_identifier2)
+        sys.exit("ERROR: Unmatched pairs with: "+pair_identifier+" "+pair_identifier2)
  
     # only return matching pairs of files in the same order
     paired_file_set = [[],[]]
