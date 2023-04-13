@@ -132,9 +132,17 @@ if args.method == "dada2" or args.method == "its":
                 print("ITS workflow primers rmoval task requires fwd_primer and rev_primer arguments.")
                 exit()
     elif args.fwd_primer and args.rev_primer:
+        # check for pairs
+        pair1, pair2=utilities.paired_files(demultiplex_output_folder, args.extension, args.pair_identifier)
+        if pair1 and pair2:
             cutadapt_folder=dadatwo.remove_primers(
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
             demultiplex_output_folder=cutadapt_folder
+        else:
+            cutadapt_files=general.remove_primers(
+                workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads,args.input_extension,demultiplexed_files,args.cutadapt_options)
+            args.input_extension=args.input_extension.replace(".gz","")
+            demultiplex_output_folder=os.path.dirname(cutadapt_files[0])
 
     # call dada2 workflow tasks
     # filter reads and trim
