@@ -133,7 +133,7 @@ if args.method == "dada2" or args.method == "its":
                 exit()
     elif args.fwd_primer and args.rev_primer:
         # check for pairs
-        pair1, pair2=utilities.paired_files(demultiplex_output_folder, args.extension, args.pair_identifier)
+        pair1, pair2=utilities.paired_files(demultiplex_output_folder, args.input_extension, args.pair_identifier)
         if pair1 and pair2:
             cutadapt_folder=dadatwo.remove_primers(
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
