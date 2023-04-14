@@ -119,6 +119,7 @@ else:
 if args.method == "dada2" or args.method == "its":
 
     # if its workflow remove primers first and set reference db to 'unite'
+    primer_tasks=[]
     if args.method == "its":
         args.dada_db = "unite"
         args.trunc_len_max = 0
@@ -139,7 +140,7 @@ if args.method == "dada2" or args.method == "its":
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads)
             demultiplex_output_folder=cutadapt_folder
         else:
-            cutadapt_files=general.remove_primers(
+            primer_tasks,cutadapt_files=general.remove_primers(
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads,args.input_extension,demultiplexed_files,args.cutadapt_options)
             args.input_extension=args.input_extension.replace(".gz","")
             demultiplex_output_folder=os.path.dirname(cutadapt_files[0])
@@ -148,7 +149,7 @@ if args.method == "dada2" or args.method == "its":
     # filter reads and trim
     read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
-            args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset,args.min_len)
+            args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset,args.min_len,primer_tasks)
     
     # learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
@@ -187,7 +188,7 @@ else:
     cutadapt_files=demultiplexed_files
     if not args.bypass_primers_removal:
         if args.fwd_primer:
-            cutadapt_files=general.remove_primers(
+            primer_tasks,cutadapt_files=general.remove_primers(
                 workflow,args.fwd_primer,args.rev_primer,demultiplex_output_folder,args.output,args.pair_identifier,args.threads,args.input_extension,demultiplexed_files,args.cutadapt_options)
             args.input_extension=args.input_extension.replace(".gz","")
 
