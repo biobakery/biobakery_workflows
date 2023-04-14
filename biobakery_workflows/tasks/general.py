@@ -42,6 +42,7 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
     pair1, pair2=utilities.paired_files(input_files, extension, pair_identifier)
 
     output_files=[]
+    tasks=[]
     if pair1 and pair2:
         for file_pair1, file_pair2 in zip(pair1, pair2):
             output_file1=os.path.join(cutadapt_folder,os.path.basename(file_pair1))
@@ -49,27 +50,29 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
             addition=""
             if rev_primer:
                 addition="-a [rev_primer]"
-            workflow.add_task(
+            task=workflow.add_task(
                 "cutadapt -g [fwd_primer] -n 2 -o [targets[0]] -p [targets[1]] [depends[0]] [depends[1]] --minimum-length 10 "+addition+" "+options,
                 depends=[file_pair1, file_pair2],
                 targets=[output_file1, output_file2],
                 fwd_primer=fwd_primer,
                 rev_primer=rev_primer)
             output_files+=[output_file1,output_file2]
+            tasks+=[task]
     else:
         output_files=[os.path.join(cutadapt_folder,os.path.basename(filename)) for filename in input_files]
         addition=""
         if rev_primer:
             addition="-a [rev_primer]"
         for infile, outfile in zip(input_files,output_files):
-            workflow.add_task(
+            task=workflow.add_task(
                 "cutadapt -g [fwd_primer] [depends[0]] -o [targets[0]] "+addition+" "+options,
                 depends=infile,
                 targets=[outfile,TrackedDirectory(cutadapt_folder)],
                 fwd_primer=fwd_primer,
                 rev_primer=rev_primer)
+            tasks+=[task]
 
-    return output_files
+    return output_files,tasks
 
 def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)

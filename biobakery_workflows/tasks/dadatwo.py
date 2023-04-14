@@ -125,7 +125,7 @@ def cutadapt_do(task):
     utilities.run_task(command, depends=task.depends, targets=task.targets)
 
 
-def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads,trunc_len_rev_offset,min_len):
+def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads,trunc_len_rev_offset,min_len,primer_tasks=[]):
     
          """ Filters samples by maxee and trims them, renders quality control plots
          of forward and reverse reads for each sample, creates read counts tsv and rds files.
@@ -169,7 +169,7 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                --threads=[args[5]]\
                --min_len=[args[8]]\
                --trunc_len_rev_offset='[args[6]]'",
-             depends =[TrackedDirectory(input_folder)],
+             depends =[TrackedDirectory(input_folder)]+primer_tasks,
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png],
              args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png, min_len],
              vars = [script_path,filtered_dir],
