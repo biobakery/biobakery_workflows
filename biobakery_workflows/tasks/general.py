@@ -72,7 +72,7 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
                 rev_primer=rev_primer)
             tasks+=[task]
 
-    return output_files,tasks
+    return tasks,output_files
 
 def demultiplex(workflow, input_files, extension, output_folder, barcode_file, index_files, min_phred, pair_identifier):
     """Demultiplex the files (single end or paired)
