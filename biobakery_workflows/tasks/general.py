@@ -61,12 +61,13 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
         addition=""
         if rev_primer:
             addition="-a [rev_primer]"
-        workflow.add_task_group(
-            "cutadapt -g [fwd_primer] [depends[0]] -o [targets[0]] "+addition+" "+options,
-            depends=input_files,
-            targets=[output_files,TrackedDirectory(cutadapt_folder)],
-            fwd_primer=fwd_primer,
-            rev_primer=rev_primer)
+        for infile, outfile in zip(input_files,output_files):
+            workflow.add_task(
+                "cutadapt -g [fwd_primer] [depends[0]] -o [targets[0]] "+addition+" "+options,
+                depends=infile,
+                targets=[outfile,TrackedDirectory(cutadapt_folder)],
+                fwd_primer=fwd_primer,
+                rev_primer=rev_primer)
 
     return output_files
 
