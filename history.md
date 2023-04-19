@@ -1,6 +1,10 @@
 
 # bioBakery workflows History #
 
+## v3.2 (TBD) ###
+
+* Update the DADA2 Silva databases to the latest versions
+
 ## v3.1 (09-27-2022) ###
 * Make the search for the strainphlan database folder version agnostic
 * Allow for bam extension in the wmgx workflow plus add qc-scratch option (requires kneaddata v0.12.0)

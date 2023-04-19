@@ -152,13 +152,13 @@ class SixteenS(Workflow):
         url="https://zenodo.org/record/158955/files/rdp_train_set_14.fa.gz")
     vars["silva_dada2"] = DBInfo("SILVA_DADA2_DB",
         description="This is the silva dada2 database",
-        url="https://zenodo.org/record/1172783/files/silva_nr_v132_train_set.fa.gz")
+        url="https://zenodo.org/record/4587955/files/silva_nr99_v138.1_train_set.fa.gz")
     vars["rdp_species_dada2"] = DBInfo("RDP_SPECIES_DADA2_DB",
         description="This is the rdp species assignment dada2 database",
         url="https://zenodo.org/record/801828/files/rdp_species_assignment_16.fa.gz")
     vars["silva_species_dada2"] = DBInfo("SILVA_SPECIES_DADA2_DB",
         description="This is the silva species assignment dada2 database",
-        url="https://zenodo.org/record/801832/files/silva_species_assignment_v128.fa.gz")
+        url="https://zenodo.org/record/4587955/files/silva_species_assignment_v138.1.fa.gz")
     vars["unite_zip"] = DBInfo("UNITE", description="This is the UNITE fungi database zip file for ITS workflow",
         url="https://files.plutof.ut.ee/doi/B2/07/B2079372C79891519EF815160D4467BBF4AF1288A23E135E666BABF2C5779767.zip")
     vars["unite"] = DBInfo("UNITE", description="This is the UNITE fungi database fasta for ITS workflow",
