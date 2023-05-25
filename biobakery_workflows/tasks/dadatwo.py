@@ -26,6 +26,62 @@ from anadama2.tracked import TrackedDirectory, TrackedExecutable
 from biobakery_workflows import files, config, utilities
 import os,fnmatch
 
+import json, sys
+
+def process_figaro_json(task):
+    """ Read the figaro output file with trimming parameters and write the settings to pass on to the next task"""
+
+    try:
+        with open(task.depends[0].name,"rt") as file_handle:
+            data=json.load(file_handle)
+            trim1=data[0]['trimPosition'][0]
+            trim2=data[0]['trimPosition'][1]
+            trunc_len_max=int(trim2)
+            trunc_len_rev_offset=int(trim1)-trunc_len_max
+    except (EnvironmentError, KeyError, IndexError, ValueError ):
+        print("Unable to read figaro output file at: "+task.depends[0].name)
+        sys.exit()
+
+    try:
+        with open(task.targets[0].name,"wt") as file_handle:
+            file_handle.write(",".join(["# trunc_len_max","trunc_len_rev_offset"])+"\n")
+            file_handle.write(",".join([str(trunc_len_max),str(trunc_len_rev_offset)])+"\n")
+    except EnvironmentError:
+        print("Unable to write figaro output file at: "+task.targets[0].name)
+        sys.exit()
+
+
+
+def figaro(workflow,fwd_primer,rev_primer,amplicon_length,input_folder,output_folder):
+    """ Try to run figaro to determine truncation settings """
+
+    figaro_output=os.path.join(output_folder,"figaro")
+    figaro_json=os.path.join(figaro_output,"trimParameters.json")
+    figaro_csv=os.path.join(figaro_output,"trimParameters.csv")
+
+    # get the primer lengths
+    fwd_primer_length=1
+    if fwd_primer:
+        fwd_primer_length=length(fwd_primer)
+
+    rev_primer_length=1
+    if rev_primer:
+        rev_primer_length=length(rev_primer)
+
+    workflow.add_task(
+        "figaro -i [args[0]] -o [args[1]] -f [args[2]] -r [args[3]] -a [args[4]]",
+        depends=TrackedDirectory(input_folder),
+        targets=figaro_json,
+        args=[input_folder,figaro_output,fwd_primer_length,rev_primer_length,amplicon_length])
+
+    workflow.add_task(
+        process_figaro_json,
+        depends=figaro_json,
+        targets=figaro_csv)
+
+    return figaro_csv
+
+
 def remove_primers(workflow,fwd_primer,rev_primer,input_folder,output_folder,pair_id,threads):
     """ Identifies primers and N filters samples
        Args:
@@ -125,7 +181,7 @@ def cutadapt_do(task):
     utilities.run_task(command, depends=task.depends, targets=task.targets)
 
 
-def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads,trunc_len_rev_offset,min_len,primer_tasks=[]):
+def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,threads,trunc_len_rev_offset,min_len,figaro_file,primer_tasks=[]):
     
          """ Filters samples by maxee and trims them, renders quality control plots
          of forward and reverse reads for each sample, creates read counts tsv and rds files.
@@ -154,6 +210,13 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
          readcounts_rds_path = os.path.join(output_folder, "Read_counts_filt.rds")
          filtered_dir = "filtered_input"
          script_path = utilities.get_package_file("filter_and_trim", "Rscript")
+
+         figaro_depends=[]
+         figaro_option=""
+         if figaro_file:
+             figaro_depends=[figaro_file]
+             figaro_option="--figaro_file='{}'".format(figaro_file)
+
          workflow.add_task(
              "[vars[0]] \
                --input_dir=[args[0]]\
@@ -168,10 +231,11 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                --pair_id=[args[4]]\
                --threads=[args[5]]\
                --min_len=[args[8]]\
-               --trunc_len_rev_offset='[args[6]]'",
-             depends =[TrackedDirectory(input_folder)]+primer_tasks,
+               --trunc_len_rev_offset='[args[6]]'\
+               [args[9]]",
+             depends =[TrackedDirectory(input_folder)]+primer_tasks+figaro_depends,
              targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png],
-             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png, min_len],
+             args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png, min_len, figaro_option],
              vars = [script_path,filtered_dir],
              name ="filter_and_trim"
              )

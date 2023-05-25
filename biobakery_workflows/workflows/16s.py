@@ -57,6 +57,7 @@ workflow.add_argument("min-size", desc="the min size to use for clustering", def
 workflow.add_argument("bypass-primers-removal", desc="do not run remove primers tasks", action="store_true")
 workflow.add_argument("fwd-primer", desc="forward primer, required for its workflow",default="")
 workflow.add_argument("rev-primer", desc="reverse primer, required for its workflow",default="")
+workflow.add_argument("amplicon-length", desc="length of the amplicon, required for figaro",default="")
 workflow.add_argument("cutadapt-options", desc="additional options when running cutadapt",default="")
 workflow.add_argument("minoverlap", desc="the min overlap required to merge pairs for the dada2 workflow", default=20)
 workflow.add_argument("maxmismatch", desc="the max mismatch required to merge pairs for the dada2 workflow", default=0)
@@ -145,11 +146,16 @@ if args.method == "dada2" or args.method == "its":
             args.input_extension=args.input_extension.replace(".gz","")
             demultiplex_output_folder=os.path.dirname(cutadapt_files[0])
 
+    # run figaro to determine trunc length if needed
+    figaro_csv=""
+    if args.amplicon_length:
+        figaro_csv = dadatwo.figaro(workflow,args.fwd_primer,args.rev_primer,args.amplicon_length,demultiplex_output_folder,args.output)
+
     # call dada2 workflow tasks
     # filter reads and trim
     read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
-            args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset,args.min_len,primer_tasks)
+            args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset,args.min_len,figaro_csv,primer_tasks)
     
     # learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(

@@ -407,6 +407,7 @@ control and generate taxonomic tables.
     seqinr (Only required for DADA2 method)
     1.  Follow the
         [DADA2 install directions](https://benjjneb.github.io/dada2/dada-installation.html)
+9. [FIGARO](https://github.com/Zymo-Research/figaro) (Only required if using FIGARO to estimate truncation lengths for DADA2)
 
 **Inputs**
 
@@ -453,6 +454,8 @@ The workflow by default expects input files with the extension
     settings.
 -   Add the option `--method dada2` to run the DADA2 method instead of
     VSEARCH.
+-   Add the option `--amplicon-length <N>` to run FIGARO to estimate truncation
+    lengths when running with the DADA2 method.
 
 ### Isolate Assembly (isolate_assembly)
 

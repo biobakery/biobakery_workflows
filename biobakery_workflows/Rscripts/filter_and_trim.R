@@ -109,6 +109,16 @@ if (paired) {
   filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.", sample.ext))
 }
 
+# check for figaro file
+if ("figaro_file" %in% names(args.list)) {
+  cat("Use truncation settings from file\n")
+  trunc_settings <- read.csv(file=args.list$figaro_file)
+  args.list$trunc_len_max <- trunc_settings[1,1]
+  args.list$trunc_len_rev_offset <- trunc_settings[1,2]
+  cat("trunc_len_max ",args.list$trunc_len_max,"\n")
+  cat("trunc_len_rev_offset ",args.list$trunc_len_rev_offset,"\n")
+}
+
 # Filter the forward and reverse reads:
 # Note that:
 # 1. Reads are both truncated and then filtered using the maxEE expected errors algorighm from UPARSE.
