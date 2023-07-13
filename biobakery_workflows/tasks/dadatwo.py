@@ -62,11 +62,11 @@ def figaro(workflow,fwd_primer,rev_primer,amplicon_length,input_folder,output_fo
     # get the primer lengths
     fwd_primer_length=1
     if fwd_primer:
-        fwd_primer_length=length(fwd_primer)
+        fwd_primer_length=len(fwd_primer)
 
     rev_primer_length=1
     if rev_primer:
-        rev_primer_length=length(rev_primer)
+        rev_primer_length=len(rev_primer)
 
     workflow.add_task(
         "figaro -i [args[0]] -o [args[1]] -f [args[2]] -r [args[3]] -a [args[4]]",
