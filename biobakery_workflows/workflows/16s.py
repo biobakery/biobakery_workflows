@@ -153,13 +153,13 @@ if args.method == "dada2" or args.method == "its":
 
     # call dada2 workflow tasks
     # filter reads and trim
-    read_counts_file_path,  filtered_dir = dadatwo.filter_trim(
+    read_counts_rds_path,  filtered_dir = dadatwo.filter_trim(
             workflow, demultiplex_output_folder,
             args.output,args.maxee,args.trunc_len_max,args.pair_identifier,args.threads,args.trunc_len_rev_offset,args.min_len,figaro_csv,primer_tasks)
     
     # learn error rates
     error_ratesF_path, error_ratesR_path = dadatwo.learn_error(
-            workflow, args.output, filtered_dir, read_counts_file_path, args.threads)
+            workflow, args.output, filtered_dir, read_counts_rds_path, args.threads)
     
     # merge pairs
     mergers_file_path = dadatwo.merge_paired_ends(

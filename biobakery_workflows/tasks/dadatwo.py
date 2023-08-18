@@ -206,7 +206,6 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
          reads_plotF_png = files.SixteenS.path("readF_qc", output_folder)
          reads_plotR_png = files.SixteenS.path("readR_qc", output_folder)
 
-         readcounts_tsv_path = os.path.join(output_folder, "Read_counts_after_filtering.tsv")
          readcounts_rds_path = os.path.join(output_folder, "Read_counts_filt.rds")
          filtered_dir = "filtered_input"
          script_path = utilities.get_package_file("filter_and_trim", "Rscript")
@@ -224,9 +223,8 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                --filtered_dir=[vars[1]]\
                --maxee=[args[2]]\
                --trunc_len_max=[args[3]]\
-               --readcounts_tsv_path=[targets[0]]\
-               --readcounts_rds_path=[targets[1]]\
-               --reads_plotF=[targets[2]]\
+               --readcounts_rds_path=[targets[0]]\
+               --reads_plotF=[targets[1]]\
                --reads_plotR=[args[7]]\
                --pair_id=[args[4]]\
                --threads=[args[5]]\
@@ -234,15 +232,15 @@ def filter_trim(workflow,input_folder,output_folder,maxee,trunc_len_max,pair_id,
                --trunc_len_rev_offset='[args[6]]'\
                [args[9]]",
              depends =[TrackedDirectory(input_folder)]+primer_tasks+figaro_depends,
-             targets = [readcounts_tsv_path, readcounts_rds_path, reads_plotF_png],
+             targets = [readcounts_rds_path, reads_plotF_png],
              args = [input_folder, output_folder, maxee, trunc_len_max, pair_id, threads, trunc_len_rev_offset, reads_plotR_png, min_len, figaro_option],
              vars = [script_path,filtered_dir],
              name ="filter_and_trim"
              )
-         return readcounts_tsv_path, filtered_dir
+         return readcounts_rds_path, filtered_dir
      
 
-def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, threads):
+def learn_error(workflow, output_folder, filtered_dir, readcounts_rds_path, threads):
     
          """ Learns error rates for each sample, renders error rates plots for forward and reverse reads
             
@@ -278,7 +276,7 @@ def learn_error(workflow, output_folder, filtered_dir, readcounts_tsv_path, thre
                --error_ratesF_path=[targets[1]]\
                --error_ratesR_path=[args[3]]\
                --threads=[vars[1]]",
-             depends = [readcounts_tsv_path],
+             depends = [readcounts_rds_path],
              targets = [error_ratesF_png, error_ratesF_path],  
              args = [output_folder, filtered_dir, error_ratesR_png, error_ratesR_path],
              vars = [script_path, threads],
