@@ -84,8 +84,9 @@ rd.counts <- readRDS(paste0(output.path, "/", args.list$readcounts_rds ))
 rdf.counts <- rd.counts[which(rd.counts$reads.out != 0),]
 
 getN <- function(x) sum(getUniques(x))
-track <- cbind(rdf.counts, sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
-colnames(track) <- c("input", "filtered", "ratio", "merged", "tabled", "nonchim")
+
+track <- cbind(rdf.counts, sapply(mergers, getN), round( rd.counts$reads.in / sapply(mergers, getN) , digits = 2), rowSums(seqtab.nochim), round( rd.counts$reads.in / rowSums(seqtab.nochim) , digits = 2) )
+colnames(track) <- c("input", "filtered", "filtered_ratio", "merged", "merged_ratio", "nonchim", "nonchim_ratio")
 rownames(track) <- sample.names
 
 # Print table
