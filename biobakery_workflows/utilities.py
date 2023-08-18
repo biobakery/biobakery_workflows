@@ -43,6 +43,13 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def reverse_complement(sequence):
+    """ Return the reverse complement of the DNA sequence """
+
+    table = str.maketrans("ATCG","TAGC")
+
+    return sequence.translate(table)[::-1]
+
 def sort_decreasing_average_abundance(taxonomy,data):
     """ Sort the taxonomy data in the order of highest average abundance first """
     import numpy
