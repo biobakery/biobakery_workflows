@@ -41,6 +41,10 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
     # check for pairs
     pair1, pair2=utilities.paired_files(input_files, extension, pair_identifier)
 
+    # get the reverse complements of each primer
+    revc_fwd_primer=utilities.reverse_complement(fwd_primer)
+    revc_rev_primer=utilities.reverse_complement(rev_primer)
+
     output_files=[]
     tasks=[]
     if pair1 and pair2:
@@ -49,27 +53,31 @@ def remove_primers(workflow, fwd_primer, rev_primer, input_folder, output_folder
             output_file2=os.path.join(cutadapt_folder,os.path.basename(file_pair2))
             addition=""
             if rev_primer:
-                addition="-a [rev_primer]"
+                addition="-G [rev_primer] -a [revc_rev_primer]"
             task=workflow.add_task(
-                "cutadapt -g [fwd_primer] -n 2 -o [targets[0]] -p [targets[1]] [depends[0]] [depends[1]] --minimum-length 10 "+addition+" "+options,
+                "cutadapt -g [fwd_primer] -A [revc_fwd_primer] -n 2 -o [targets[0]] -p [targets[1]] [depends[0]] [depends[1]] --minimum-length 10 "+addition+" "+options,
                 depends=[file_pair1, file_pair2],
                 targets=[output_file1, output_file2],
                 fwd_primer=fwd_primer,
-                rev_primer=rev_primer)
+                rev_primer=rev_primer,
+                revc_fwd_primer=revc_fwd_primer,
+                revc_rev_primer=revc_rev_primer)
             output_files+=[output_file1,output_file2]
             tasks+=[task]
     else:
         output_files=[os.path.join(cutadapt_folder,os.path.basename(filename)) for filename in input_files]
         addition=""
         if rev_primer:
-            addition="-a [rev_primer]"
+            addition="-G [rev_primer] -a [revc_rev_primer]"
         for infile, outfile in zip(input_files,output_files):
             task=workflow.add_task(
-                "cutadapt -g [fwd_primer] [depends[0]] -o [targets[0]] "+addition+" "+options,
+                "cutadapt -g [fwd_primer] -A [revc_fwd_primer] [depends[0]] -o [targets[0]] "+addition+" "+options,
                 depends=infile,
                 targets=[outfile,TrackedDirectory(cutadapt_folder)],
                 fwd_primer=fwd_primer,
-                rev_primer=rev_primer)
+                rev_primer=rev_primer,
+                revc_fwd_primer=revc_fwd_primer,
+                revc_rev_primer=revc_rev_primer)
             tasks+=[task]
 
     return tasks,output_files
