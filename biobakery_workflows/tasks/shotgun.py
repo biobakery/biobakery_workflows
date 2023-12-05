@@ -106,16 +106,16 @@ def kneaddata(workflow, input_files, extension, output_folder, threads, paired=N
         first_input_option=" --input1 [depends[0]] "
         second_input_option=" --input2 [depends[1]] --cat-final-output "
         # determine time/memory equations based on the two input files
-        time_equation="5*6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 7 else 7*6*60"
-        mem_equation="3*12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 7 else 6*12*1024"
+        time_equation="5*6*60 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 7*6*60"
+        mem_equation="3*12*1024 if ( file_size('[depends[0]]') + file_size('[depends[1]]') ) < 10 else 6*12*1024"
     else:
         # the second input option is not used since these are single-end input files
         # always cat the final output (which could be more then one file for the case of a bam input file with paired-end reads)
         first_input_option=" --unpaired [depends[0]] "
         second_input_option=" --cat-final-output "
         # determine time/memory equations based on the single input file
-        time_equation="3*6*60 if file_size('[depends[0]]') < 5 else 5*6*60"
-        mem_equation="3*12*1024 if file_size('[depends[0]]') < 5 else 6*12*1024"
+        time_equation="3*6*60 if file_size('[depends[0]]') < 10 else 5*6*60"
+        mem_equation="3*12*1024 if file_size('[depends[0]]') < 10 else 6*12*1024"
         
     # set additional options to empty string if not provided
     if additional_options is None:
@@ -848,7 +848,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
                 options=options),
             depends=strainphlan_markers+[ordered_clade_list],
             targets=[clade_logs[clade_number-1],clade_tree[clade_number-1]], 
-            time=6*60, # 6 hours
+            time=24*60, # 24 hours
             mem=50*1024, # 50 GB
             cores=threads,
             name="strainphlan_clade_"+str(clade_number))

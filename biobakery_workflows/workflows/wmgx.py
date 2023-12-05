@@ -63,7 +63,7 @@ workflow.add_argument("run-strain-gene-profiling", desc="run the gene-based stra
 workflow.add_argument("bypass-taxonomic-profiling", desc="do not run the taxonomic profiling tasks (a tsv profile for each sequence file must be included in the input folder using the same sample name)", action="store_true")
 workflow.add_argument("run-assembly", desc="run the assembly and annotation tasks", action="store_true")
 workflow.add_argument("strain-profiling-options", desc="additional options when running the strain profiling step", default="")
-workflow.add_argument("taxonomic-profiling-options", desc="additional options when running the taxonomic profiling step", default="")
+workflow.add_argument("taxonomic-profiling-options", desc="additional options when running the taxonomic profiling step", default=" -t rel_ab_w_read_stats ")
 workflow.add_argument("max-strains", desc="the max number of strains to profile", default=20, type=int)
 workflow.add_argument("strain-list", desc="input file with list of strains to profile", default="")
 workflow.add_argument("assembly-options", desc="additional options when running the assembly step", default="")
