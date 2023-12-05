@@ -53,6 +53,7 @@ workflow.add_argument("qc-options", desc="additional options when running the QC
 workflow.add_argument("bypass-quality-control", desc="do not run the quality control tasks", action="store_true")
 workflow.add_argument("remove-intermediate-output", desc="remove intermediate output files", action="store_true")
 workflow.add_argument("bypass-strain-profiling", desc="do not run the strain profiling tasks", action="store_true")
+workflow.add_argument("taxonomic-profiling-options", desc="additional options when running the taxonomic profiling step", default=" -t rel_ab_w_read_stats ")
 
 # get the arguments from the command line
 args = workflow.parse_args()
@@ -80,11 +81,11 @@ else:
 
 ### STEP #2: Run taxonomic profiling on all of the metagenome filtered files (and metatranscriptome if mapping not provided)###
 wms_taxonomic_profile, wms_taxonomy_tsv_files, wms_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
-    wms_qc_output_files,wms_output_folder,args.threads,args.input_extension)
+    wms_qc_output_files,wms_output_folder,args.threads,args.input_extension, options=args.taxonomic_profiling_options)
 
 if not args.input_mapping:
     wts_taxonomic_profile, wts_taxonomy_tsv_files, wts_taxonomy_sam_files = shotgun.taxonomic_profile(workflow,
-        wts_qc_output_files,wts_output_folder,args.threads,args.input_extension)   
+        wts_qc_output_files,wts_output_folder,args.threads,args.input_extension, options=args.taxonomic_profiling_options)   
 
 ### STEP #3: Run functional profiling on all of the filtered files ###
 
