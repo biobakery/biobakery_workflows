@@ -286,7 +286,7 @@ def list_depends(name, step, paired):
 			else:
 				return [str(name + pair_identifier + "." + input_extension), str(name + pair_identifier_2 + "." + input_extension)]
 		elif paired == "concatenated":
-			return [str(deconcatenated_dir + name.split("/")[-1] + ".done"), list_paired]
+			return [str(deconcatenated_dir + name.split("/")[-1] + ".done"), list_paired, scratch + "searched/paired_list.txt"]
 		else:
 			return [str(name + "." + input_extension)]
 	elif step == "align":
@@ -380,6 +380,11 @@ if paired == "concatenated":
 		else:
 			command = "if grep -q -m 1 /2$ " + name + "." + input_extension + "; then echo " + name + "." + input_extension + " >> " + list_paired + "; fi && touch " + searched_dir + name.split("/")[-1] + "_searched.log"
 			workflow.add_task(command, depends=[name + "." + input_extension], targets = [searched_dir + name.split("/")[-1] + "_searched.log", list_paired], name="Create paired/unpaired list")
+
+	command = "mkdir -p " + scratch + "searched/ && cp " + list_paired + " " + scratch + "searched/paired_list.txt"
+	depends_list = [searched_dir + name.split("/")[-1] + "_searched.log" for name in names]
+	depends_list.append(list_paired)
+	workflow.add_task(command, depends=depends_list, targets = [scratch + "searched/paired_list.txt"], name="Create paired/unpaired list")
 
 	for name in names:
 		workflow.add_task_gridable(deconcatenate(name),
@@ -850,10 +855,10 @@ for name in names:
 	os.makedirs(checkm_qa_scratch + name.split("/")[-1] + "/", exist_ok=True)
 	os.makedirs(qa_unmerged_dir + name.split("/")[-1] + "/", exist_ok=True)
 	if args.grid_jobs > 0:
-		command = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then " + this_folder + "checkm2/bin/checkm2 predict -x fa --input " + checkm_bin_name + " --output-directory " + checkm_qa_scratch + name.split("/")[-1] + "/" + " --threads " + str(args.cores) + " " + args.checkm_predict_options + "; " + \
+		command = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then checkm2 predict -x fa --input " + checkm_bin_name + " --output-directory " + checkm_qa_scratch + name.split("/")[-1] + "/" + " --threads " + str(args.cores) + " " + args.checkm_predict_options + "; " + \
 			"else echo -e \"Name\tCompleteness\tContamination\tCompleteness_Model_Used\tTranslation_Table_Used\tCoding_Density\tContig_N50\tAverage_Gene_Length\tGenome_Size\tGC_Content\tTotal_Coding_Sequences\tAdditional_Notes\" > " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv; fi"
 	else:
-		command = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then " + this_folder + "checkm2/bin/checkm2 predict -x fa --input " + checkm_bin_name + " --output-directory " + qa_unmerged_dir + name.split("/")[-1] + "/" + " --threads " + str(args.cores) + " " + args.checkm_predict_options + "; " + \
+		command = "if ls " + metabat_out + "*.bin.[0-9]*.fa; then checkm2 predict -x fa --input " + checkm_bin_name + " --output-directory " + qa_unmerged_dir + name.split("/")[-1] + "/" + " --threads " + str(args.cores) + " " + args.checkm_predict_options + "; " + \
 			"else echo -e \"Name\tCompleteness\tContamination\tCompleteness_Model_Used\tTranslation_Table_Used\tCoding_Density\tContig_N50\tAverage_Gene_Length\tGenome_Size\tGC_Content\tTotal_Coding_Sequences\tAdditional_Notes\" > " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv; fi"
 	workflow.add_task_gridable(actions=command,
 	depends=list_targets(name=name, step="copy_bins", paired=paired),
@@ -871,8 +876,15 @@ for count, name in enumerate(names):
 		command = "cat " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv > " + qa_dir + "quality_report.tsv"
 		depends_list.append(qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv")
 	else:
-		command = command + " && tail -n +2 " + qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv >> " + qa_dir + "quality_report.tsv"
 		depends_list.append(qa_unmerged_dir + name.split("/")[-1] + "/quality_report.tsv")
+
+with open(qa_dir + "quality_report_merge_list.txt", 'w') as f:
+	for count, depend in enumerate(depends_list):
+		if count != 0:
+			f.write(depend + '\n')
+
+command = command + " && cat " + qa_dir + "quality_report_merge_list.txt" + " | while read line; do tail -n +2 $line >> " + qa_dir + "quality_report.tsv; done"
+
 workflow.add_task(command,
 depends = depends_list,
 targets = qa_dir + "quality_report.tsv",
@@ -916,8 +928,15 @@ if not args.skip_placement:
 			command = "cat " + phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv > " + phylophlan_dir + "phylophlan_out.tsv"
 			depends_list.append(phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv")
 		else:
-			command = command + " && tail -n +5 " + phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv >> " + phylophlan_dir + "phylophlan_out.tsv"
 			depends_list.append(phylophlan_unmerged_dir + name.split("/")[-1] + "/" + "phylophlan_out.tsv")
+
+	command = command + " && cat " + phylophlan_dir + "phylophlan_merge_list.txt" + " | while read line; do tail -n +5 $line >> " + phylophlan_dir + "phylophlan_out.tsv; done"
+
+	with open(phylophlan_dir + "phylophlan_merge_list.txt", 'w') as f:
+		for count, depend in enumerate(depends_list):
+			if count != 0:
+				f.write(depend + '\n')
+
 	workflow.add_task(command,
 	depends = depends_list,
 	targets = phylophlan_dir + "phylophlan_out.tsv",
