@@ -24,7 +24,7 @@ opts <- docopt(doc)
 in_dir <- gsub("/$", "", opts$i)
 files <- list.files(path=in_dir, full.names=TRUE)
 
-read_nums <- files[grep("read_num",files)]
+mapped_nums <- files[grep("mapped_read_num",files)]
 
 abundance_files <- files[grepl("\\.abundance\\.",files) & !grepl("done", files)]
 
@@ -117,10 +117,15 @@ total_profile <- total_profile[order(total_profile$Taxonomy),]
 total_profile[is.na(total_profile)] <- 0
 
 mapped_props <- c()
-for (read_num in read_nums) {
+for (read_num in mapped_nums) {
   text <- readChar(read_num, file.info(read_num)$size)
-  temp <- strsplit(text, "\n")[[1]] %>% as.numeric()
-  mapped <- temp[1]/temp[2]
+  mapped_num <- strsplit(text, "\n")[[1]] %>% as.numeric()
+  
+  total_num_file <- gsub("mapped_read_num\\.txt", "total_read_num\\.txt", read_num)
+  text <- readChar(total_num_file, file.info(total_num_file)$size)
+  total_num <- strsplit(text, "\n")[[1]] %>% as.numeric()
+  
+  mapped <- mapped_num/total_num
   sample <- gsub(".*\\/", "", read_num) %>% gsub(pattern="\\.mapped_read_num.*", replacement="")
   mapped_props <- rbind(mapped_props, c(sample, mapped))
 }
