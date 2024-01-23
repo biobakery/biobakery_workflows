@@ -29,6 +29,7 @@ import math
 import functools
 import time
 import collections
+import subprocess
 import re
 
 from anadama2.tracked import TrackedDirectory
