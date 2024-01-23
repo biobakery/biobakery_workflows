@@ -482,11 +482,18 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     
     ### Step 1: Run humann on all input files ###
 
+    # get the humann version
+    humann_v4=utilities.check_version("humann","humann v4")
+
     # get a list of output files, one for each input file, with the humann output file names
     main_folder=os.path.join("humann","main")
-    genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="genefamilies", extension="tsv", create_folder=True)
-    pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="pathabundance", extension="tsv")
-    pathcoverage = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="pathcoverage", extension="tsv")
+
+    if humann_v4:
+        genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="_2_genefamilies", extension="tsv", create_folder=True)
+        pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="_4_pathabundance", extension="tsv")
+    else:
+        genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="genefamilies", extension="tsv", create_folder=True)
+        pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="pathabundance", extension="tsv")
 
     # get the list of the log files that will be created, one for each input file, set to the same folder as the main output files
     log_files = utilities.name_files(sample_names, output_folder, subfolder=main_folder, extension="log")
@@ -511,11 +518,11 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         optional_profile_args+=" "+options+" "
  
     # create a task to run humann on each of the kneaddata output files
-    for sample, depend_fastq, target_gene, target_path, target_coverage, target_log in zip(sample_names, depends, genefamiles, pathabundance, pathcoverage, log_files):
+    for sample, depend_fastq, target_gene, target_path, target_log in zip(sample_names, depends, genefamiles, pathabundance, log_files):
         workflow.add_task_gridable(
-            "humann --input [depends[0]] --output [args[0]] --o-log [targets[3]] --threads [args[1]]"+optional_profile_args,
+            "humann --input [depends[0]] --output [args[0]] --o-log [targets[2]] --threads [args[1]]"+optional_profile_args,
             depends=utilities.add_to_list(depend_fastq,TrackedExecutable("humann")),
-            targets=[target_gene, target_path, target_coverage, target_log],
+            targets=[target_gene, target_path, target_log],
             args=[humann_output_folder, threads],
             time="3*24*60 if file_size('[depends[0]]') < 25 else 8*24*60", # 24 hours or more depending on file size
             mem="3*36*1024 if file_size('[depends[0]]') < 25 else 3*48*1024", # 32 GB or more depending on file size

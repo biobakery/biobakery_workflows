@@ -43,6 +43,19 @@ MIN_SAMPLES_DATA_FILE = 3
 TAXONOMY_DELIMITER = "|"
 MAX_METADATA_CATEGORIES = 10
 
+def check_version(path, match_version):
+    """ Check the version of the software matches required """
+
+    try:
+        version=subprocess.check_output(path+" --version", shell=True).decode('utf-8')
+    except (EnvironmentError, subprocess.CalledProcessError):
+        version="not found"
+
+    if version.startswith(match_version):
+        return True
+    else:
+        return False
+
 def reverse_complement(sequence):
     """ Return the reverse complement of the DNA sequence """
 
