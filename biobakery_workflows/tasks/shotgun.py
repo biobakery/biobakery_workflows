@@ -489,8 +489,8 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
     main_folder=os.path.join("humann","main")
 
     if humann_v4:
-        genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="_2_genefamilies", extension="tsv", create_folder=True)
-        pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="_4_pathabundance", extension="tsv")
+        genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="2_genefamilies", extension="tsv", create_folder=True)
+        pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="4_pathabundance", extension="tsv")
     else:
         genefamiles = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="genefamilies", extension="tsv", create_folder=True)
         pathabundance = utilities.name_files(sample_names, output_folder, subfolder=main_folder, tag="pathabundance", extension="tsv")
