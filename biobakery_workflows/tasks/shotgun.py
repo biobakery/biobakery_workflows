@@ -545,6 +545,11 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         extension="tsv", create_folder=True)
     
     # get ec files for all of the gene families files
+    if humann_v4:
+        groups_option="uniclust90_level4ec"
+    else:
+        groups_option="uniref90_level4ec"
+
     workflow.add_task_group_gridable(
         "humann_regroup_table --input [depends[0]] --output [targets[0]] --groups uniref90_level4ec",
         depends=genefamiles,
