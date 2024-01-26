@@ -551,7 +551,7 @@ def functional_profile(workflow,input_files,extension,output_folder,threads,taxo
         groups_option="uniref90_level4ec"
 
     workflow.add_task_group_gridable(
-        "humann_regroup_table --input [depends[0]] --output [targets[0]] --groups uniref90_level4ec",
+        "humann_regroup_table --input [depends[0]] --output [targets[0]] --groups "+groups_option,
         depends=genefamiles,
         targets=ec_files,
         time=10, # 10 minutes
