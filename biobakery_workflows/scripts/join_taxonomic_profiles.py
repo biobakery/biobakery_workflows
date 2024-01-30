@@ -39,8 +39,8 @@ def join_data_tables(data_tables,output,verbose=None):
                 data=line.rstrip().split(TAXON_TABLE_DELIMITER)
                 taxon=data[0]
                 try:
-                    if data[3].replace(".","").replace("e-","").isdigit():
-                        read_percent=data[3]
+                    if data[2].replace(".","").replace("e-","").isdigit():
+                        read_percent=data[2]
                     elif data[-1].replace(".","").replace("e-","").isdigit():
                         read_percent=data[-1]
                     else:
