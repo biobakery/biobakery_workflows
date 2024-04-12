@@ -815,8 +815,11 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
 
     if strainphlan_v4:
         strainphlan_markers_temp = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="json.bz2", create_folder=True)
+        strainphlan_markers_wildcard = "*.json.bz2"
     else:
         strainphlan_markers_temp = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="pkl", create_folder=True)
+        strainphlan_markers_wildcard = "*.pkl"
+
     # place each in its own output folder to allow for unique temp output folders for each run
     strainphlan_markers=[]
     for filename in strainphlan_markers_temp:
@@ -840,7 +843,7 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
     clade_list = utilities.name_files("clades_list.txt", output_folder, subfolder="strainphlan")
     
     workflow.add_task(
-        "strainphlan --samples [args[0]]/*/*.pkl --output_dir [args[0]] --print_clades_only > [targets[0]] "+options,
+        "strainphlan --samples [args[0]]/*/"+strainphlan_markers_wildcard+" --output_dir [args[0]] --print_clades_only > [targets[0]] "+options,
         depends=strainphlan_markers,
         targets=clade_list,
         args=os.path.abspath(os.path.join(os.path.dirname(strainphlan_markers[0]),"..")),
