@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from anadama2 import Workflow
 
 workflow = Workflow()
