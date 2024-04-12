@@ -809,7 +809,14 @@ def strain_profile(workflow,sam_files,output_folder,threads,reference_folder,mar
 
     ### STEP #1: Identify markers for each of the samples
     # name the marker files based on the sam files
-    strainphlan_markers_temp = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="pkl", create_folder=True)
+
+    # get the strainphlan version
+    strainphlan_v4=utilities.check_version("metaphlan","MetaPhlAn version 4.1")
+
+    if strainphlan_v4:
+        strainphlan_markers_temp = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="json.bz2", create_folder=True)
+    else:
+        strainphlan_markers_temp = utilities.name_files(sam_files, output_folder, subfolder="strainphlan", extension="pkl", create_folder=True)
     # place each in its own output folder to allow for unique temp output folders for each run
     strainphlan_markers=[]
     for filename in strainphlan_markers_temp:
