@@ -714,9 +714,17 @@ def strainphlan(task,threads,clade_number,clade_list,reference_folder,marker_fol
             profile_clade=clades[clade_number]
         except IndexError:
             profile_clade=None
-            
+           
     if profile_clade:
-        command = "strainphlan --samples [args[0]]/*/*.pkl --output_dir [args[1]] "+\
+        # get the strainphlan version
+        strainphlan_v4=utilities.check_version("metaphlan","MetaPhlAn version 4.1")
+
+        if strainphlan_v4:
+            strainphlan_markers_wildcard = "*.json.bz2"
+        else:
+            strainphlan_markers_wildcard = "*.pkl"
+
+        command = "strainphlan --samples [args[0]]/*/"+strainphlan_markers_wildcard+" --output_dir [args[1]] "+\
             "--clade [args[2]] --nprocs [args[3]] "+options
             
         # add the marker files to the command
