@@ -73,14 +73,19 @@ seqtab.nochim.seqnames <- colnames(seqtab.nochim)
 taxa.refdb <- dada2::assignTaxonomy(seqtab.nochim, refdb.path, multithread = as.numeric(args.list$threads), tryRC=tryRC_option)
 
 if (!identical(args.list$refdb_species_path,"None")) {
- refdb.species.path <- normalizePath( args.list$refdb_species_path )
- # Append species if reference db is not green genes
- taxa.refdb.species <- addSpecies(taxa.refdb, refdb.species.path)
- # Remove NAs in taxonomy assignment
- taxa.refdb.species.2 <- removeNA.in.assignedTaxonomy(taxa.refdb.species )
+  refdb.species.path <- normalizePath( args.list$refdb_species_path )
+  # Append species if reference db is not green genes
+  # split taxonomy table to avoid dada2 memory leak
+  chunk.size <- 4000
+  chunks <- split(c(1:nrow(taxa.refdb)), sort(c(1:nrow(taxa.refdb))%%ceiling(nrow(taxa.refdb)/chunk.size)))
+  chunks.species <- lapply(chunks,
+                           function(x) return(addSpecies(taxa.refdb[x,], refFasta = refdb.species.path)))
+  taxa.refdb <- do.call(rbind, chunks.species)
+  # Remove NAs in taxonomy assignment
+  taxa.refdb.species.2 <- removeNA.in.assignedTaxonomy(taxa.refdb.species)
 } else {
- # No need to add species if green genes, just replacing NAs with prefix
- taxa.refdb.species.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb)
+  # No need to add species if green genes, just replacing NAs with prefix
+  taxa.refdb.species.2 <- replaceNA.in.assignedTaxonomy(taxa.refdb)
 }
 
 # Print first 6 rows of taxonomic assignment
