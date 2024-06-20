@@ -60,7 +60,7 @@ def check_version(path, match_version):
 def reverse_complement(sequence):
     """ Return the reverse complement of the DNA sequence """
 
-    table = str.maketrans("ATCG","TAGC")
+    table = str.maketrans("ATCGYRKMDVHB","TAGCRYMKHBDV")
 
     return sequence.translate(table)[::-1]
 
