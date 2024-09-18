@@ -423,7 +423,7 @@ def merge_pairs(workflow,input_files,extension,pair_identifier,output_folder):
                 command+" [depends[0]] [depends[1]] > [targets[0]]",
                 depends=[pair1,pair2],
                 time=10,
-                mem=1*1024,
+                mem=10*1024,
                 cores=1,
                 targets=target)
     else:
