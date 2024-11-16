@@ -1,6 +1,46 @@
 
 # bioBakery workflows History #
 
+##4.0.0a1 (11-15-2024)
+* Update shotgun workflow to give the merge_pairs function more memory for larger files
+* Add extended IUPAC to reverse complement
+* Chunk taxonomy table for species assignment
+* Add strainphlan_markers_wildcard to allow for new extension with strainphlan task
+* Add bam utility script
+* Allow for strainphlan v4p1 format for marker files
+* Update join for metaphlan outputs with new flag
+* Update regroup table for humann v4
+* Add taxonomic profiling options to wmgx_wmtx workflow
+* Change runtimes and add metaphlan option as default for HUMAnN v4
+* Add utility script to downsample fastq
+* Flip new ratios for DADA2 read counts
+* Remove initial filtered reads file from DADA2 outputs
+* Add more ratios and remove table column from DADA2 qc read count output
+* Add reverse complement to primer removal for DADA2 non-ITs
+* Add reverse complement function to utilities
+* Reduce the min size for a large file in kneaddata time/mem equations
+* Add figaro option for DADA2 workflow
+* Update DADA2 silva database versions
+* Update 16s workflow to track cutadapt tasks
+* For tracking cutadapt tasks to dada2 use workflow tasks instead of files
+* Update primer task to individual task from group to support new target
+* Add tracked directory for remove primers for single end for dada2 so it can be used downstream
+* Make paired function more flexible for checking on matches
+* Allow for dada2 remove primers with single end
+* Init add of two options, min_len and pooling, to allow for long reads with DADA2
+* In 16s workflow, add remove primer option
+* In 16s workflow, add check for percent identity max to prevent unclear error messages downstream
+* Add the option to bypass quality control to the wmgx_wmtx workflow
+* Fix warning message for mismatch of file pairs
+* Add database name reduction to qc vis to fit in tables
+* Update strainphlan tasks to allow for identification at a strain level instead of species
+* Increase sample2makers time
+* Make the find of the metaphlan pkl file version agnostic
+
+
+
+
+
 ## v3.2 (TBD) ###
 
 * Update the DADA2 Silva databases to the latest versions
