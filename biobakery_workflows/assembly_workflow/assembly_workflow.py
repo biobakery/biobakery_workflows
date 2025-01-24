@@ -14,6 +14,7 @@ workflow.add_argument("cores", desc="The number of CPU cores allocated to the jo
 workflow.add_argument("mem", desc="The maximum memory in megabytes allocated to run any individual command", type=int, default=180000)
 workflow.add_argument("input-extension", desc="the input file extension", default="fastq.gz")
 workflow.add_argument("time", desc="The maximum time in minutes allocated to run any individual command", type=int, default=10000)
+workflow.add_argument("min-time", desc="The minimum time in minutes allocated to run any individual command", type=int, default=10)
 workflow.add_argument("paired", desc="Whether the inputs are \"unpaired\", \"paired\", or \"concatenated\"", default="paired")
 workflow.add_argument("pair-identifier", desc="extension to identify the first file in a pair like _R1; \"kneaddata_default\" looks for _paired_1, _paired_2, _unmatched_1, and _unmatched_2 by default", default="kneaddata_default")
 workflow.add_argument("skip-contigs", desc="Whether to skip MEGAHIT, contigs should be in $OUTPUT_DIRECTORY/assembly/main/$SAMPLE_NAME/$SAMPLE_NAME.contigs.fa", action="store_true")
@@ -197,6 +198,7 @@ memory = args.mem
 cores = args.cores
 partition = args.grid_partition
 max_time = args.time
+min_time = args.min_time
 local_jobs = args.jobs
 
 #######################################
@@ -268,6 +270,8 @@ def calculate_time(name, step, paired):
 		time = time * 6
 	if time > max_time:
 		time = max_time
+	if time < min_time:
+		time = min_time
 	return int(time)
 
 #################################
