@@ -28,13 +28,13 @@ library(vegan)
 # read in the file, skipping the first 8 rows and filling in empty columns, using the tab as sep, and stripping extra white space
 data <- read.table( args_list$args[1], skip = 8, fill = TRUE, sep="\t", strip.white = T)
 
-list = data$V33
+list = data[,ncol(data)]
 list = gsub(" .*", "", list)
 # remove the first column of the data as it is blank
 data[1] <- NULL
 
 # get the header as the last column of the data as a character vector
-header <- lapply(data[,ncol(data)], as.character)
+header <- unlist(lapply(data[,ncol(data)], as.character))
 
 # remove the last column from the data as it has been stored as a header
 data[ncol(data)] <- NULL
