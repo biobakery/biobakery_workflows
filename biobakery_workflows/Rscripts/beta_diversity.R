@@ -142,7 +142,7 @@ filtered_data <- data[,colSums(data_zeros > current_args$min_abundance) > min_sa
 # remove empty rows from data
 filtered_data <- filtered_data[rowSums(filtered_data != 0, na.rm=TRUE) > 0, , drop = FALSE]
 
-if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
+if ((ncol(filtered_data) < 1) | (nrow(filtered_data) < 1)) {
   stop("No data remain in the data after filtering for min abundance and prevalence")
 }
 
@@ -153,7 +153,7 @@ metadata_zeros[metadata_zeros == "UNK"] <- NA
 max_not_missing_values <- (( 100 - current_args$max_missing ) / 100 ) * nrow(metadata)
 filtered_metadata <- na.omit(metadata_zeros[ ,colSums(metadata_zeros !='NA', na.rm=TRUE) > max_not_missing_values, drop = FALSE])
 
-if ((ncol(filtered_metadata) < 1) || (nrow(filtered_metadata) < 1)) {
+if ((ncol(filtered_metadata) < 1) | (nrow(filtered_metadata) < 1)) {
   stop("No metadata remain after filtering for max missing")
 }
 

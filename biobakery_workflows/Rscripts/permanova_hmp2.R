@@ -69,7 +69,7 @@ PERMANOVA_repeat_measures <- function(
 
     # Ensure that the data in permute_within matches that in dist
     ord <- rownames(as.matrix(D))
-    if (length(ord) != nrow(permute_within) || length(blocks) != length(ord)) {
+    if (length(ord) != nrow(permute_within) | length(blocks) != length(ord)) {
         stop("blocks, permute_within, and D are not the same size")
     }
     if (is.null(rownames(permute_within))) {
@@ -90,11 +90,11 @@ PERMANOVA_repeat_measures <- function(
         block_data <- block_data[match(levels(blocks), rownames(block_data)), , drop=F]
         blocks <- as.numeric(blocks)
     } else if (is.numeric(blocks)) {
-        if (blocks < 1 || max(blocks) > nrow(block_data)) {
+        if (blocks < 1 | max(blocks) > nrow(block_data)) {
             stop("Numeric blocks has indices out of range")
         }
     } else if (is.character(blocks)) {
-        if (is.null(rownames(block_data)) || !all(blocks %in% rownames(block_data))) {
+        if (is.null(rownames(block_data)) | !all(blocks %in% rownames(block_data))) {
             stop("blocks does not match the rownames of block_data")
         }
         # Transform to numeric
@@ -106,7 +106,7 @@ PERMANOVA_repeat_measures <- function(
     # Error out on NA metadata rather than allowing adonis to error out with
     # a totally nonsensical error message
     na.removed <- 0
-    if (any(is.na(permute_within)) || any(is.na(block_data))) {
+    if (any(is.na(permute_within)) | any(is.na(block_data))) {
         if (na.rm) {
             n_prerm <- length(blocks)
 
@@ -247,7 +247,7 @@ PERMANOVA_heatmap <- function(R2, P, fontsize=6, FDR=T, alpha=NA, beta=NA, outfi
     # Try to make a reasonable color scheme that has contrast where needed
     colors <- colorRampPalette(brewer.pal(n = 9, name = "Blues"))(100)
     R2Q <- quantile(R2, c(0.25, 0.75), na.rm=T)
-    if (is.na(alpha) || is.na(beta)) {
+    if (is.na(alpha) | is.na(beta)) {
     labhat <- optim(par=c(0, 0), method="Nelder-Mead",
                     fn=function(lab) sum((pbeta(c(0.25, 0.75), exp(lab[1]), exp(lab[2])) - R2Q)^2))
     abhat <- exp(labhat$par)
@@ -383,7 +383,7 @@ bc_omnibus_tests <- function(pcl, meta, covariates, perindividual_covariates, bl
                 varsub <- varsub[ok_covars[varsub]]
             }
 
-            if (("subject" %in% varsub) || blocks_off){
+            if (("subject" %in% varsub) | blocks_off){
                 # Subject is among the covariates, so the permutations must be free
                 sep.ad <- PERMANOVA_repeat_measures(
                     D, permutations=Nperms, na.rm=T,

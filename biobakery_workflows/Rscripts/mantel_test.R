@@ -141,7 +141,7 @@ for (datafile in datafiles) {
     # remove empty rows from data
     filtered_data <- filtered_data[rowSums(filtered_data != 0, na.rm=TRUE) > 0, , drop = FALSE]
 
-    if ((ncol(filtered_data) < 1) || (nrow(filtered_data) < 1)) {
+    if ((ncol(filtered_data) < 1) | (nrow(filtered_data) < 1)) {
       stop("No data remain in the data after filtering for min abundance and prevalence")
     }
 

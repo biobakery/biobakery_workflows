@@ -42,7 +42,7 @@ fnFs <- sort(grep(paste0(pair_id1,".*\\.fastq"), list.files(input.path), value =
 fnRs <- sort(grep(paste0(pair_id2,".*\\.fastq"), list.files(input.path), value = T ) )
 
 paired <- TRUE
-if (length(fnFs)==0 || length(fnRs)==0) {
+if (length(fnFs)==0 | length(fnRs)==0) {
   paired <- FALSE
   fnFs <- sort(grep(".*\\.fastq", list.files(input.path), value = T ) )
 }
