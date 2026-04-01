@@ -56,6 +56,7 @@ def split_directory(input_dir, max_size_bytes):
             current_size = 0
 
         target = current_batch / item.name
+
         if item.is_dir():
             shutil.copytree(item, target)
         else:
@@ -113,8 +114,8 @@ def create_tarballs(split_dir, output_dir):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python split_then_tar.py <input_directory>")
+    if len(sys.argv) not in (2, 3):
+        print("Usage: python hutlab_split_then_tar.py <input_directory> [<output_directory>]")
         sys.exit(1)
 
     input_path = Path(sys.argv[1]).resolve()
@@ -123,8 +124,13 @@ def main():
         print(f"Invalid directory: {input_path}")
         sys.exit(1)
 
-    output_dir = input_path.parent / f"{input_path.name}_tars"
-    output_dir.mkdir(exist_ok=True)
+    # Optional output directory
+    if len(sys.argv) == 3:
+        output_dir = Path(sys.argv[2]).resolve()
+    else:
+        output_dir = input_path.parent / f"{input_path.name}_tars"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     max_size_gb = 500
     max_size_bytes = max_size_gb * 1024 ** 3
