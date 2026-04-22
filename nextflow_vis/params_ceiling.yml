@@ -1,0 +1,15 @@
+# bioBakery Vis — CEILING preset (comprehensive / high-sensitivity)
+#
+# Very permissive thresholds → many features → longer run, larger PDF.
+# Use for: deep-dive analysis, publication supplementary figures.
+#
+# Usage:
+#   nextflow run main.nf -params-file params_ceiling.yml --input /path/to/data
+min_abundance: 0.001
+min_samples: 1
+max_sets_heatmap: 50
+max_sets_barplot: 30
+max_groups_barplot: 10
+correlation_threshold: 0.5
+max_missing: "30.0"
+format: "pdf"

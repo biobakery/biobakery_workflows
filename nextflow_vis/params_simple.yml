@@ -1,0 +1,46 @@
+# bioBakery Vis — Simple Preset Parameters
+#
+# Three presets for the most common use cases.
+# Pass with: nextflow run main.nf -params-file params_simple.yml
+#
+# Override any value on the command line:
+#   nextflow run main.nf -params-file params_simple.yml --format html
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# Preset: FLOOR (fast / exploratory)
+#   Low thresholds, fewer features shown, quicker run.
+#   Use when: quick QC check, many samples, tight deadline.
+# ─────────────────────────────────────────────────────────────────────────────
+# min_abundance:        0.1    # less sensitive filter (fewer features kept)
+# min_samples:          10     # feature must appear in ≥10% of samples
+# max_sets_heatmap:     10     # 10 features max in each heatmap
+# max_sets_barplot:     8      # 8 features max in each barplot
+# max_groups_barplot:   3      # 3 grouped barplots per metadata variable
+# correlation_threshold: 0.9   # tighter Spearman filter (fewer, stronger associations)
+# max_missing:          10.0   # stricter metadata completeness
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Preset: DEFAULT (standard / publication-ready)
+#   Balanced thresholds. Matches bioBakery tutorial recommendations.
+# ─────────────────────────────────────────────────────────────────────────────
+min_abundance: 0.01
+min_samples: 3
+max_sets_heatmap: 25
+max_sets_barplot: 15
+max_groups_barplot: 5
+correlation_threshold: 0.7
+max_missing: "20.0"
+format: "pdf"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Preset: CEILING (comprehensive / high-sensitivity)
+#   Very permissive thresholds. Many features, longer runtime, larger PDF.
+#   Use when: you want to see everything, deep-dive analysis.
+# ─────────────────────────────────────────────────────────────────────────────
+# min_abundance:        0.001  # very sensitive (many features retained)
+# min_samples:          1      # feature must appear in ≥1% of samples
+# max_sets_heatmap:     50     # up to 50 features per heatmap
+# max_sets_barplot:     30     # up to 30 features per barplot
+# max_groups_barplot:   10     # up to 10 grouped barplots
+# correlation_threshold: 0.5   # looser Spearman filter
+# max_missing:          30.0   # more permissive metadata completeness

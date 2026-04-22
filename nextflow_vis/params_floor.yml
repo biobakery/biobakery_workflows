@@ -1,0 +1,15 @@
+# bioBakery Vis — FLOOR preset (fast / exploratory)
+#
+# Low thresholds → fewer features → faster run, smaller PDF.
+# Use for: quick QC checks, large cohorts, tight deadlines.
+#
+# Usage:
+#   nextflow run main.nf -params-file params_floor.yml --input /path/to/data
+min_abundance: 0.1
+min_samples: 10
+max_sets_heatmap: 10
+max_sets_barplot: 8
+max_groups_barplot: 3
+correlation_threshold: 0.9
+max_missing: "10.0"
+format: "pdf"

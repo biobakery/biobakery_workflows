@@ -1,0 +1,58 @@
+name: biobakery_vis
+# ─────────────────────────────────────────────────────────────────────────────
+# Conda environment for bioBakery visualization workflow (Nextflow edition)
+#
+# Create:
+#   conda env create -f environments/conda.yml
+# Activate:
+#   conda activate biobakery_vis
+# Use with Nextflow:
+#   nextflow run main.nf -profile conda
+# ─────────────────────────────────────────────────────────────────────────────
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  # ── Python runtime ──────────────────────────────────────────────────────────
+  - python=3.9
+
+  # ── bioBakery core (pulls in anadama2 and biobakery_workflows) ─────────────
+  - bioconda::biobakery_workflows>=3.0
+
+  # ── Python scientific stack ─────────────────────────────────────────────────
+  - numpy>=1.20
+  - scipy>=1.7
+  - pandas>=1.2
+  - matplotlib>=3.3
+  - scikit-learn>=0.24
+
+  # ── Pweave (document template engine) ─────────────────────────────────────
+  - conda-forge::pweave>=0.30.3
+
+  # ── hclust2 (hierarchical clustering heatmaps) ────────────────────────────
+  - pip:
+    - hclust2>=1.0.0
+
+  # ── R runtime and visualization packages ──────────────────────────────────
+  - r-base>=4.0
+  - r-vegan
+  - r-ggplot2
+  - r-optparse
+  - r-gridExtra
+  - r-dplyr
+  - r-tibble
+  - r-purrr
+  - r-readr
+  - bioconda::r-ggtree           # for strainphlan phylogenetic visualization
+
+  # ── PDF / HTML report generation ──────────────────────────────────────────
+  - conda-forge::pandoc>=2.11
+  - conda-forge::texlive-core    # LaTeX for PDF output
+
+  # ── Utilities ─────────────────────────────────────────────────────────────
+  - curl
+  - zip
+  - unzip

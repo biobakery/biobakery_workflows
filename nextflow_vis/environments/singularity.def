@@ -1,0 +1,61 @@
+Bootstrap: docker
+From: biobakery/workflows:latest
+
+%labels
+    Maintainer  "bioBakery workflows development team <biobakery-users@googlegroups.com>"
+    Description "bioBakery visualization workflow container (Singularity / Nextflow edition)"
+    Version     "4.0.0"
+
+%post
+    # ── System dependencies ───────────────────────────────────────────────────
+    apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        pandoc \
+        texlive-xetex \
+        texlive-latex-extra \
+        texlive-fonts-recommended \
+        texlive-fonts-extra \
+        lmodern \
+        fonts-dejavu \
+        curl \
+        procps
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+    # ── Python packages ───────────────────────────────────────────────────────
+    pip install --no-cache-dir \
+        "pweave>=0.30.3" \
+        "hclust2>=1.0.0" \
+        "scipy>=1.7.0" \
+        "matplotlib>=3.3.0" \
+        "pandas>=1.2.0" \
+        "numpy>=1.20.0"
+
+    # ── R packages ────────────────────────────────────────────────────────────
+    Rscript -e "
+        pkgs <- c('vegan','ggplot2','optparse','gridExtra','dplyr','tibble','purrr','readr')
+        missing <- pkgs[!sapply(pkgs, requireNamespace, quietly=TRUE)]
+        if (length(missing) > 0) {
+            install.packages(missing, repos='https://cloud.r-project.org', quiet=TRUE)
+        }
+    "
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    export PATH=/usr/local/bin:$PATH
+
+%runscript
+    exec biobakery_workflows "$@"
+
+%help
+    bioBakery Visualization Workflow — Singularity container.
+
+    Build:
+      singularity build biobakery_vis.sif singularity.def
+
+    Use with Nextflow (set in nextflow.config):
+      singularity.enabled = true
+      process.container   = '/path/to/biobakery_vis.sif'
+    Or use a Docker URI directly (Nextflow auto-converts):
+      process.container   = 'docker://biobakery/workflows:latest'
