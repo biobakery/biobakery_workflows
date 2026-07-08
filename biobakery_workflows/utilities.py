@@ -1885,9 +1885,11 @@ def match_files(files1,files2,mapping):
     
     pair1=[]
     pair2=[]
+    all_keys1 = set(set_mappings.keys())
+    all_keys2 = set(set_mappings.values())
     for item1,item2 in set_mappings.items():
-        file1=list(filter(lambda file: os.path.basename(file).startswith(item1),files1))
-        file2=list(filter(lambda file: os.path.basename(file).startswith(item2), files2))
+        file1=list(filter(lambda file: os.path.basename(file).startswith(item1) and not any(os.path.basename(file).startswith(k) for k in all_keys1 if len(k) > len(item1)),files1))
+        file2=list(filter(lambda file: os.path.basename(file).startswith(item2) and not any(os.path.basename(file).startswith(k) for k in all_keys2 if len(k) > len(item2)), files2))
         if len(file1) == 1 and len(file2) == 1:
             # check for the pair
             pair1.append(file1[0])
