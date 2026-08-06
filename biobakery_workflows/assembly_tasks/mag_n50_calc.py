@@ -12,7 +12,9 @@ parser.add_argument("-t", help="Number of processes to run in parallel", type=in
 args = parser.parse_args()
 
 # input
-in_dir = "/" + args.i.strip("/") + "/"
+# abspath rather than forcing a leading "/": a relative -i such as "." became
+# "/./" and walked the whole filesystem
+in_dir = os.path.abspath(args.i) + os.sep
 
 paths = Path(in_dir).rglob('*.fa')
 
@@ -22,7 +24,7 @@ for path in paths:
 	files.append(path.as_posix())
 
 # output
-out_dir = "/" + args.o.strip("/") + "/"
+out_dir = os.path.abspath(args.o) + os.sep
 
 if not os.path.exists(out_dir + "tmp/"):
 	os.makedirs(out_dir + "tmp/")
