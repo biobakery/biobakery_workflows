@@ -634,6 +634,19 @@ To install the PhyloPhlAn SGB database (about 20 GB):
     $ rm -r tmp_input
     $ export PHYLOPHLAN_PATH=$DATABASES/phylophlan/
 
+-   PhyloPhlAn re-verifies the database on *every* invocation: it md5-hashes
+    the 20 GB `SGB.Jul20.tar` in 4 KB chunks before it checks whether the
+    database is already extracted. On a network filesystem that costs roughly
+    16 minutes per sample, per run. The tar cannot simply be deleted, because
+    the check exits when it is missing. Once the database is extracted, the
+    cost can be removed by replacing the tar with a small placeholder and
+    regenerating `SGB.Jul20.md5` to match it; the untar and decompress steps
+    are then skipped because the extracted folder already exists. Deleting the
+    `*.msh.bz2` files, which are redundant once decompressed, reclaims a
+    further 20 GB.
+-   Even so, the mash step still reads all 43 GB of `.msh` sketches for each
+    sample. Put this database on fast local storage rather than a shared
+    network filesystem if you intend to run many samples.
 -   PhyloPhlAn has no dedicated download command, so it is run once
     against an empty input folder purely to trigger the download.
 
