@@ -30,7 +30,10 @@ data['keep'] = np.where((data['completeness'] >= args.completeness) & (data['con
 
 n50 = pd.read_csv(n50, sep='\t', header=0)
 n50 = n50.rename(columns={'MAG': "bin_id", "N50": "n50"})
-n50['bin_id'] = [name.split("/")[-1].rsplit(".",1)[0] for name in n50['bin_id']]
+# build as an explicitly typed Series: assigning a plain list gives an empty
+# table a float64 key, which then cannot be merged against the string key above
+n50['bin_id'] = pd.Series([name.split("/")[-1].rsplit(".",1)[0] for name in n50['bin_id']],
+                          index=n50.index, dtype=object)
 output = data.merge(n50, left_on='bin_id', right_on='bin_id')
 
 output.to_csv(out_file, sep='\t', index=False)
