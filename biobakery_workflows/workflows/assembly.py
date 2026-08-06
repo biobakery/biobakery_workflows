@@ -486,7 +486,7 @@ def align(name, paired):
 				c = "bowtie2 -x " + index + " -1 " + name + "_paired_1." + input_extension + " -2 " + name + "_paired_2." + input_extension + " -U " + name + "_unmatched_1." + input_extension + "," + name + "_unmatched_2." + input_extension + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal",
 				d = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				e = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
-				f = "jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted,
+				f = "if [ ! -s " + bam_sorted + " ]; then echo -e \"contigName\tcontigLen\ttotalAvgDepth\t" + name.split("/")[-1] + ".sorted\t" + name.split("/")[-1] + ".sorted-var\" > " + depths_dir + name.split("/")[-1] + ".contig_depths.txt; else jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted + "; fi",
 				)
 		else:
 			command = '''{a} && {b} && {c} && {d} && {e} && {f}'''.format(
@@ -495,7 +495,7 @@ def align(name, paired):
 				c = "bowtie2 -x " + index + " -1 " + name + pair_identifier + "." + input_extension + " -2 " + name + pair_identifier_2 + "." + input_extension + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal",
 				d = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 				e = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
-				f = "jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted,
+				f = "if [ ! -s " + bam_sorted + " ]; then echo -e \"contigName\tcontigLen\ttotalAvgDepth\t" + name.split("/")[-1] + ".sorted\t" + name.split("/")[-1] + ".sorted-var\" > " + depths_dir + name.split("/")[-1] + ".contig_depths.txt; else jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted + "; fi",
 				)
 	elif paired == "unpaired":
 		command = '''{a} && {b} && {c} && {d} && {e} && {f}'''.format(
@@ -504,7 +504,7 @@ def align(name, paired):
 			c = "bowtie2 -x " + index + " -U " + name + "." + input_extension + " -S " + sam + " -p " + str(cores) + " --very-sensitive-local --no-unal",
 			d = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 			e = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
-			f = "jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted,
+			f = "if [ ! -s " + bam_sorted + " ]; then echo -e \"contigName\tcontigLen\ttotalAvgDepth\t" + name.split("/")[-1] + ".sorted\t" + name.split("/")[-1] + ".sorted-var\" > " + depths_dir + name.split("/")[-1] + ".contig_depths.txt; else jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted + "; fi",
 			)
 	elif paired == "concatenated":
 		command = '''{a} && {b} && {c} && {d} && {e} && {f}'''.format(
@@ -515,7 +515,7 @@ def align(name, paired):
 				sam + " -p " + str(cores) + " --very-sensitive-local --no-unal; fi",
 			d = "samtools view -bS -F 4 " + sam + " > " + bam_unsorted,
 			e = "samtools sort " + bam_unsorted + " -o " + bam_sorted + " --threads " + str(cores) + "; fi",
-			f = "jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted,
+			f = "if [ ! -s " + bam_sorted + " ]; then echo -e \"contigName\tcontigLen\ttotalAvgDepth\t" + name.split("/")[-1] + ".sorted\t" + name.split("/")[-1] + ".sorted-var\" > " + depths_dir + name.split("/")[-1] + ".contig_depths.txt; else jgi_summarize_bam_contig_depths --outputDepth " + depths_dir + name.split("/")[-1] + ".contig_depths.txt " + bam_sorted + "; fi",
 			)
 
 	return str(command)

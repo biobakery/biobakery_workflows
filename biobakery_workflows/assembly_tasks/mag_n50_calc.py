@@ -56,9 +56,13 @@ for tsv in tsvs:
 	df = pd.read_csv(tsv.as_posix(), sep="\t", header=None)
 	dfs.append(df)
 
-df = pd.concat(dfs, axis=0, ignore_index=True)
-
-df.rename(columns={ df.columns[0]: "MAG", df.columns[1]: "N50" }, inplace = True)
+if dfs:
+	df = pd.concat(dfs, axis=0, ignore_index=True)
+	df.rename(columns={ df.columns[0]: "MAG", df.columns[1]: "N50" }, inplace = True)
+else:
+	# no bins to measure, e.g. every sample assembled no contigs above the
+	# minimum length; still write the table so downstream tasks have their input
+	df = pd.DataFrame(columns=["MAG", "N50"])
 
 df.to_csv(out_dir + "mags_n50.tsv", sep="\t", index=False)
 
