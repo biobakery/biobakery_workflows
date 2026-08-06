@@ -14,7 +14,7 @@ except ImportError:
 
 from glob import glob    
 
-VERSION = "4.0.0a1"
+VERSION = "3.2"
 
 AUTHOR = "bioBakery workflows development team"
 AUTHOR_EMAIL = "biobakery-users@googlegroups.com"
@@ -63,10 +63,19 @@ setuptools.setup(
             'document_templates/*.mdw',
             'document_templates/*.pmd',
             'data/*',
-            'Rscripts/*'
+            'Rscripts/*',
+            'assembly_tasks/*.py',
+            'assembly_tasks/*.R',
+            'assembly_tasks/checkm/*',
+            'assembly_tasks/checkm/util/*'
         ]},
     data_files=[
         ("images/", glob("images/*")),
+        # the assembly workflow is installed to bin/ and locates these helpers
+        # as "<script>/../assembly_tasks/", so they are installed under the prefix
+        ("assembly_tasks/", glob("biobakery_workflows/assembly_tasks/*.py")+glob("biobakery_workflows/assembly_tasks/*.R")),
+        ("assembly_tasks/checkm/", glob("biobakery_workflows/assembly_tasks/checkm/*.py")+glob("biobakery_workflows/assembly_tasks/checkm/VERSION")),
+        ("assembly_tasks/checkm/util/", glob("biobakery_workflows/assembly_tasks/checkm/util/*.py")),
         ("tutorial/input/", glob("examples/tutorial/input/*")),
         ("tutorial/kneaddata_demo_db/Homo_sapiens_demo/", glob("examples/tutorial/kneaddata_demo_db/Homo_sapiens_demo/*")),
         ("tutorial/kneaddata_demo_db/SILVA_demo/", glob("examples/tutorial/kneaddata_demo_db/SILVA_demo/*"))

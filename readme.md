@@ -30,6 +30,7 @@ Table of contents
     + [Whole Metagenome and Metatranscriptome Shotgun (wmgx\_wmtx)](#whole-metagenome-and-metatranscriptome-shotgun-wmgx_wmtx)
     + [16S rRNA (16s)](#16s-rrna-16s)
     + [Isolate Assembly (isolate_assembly)](#isolate-assembly-isolate_assembly)
+    + [Assembly (assembly)](#assembly-assembly)
   * [Visualization Workflow](#visualization-workflow-1)
     + [Visualization for Whole Metagenome Shotgun and 16S (vis)](#visualization-for-whole-metagenome-shotgun-and-16S-vis)
   * [Stats Workflow](#stats-workflow)
@@ -521,6 +522,209 @@ provide the identifier string for the first file in the set of pairs.
 -   See the section on
     [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
     to optimize the workflow run based on your computing resources.
+
+### Assembly (assembly)
+
+This workflow assembles metagenomes into metagenome-assembled genomes
+(MAGs) and clusters them into species-level genome bins (SGBs). It was
+previously distributed on its own branch as the `sgb_pipeline` workflow.
+Reads are assembled with MEGAHIT, contigs are binned with MetaBAT 2, bin
+quality is assessed with CheckM2, bins are placed taxonomically with
+PhyloPhlAn, and the retained MAGs are clustered into SGBs with Mash and
+FastANI. The final output is a merged taxonomy and abundance profile.
+
+**Super Tasks**
+
+1.  Assembly
+2.  Read alignment and contig depth calculation
+3.  Binning
+4.  Abundance estimation
+5.  Quality assessment
+6.  Taxonomic placement
+7.  SGB clustering
+
+**Requirements**
+
+1.  [MEGAHIT](https://github.com/voutcn/megahit)
+    1.  Install with: `$ conda install -c bioconda megahit`
+2.  [Bowtie2](https://bowtie-bio.sourceforge.net/bowtie2/)
+    1.  Install with: `$ conda install -c bioconda bowtie2`
+3.  [SAMtools](http://www.htslib.org/)
+    1.  Install with: `$ conda install -c bioconda samtools`
+4.  [MetaBAT 2](https://bitbucket.org/berkeleylab/metabat) (provides
+    `metabat2` and `jgi_summarize_bam_contig_depths`)
+    1.  Install with: `$ conda install -c bioconda metabat2`
+5.  [CheckM2](https://github.com/chklovski/CheckM2) (plus database)
+    1.  Install with: `$ conda install -c bioconda checkm2`
+    2.  Requires [DIAMOND](https://github.com/bbuchfink/diamond) and
+        [Prodigal](https://github.com/hyattpd/Prodigal)
+6.  [PhyloPhlAn](https://github.com/biobakery/phylophlan) v3.2+ (plus
+    database)
+    1.  Install with: `$ conda install -c bioconda phylophlan`
+7.  [Mash](https://github.com/marbl/Mash)
+    1.  Install with: `$ conda install -c bioconda mash`
+8.  [FastANI](https://github.com/ParBLiSS/FastANI)
+    1.  Install with: `$ conda install -c bioconda fastani`
+9.  [assembly-stats](https://github.com/sanger-pathogens/assembly-stats)
+    (used to compute the N50 of each MAG)
+    1.  Install with: `$ conda install -c bioconda assembly-stats`
+10. R plus the packages `data.table`, `docopt`, `doParallel`, `dplyr`,
+    `stringr`, `tibble` and `tidyr`
+11. Python plus the packages `biopython`, `numpy`, `pandas`, `scipy`,
+    `scikit-learn`, `lightgbm`, `keras`/`tensorflow`, `multiprocess`,
+    `tqdm` and `requests` (the CheckM2 model requires the
+    `keras`/`tensorflow` stack)
+
+*A note on the PhyloPhlAn executable*: in PhyloPhlAn v3.2 and later the
+`phylophlan_metagenomic` program was renamed. This workflow calls
+`phylophlan_assign_sgbs_legacy`, which is the same program under its new
+name and accepts the same options. If you are running PhyloPhlAn v3.0.x
+the equivalent executable is named `phylophlan_metagenomic`.
+
+*Install everything with conda*
+
+    $ conda create -n biobakery_assembly -c conda-forge -c bioconda \
+        megahit bowtie2 samtools metabat2 checkm2 phylophlan mash fastani \
+        assembly-stats diamond prodigal r-base r-data.table r-docopt r-doparallel \
+        r-dplyr r-stringr r-tibble r-tidyr
+    $ conda activate biobakery_assembly
+
+*Install without conda*
+
+Each tool can also be installed manually, which avoids pulling a second
+Python and R stack into your environment. MEGAHIT, Bowtie2, SAMtools and
+Mash are commonly already available. For the rest:
+
+-   MetaBAT 2: build from source with CMake against Boost (1.55+) and
+    zlib. Note that its `src/CMakeLists.txt` sets
+    `Boost_USE_STATIC_LIBS ON`; if only shared Boost libraries are
+    available, set it to `OFF` before configuring.
+-   FastANI, DIAMOND and Prodigal: download the released Linux binaries
+    and place them on your `$PATH`. On systems with glibc older than
+    2.29, use FastANI v1.33 rather than v1.34.
+-   assembly-stats: build from source with CMake
+    (`https://github.com/sanger-pathogens/assembly-stats`).
+-   CheckM2 and PhyloPhlAn: install with
+    `$ pip install checkm2 phylophlan`. Pin `scikit-learn` to the version
+    CheckM2's bundled model was trained with (1.6.1 for CheckM2 v1.1.0);
+    a newer scikit-learn only emits an `InconsistentVersionWarning` while
+    still producing results, so a mismatch can pass unnoticed.
+-   R packages: `> install.packages(c("data.table", "docopt", "doParallel", "dplyr", "stringr", "tibble", "tidyr"))`
+
+**Databases**
+
+Two databases are required, unless the workflow is run with
+`--skip-placement`, which only needs the CheckM2 database.
+
+To install the CheckM2 database:
+
+    $ checkm2 database --download --path $DATABASES/checkm2/
+    $ export CHECKM_DATA_PATH=$DATABASES/checkm2/
+    $ export CHECKM2DB=$DATABASES/checkm2/CheckM2_database/uniref100.KO.1.dmnd
+
+-   Both variables are needed. The workflow checks that
+    `$CHECKM_DATA_PATH` is set, while `checkm2` itself reads
+    `$CHECKM2DB`, which must point at the `.dmnd` file rather than the
+    folder containing it.
+
+To install the PhyloPhlAn SGB database (about 20 GB):
+
+    $ mkdir -p $DATABASES/phylophlan tmp_input && touch tmp_input/tmp.fa
+    $ phylophlan_assign_sgbs_legacy -d SGB.Jul20 --database_folder $DATABASES/phylophlan/ -i tmp_input/
+    $ rm -r tmp_input
+    $ export PHYLOPHLAN_PATH=$DATABASES/phylophlan/
+
+-   PhyloPhlAn re-verifies the database on *every* invocation: it md5-hashes
+    the 20 GB `SGB.Jul20.tar` in 4 KB chunks before it checks whether the
+    database is already extracted. On a network filesystem that costs roughly
+    16 minutes per sample, per run. The tar cannot simply be deleted, because
+    the check exits when it is missing. Once the database is extracted, the
+    cost can be removed by replacing the tar with a small placeholder and
+    regenerating `SGB.Jul20.md5` to match it; the untar and decompress steps
+    are then skipped because the extracted folder already exists. Deleting the
+    `*.msh.bz2` files, which are redundant once decompressed, reclaims a
+    further 20 GB.
+-   Even so, the mash step still reads all 43 GB of `.msh` sketches for each
+    sample. Put this database on fast local storage rather than a shared
+    network filesystem if you intend to run many samples.
+-   PhyloPhlAn has no dedicated download command, so it is run once
+    against an empty input folder purely to trigger the download.
+
+**Inputs**
+
+1.  A set of fastq (or fastq.gz) files. These are expected to be quality
+    controlled already, for example with the output of KneadData or of
+    the wmgx workflow. The files may be single-end, paired-end, or
+    interleaved ("concatenated").
+
+Use `--paired` to select the input type (`unpaired`, `paired` or
+`concatenated`) and `--input-extension` to set the file extension
+(`fastq`, `fastq.gz`, `fq` or `fq.gz`). For paired inputs the default
+`--pair-identifier kneaddata_default` looks for the `_paired_1`,
+`_paired_2`, `_unmatched_1` and `_unmatched_2` files that KneadData
+produces; supply for example `--pair-identifier _R1` if your files use a
+different convention.
+
+**To run the workflow**
+
+-   `$ biobakery_workflows assembly --input $INPUT --output $OUTPUT`
+-   In the command replace `$INPUT` with the path to the folder
+    containing your fastq input files and `$OUTPUT` with the path to the
+    folder to write output files.
+-   See the section on
+    [parallelization options](https://github.com/biobakery/biobakery_workflows#parallelization-options)
+    to optimize the workflow run based on your computing resources.
+
+For example, to run on paired-end reads and estimate abundance from the
+MAGs generated for each sample:
+
+    $ biobakery_workflows assembly --input $INPUT --output $OUTPUT \
+        --paired paired --pair-identifier _R1 --input-extension fastq.gz \
+        --abundance-type by_sample --cores 8 --local-jobs 8 \
+        --remove-intermediate-output
+
+To skip taxonomic placement and SGB clustering, which stops the workflow
+after the CheckM2 steps and requires only the CheckM2 database:
+
+    $ biobakery_workflows assembly --input $INPUT --output $OUTPUT \
+        --paired unpaired --skip-placement --local-jobs 12
+
+To reuse contigs that have already been assembled, place them at
+`$OUTPUT/assembly/main/$SAMPLE/$SAMPLE.contigs.fa` and add
+`--skip-contigs`.
+
+**Selected options**
+
+-   `--abundance-type` : estimate abundance by aligning reads against
+    only the MAGs from that sample (`by_sample`, the default) or against
+    every MAG generated in the run (`by_dataset`).
+-   `--completeness` / `--contamination` : the CheckM2 thresholds used to
+    decide which bins are retained (defaults 50 and 10).
+-   `--min-contig-length` : passed to both MEGAHIT and MetaBAT 2
+    (default 2500).
+-   `--skip-placement` : stop after the CheckM2 steps.
+-   `--skip-contigs` : reuse existing contigs instead of running MEGAHIT.
+-   `--gc-length-stats` : also compute GC content and length statistics
+    per bin.
+-   `--remove-intermediate-output` : delete the scratch folder when the
+    run completes.
+-   `--megahit-options`, `--metabat-options`, `--checkm-coverage-options`,
+    `--checkm-predict-options`, `--phylophlan-metagenomic-options` and
+    `--mash-sketch-options` : pass additional options straight through to
+    the underlying tool, as a quoted string.
+
+**Outputs**
+
+-   `$OUTPUT/final_profile_$ABUNDANCE_TYPE.tsv` : the merged taxonomy and
+    abundance profile across all samples.
+-   `$OUTPUT/main/bins/` : the MAGs produced for each sample.
+-   `$OUTPUT/main/checkm/qa/checkm_qa_and_n50.tsv` : bin quality and N50
+    statistics.
+-   `$OUTPUT/main/phylophlan/phylophlan_relab.tsv` : the taxonomic
+    assignment for each MAG.
+-   `$OUTPUT/main/sgbs/sgbs/SGB_info.tsv` : the SGB each retained MAG was
+    assigned to.
+
 
 Visualization Workflows
 -----------------------

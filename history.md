@@ -1,7 +1,13 @@
 
 # bioBakery workflows History #
 
-##4.0.0a1 (11-15-2024)
+## v3.2 (TBD) ###
+
+* Add the assembly workflow for MAG and SGB generation (ported from the sgb_pipeline branch and renamed to assembly)
+* Add assembly_tasks helper scripts (checkm, Mash clustering, GC and N50 stats, taxonomy and abundance merging) used by the assembly workflow
+* Install assembly_tasks under the install prefix so the assembly workflow can locate them when run from bin
+* Update the assembly workflow to call phylophlan_assign_sgbs_legacy, the current name for phylophlan_metagenomic in PhyloPhlAn v3.2+
+* Update the DADA2 Silva databases to the latest versions
 * Update shotgun workflow to give the merge_pairs function more memory for larger files
 * Add extended IUPAC to reverse complement
 * Chunk taxonomy table for species assignment
@@ -36,14 +42,6 @@
 * Update strainphlan tasks to allow for identification at a strain level instead of species
 * Increase sample2makers time
 * Make the find of the metaphlan pkl file version agnostic
-
-
-
-
-
-## v3.2 (TBD) ###
-
-* Update the DADA2 Silva databases to the latest versions
 
 ## v3.1 (09-27-2022) ###
 * Make the search for the strainphlan database folder version agnostic
