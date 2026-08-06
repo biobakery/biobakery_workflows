@@ -9,8 +9,10 @@ parser.add_argument("--mag_dir", help="Directory containing MAGs", type=str, req
 parser.add_argument("--out_dir", help="Output directory", type=str, required=True)
 args = parser.parse_args()
 
-mag_dir = "/" + args.mag_dir.strip("/") + "/"
-out_dir = "/" + args.out_dir.strip("/") + "/"
+# abspath rather than forcing a leading "/": a relative path such as "." or a
+# staged directory name became an absolute path at the filesystem root
+mag_dir = os.path.abspath(args.mag_dir) + os.sep
+out_dir = os.path.abspath(args.out_dir) + os.sep
 
 # create tmp directory
 tmp = out_dir + "tmp/"

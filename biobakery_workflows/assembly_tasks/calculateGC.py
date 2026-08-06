@@ -20,7 +20,13 @@ threads = args.threads
 
 exclude = [".unbinned.", ".tooShort.", ".lowDepth.", "final.contigs"]
 
-paths = Path("/" + in_dir.strip("/") + "/").rglob("*.fa")
+# abspath, and os.walk(followlinks=True) rather than rglob, which will not
+# descend into symlinked directories such as staged workflow inputs
+paths = []
+for _root, _dirs, _names in os.walk(os.path.abspath(in_dir), followlinks=True):
+	for _n in _names:
+		if _n.endswith(".fa"):
+			paths.append(Path(os.path.join(_root, _n)))
 
 files = []
 for path in paths:

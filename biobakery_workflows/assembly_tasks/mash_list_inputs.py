@@ -14,8 +14,10 @@ parser.add_argument("--threads", help="Number of processes to run in parallel", 
 args = parser.parse_args()
 
 checkm = args.checkm
-bins = "/" + args.bins.strip("/") + "/"
-mash = "/" + args.mash.strip("/") + "/"
+# abspath rather than forcing a leading "/": a relative path such as "." or a
+# staged directory name became an absolute path at the filesystem root
+bins = os.path.abspath(args.bins) + os.sep
+mash = os.path.abspath(args.mash) + os.sep
 threads = args.threads
 
 # function to recursively list files

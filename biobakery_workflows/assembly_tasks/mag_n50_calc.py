@@ -16,12 +16,15 @@ args = parser.parse_args()
 # "/./" and walked the whole filesystem
 in_dir = os.path.abspath(args.i) + os.sep
 
-paths = Path(in_dir).rglob('*.fa')
-
+# os.walk(followlinks=True) rather than Path.rglob: rglob will not descend into
+# a symlinked directory, and workflow engines commonly stage inputs as symlinks,
+# in which case the bins directory was skipped and no MAGs were measured at all
 files = []
 
-for path in paths:
-	files.append(path.as_posix())
+for root, _dirs, names in os.walk(in_dir, followlinks=True):
+	for name in names:
+		if name.endswith('.fa'):
+			files.append(os.path.join(root, name))
 
 # output
 out_dir = os.path.abspath(args.o) + os.sep
